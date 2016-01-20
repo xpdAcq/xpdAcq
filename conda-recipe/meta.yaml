@@ -1,7 +1,6 @@
 package:
   name: xpdacq
   version: '1.0.0'
-  # use __conda_version__.txt for version
 
 source:
   git_rev: master
