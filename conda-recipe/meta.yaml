@@ -1,0 +1,25 @@
+package:
+  name: xpdacq
+  version: '1.0.0'
+  # use __conda_version__.txt for version
+
+source:
+  git_rev: master
+  git_url: https://github.com/chiahaoliu/xpdAcq.git
+
+requirements:
+  build:
+    - python
+    - setuptools
+
+  run:
+    - python
+    - numpy
+    - matplotlib
+
+test:
+  imports:
+    - xpdacq
+
+about:
+  home: https://github.com/chiahaoliu/xpdAcq
