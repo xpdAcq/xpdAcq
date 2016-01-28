@@ -4,16 +4,20 @@ import sys
 import os.path
 
 
-def _make_datapaths():
+def _make_clean_env():
     '''Make a clean environment for a new user
     
-    1. make sure that xpdUser is completely empty except for <tarArchive>.tar and/or
-         <name>_<saf#>_config.yml
-      a. if no, request the user runs end_beamtime
+    1. make sure that that the user is currently in /xpdUser  if not move to ~/xpdUser and try again
+    2. make sure that xpdUser is completely empty or contains just <tarArchive>.tar and/or
+         <PIname>_<saf#>_config.yml
+      a. if no, request the user runs end_beamtime and exit
       b. if yes, delete the tar file (it is archived elsewhere),  and create the 
-           working directories
-    1. look for a userConfig
-    1. ask a series of questions to help set up the environment
+           working directories. Do not delete the yml file.
+    1. look for a <PIname>_<saf#>_config.yml and load it.  Ask the user if this is
+    the right one before loading it.  If yes, load, if no exit telling user to manually
+    delete the yml file and install the correct one in \xpdUser directory, if it exists.
+    1. ask a series of questions to help set up the environment. Save them in the
+    <PIname>_<saf#>_config.yml file.  Create this if it does not already exist.
     '''
     from xpdacq.config import datapath
     for d in datapath.allfolders:
