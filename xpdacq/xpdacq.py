@@ -14,7 +14,7 @@
 #
 ##############################################################################
 ## testing section ##
-from bluesky.scans import Count # fake object but exact syntax
+from bluesky.plans import Count # fake object but exact syntax
 #####################
 
 
@@ -43,6 +43,13 @@ def _bluesky_RE():
 RE = _bluesky_RE()
 
 
+def get_light_images(exp_time, scan_time, num=1):
+    ''' simple function that wrap Count
+    '''
+    
+    from bluesky.plans import Count
+    #FIXME - configure PE1
+    
+    mycount = Count([pe1], num=num)
 
-
-
+    

@@ -63,17 +63,21 @@ def end_beamtime():
         else:
             print('continue...')
     
+    os.chdir(B_DIR)
     print('Files under %s will be compressed to a .tar file and it will be located at:' % BASE)
-    shutil.make_archive(full_info, 'tar', B_DIR, BASE, owner = PI_name.strip(), verbose=1, dry_run=1)
+    tar_return = shutil.make_archive(full_info, 'tar', BASE, owner = PI_name.strip(), verbose=1, dry_run=1)
+    print(tar_return)
     user_confirm = input('Is it correct? [y]/n ')
     if user_confirm not in ('y', ' '):
         print('Alright, please start again')
+        os.chdir(BASE)
         return
     else:
         # FIXME - it doesn't work for a directory....
-        shutil.make_archive(full_info, 'tar', B_DIR, BASE, owner = PI_name.strip(), verbose=1, dry_run=0)
+        shutil.make_archive(full_info, 'tar', base_dir = BASE, owner = PI_name.strip())
         print('Files have been compressed')
-        print('Beamline scientist can decide if files under %s are going to be keep')
+        print('Beamline scientist can decide if files under %s are going to be kept' % BASE)
+        os.chdir(BASE)
     
 if __name__ == '__main__':
     end_beamtime()
