@@ -12,8 +12,8 @@ class DataPath(object):
     '''Absolute paths to data folders in XPD experiment.
     '''
 
-    base = os.path.expanduser('./'+WORKING_DIR)
-    raw_config = os.path.expanduser('./'+CONFIG_DIR)
+    base = os.path.expanduser('~/'+WORKING_DIR)
+    raw_config = os.path.expanduser('~/'+CONFIG_DIR)
 
     @property
     def tif(self):
