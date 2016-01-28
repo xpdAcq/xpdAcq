@@ -5,12 +5,15 @@
 
 import os.path
 
+WORKING_DIR = 'xpdUser'
+CONFIG_DIR = 'xpdConfig'
+
 class DataPath(object):
     '''Absolute paths to data folders in XPD experiment.
     '''
 
-    base = os.path.expanduser('~/xpdUser')
-    raw_config = os.path.expanduser('~/xpdConfig')
+    base = os.path.expanduser('./'+WORKING_DIR)
+    raw_config = os.path.expanduser('./'+CONFIG_DIR)
 
     @property
     def tif(self):

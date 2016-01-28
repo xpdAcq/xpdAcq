@@ -5,7 +5,15 @@ import os.path
 
 
 def _make_datapaths():
-    '''Create all data directories if they do not exist yet.
+    '''Make a clean environment for a new user
+    
+    1. make sure that xpdUser is completely empty except for <tarArchive>.tar and/or
+         <name>_<saf#>_config.yml
+      a. if no, request the user runs end_beamtime
+      b. if yes, delete the tar file (it is archived elsewhere),  and create the 
+           working directories
+    1. look for a userConfig
+    1. ask a series of questions to help set up the environment
     '''
     from xpdacq.config import datapath
     for d in datapath.allfolders:
