@@ -18,6 +18,10 @@ from bluesky.plans import Count # fake object but exact syntax
 #####################
 
 
+import numpy as np
+print('Before you start, make sure the area detector IOC is in "Continus mode"')
+pe1c_threshold = 300
+
 ## main module ##
 def _bluesky_global_state():
     '''Import and return the global state from bluesky.'''
@@ -43,13 +47,50 @@ def _bluesky_RE():
 RE = _bluesky_RE()
 
 
-def get_light_images(exp_time, scan_time, num=1):
+
+def get_light_images(secs = 1.0, mins = 0):
+    
+    # TODO - finalize the format of scan time input
     ''' simple function that wrap Count
+    
+    Parameters
+    -----------
+    secs - float
+        exposure time
+
+    mins - float
+        exposure time
+
+    Returns
+    --------
+    It returns nothing
+
     '''
     
     from bluesky.plans import Count
-    #FIXME - configure PE1
     
-    mycount = Count([pe1], num=num)
+    # default setting for pe1c
+    pe1c_frame_rate = 0.1  # FIXME - that should be heard from pe1c attributes
+    pe1c_num_set = 1
+    
+    total_time = secs + mins*60
+    num_frame = np.rint( total_time / pe1c_frame_rate )
+    
+    # logic to prevent from overflow
+    if num_frame > pe1c_threshold:
+        print('Overflow')
+        pe1c_num_set = np.ceil( num_frame / pe1c_threshold)
+        num_frame = pe1c_threshold
+        # should we let user know??
+    
+    # FIXME - test if pe1c is correctly configured
+    pe1c.numer_of_sets.put(pe1c_num_set)
+    pe1c.image_per_set.put(num_frame)
+
+    # run scan
+    print('Running a scan of %s minute(s) and %s second(s)' % (mins, secs))
+    mycount = Count([pe1], num=1)
 
     
+    # hook to visualize data
+    # FIXME - should sit in xpdanl package
