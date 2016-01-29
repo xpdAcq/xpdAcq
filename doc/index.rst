@@ -11,9 +11,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   installation
-   functionality
-   api
+   beamlinestaff
+   xpdusers
+   troubleshooting
 
 
 Indices and tables
