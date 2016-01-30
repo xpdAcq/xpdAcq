@@ -69,11 +69,12 @@ def _setup_config():
     yml_f = [ f for f in allowed_f if f.endswith('.yml')]
     
     if len(yml_f) > 1:
-        raise RuntimeError('There is more than one config.yml already exist in working dir, please contact beamline scientist')
+        print('There is more than one config.yml already exist in working dir, please contact beamline scientist')
         return
 
     if not yml_f :
-        raise RuntimeError('There is no config.yml already exist in working dir')
+        print('There is no config.yml in working dir')
+        print('Please make sure you load necessary file')
         return
 
     confirm = input('This config.yml file will be used: %s \n Is it the one you wish to use? [y]/n    ' % yml_f) 
@@ -171,13 +172,7 @@ def end_beamtime():
     
 if __name__ == '__main__':
     end_beamtime()
-    try:
-        start_beamtime()
-    except RuntimeError as e:
-        print(e, file=sys.stderr)
-        print("Ask beamline scientist what to do next.", file=sys.stderr)
-        sys.exit(1)
-
+    
 
 
 '''
