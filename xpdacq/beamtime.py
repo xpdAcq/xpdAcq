@@ -101,14 +101,86 @@ W_DIR = datapath.tif
 D_DIR = datapath.dark
 R_DIR = datapath.config
 S_DIR = datapath.script
+EXP_DIR = datapath.export_dir
+IMP_DIR = datapath.import_dir
 
 # FIXME: confirm where to put backup dir
-B_DIR = os.path.expanduser('~/xpdBackup')
+B_DIR = os.path.expanduser('~/xpdBackup') # remote backup directory
+
 
 if os.path.isdir(B_DIR):
     pass
 else:
     os.makedirs(B_DIR)
+
+def _get_time(date = True):
+    ''' function to grab current time info
+    
+    Parameters:
+    -----------
+    
+    date
+        bool - if yes, grab full time info. else only grab upto month
+
+    Retunrs
+    -------
+    time_info
+        str - time info
+    
+    '''
+    
+    time = datetime.datetime.now()
+    year = time.year
+    month = time.month
+    day = time.day
+
+    if date:
+        time_info = '_'.join([str(year), str(month), str(day)])
+    time_info = '_'.join([str(year), str(month)])
+ 
+    return time_info
+
+
+def flush_dir(folder_path):
+    ''' delete files and subdir under folder
+    '''
+    
+    import os, shutil
+    e = 'No files inside this directory, pass'
+    if os.listdir(folder_path):
+        for f in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, f)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path): shutil.rmtree(file_path)
+            except:
+                print(e)
+    else:
+        pass
+
+def _tar_n_move(f_name, src_dir, dest_dir, dry_run = False):
+    ''' compree a source directory and output to a dest_dir
+    '''
+    import os
+    import shutil
+    
+    cwd = os.getcwd()  # current working directory
+    os.chdir(dest_dir)
+    print('Files under %s will be compressed to a .tar file and it will be located at:' % src_dir)
+    tar_return = shutil.make_archive(f_name, 'tar', base_dir = dest_dir, verbose=True, dry_run=True)
+    print(tar_return)
+    user_confirm = input('Is it correct? [y]/n ')
+    if user_confirm not in ('y', ' '):
+        print('Alright, please start again')
+        os.chdir(cwd)
+        return
+    else:
+        shutil.make_archive(f_name, 'tar', base_dir = dest_dir)
+        print('Files have been compressed')
+        print('Beamline scientist can decide if files under %s are going to be kept' % src_dir)
+        os.chdir(cwd)
+
 
 def end_beamtime():
     '''cleans up at the end of a beamtime
@@ -131,44 +203,28 @@ def end_beamtime():
     
     PI_name = input('Please enter PI name to this beamtime: ')
     
-    time = datetime.datetime.now()
-    year = time.year
-    month = time.month
-    time_info = '_'.join([str(year), str(month)])
-
-    full_info = '_'.join([time_info.strip(), saf_num.strip(), PI_name.strip()])
+    time_info = _get_time(date = False)
     
-    backup_trunk = os.path.join(B_DIR, full_info)
-
-    print('Current data in tif_base, dark_base, config_base and script_base will be compressed and moved to %s' % B_DIR)
+    full_info = '_'.join([PI_name.strip(), saf_num.strip(), time_info.strip()])
     
-    if os.path.isdir(backup_trunk):
+    backup_f_name = os.path.join(B_DIR, full_info)
+
+    print('Current data in subdirectories under xpdUser/ will be compressed and moved to %s' % B_DIR)
+    
+    if os.path.isfile(backup_f_name):
         print('a file with the same PI name, SAF number and year-month already exists')
         print('before proceeding, check that you entered the correct information')
-        print('do you want to create a new backup directory for a new beamtime with this user?')
+        print('do you want to create a new backup file for a new beamtime with this user?')
         print('to add files to the existing backup directory hit return.')
         respo = input('Otherwise, enter a new directory name, e.g., "secondbeamtime":')
         if str(respo) != '':
-            new_path = os.path.join(B_DIR, full_info + str(respo))
-            backup_trunk = new_path
+            new_name = os.path.join(B_DIR, full_info + '_' + str(respo))
+            backup_f_name = new_name
         else:
             print('continue...')
     
-    os.chdir(B_DIR)
-    print('Files under %s will be compressed to a .tar file and it will be located at:' % BASE)
-    tar_return = shutil.make_archive(full_info, 'tar', BASE, owner = PI_name.strip(), verbose=1, dry_run=1)
-    print(tar_return)
-    user_confirm = input('Is it correct? [y]/n ')
-    if user_confirm not in ('y', ' '):
-        print('Alright, please start again')
-        os.chdir(BASE)
-        return
-    else:
-        # FIXME - it doesn't work for a directory....
-        shutil.make_archive(full_info, 'tar', base_dir = BASE, owner = PI_name.strip())
-        print('Files have been compressed')
-        print('Beamline scientist can decide if files under %s are going to be kept' % BASE)
-        os.chdir(BASE)
+    _tar_n_move(backup_f_name, src_dir = BASE, dest_dir = B_DIR)
+    flush_dir(IMP_DIR)
     
 if __name__ == '__main__':
     end_beamtime()

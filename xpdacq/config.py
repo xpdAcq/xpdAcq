@@ -7,13 +7,23 @@ import os.path
 
 WORKING_DIR = 'xpdUser'
 CONFIG_DIR = 'xpdConfig'
+STEM = '.'
 
 class DataPath(object):
     '''Absolute paths to data folders in XPD experiment.
     '''
+    base = os.path.expanduser( STEM + WORKING_DIR)
+    raw_config = os.path.expanduser( STEM +CONFIG_DIR)
 
-    base = os.path.expanduser('~/'+WORKING_DIR)
-    raw_config = os.path.expanduser('~/'+CONFIG_DIR)
+    @property
+    def import_dir(self):
+        "Folder for user/beamline scientist import."
+        return os.path.join(self.base, 'Import')
+
+    @property
+    def export_dir(self):
+        "Folder for user output."
+        return os.path.join(self.base, 'Export')
 
     @property
     def tif(self):
@@ -38,11 +48,13 @@ class DataPath(object):
     @property
     def allfolders(self):
         "Return a list of all data folder paths for XPD experiment."
-        rv = [self.base, self.raw_config, self.tif, self.dark, self.config, self.script]
+        rv = [
+                self.base, self.raw_config, self.tif, self.dark, self.config,
+                self.script, self.export_dir, self.import_dir
+            ]
         return rv
 
 # class DataPath
 
-
 # unique instance of the DataPath class.
-datapath = DataPath()
+datapath = DataPath(STEM)
