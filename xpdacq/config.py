@@ -5,15 +5,29 @@
 
 import os.path
 
+#from xpdacq.main_config import main_config
+
 WORKING_DIR = 'xpdUser'
 CONFIG_DIR = 'xpdConfig'
-STEM = '.'
 
 class DataPath(object):
     '''Absolute paths to data folders in XPD experiment.
     '''
-    base = os.path.expanduser( STEM + WORKING_DIR)
-    raw_config = os.path.expanduser( STEM +CONFIG_DIR)
+    def __init__(self, stem):
+        self.stem = stem
+    
+    @property
+    def base(self):
+        ''' base dir of entire configuration '''
+        if self.stem == '~':
+            return os.path.expanduser('~/'+ WORKING_DIR)
+        return os.path.join( self.stem, WORKING_DIR)
+    @property
+    def raw_config(self): 
+        ''' config dir of entire configuration''' 
+        if self.stem == '~':
+            return os.path.expanduser('~/'+ CONFIG_DIR)
+        return os.path.join( self.stem, CONFIG_DIR)
 
     @property
     def import_dir(self):
@@ -57,4 +71,4 @@ class DataPath(object):
 # class DataPath
 
 # unique instance of the DataPath class.
-datapath = DataPath(STEM)
+#datapath = DataPath(STEM)
