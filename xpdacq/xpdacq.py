@@ -19,10 +19,12 @@ from bluesky.plans import Count # fake object but exact syntax
 
 
 import numpy as np
+import matplotlib.pyplot as plt
+
 print('Before you start, make sure the area detector IOC is in "Continus mode"')
 pe1c_threshold = 300
 
-## main module ##
+################# priviate module ###########################
 def _bluesky_global_state():
     '''Import and return the global state from bluesky.'''
 
@@ -46,7 +48,7 @@ def _bluesky_RE():
 
 RE = _bluesky_RE()
 
-
+##############################################################
 
 def get_light_images(secs = 1.0, mins = 0):
     
@@ -68,6 +70,11 @@ def get_light_images(secs = 1.0, mins = 0):
     '''
     
     from bluesky.plans import Count
+    from xpdanl.xpdanl import plot_last_one
+
+    # FIXME - proper command to close and open shutter
+    from xpdacq.control import _open_shutter
+    from xpdacq.control import _close_shutter
     
     # default setting for pe1c
     pe1c_frame_rate = 0.1  # FIXME - that should be heard from pe1c attributes
@@ -87,10 +94,21 @@ def get_light_images(secs = 1.0, mins = 0):
     pe1c.numer_of_sets.put(pe1c_num_set)
     pe1c.image_per_set.put(num_frame)
 
-    # run scan
+    # Set up plan
     print('Running a scan of %s minute(s) and %s second(s)' % (mins, secs))
-    mycount = Count([pe1], num=1)
-
+    count_plan = Count([pe1], num=1)
     
+    def QXRD_plan():
+        print('Collecting dark frames....')
+        _close_shutter()
+        yield from count_plan
+        print('Collecting light frames....')
+        _open_shutter()
+        yield from count_plan
+
+    RE(QXRD_plan())
+    
+        
     # hook to visualize data
-    # FIXME - should sit in xpdanl package
+    # FIXME - make sure to plot the corrected image
+    plot_last_one()
