@@ -97,7 +97,9 @@ def get_light_images(secs = 1.0, mins = 0):
     # Set up plan
     print('Running a scan of %s minute(s) and %s second(s)' % (mins, secs))
     count_plan = Count([pe1], num=1)
-    
+
+    # reproduce QXRD workflow. Do dark and light scan in the same time so that we can subtract it
+    # can be modified if we have better understanding on dark current on area detector    
     def QXRD_plan():
         print('Collecting dark frames....')
         _close_shutter()
