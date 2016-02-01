@@ -97,7 +97,7 @@ def composition_dict_gen(sample):
     sample_name - tuple - if it is a mixture, give a tuple following corresponding amounts. For example, ('NaCl',1,'Al2O3',2)
     '''
 
-    from utils import composition_analysis
+    from xpdacq.utils import composition_analysis
     sample_list = [ el for el in sample if isinstance(el,str)]
     amount_list = [ amt for amt in sample if isinstance(amt, float) or isinstance(amt, int)]
     compo_dict_list = []
