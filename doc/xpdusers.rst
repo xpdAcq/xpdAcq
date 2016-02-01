@@ -1,10 +1,14 @@
+.. _xpdu:
+
 XPD Users
-=========
+---------
+
+ * :ref:`sb_overview`
 
 Set up beamtime
 +++++++++++++++
-
-*contents*
+ 
+ * :ref:`usb`
 
 Set up experiment
 +++++++++++++++++
