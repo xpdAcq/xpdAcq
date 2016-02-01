@@ -34,7 +34,7 @@ class DataPath(object):
     def base(self):
         ''' base dir of entire configuration '''
         if self.stem == '~':
-            return os.path.expanduser('~/')
+            return os.path.expanduser('~/' + WORKING_DIR)
         return os.path.join( self.stem, WORKING_DIR)
     @property
     def raw_config(self): 
