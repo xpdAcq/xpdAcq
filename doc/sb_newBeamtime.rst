@@ -20,6 +20,33 @@ Goals of the Setup
 Setup Steps
 """""""""""
 
+1. [return to this later]
+1. We are still finalizing the steps to automate this process. For now:
+  1. run the start_beamtime script to initialize directories
+  1. Ensure that under xpdUsers there are no directories except for Import, Export
+     tif_base, dark_base, config_base, script_base
+  1. Ensure that all those directories are empty.
+  1. If you have a .yml file from the user (probably won't yet) place it in the
+     Import directory.
+  
+  
+.. code-block:: python
+
+  >>> import loadsim
+  >>> import loadsim
+      Traceback (most recent call last):
+        File "<pyshell#3>", line 1, in <module>
+          import loadsim
+        File "c:\users\billinge\documents\github\xpdsim\loadsim.py", line 17, in <module>
+          from xpdacq.beamtime import BeamTime
+      ImportError: No module named 'xpdacq.beamtime'
+ 
+2. then do it again
+
+::
+
+    >>> print('here')
+    here
 
 ``icollection`` Typed at the command prompt from any directory.  This starts an ipython session and preloads all the packages needed for XPD data acquisition|
 
