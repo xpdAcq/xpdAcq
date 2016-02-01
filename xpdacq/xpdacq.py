@@ -19,7 +19,7 @@ from bluesky.plans import Count # fake object but exact syntax
 
 
 import numpy as np
-print('Before you start, make sure the area detector IOC is in "Continus mode"')
+print('Before you start, make sure the area detector IOC is in "Continuous mode"')
 pe1c_threshold = 300
 
 ## main module ##
@@ -84,7 +84,7 @@ def get_light_images(secs = 1.0, mins = 0):
         # should we let user know??
     
     # FIXME - test if pe1c is correctly configured
-    pe1c.numer_of_sets.put(pe1c_num_set)
+    pe1c.number_of_sets.put(pe1c_num_set)
     pe1c.image_per_set.put(num_frame)
 
     # run scan
