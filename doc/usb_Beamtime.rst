@@ -21,7 +21,7 @@ Setup Steps
 
  #. make sure you are familiar with the background information in :ref:`sb_overview` and :ref:`sb_icollection` 
  #. make sure you are in directory ``xpdUser``
- #. make sure you are in the ``collection`` ipython environment (see ``[collection]`` at the beginning of the line).  If you are not already in the ``collection`` environment, type ``icollection`` at the command prompt (see [here](:ref:`sb_icollection`) if you don't know what that means)
+ #. make sure you are in the ``collection`` ipython environment (e.g., see ``(collection)`` at the beginning of the command line).  If you are not already in the ``collection`` environment, type ``icollection`` at the command prompt (see :ref:`here <sb_icollection>` if you don't know what that means)
  #. time to create our own instance of Beamtime:
 
 .. code-block:: python

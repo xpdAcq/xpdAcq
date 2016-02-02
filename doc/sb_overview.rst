@@ -20,23 +20,26 @@ Once the directories are set-up, the experiment is run by typing `icollection`
 which places you into an ipython session.  The available commands and workflow
 are described under :ref:`xpdu`.
 
+Table of directories and their uses:
+
 +---------------+------------------------------------------------------------+
 |directory name |contents                                                    |
 +===============+============================================================+
-|Import         |User places here their pre-made beamtime metata in a file called |
-|               |``<PIname>_<saf#>_config.yml``                              |
+|Import         |User places here their pre-made beamtime metata in a file   | 
+|               |called ``<PIname>_<saf#>_config.yml``                       |
 +---------------+------------------------------------------------------------+
 |Export         |A zipped tar file will be placed here at the end of the     |
 |               |beamtime containing *everything* that the user created in   |
 |               |in any directory below ``~/xpdUser``. This is for the user  |
 |               |to take home on their hard-drive                            |
 +---------------+------------------------------------------------------------+
-|config_base    |This contains the config file used by ``xPDFsuite``.        |
-|               |xPDFsuite will write this file.  The user should not edit or|
+|config_base    |This contains the config file used by ``xPDFsuite`` and     |
+|               |xpdacq. Only the programs should write in this directory    |
+|               |Users must not edit or                                      |
 |               |add anything to this directory                              |
 +---------------+------------------------------------------------------------+
 |tif_base       |This is where all the image files (.tiff) are stored *that* |
-|               |*the user extracts* from the database using dataBroker  |
+|               |*the user extracts* from the database using dataBroker      |
 |               |scripts during the experiment.                              |
 +---------------+------------------------------------------------------------+
 |dark_base      |This is where image files from dark-exposures are stored    |

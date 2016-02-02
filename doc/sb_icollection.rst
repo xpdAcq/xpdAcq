@@ -83,7 +83,7 @@ there are helpful functions for setting up these metadata libraries.  In the
 future, a GUI is planned to facilitate this even further.
 
 With this information in mind, please go ahead and start the step-by-step process
-of setting up your beamtime in :ref:`usb`
+of setting up your beamtime in :ref:`usb_Beamtime`
   
 
 return to :ref:`xpdu`
