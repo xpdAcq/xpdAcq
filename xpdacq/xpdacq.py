@@ -21,7 +21,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-import dataprotal.DataBroker as db
+from dataportal import DataBroker as db
 
 
 print('Before you start, make sure the area detector IOC is in "Continuous mode"')
@@ -80,7 +80,12 @@ def get_light_images(secs = 1.0, mins = 0):
     from xpdacq.control import _close_shutter
     
     # default setting for pe1c
-    pe1c_frame_rate = 0.1  # FIXME - that should be heard from pe1c attributes
+    pe1c_frame_rate = pe1c.cam.acquire_time.get()
+    print('current frame rate is %s' : pe1c_frame_rate)
+
+    # set to number we want
+    pe1c.cam.acquire_time.put(0.1)
+
     pe1c_num_set = 1
     
     total_time = secs + mins*60
