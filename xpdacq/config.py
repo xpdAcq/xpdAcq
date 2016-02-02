@@ -54,31 +54,36 @@ class DataPath(object):
         return os.path.join(self.base, 'Export')
 
     @property
-    def tif(self):
+    def tif_dir(self):
         "Folder for saving tiff files."
         return os.path.join(self.base, 'tif_base')
 
     @property
-    def dark(self):
+    def dark_dir(self):
         "Folder for saving dark tiff files."
         return os.path.join(self.base, 'dark_base')
 
     @property
-    def config(self):
+    def config_dir(self):
         "Folder for calibration files."
         return os.path.join(self.base, 'config_base')
 
     @property
-    def script(self):
+    def script_dir(self):
         "Folder for saving script files for the experiment."
-        return os.path.join(self.base, 'script_base')
+        return os.path.join(self.base, 'userScripts')
+
+    @property
+    def analysis_dir(self):
+        "Folder for saving script files for the experiment."
+        return os.path.join(self.base, 'userAnalysis')
 
     @property
     def allfolders(self):
         "Return a list of all data folder paths for XPD experiment."
         rv = [
-                self.base, self.raw_config, self.tif, self.dark, self.config,
-                self.script, self.export_dir, self.import_dir
+                self.base, self.raw_config, self.tif_dir, self.dark_dir, self.config_dir,
+                self.script_dir, self.export_dir, self.import_dir, self.analysis_dir
             ]
         return rv
 

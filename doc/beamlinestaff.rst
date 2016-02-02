@@ -10,10 +10,6 @@ Start Beamtime
  * :ref:`sb_newBeamtime`
 
 
-
-
-
-
 End Beamtime
 ++++++++++++
 
