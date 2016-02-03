@@ -271,7 +271,7 @@ def end_beamtime(base_dir=None, archive_dir=None):
     archive_f_name = os.path.join(archive_dir, full_info) + ext
     shutil.copyfile(tar_ball, archive_f_name)
     shutil.rmtree(dp.base)
-    _make_clean_env(dp)
+    os.makedirs(dp.base)
     shutil.copy(archive_f_name, dp.base)
     final_path = os.path.join(dp.base, os.path.basename(archive_f_name))
     print("Final archive file at {}".format(final_path))
@@ -284,14 +284,15 @@ def get_full_ext(path, post_ext=''):
         return get_full_ext(path, ext + post_ext)
     return post_ext
 
-"""
+
 def start_beamtime(base_dir=None):
     if base_dir is None:
         base_dir = B_DIR
     dp = DataPath(base_dir)
-    print(dp)
+    if len(os.listdir(dp.base)) > 1:
+        raise RuntimeError("Unexpected files in {}, you need to run"
+                           "end_beamtime()".format(dp.base))
+    shutil.rmtree(dp.base)
     _make_clean_env(dp)
-    _ensure_empty_dps(dp)
     _setup_config(dp)
     return
-"""
