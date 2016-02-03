@@ -260,9 +260,12 @@ def end_beamtime(base_dir=None, archive_dir=None):
     tar_ball = export_data(base_dir)
     ext = get_full_ext(tar_ball)
     os.makedirs(archive_dir, exist_ok=True)
-
-    saf_num = input('Please enter your SAF number to this beamtime: ')
-    PI_name = input('Please enter PI name to this beamtime: ')
+    try:
+        saf_num = bt.md['bt_safN']
+        PI_name = bt.md['bt_piLast']
+    except NameError:
+        saf_num = input('Please enter your SAF number to this beamtime: ')
+        PI_name = input('Please enter PI name to this beamtime: ')
 
     full_info = '_'.join([PI_name.strip().replace(' ', ''),
                           saf_num.strip()])
