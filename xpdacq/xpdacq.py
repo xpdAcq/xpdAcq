@@ -20,12 +20,16 @@ from bluesky.plans import Count # fake object but exact syntax
 import numpy as np
 import matplotlib.pyplot as plt
 
+from xpdacq.control import _get_obj
 
-import dataprotal.DataBroker as db
-
+from dataportal import DataBroker as db
 
 print('Before you start, make sure the area detector IOC is in "Continuous mode"')
-pe1c_threshold = 300
+expo_threshold = 60 # in seconds
+frame_rate = 0.1 # default frame rate
+area_det_name = 'pe1c'
+area_det = _get_obj(area_det_name)
+
 
 ################# private module ###########################
 def _bluesky_global_state():
@@ -80,26 +84,70 @@ def get_light_images(secs = 1.0, mins = 0):
     from xpdacq.control import _close_shutter
     
     # default setting for pe1c
-    pe1c_frame_rate = 0.1  # FIXME - that should be heard from pe1c attributes
+    area_det.cam.acquire_time.put(frame_rate)
+
+    # set to number we want
+    pe1c.cam.acquire_time.put(0.1)
+
     pe1c_num_set = 1
     
-    total_time = secs + mins*60
-    num_frame = np.rint( total_time / pe1c_frame_rate )
+    total_time = secs + mins*60.
     
     # logic to prevent from overflow
-    if num_frame > pe1c_threshold:
-        print('Overflow')
-        pe1c_num_set = np.ceil( num_frame / pe1c_threshold)
-        num_frame = pe1c_threshold
-        # should we let user know??
+    frame_info = _cal_frame(total_time)
     
-    # FIXME - test if pe1c is correctly configured
-    pe1c.number_of_sets.put(pe1c_num_set)
-    pe1c.image_per_set.put(num_frame)
+    if frame_info[0] == 0:
+        # no saturation
+        num_img = 1 
+        area_det.number_of_sets.put(num_img)
+        
+        num_frame = frame_info[1]
+        area_det.image_per_set.put(num_frame)
+        plan = Count([area_det], num= num_frame)
+        gs.RE(plan)
+        
+    if frame_info[0] != 0:
+        num_img = frame_info[0] + 1
+        gs.RE(_xpd_plan_1(frame_info[0], frame_info[1]))
+    
+    print('End of get_light_image...')
 
-    # Set up plan
-    print('Running a scan of %s minute(s) and %s second(s)' % (mins, secs))
-    count_plan = Count([pe1], num=1)
+def _xpd_plan_1(num_saturation, num_unsaturation, det=None):
+    ''' type-1 plan: change image_per_set on the fly with Count
+    
+    Parameters:
+    -----------
+        num_img : int
+            num of images you gonna take, last one is fractional
+        
+        time_dec : flot
+    '''
+    from bluesky import Msg
+    from xpdacq.control import _get_obj
+    
+    if not det:
+        _det = _get_obj('pe1c')
+
+    num_threshold = int(expo_threshold / frame_rate)
+
+    yield Msg('open_run')
+    yield Msg('stage', _det)
+    _det.number_of_sets.put(1)
+    
+    _det.image_per_set.put(num_threshold)
+    for i in range(num_saturation):
+        yield Msg('create')
+        yield Msg('trigger', _det)
+        yield Msg('read', _det)
+        yield Msg('save')
+    
+    _det.image_per_set.put(num_unsaturation)
+    yield Msg('create')
+    yield Msg('trigger', _det)
+    yield Msg('read', _det)
+    yield Msg('save')
+    yield Msg('close_run')
+
 
     # reproduce QXRD workflow. Do dark and light scan with the same amount of time so that we can subtract it
     # can be modified if we have better understanding on dark current on area detector    
@@ -118,3 +166,32 @@ def get_light_images(secs = 1.0, mins = 0):
     # hook to visualize data
     # FIXME - make sure to plot dark corrected image
     plot_scan(db[-1])
+
+def _cal_frame(total_time):
+    ''' function to calculate frame
+        
+        Parameters
+        ----------
+        total_time : float
+            - total time in seconds
+        
+        frame_rate : float
+            - 'unit' of exposure   
+    
+        Returns
+        -------
+        out_put : tuple
+            - (integer, fractional number)
+
+    '''
+    import math    
+    total_float = total_time / expo_threshold
+    parsed_num = math.modf(total_float)
+    
+    # number of frames that will collect with maximum exposure
+    num_int = parsed_time[1]
+    
+    # last frame, collect fractio of exposure threshold
+    num_dec = (parsed_time[0] * expo_threshold) / frame_rate
+    
+    return (num_int, num_dec)
