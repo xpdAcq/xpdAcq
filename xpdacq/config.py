@@ -21,6 +21,7 @@ import os.path
 
 #from xpdacq.main_config import main_config
 
+B_DIR = '~/'
 WORKING_DIR = 'xpdUser'
 CONFIG_DIR = 'xpdConfig'
 

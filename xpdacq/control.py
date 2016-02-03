@@ -14,8 +14,12 @@
 ##############################################################################
 
 def _get_obj(name):
-    ipshel = get_ipython()    # ipython builtin
+    ipshell = get_ipython()
     return ipshell.user_ns[name]
+    
+def _go_home(B_DIR):
+    ''' [fixme] this function takes one to the base directory'''
+    pass
 
 
 def _open_shutter():

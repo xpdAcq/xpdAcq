@@ -19,10 +19,6 @@ import os
 
 from xpdacq.config import DataPath
 
-def ensure_sc_uid(md):
-    if 'sc_uid' not in md:
-        raise ValueError("scan metadata needed to run scan.  Please create a scan metadata object and rerun.")
-
 class XPD():
     def _getuid(self):
         return str(uuid.uuid1())

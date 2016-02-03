@@ -15,7 +15,7 @@
 ##############################################################################import sys
 import os
 import datetime
-from xpdacq.config import DataPath
+from xpdacq.config import DataPath, B_DIR
     
 def _make_clean_env(datapath):
     '''Make a clean environment for a new user
@@ -168,9 +168,12 @@ def _tar_n_move(f_name, src_dir, dest_dir, dry_run = False):
         print('Files have been compressed')
         print('Beamline scientist can decide if files under %s are going to be kept' % src_dir)
         os.chdir(cwd)
+        
+def export_data(base_dir=B_DIR):
+    _go_home(base_dir)
 
-def start_beamtime(where='~/'):
-    datapath = DataPath(where)
+def start_beamtime(base_dir=B_DIR):
+    datapath = DataPath(base_dir)
     print(datapath)
     _make_clean_env(datapath)
     _ensure_empty_datapaths(datapath)
@@ -178,7 +181,7 @@ def start_beamtime(where='~/'):
     return
 
 
-def end_beamtime(where='~/'):
+def end_beamtime(base_dir=B_DIR):
     '''cleans up at the end of a beamtime
 
     Function takes all the user-generated tifs and config files, etc., and archives them to a
@@ -187,7 +190,7 @@ def end_beamtime(where='~/'):
     '''
     import shutil
 
-    datapath = DataPath(where)
+    datapath = DataPath(base_dir)
  
     #FIXME - a way to confirm SAF_number in current md_class
     #SAF_num = metadata['SAF_number']

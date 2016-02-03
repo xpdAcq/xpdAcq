@@ -22,13 +22,12 @@ import matplotlib.pyplot as plt
 
 from xpdacq.control import _get_obj
 
-from dataportal import DataBroker as db
+#from dataportal import DataBroker as db
 
 print('Before you start, make sure the area detector IOC is in "Continuous mode"')
 #expo_threshold = 60 # in seconds Deprecated!
 ACQUIRE_TIME = 0.1 # default frame rate
 AREA_DET_NAME = 'pe1c'
-
 
 # set up the detector    
 # default settings for pe1c
