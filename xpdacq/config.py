@@ -30,20 +30,16 @@ class DataPath(object):
     '''Absolute paths to data folders in XPD experiment.
     '''
     def __init__(self, stem):
-        self.stem = stem
+        self.stem = os.path.expanduser(stem)
 
     @property
     def base(self):
         ''' base dir of entire configuration '''
-        if self.stem == '~':
-            return os.path.expanduser('~/' + WORKING_DIR)
         return os.path.join(self.stem, WORKING_DIR)
 
     @property
     def raw_config(self):
         ''' config dir of entire configuration'''
-        if self.stem == '~':
-            return os.path.expanduser('~/' + CONFIG_DIR)
         return os.path.join(self.stem, CONFIG_DIR)
 
     @property
