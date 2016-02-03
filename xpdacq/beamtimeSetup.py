@@ -49,14 +49,11 @@ def _make_clean_env(datapath):
     datapath : ??
         Base directory to work in
     '''
-
+    out = []
     for d in datapath.allfolders:
         os.makedirs(d, exist_ok=True)
-    print('Working directories have been created:')
-    print(datapath.allfolders, sep='\n')
-    os.chdir(datapath.base)
-    print('')
-    return
+        out.append(d)
+    return out
 
 
 def _ensure_empty_datapaths(datapath):
@@ -231,73 +228,69 @@ def export_data(root_dir=None, ar_format='gztar'):
                                          base_dir='xpdUser',
                                          verbose=1, dry_run=False)
         shutil.move(tar_return, dp.export_dir)
+        print(dp.export_dir)
     finally:
         os.chdir(cur_path)
-    out_file = os.path.join(dp.export_dir, tar_return)
+    out_file = os.path.join(dp.export_dir, os.path.basename(tar_return))
     print('New archive file with name '+out_file+' written.')
     print('Please copy this to your local computer or external hard-drive')
+    return out_file
 
 
+def end_beamtime(base_dir=None, archive_dir=None):
+    '''cleans up at the end of a beamtime
+
+    Function takes all the user-generated tifs and config files, etc.,
+    and archives them to a directory in the remote file-store with
+    filename B_DIR/useriD
+
+    This function does three things:
+
+      1. runs export_data to get all of the current data
+      2. copies the tarball off to an archive location
+      3. removes all the un-tarred data
+
+    '''
+    if archive_dir is None:
+        archive_dir = os.path.expanduser(strftime('~/pe1_data/userfiles/%Y'))
+
+    if base_dir is None:
+        base_dir = B_DIR
+    dp = DataPath(base_dir)
+    tar_ball = export_data(base_dir)
+    ext = get_full_ext(tar_ball)
+    os.makedirs(archive_dir, exist_ok=True)
+
+    saf_num = input('Please enter your SAF number to this beamtime: ')
+    PI_name = input('Please enter PI name to this beamtime: ')
+
+    full_info = '_'.join([PI_name.strip().replace(' ', ''),
+                          saf_num.strip()])
+
+    archive_f_name = os.path.join(archive_dir, full_info) + ext
+    shutil.copyfile(tar_ball, archive_f_name)
+    shutil.rmtree(dp.base)
+    _make_clean_env(dp)
+    shutil.copy(archive_f_name, dp.base)
+    final_path = os.path.join(dp.base, os.path.basename(archive_f_name))
+    print("Final archive file at {}".format(final_path))
+    return final_path
+
+
+def get_full_ext(path, post_ext=''):
+    path, ext = os.path.splitext(path)
+    if ext:
+        return get_full_ext(path, ext + post_ext)
+    return post_ext
+
+"""
 def start_beamtime(base_dir=None):
     if base_dir is None:
         base_dir = B_DIR
-    datapath = DataPath(base_dir)
-    print(datapath)
-    _make_clean_env(datapath)
-    _ensure_empty_datapaths(datapath)
-    _setup_config(datapath)
+    dp = DataPath(base_dir)
+    print(dp)
+    _make_clean_env(dp)
+    _ensure_empty_dps(dp)
+    _setup_config(dp)
     return
-
-"""
-def end_beamtime(base_dir=B_DIR):
-    '''cleans up at the end of a beamtime
-
-    Function takes all the user-generated tifs and config files, etc., and archives them to a
-    directory in the remote file-store with filename B_DIR/useriD
-
-    '''
-    import shutil
-
-    datapath = DataPath(base_dir)
-
-    #FIXME - a way to confirm SAF_number in current md_class
-    #SAF_num = metadata['SAF_number']
-    #userID = SAF_num
-    #userIn = input('SAF number to current experiment is %s. Is it correct (y/n)? ' % SAF_num)
-    #if userIn not in ('y','yes',''):
-        #print('Alright, lets do it again...')
-        #return
-
-    if os.path.isdir(B_DIR):
-        pass
-    else:
-        os.makedirs(B_DIR)
-
-    saf_num = input('Please enter your SAF number to this beamtime: ')
-
-    PI_name = input('Please enter PI name to this beamtime: ')
-
-    time_info = _get_time(date = False)
-
-    full_info = '_'.join([PI_name.strip(), saf_num.strip(), time_info.strip()])
-
-    backup_f_name = os.path.join(B_DIR, full_info)
-
-    print('Current data in subdirectories under xpdUser/ will be compressed and moved to %s' % B_DIR)
-
-    if os.path.isfile(backup_f_name):
-        print('a file with the same PI name, SAF number and year-month already exists')
-        print('before proceeding, check that you entered the correct information')
-        print('do you want to create a new backup file for a new beamtime with this user?')
-        print('to add files to the existing backup directory hit return.')
-        respo = input('Otherwise, enter a new directory name, e.g., "secondbeamtime":')
-        if str(respo) != '':
-            new_name = os.path.join(B_DIR, full_info + '_' + str(respo))
-            backup_f_name = new_name
-        else:
-            print('continue...')
-
-    _tar_n_move(backup_f_name, src_dir = datapath.base, dest_dir = B_DIR)
-    flush_dir(datapath.import_dir)
-
 """
