@@ -15,7 +15,7 @@
 ##############################################################################
 class Beamtime(object):
     def __init__(self,):
-
+        pass
 
     @property
     def B_DIR(self):

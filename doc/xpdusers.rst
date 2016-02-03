@@ -4,11 +4,12 @@ XPD Users
 ---------
 
  * :ref:`sb_overview`
+ * :ref:`sb_icollection`
 
 Set up beamtime
 +++++++++++++++
  
- * :ref:`usb`
+ * :ref:`usb_Beamtime`
 
 Set up experiment
 +++++++++++++++++

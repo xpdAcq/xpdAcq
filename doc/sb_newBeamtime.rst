@@ -20,14 +20,13 @@ Goals of the Setup
 Setup Steps
 """""""""""
 
-1. [return to this later]
-1. We are still finalizing the steps to automate this process. For now:
-  1. run the start_beamtime script to initialize directories
-  1. Ensure that under xpdUsers there are no directories except for Import, Export
-     tif_base, dark_base, config_base, script_base
-  1. Ensure that all those directories are empty.
-  1. If you have a .yml file from the user (probably won't yet) place it in the
-     Import directory.
+#. [return to this later]
+#. We are still finalizing the steps to automate this process. For now:
+  
+  #. run the start_beamtime script to initialize directories
+  #. Ensure that under xpdUsers there are no directories except for Import, Export, tif_base, dark_base, config_base, script_base
+  #. Ensure that all those directories are empty.
+  #. If you have a .yml file from the user (probably won't yet) place it in the Import directory.
   
   
 .. code-block:: python
