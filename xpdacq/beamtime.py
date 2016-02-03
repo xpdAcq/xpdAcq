@@ -152,6 +152,42 @@ class Xposure(XPD):
         self.md = self.sc.md
  #       self._yamify()    # no need to yamify this
 
+def export_data(root_dir=None, ar_format='gztar'):
+    """Create a tarball of all of the data is the user folders.
+
+    This assumes that the root directory is layed out prescribed by DataPath.
+
+    This function will:
+
+      - remove any existing tarball
+      - create a new (timestamped) tarball
+
+    """
+    if root_dir is None:
+        root_dir = B_DIR
+    dp = DataPath(root_dir)
+    # remove any existing exports
+    shutil.rmtree(dp.export_dir)
+    # tiff name
+    print('Deleting any existing archive files in the Export directory')
+    f_name = strftime('data4export_%Y-%m-%dT%H%M')
+    os.makedirs(dp.export_dir)
+    cur_path = os.getcwd()
+    try:
+        os.chdir(dp.stem)
+        tar_return = shutil.make_archive(f_name, ar_format,
+                                         root_dir=dp.stem,
+                                         base_dir='xpdUser',
+                                         verbose=1, dry_run=False)
+        shutil.move(tar_return, dp.export_dir)
+        print(dp.export_dir)
+    finally:
+        os.chdir(cur_path)
+    out_file = os.path.join(dp.export_dir, os.path.basename(tar_return))
+    print('New archive file with name '+out_file+' written.')
+    print('Please copy this to your local computer or external hard-drive')
+    return out_file
+
 
 '''
 class XPDSTATE():
