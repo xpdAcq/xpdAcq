@@ -94,7 +94,7 @@ def export_data(root_dir=None, ar_format='gztar'):
     return out_file
 
 
-def end_beamtime(base_dir=None, archive_dir=None):
+def _end_beamtime(base_dir=None, archive_dir=None):
     '''cleans up at the end of a beamtime
 
     Function takes all the user-generated tifs and config files, etc.,
