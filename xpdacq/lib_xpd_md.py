@@ -38,12 +38,22 @@ def _get_namespace(var_name):
  
     return var_val
 
-def Set_beamtime(safN, experimenters, update):
+def set_beamtime(safN, experimenters, update):
     ''' This function sets up experimenter name(s). This function can be run at anytime to change experimenter global setting
     Argument:
         experimenters - str or list - name of current experimenters
         update - bool - optional. set True to update experimenters list and set False to extend experimenters list
     '''
+    print('If you have preloaded this information in a user-config file,')
+    print('please place that in the Import directory and run import_config()')
+    piLast = input('Please enter the last name of the PI on the SAF (type x to exit):')
+    if piLast == 'x': return
+        
+    #from xpdacq.lib_xpd_md import set_beamtime as st_beamtime
+    #out = st_beamtime(safN_val, experimenters_val, update)
+    #self.safN = out[0]
+    #self.experimenters = out[1]
+    #self.modified_time = out[2]
     import time
     experimenters_list = []
     if not isinstance(experimenters, list):
@@ -64,7 +74,7 @@ def Set_beamtime(safN, experimenters, update):
     return (safN, experimenters_list, timestamp)
 
 
-def Set_experiment():
+def set_experiment():
     return
     ''' This function sets up experimenter name(s). This function can be run at anytime to change experimenter global setting
     Argument:
@@ -115,7 +125,7 @@ def composition_dict_gen(sample):
     return compo_dict_list
 
 
-def Set_sample(sample_name, sample, time):
+def set_sample(sample_name, sample, time):
     '''set up metadata fields for your runengine
 
     This function sets up persistent metadata that will be saved with subsequent scans,
@@ -145,10 +155,10 @@ def Set_sample(sample_name, sample, time):
     return (sample_name, composition, timestamp) 
 
 
-def Set_scan():
+def set_scan():
     return
 
-def Set_event():
+def set_event():
     return
 
 def show_obj(obj):

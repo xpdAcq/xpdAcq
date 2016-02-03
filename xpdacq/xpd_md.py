@@ -35,11 +35,7 @@ class Beamtime(object):
         self.set_beamtime(safN, experimenters, update)
 
     def set_beamtime(self, safN_val, experimenters_val, update = False):
-        from xpdacq.lib_xpd_md import Set_beamtime
-        out = Set_beamtime(safN_val, experimenters_val, update)
-        self.safN = out[0]
-        self.experimenters = out[1]
-        self.modified_time = out[2]
+
 
     def show_beamtime(self):
         full_info = self.__dict__
@@ -84,8 +80,8 @@ class Experiment(object):
             print('Your have included environment varibales and its corresponding values: %s' % env_dict)
 
     def set_experiment(self):
-        from xpdacq.lib_xpd_md import Set_experiment
-        out = Set_experiment() # remain as a method but it does nothing now
+        from xpdacq.lib_xpd_md import set_experiment
+        out = set_experiment() # remain as a method but it does nothing now
 
     def show_experiment(self):
         full_info = self.__dict__
@@ -119,8 +115,8 @@ class Sample(object):
             sample_name_val - str - sample name, like 'NaCl' or 'NADDPH'
             sample_val - tuple - tuple that represents chemical composition. For example: ('Na', 1, 'Cl', 1)
         '''
-        from xpdacq.lib_xpd_md import Set_sample
-        out = Set_sample(sample_name_val, sample_val, time)
+        from xpdacq.lib_xpd_md import set_sample
+        out = set_sample(sample_name_val, sample_val, time)
         self.sample_name = out[0]
         self.composition = out[1]
         self.modified_time = out[2]
@@ -151,9 +147,9 @@ class Scan(object):
         self.Sample = obj
 
     def set_scan(self, scan_tag):
-        from xpdacq.lib_xpd_md import Set_scan
+        from xpdacq.lib_xpd_md import set_scan
         # dummy method
-        Set_scan()    
+        set_scan()    
 
     def show_scan(self):
         from xpdacq.lib_xpd_md import show_obj
@@ -176,8 +172,8 @@ class Event(object):
         self.Scan = obj 
 
     def set_event(self):
-        from xpdacq.lib_xpd_md import Set_scan
-        Set_scan()
+        from xpdacq.lib_xpd_md import set_scan
+        set_scan()
 
     def show_event(self):
         from xpdacq.lib_xpd_md import show_obj
