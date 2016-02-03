@@ -14,7 +14,7 @@
 ##############################################################################
 
 def _get_obj(name):
-    ipshel = get_ipython()
+    ipshel = get_ipython()    # ipython builtin
     return ipshell.user_ns[name]
 
 

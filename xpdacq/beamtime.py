@@ -19,9 +19,10 @@ import os
 
 from xpdacq.config import DataPath
 
-def test():
-    dir = {'thing1':{'this':'that','the':'other'},'thing2':{'py':'thon'}}
-    
+def ensure_sc_uid(md):
+    if 'sc_uid' not in md:
+        raise ValueError("scan metadata needed to run scan.  Please create a scan metadata object and rerun.")
+
 class XPD():
     def _getuid(self):
         return str(uuid.uuid1())
@@ -55,9 +56,9 @@ class XPD():
         else:
             yaml.dump(self, fpath )
             
-
-    def _get_ymls(self):
-        fpath = self._yaml_path()
+    @classmethod
+    def _get_ymls(cls):
+        fpath = cls._yaml_path()
         yamls = os.listdir(fpath)
         return yamls
     
@@ -134,6 +135,13 @@ class Scan(XPD):
         #self.test1 = 'test'
         #self.test2 = 123 
 
+class Xposure(XPD):
+    def __init__(self,scan):
+        self.type = 'xp' 
+        self.sc = scan
+        self.md = self.sc.md
+ #       self._yamify()    # no need to yamify this
+ 
 
 '''
 class XPDSTATE():
