@@ -105,10 +105,10 @@ def get_light_images(mdo, exposure = 1.0, area_det=area_det):
     exp.md.update({'xp_requested_exposure':exposure,'xp_computed_exposure':computed_exposure}) 
     exp.md.update({'xp_time_per_frame':area_det.cam.acquire_time,'xp_num_frames':num_frame})
     
-    # area_det.image_per_set.put(num_frame)
+    area_det.image_per_set.put(num_frame)
     md_dict = exp.md
     
-    plan = Count([area_det], num= num_frame)
+    plan = Count([area_det])
     gs.RE(plan,**md_dict)
         
     print('End of get_light_image...')
