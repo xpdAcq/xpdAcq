@@ -29,8 +29,20 @@ CONFIG_DIR = 'xpdConfig'
 class DataPath(object):
     '''Absolute paths to data folders in XPD experiment.
     '''
+    _known_keys = [
+        'base',
+        'raw_config',
+        'tif_dir',
+        'dark_dir',
+        'config_dir',
+        'script_dir',
+        'export_dir',
+        'import_dir',
+        'analysis_dir'
+    ]
+
     def __init__(self, stem):
-        self.stem = os.path.expanduser(stem)
+        self.stem = os.path.abspath(os.path.expanduser(stem))
 
     @property
     def base(self):
@@ -80,13 +92,14 @@ class DataPath(object):
     @property
     def allfolders(self):
         "Return a list of all data folder paths for XPD experiment."
-        rv = [
-            self.base, self.raw_config, self.tif_dir, self.dark_dir,
-            self.config_dir,
-            self.script_dir, self.export_dir, self.import_dir,
-            self.analysis_dir
-            ]
-        return rv
+        return [getattr(self, k) for k in self._known_keys]
+
+    def __str__(self):
+        return '\n'.join('{k}: {v}'.format(k=k, v=getattr(self, k))
+                         for k in self._known_keys)
+
+    def __repr__(self):
+        return 'DataPath({!r})'.format(self.stem)
 
 # class DataPath
 

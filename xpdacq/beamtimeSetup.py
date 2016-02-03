@@ -222,19 +222,26 @@ def export_data(root_dir=None, ar_format='gztar'):
     shutil.rmtree(dp.export_dir)
     # tiff name
     print('Deleting any existing archive files in the Export directory')
-    f_name = os.path.join(dp.export_dir, strftime('data4export_%Y-%m-%dT%H%M'))
+    f_name = strftime('data4export_%Y-%m-%dT%H%M')
     os.makedirs(dp.export_dir)
-    tar_return = shutil.make_archive(f_name, ar_format,
-                                     root_dir=dp.export_dir,
-                                     base_dir=dp.base,
-                                     verbose=1, dry_run=False)
-
+    cur_path = os.getcwd()
+    try:
+        os.chdir(dp.stem)
+        tar_return = shutil.make_archive(f_name, ar_format,
+                                         root_dir=dp.stem,
+                                         base_dir='xpdUser',
+                                         verbose=1, dry_run=False)
+        shutil.move(tar_return, dp.export_dir)
+    finally:
+        os.chdir(cur_path)
     out_file = os.path.join(dp.export_dir, tar_return)
     print('New archive file with name '+out_file+' written.')
     print('Please copy this to your local computer or external hard-drive')
 
-"""
-def start_beamtime(base_dir=B_DIR):
+
+def start_beamtime(base_dir=None):
+    if base_dir is None:
+        base_dir = B_DIR
     datapath = DataPath(base_dir)
     print(datapath)
     _make_clean_env(datapath)
@@ -242,7 +249,7 @@ def start_beamtime(base_dir=B_DIR):
     _setup_config(datapath)
     return
 
-
+"""
 def end_beamtime(base_dir=B_DIR):
     '''cleans up at the end of a beamtime
 
