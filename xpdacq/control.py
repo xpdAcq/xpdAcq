@@ -14,13 +14,9 @@
 ##############################################################################
 
 def _get_obj(name):
-    ipshell = get_ipython()
-    return ipshell.user_ns[name]
-    
-def _go_home(B_DIR):
-    ''' [fixme] this function takes one to the base directory'''
-    pass
 
+    ip = get_ipython() # build-in function
+    return ip.user_ns[name]
 
 def _open_shutter():
     ''' open the shutter that is currently working. Maintain at every beamtime
@@ -42,7 +38,7 @@ def _open_shutter():
         shutter_tries = 5
         while sh.get() == 0 and shutter_try < shutter_tries:
             sh.put(1)
-            time.sleep(2.)   
+            time.sleep(1.7)   
             print('shutter value after open_pv.put(1): %s' % sh.get())
             shutter_try += 1
         if sh.get() == 0:
@@ -69,9 +65,9 @@ def _close_shutter():
         # open shutter
         shutter_try = 0
         shutter_tries = 5
-        while sh.get() == 0 and shutter_try < shutter_tries:
+        while sh.get() == 1 and shutter_try < shutter_tries:
             sh.put(0)
-            time.sleep(2.)   
+            time.sleep(1.7)   
             print('shutter value after open_pv.put(1): %s' % sh.get())
             shutter_try += 1
         if sh.get() == 1:
