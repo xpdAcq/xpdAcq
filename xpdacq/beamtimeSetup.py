@@ -141,7 +141,7 @@ def get_full_ext(path, post_ext=''):
     return post_ext
 
 
-def start_beamtime(base_dir=None):
+def _start_beamtime(base_dir=None):
     if base_dir is None:
         base_dir = B_DIR
     dp = DataPath(base_dir)
