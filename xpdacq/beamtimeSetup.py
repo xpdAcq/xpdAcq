@@ -19,10 +19,9 @@ import datetime
 import shutil
 from xpdacq.config import DataPath
 
-from time import strftime
-
 B_DIR = os.getcwd()
 
+from time import strftime
 
 def _make_clean_env(datapath):
     '''Make a clean environment for a new user
