@@ -14,14 +14,8 @@
 ##############################################################################
 
 def _get_obj(name):
-<<<<<<< HEAD
-    ip = get_ipython()
+    ip = get_ipython() # build-in function
     return ip.user_ns[name]
-=======
-    ipshel = get_ipython()    # ipython builtin
-    return ipshell.user_ns[name]
->>>>>>> 7230a8b3f536596cab25f025c1cad961e1063b06
-
 
 def _open_shutter():
     ''' open the shutter that is currently working. Maintain at every beamtime
