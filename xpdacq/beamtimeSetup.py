@@ -17,7 +17,7 @@ import sys
 import os
 import datetime
 import shutil
-# from .config import DataPath
+from .config import DataPath
 
 from time import strftime
 
@@ -233,7 +233,7 @@ def export_data(root_dir=None, ar_format='gztar'):
     print('New archive file with name '+out_file+' written.')
     print('Please copy this to your local computer or external hard-drive')
 
-"""
+
 def start_beamtime(base_dir=B_DIR):
     datapath = DataPath(base_dir)
     print(datapath)
@@ -242,7 +242,7 @@ def start_beamtime(base_dir=B_DIR):
     _setup_config(datapath)
     return
 
-
+"""
 def end_beamtime(base_dir=B_DIR):
     '''cleans up at the end of a beamtime
 
