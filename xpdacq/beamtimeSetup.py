@@ -17,7 +17,7 @@ import sys
 import os
 import datetime
 import shutil
-# from .config import DataPath
+from xpdacq.config import DataPath
 
 from time import strftime
 

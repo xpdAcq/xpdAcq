@@ -58,12 +58,15 @@ def _bluesky_RE():
 
 RE = _bluesky_RE()
 gs = _bluesky_global_state()
+
+old_validator = RE.md_validator
+def ensure_sc_uid(md):
+    old_validator(md)
+    if 'sc_uid' not in md:
+        raise ValueError("scan metadata needed to run scan.  Please create a scan metadata object and rerun.")
 RE.md_validator = ensure_sc_uid
 
 ##############################################################
-def ensure_sc_uid(md):
-    if 'sc_uid' not in md:
-        raise ValueError("scan metadata needed to run scan.  Please create a scan metadata object and rerun.")
 
 
 def get_light_images(mdo, exposure = 1.0, area_det=area_det):
@@ -104,9 +107,6 @@ def get_light_images(mdo, exposure = 1.0, area_det=area_det):
     
     # area_det.image_per_set.put(num_frame)
     md_dict = exp.md
-    if not validate_md(md_dict):
-        raise ValueError("blah blah")
-
     
     plan = Count([area_det], num= num_frame)
     gs.RE(plan,**md_dict)
