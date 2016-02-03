@@ -91,4 +91,4 @@ class DataPath(object):
 # class DataPath
 
 # unique instance of the DataPath class.
-#datapath = DataPath(STEM)
+datapath = DataPath(B_DIR)

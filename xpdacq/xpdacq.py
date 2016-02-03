@@ -58,7 +58,6 @@ def _bluesky_RE():
     return RE
 
 RE = _bluesky_RE()
-
 RE.md_validator = ensure_sc_uid
 
 ##############################################################

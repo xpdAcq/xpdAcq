@@ -17,7 +17,7 @@ import uuid
 import yaml
 import os
 
-from xpdacq.config import DataPath
+#from xpdacq.config import DataPath
 
 class XPD():
     def _getuid(self):
@@ -106,7 +106,20 @@ class Experiment(XPD):
         self.md = self.bt.md
         self.md.update({'ex_name':expname})
         self.md.update({'ex_uid': self._getuid()})
-        self._yamify()    
+        self._yamify()
+
+'''        
+        @property
+        def _private_md(self):
+            retrun {}
+            
+        @property
+        def md(self):
+            out = {}
+            out.update(self.bt.md)
+            out.update(self._private_md)
+            self._yamify()    
+'''
         
 class Sample(XPD):
     def __init__(self, samname, experiment):

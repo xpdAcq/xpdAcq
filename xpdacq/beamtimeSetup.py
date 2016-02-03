@@ -12,10 +12,14 @@
 # See AUTHORS.txt for a list of people who contributed.
 # See LICENSE.txt for license information.
 #
-##############################################################################import sys
+##############################################################################
+import sys
 import os
 import datetime
-from xpdacq.config import DataPath, B_DIR
+import shutil
+#from xpdacq.config import DataPath, B_DIR  #datapath already instantiated in ipython_profil
+
+B_DIR = os.getcwd()
     
 def _make_clean_env(datapath):
     '''Make a clean environment for a new user
@@ -124,8 +128,10 @@ def _get_time(date = True):
     return time_info
 
 
-def flush_dir(folder_path):
+def _flush_dir(folder_path):
     ''' delete files and subdir under folder
+    
+    BEWARE!
     '''
     
     import os, shutil
@@ -136,15 +142,15 @@ def flush_dir(folder_path):
             try:
                 if os.path.isfile(file_path):
                     os.unlink(file_path)
-                #elif os.path.isdir(file_path): shutil.rmtree(file_path)
-                '''that kill sub dirs in a brutal way'''
+                elif os.path.isdir(file_path): 
+                    shutil.rmtree(file_path)
             except:
                 print(e)
     else:
         pass
 
-    if not os.listdir(folder_path):
-        print('flushed directroy %s' % folder_path) 
+    #if not os.listdir(folder_path):
+    #    print('flushed directroy %s' % folder_path) 
 
 def _tar_n_move(f_name, src_dir, dest_dir, dry_run = False):
     ''' compree a source directory and output to a dest_dir
@@ -168,10 +174,21 @@ def _tar_n_move(f_name, src_dir, dest_dir, dry_run = False):
         print('Files have been compressed')
         print('Beamline scientist can decide if files under %s are going to be kept' % src_dir)
         os.chdir(cwd)
-        
-def export_data(base_dir=B_DIR):
-    _go_home(base_dir)
-
+       
+def export_data(base_dir=B_DIR,format='gztar'):
+    from time import strftime
+    f_name = base_dir+'/Export/data4export'+strftime('%Y-%m-%d-%H%M') 
+    
+    os.chdir(base_dir)
+    # remove any earlier Export files
+    print('Deleting any existing archive files in the Export directory')
+    _flush_dir(base_dir+'/Export/')
+    
+    # 
+    tar_return = shutil.make_archive(f_name, format,  verbose=True, dry_run=False)
+    print('New archive file with name '+f_name+' written.')  
+    print('Please copy this to your local computer or external hard-drive')
+"""
 def start_beamtime(base_dir=B_DIR):
     datapath = DataPath(base_dir)
     print(datapath)
@@ -232,3 +249,4 @@ def end_beamtime(base_dir=B_DIR):
     _tar_n_move(backup_f_name, src_dir = datapath.base, dest_dir = B_DIR)
     flush_dir(datapath.import_dir)
 
+"""
