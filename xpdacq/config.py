@@ -30,7 +30,7 @@ class DataPath(object):
     '''Absolute paths to data folders in XPD experiment.
     '''
     def __init__(self, stem):
-        self.stem = os.path.expanduser(stem)
+        self.stem = os.path.abspath(os.path.expanduser(stem))
 
     @property
     def base(self):
