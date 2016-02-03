@@ -17,30 +17,42 @@ import sys
 import os
 import datetime
 import shutil
-#from xpdacq.config import DataPath, B_DIR  #datapath already instantiated in ipython_profil
+# from .config import DataPath
+
+from time import strftime
 
 B_DIR = os.getcwd()
+
 
 def _make_clean_env(datapath):
     '''Make a clean environment for a new user
 
-    1. make sure that that the user is currently in /xpdUser  if not move to ~/xpdUser and try again
-    2. make sure that xpdUser is completely empty or contains just <tarArchive>.tar and/or
-         <PIname>_<saf#>_config.yml
+    1. make sure that that the user is currently in /xpdUser
+       if not move to ~/xpdUser and try again
+
+    2. make sure that xpdUser is completely empty or contains just
+       <tarArchive>.tar and/or <PIname>_<saf#>_config.yml
       a. if no, request the user runs end_beamtime and exit
-      b. if yes, delete the tar file (it is archived elsewhere),  and create the
-           working directories. Do not delete the yml file.
-    1. look for a <PIname>_<saf#>_config.yml and load it.  Ask the user if this is
-    the right one before loading it.  If yes, load, if no exit telling user to manually
-    delete the yml file stall the correct one in dUser directory, if it exists.
-    1. ask a series of questions to help set up the environment. Save them in the
-    <PIname>_<saf#>_config.yml file.  Create this if it does not already exist.
+      b. if yes, delete the tar file (it is archived elsewhere),
+         and create the working directories. Do not delete the yml file.
+
+    3. look for a <PIname>_<saf#>_config.yml and load it.  Ask the user if
+       this is the right one before loading it.  If yes, load, if no exit
+       telling user to manually delete the yml file stall the correct one in
+       dUser directory, if it exists.
+
+    4. ask a series of questions to help set up the environment. Save them
+       in the <PIname>_<saf#>_config.yml file.  Create this if it does not
+       already exist.
+
+    Parameters
+    ----------
+    datapath : ??
+        Base directory to work in
     '''
 
     for d in datapath.allfolders:
-        if os.path.isdir(d):
-            continue
-        os.mkdir(d)
+        os.makedirs(d, exist_ok=True)
     print('Working directories have been created:')
     print(datapath.allfolders, sep='\n')
     os.chdir(datapath.base)
@@ -60,47 +72,59 @@ def _ensure_empty_datapaths(datapath):
             if os.path.join(r, d) not in allowed:
                 spurious.append(d)
         # all files are spurious, except for .yml and .tar files
-        spurious +=  [os.path.join(r, f) for f in files if os.path.splitext(f)[1] not in ('.yml', '.tar')]
-        allowed_f += [os.path.join(r, f) for f in files if os.path.splitext(f)[1] in ('.yml', '.tar')]
+        spurious.extend([os.path.join(r, f) for f in files
+                         if os.path.splitext(f)[1] not in ('.yml', '.tar')])
+        allowed_f.extend([os.path.join(r, f) for f in files
+                          if os.path.splitext(f)[1] in ('.yml', '.tar')])
 
     if spurious:
         emsg = 'The working directory {} has unknown files:{}'.format(
                 datapath.base, "\n  ".join([''] + spurious))
         print(emsg)
-        print('Files other than .tar and .yml files should not exit \n Please contact beamline scientist')
+        print('Files other than .tar and .yml files should not exit \n'
+              'Please contact beamline scientist')
     if allowed_f:
-        tar_f = [ el for el in allowed_f if el.endswith('.tar')]
+        tar_f = [el for el in allowed_f if el.endswith('.tar')]
         print('Delete %s....' % tar_f, sep='\n')
+        for f in tar_f:
+            os.unlink(f)
 
     return allowed_f
+
 
 def _setup_config(datapath):
     ''' setup .yml file and load it
     '''
     allowed_f = _ensure_empty_datapaths(datapath)
-    yml_f = [ f for f in allowed_f if f.endswith('.yml')]
+    yml_f = [f for f in allowed_f if f.endswith('.yml')]
 
     if len(yml_f) > 1:
-        print('There is more than one config.yml already exist in working dir, please contact beamline scientist\n')
+        print('There is more than one config.yml already exist in working dir,'
+              ' Please contact beamline scientist\n')
         return
 
-    if not yml_f :
+    if not yml_f:
         print('WARNING: There is no config.yml in working dir')
         print('If you have one, please add it to ')
         print('(That is fine if you are doing simulation)\n')
         return
 
-    confirm = input('This config.yml file will be used: %s \n Is it the one you wish to use? [y]/n    ' % yml_f)
-    if confirm not in ('y',''):
-        print('Alright, please delete unwanted config.yml file manuall and put it in ~/xpdUser\n')
+    confirm = input('This config.yml file will be used: %s \n'
+                    'Is it the one you wish to use? [y]/n    ' % yml_f)
+
+    if confirm not in ('y', ''):
+        print('Alright, please delete unwanted config.yml file manuall '
+              'and put it in ~/xpdUser\n')
         return
     else:
-        #FIXME - loading yml file
+        # FIXME - loading yml file
         print('load %s' % yml_f)
 
-    print('\n Everything is ready to begin.  Please continue with icollection.\n')
+    print('\n Everything is ready to begin.  '
+          'Please continue with icollection.\n')
 
-def _get_time(date = True):
+
+def _get_time(date=True):
     ''' function to grab current time info
 
     Parameters:
@@ -149,10 +173,11 @@ def _flush_dir(folder_path):
     else:
         pass
 
-    #if not os.listdir(folder_path):
+    # if not os.listdir(folder_path):
     #    print('flushed directroy %s' % folder_path)
 
-def _tar_n_move(f_name, src_dir, dest_dir, dry_run = False):
+
+def _tar_n_move(f_name, src_dir, dest_dir, dry_run=False):
     ''' compree a source directory and output to a dest_dir
     '''
     import os
@@ -160,34 +185,54 @@ def _tar_n_move(f_name, src_dir, dest_dir, dry_run = False):
 
     cwd = os.getcwd()  # current working directory
     os.chdir(dest_dir)
-    print('Files under %s will be compressed to a .tar file and it will be located at:' % src_dir)
-    tar_return = shutil.make_archive(f_name, 'tar', base_dir = dest_dir, verbose=True, dry_run=True)
+    print('Files under %s will be compressed to a .tar file and '
+          'it will be located at:' % src_dir)
+    tar_return = shutil.make_archive(f_name, 'tar', base_dir=dest_dir,
+                                     verbose=True, dry_run=True)
     print(tar_return)
     user_confirm = input('Is it correct? [y]/n ')
     if user_confirm not in ('y', ''):
         os.chdir(cwd)
-        raise RuntimeError ('YOU ARE FIME :)))) \nLet us run again')
+        raise RuntimeError('YOU ARE FINE :)))) \nLet us run again')
         # Need this error to stop from flushing directory
         return
     else:
-        shutil.make_archive(f_name, 'tar', base_dir = dest_dir)
+        shutil.make_archive(f_name, 'tar', base_dir=dest_dir)
         print('Files have been compressed')
-        print('Beamline scientist can decide if files under %s are going to be kept' % src_dir)
+        print('Beamline scientist can decide if files under %s '
+              'are going to be kept' % src_dir)
         os.chdir(cwd)
 
-def export_data(base_dir=B_DIR,format='gztar'):
-    from time import strftime
-    f_name = base_dir+'/Export/data4export'+strftime('%Y-%m-%d-%H%M')
 
-    os.chdir(base_dir)
-    # remove any earlier Export files
+def export_data(root_dir=None, ar_format='gztar'):
+    """Create a tarball of all of the data is the user folders.
+
+    This assumes that the root directory is layed out prescribed by DataPath.
+
+    This function will:
+
+      - remove any existing tarball
+      - create a new (timestamped) tarball
+
+    """
+    if root_dir is None:
+        root_dir = B_DIR
+    dp = DataPath(root_dir)
+    # remove any existing exports
+    shutil.rmtree(dp.export_dir)
+    # tiff name
     print('Deleting any existing archive files in the Export directory')
-    _flush_dir(base_dir+'/Export/')
+    f_name = os.path.join(dp.export_dir, strftime('data4export_%Y-%m-%dT%H%M'))
+    os.makedirs(dp.export_dir)
+    tar_return = shutil.make_archive(f_name, ar_format,
+                                     root_dir=dp.export_dir,
+                                     base_dir=dp.base,
+                                     verbose=1, dry_run=False)
 
-    #
-    tar_return = shutil.make_archive(f_name, format,  verbose=True, dry_run=False)
-    print('New archive file with name '+f_name+' written.')
+    out_file = os.path.join(dp.export_dir, tar_return)
+    print('New archive file with name '+out_file+' written.')
     print('Please copy this to your local computer or external hard-drive')
+
 """
 def start_beamtime(base_dir=B_DIR):
     datapath = DataPath(base_dir)
