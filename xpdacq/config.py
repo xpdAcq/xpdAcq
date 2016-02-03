@@ -25,24 +25,26 @@ B_DIR = '~/'
 WORKING_DIR = 'xpdUser'
 CONFIG_DIR = 'xpdConfig'
 
+
 class DataPath(object):
     '''Absolute paths to data folders in XPD experiment.
     '''
     def __init__(self, stem):
         self.stem = stem
-    
+
     @property
     def base(self):
         ''' base dir of entire configuration '''
         if self.stem == '~':
             return os.path.expanduser('~/' + WORKING_DIR)
-        return os.path.join( self.stem, WORKING_DIR)
+        return os.path.join(self.stem, WORKING_DIR)
+
     @property
-    def raw_config(self): 
-        ''' config dir of entire configuration''' 
+    def raw_config(self):
+        ''' config dir of entire configuration'''
         if self.stem == '~':
-            return os.path.expanduser('~/'+ CONFIG_DIR)
-        return os.path.join( self.stem, CONFIG_DIR)
+            return os.path.expanduser('~/' + CONFIG_DIR)
+        return os.path.join(self.stem, CONFIG_DIR)
 
     @property
     def import_dir(self):
@@ -83,8 +85,10 @@ class DataPath(object):
     def allfolders(self):
         "Return a list of all data folder paths for XPD experiment."
         rv = [
-                self.base, self.raw_config, self.tif_dir, self.dark_dir, self.config_dir,
-                self.script_dir, self.export_dir, self.import_dir, self.analysis_dir
+            self.base, self.raw_config, self.tif_dir, self.dark_dir,
+            self.config_dir,
+            self.script_dir, self.export_dir, self.import_dir,
+            self.analysis_dir
             ]
         return rv
 
