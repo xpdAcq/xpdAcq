@@ -22,7 +22,6 @@ import matplotlib.pyplot as plt
 
 from xpdacq.control import _get_obj
 
-from dataportal import DataBroker as db
 
 print('Before you start, make sure the area detector IOC is in "Continuous mode"')
 expo_threshold = 60 # in seconds
@@ -54,12 +53,12 @@ def _bluesky_RE():
     return RE
 
 RE = _bluesky_RE()
+gs = _bluesky_global_state()
 
 ##############################################################
 
 def get_light_images(secs = 1.0, mins = 0):
     
-    # TODO - finalize the format of scan time input
     ''' simple function that wrap Count
     
     Parameters
@@ -77,95 +76,42 @@ def get_light_images(secs = 1.0, mins = 0):
     '''
     
     from bluesky.plans import Count
-    from xpdanl.xpdanl import plot_last_one
-
+    #from xpdanl.xpdanl import plot_last_one
+    from xpdacq.control import _get_obj
+        
     # FIXME - proper command to close and open shutter
     from xpdacq.control import _open_shutter
     from xpdacq.control import _close_shutter
     
     # default setting for pe1c
+    area_det = _get_obj('pe1c')
     area_det.cam.acquire_time.put(frame_rate)
-
-    # set to number we want
-    pe1c.cam.acquire_time.put(0.1)
-
-    pe1c_num_set = 1
-    
+    area_det.number_of_sets.put(1)
     total_time = secs + mins*60.
-    
+    print('total time = %s s' % total_time)
+
     # logic to prevent from overflow
     frame_info = _cal_frame(total_time)
-    
+    print(frame_info)
+
     if frame_info[0] == 0:
         # no saturation
         num_img = 1 
         area_det.number_of_sets.put(num_img)
         
-        num_frame = frame_info[1]
-        area_det.image_per_set.put(num_frame)
-        plan = Count([area_det], num= num_frame)
+        print(frame_info)
+
+        num_frame = int(frame_info[1])
+        area_det.images_per_set.put(num_frame)
+        plan = Count([area_det], num= 1)
         gs.RE(plan)
         
-    if frame_info[0] != 0:
+    if frame_info[0] >  0:
         num_img = frame_info[0] + 1
         gs.RE(_xpd_plan_1(frame_info[0], frame_info[1]))
     
     print('End of get_light_image...')
 
-def _xpd_plan_1(num_saturation, num_unsaturation, det=None):
-    ''' type-1 plan: change image_per_set on the fly with Count
-    
-    Parameters:
-    -----------
-        num_img : int
-            num of images you gonna take, last one is fractional
-        
-        time_dec : flot
-    '''
-    from bluesky import Msg
-    from xpdacq.control import _get_obj
-    
-    if not det:
-        _det = _get_obj('pe1c')
-
-    num_threshold = int(expo_threshold / frame_rate)
-
-    yield Msg('open_run')
-    yield Msg('stage', _det)
-    _det.number_of_sets.put(1)
-    
-    _det.image_per_set.put(num_threshold)
-    for i in range(num_saturation):
-        yield Msg('create')
-        yield Msg('trigger', _det)
-        yield Msg('read', _det)
-        yield Msg('save')
-    
-    _det.image_per_set.put(num_unsaturation)
-    yield Msg('create')
-    yield Msg('trigger', _det)
-    yield Msg('read', _det)
-    yield Msg('save')
-    yield Msg('close_run')
-
-
-    # reproduce QXRD workflow. Do dark and light scan with the same amount of time so that we can subtract it
-    # can be modified if we have better understanding on dark current on area detector    
-    
-    def QXRD_plan():
-        print('Collecting dark frames....')
-        _close_shutter()
-        yield from count_plan
-        print('Collecting light frames....')
-        _open_shutter()
-        yield from count_plan
-
-    RE(QXRD_plan())
-    
-        
-    # hook to visualize data
-    # FIXME - make sure to plot dark corrected image
-    plot_scan(db[-1])
 
 def _cal_frame(total_time):
     ''' function to calculate frame
@@ -189,9 +135,69 @@ def _cal_frame(total_time):
     parsed_num = math.modf(total_float)
     
     # number of frames that will collect with maximum exposure
-    num_int = parsed_time[1]
+    num_int = int(parsed_num[1])
     
     # last frame, collect fractio of exposure threshold
-    num_dec = (parsed_time[0] * expo_threshold) / frame_rate
+    num_dec = int((parsed_num[0] * expo_threshold) / frame_rate)
     
     return (num_int, num_dec)
+
+
+
+def _xpd_plan_1(num_saturation, num_unsaturation, det=None):
+    ''' type-1 plan: change image_per_set on the fly with Count
+    
+    Parameters:
+    -----------
+        num_img : int
+            num of images you gonna take, last one is fractional
+        
+        time_dec : flot
+    '''
+    from bluesky import Msg
+    from xpdacq.control import _get_obj
+    
+    if not det:
+        _det = _get_obj('pe1c')
+
+    num_threshold = int(expo_threshold / frame_rate)
+    print('Overflow...')
+    print('num of threshold = %i ' % num_threshold)
+
+    yield Msg('open_run')
+    yield Msg('stage', _det)
+    _det.number_of_sets.put(1)
+    _det.images_per_set.put(num_threshold)
+    for i in range(num_saturation+1):
+        yield Msg('create')
+        yield Msg('trigger', _det)
+        yield Msg('read', _det)
+        yield Msg('save')
+    
+    _det.images_per_set.put(num_unsaturation)
+    yield Msg('create')
+    yield Msg('trigger', _det)
+    yield Msg('read', _det)
+    yield Msg('save')
+    yield Msg('unstage', _det)
+    yield Msg('close_run')
+
+
+    # reproduce QXRD workflow. Do dark and light scan with the same amount of time so that we can subtract it
+    # can be modified if we have better understanding on dark current on area detector    
+   
+    
+def QXRD_plan():
+    print('Collecting dark frames....')
+    _close_shutter()
+    yield from count_plan
+    print('Collecting light frames....')
+    _open_shutter()
+    yield from count_plan
+
+        
+    # hook to visualize data
+    # FIXME - make sure to plot dark corrected image
+    plot_scan(db[-1])
+
+
