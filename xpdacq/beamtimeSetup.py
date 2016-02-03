@@ -145,9 +145,21 @@ def start_beamtime(base_dir=None):
     if base_dir is None:
         base_dir = B_DIR
     dp = DataPath(base_dir)
-    if len(os.listdir(dp.base)) > 1:
-        raise RuntimeError("Unexpected files in {}, you need to run"
-                           "end_beamtime()".format(dp.base))
-    shutil.rmtree(dp.base)
+    if os.path.exists(dp.base):
+        if not os.path.isdir(dp.base):
+            raise RuntimeError("Expected a folder, got a file.  "
+                               "Talk to beamline staff")
+        files = os.listdir(dp.base)
+        if len(files) > 1:
+            raise RuntimeError("Unexpected files in {}, you need to run"
+                               "Talk to beamline staff".format(dp.base))
+        elif len(files) == 1:
+            tf, = files
+            if 'tar' not in tf:
+                raise RuntimeError("Expected a tarball of some sort, found {} "
+                                   "Talk to beamline staff"
+                                   .format(tf))
+            os.unlink(tf)
+
     _make_clean_env(dp)
     return
