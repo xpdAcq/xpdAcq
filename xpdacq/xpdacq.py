@@ -55,6 +55,7 @@ def dryrun(sample,scan,**kwargs):
             elif i == 'verify_write':
                 subs.update({'stop':verify_files_saved})
 
+
     if scan.scan == 'ct':
        get_light_images_dryrun(cmdo,parms['exposure'],'pe1c',parms['subs'],**kwargs)
     elif scan.scan == 'tseries':
@@ -77,16 +78,16 @@ def run(sample,scan,**kwargs):
     cmdo = Union(sample,scan)
     parms = scan.sc_params
     area_det = _get_obj('pe1c')
-    
+    subs={}
+
     if 'subs' in parms: subsc = parms['subs']
-    subs = {}
-    if 'subs' in subsc:
-        for i in subsc['subs']:
-            if i == 'livetable':
-                subs.update({'all':LiveTable([area_det])})
-            elif i == 'verify_write':
-                subs.update({'stop':verify_files_saved})
-                
+    for i in subsc:
+        if i == 'livetable':
+            subs.update({'all':LiveTable([area_det])})
+        elif i == 'verify_write':
+            subs.update({'stop':verify_files_saved})
+    print(subs)
+
     if scan.scan == 'ct':
        get_light_images(cmdo,parms['exposure'],'pe1c',subs,**kwargs)
     elif scan.scan == 'tseries':
