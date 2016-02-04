@@ -158,7 +158,7 @@ def _start_beamtime(base_dir=None):
                 raise RuntimeError("Expected a tarball of some sort, found {} "
                                    "Talk to beamline staff"
                                    .format(tf))
-            os.unlink(tf)
+            os.unlink(os.path.join(dp.base, tf))
 
     _make_clean_env(dp)
     return
