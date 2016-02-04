@@ -22,7 +22,7 @@ from time import strftime
 from xpdacq.config import DataPath
 
 
-class XPD():
+class XPD:
     _base_path = ''
     def _getuid(self):
         return str(uuid.uuid1())
@@ -33,18 +33,24 @@ class XPD():
 
     def export(self):
         return self.md
-        
+    
     def _yaml_path(self):
-        if os.path.isdir(os.path.join(self._base_path,'config_base/yml')):
+        out_dir = os.path.join(self._base_path,'config_base','yml')
+        os.makedirs(out_dir, exist_ok = True)
+        '''
+        if os.path.isdir(os.path.join(self._base_path,'config_base','yml')):
             pass
         elif os.path.isdir(os.path.join(self._base_path,'config_base')):
-            os.mkdir(os.path.join(self._base_path,'config_base/yml'))
+            os.mkdir(os.path.join(self._base_path,'config_base','yml'))
         else:
             os.mkdir(os.path.join(self._base_path,'config_base'))
-            os.mkdir(os.path.join(self._base_path,'config_base/yml'))
+            os.mkdir(os.path.join(self._base_path,'config_base', 'yml'))
+        '''
+        
 
-        return os.path.join(self._base_path,'config_base/yml')
-
+        #return os.path.join(self._base_path,'config_base','yml')
+        return out_dir
+            
     def _yamify(self):
         fname = self.name
         ftype = self.type
@@ -63,7 +69,7 @@ class XPD():
 
     @classmethod
     def loadyamls(cls):
-        fpath = cls._yaml_path(cls)
+        fpath = cls._yaml_path()
         yamls = os.listdir(fpath)
         olist = []
         for f in yamls:
