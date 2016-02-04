@@ -63,7 +63,7 @@ class XPD():
 
     @classmethod
     def loadyamls(cls):
-        fpath = cls._yaml_path()
+        fpath = cls._yaml_path(cls)
         yamls = os.listdir(fpath)
         olist = []
         for f in yamls:
