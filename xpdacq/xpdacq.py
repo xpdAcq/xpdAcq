@@ -17,17 +17,11 @@
 from bluesky.plans import Count # fake object but exact syntax
 #####################
 
-import numpy as np
-import matplotlib.pyplot as plt
 from xpdacq.beamtime import Union, Xposure
-from xpdacq.control import _get_obj
 from bluesky.plans import Count
-#from xpdanl.xpdanl import plot_last_one
 from xpdacq.control import _get_obj   
-# FIXME - proper command to close and open shutter
 from xpdacq.control import _open_shutter
 from xpdacq.control import _close_shutter
-
 
 print('Before you start, make sure the area detector IOC is in "Continuous mode"')
 #expo_threshold = 60 # in seconds Deprecated!
@@ -91,42 +85,6 @@ def setupscan(scan):
     use run() for production scans
     '''
     pass
-################# private module ###########################
-
-def _bluesky_global_state():
-    '''Import and return the global state from bluesky.'''
-
-    from bluesky.standard_config import gs
-    return gs
-"""
-def _bluesky_metadata_store():
-    '''Return the dictionary of bluesky global metadata.'''
-
-    gs = _bluesky_global_state()
-    return gs.RE.md
-
-def _bluesky_RE():
-    import bluesky
-    from bluesky.run_engine import RunEngine
-    from bluesky.register_mds import register_mds
-    #from bluesky.run_engine import DocumentNames
-    RE = RunEngine()
-    register_mds(RE)
-    return RE
-
-RE = _bluesky_RE()
-gs = _bluesky_global_state()
-
-old_validator = RE.md_validator
-def ensure_sc_uid(md):
-    old_validator(md)
-    if 'sc_uid' not in md:
-        raise ValueError("scan metadata needed to run scan.  Please create a scan metadata object and rerun.")
-RE.md_validator = ensure_sc_uid
-"""
-##############################################################
-gs = _bluesky_global_state()
-
 
 def get_light_images(mdo, exposure = 1.0, area_det='pe1c', **kwargs):
     '''the main xpdAcq function for getting an exposure
@@ -163,7 +121,7 @@ def get_light_images(mdo, exposure = 1.0, area_det='pe1c', **kwargs):
     md_dict.update(kwargs)
     
     plan = Count([area_det])
-    gs.RE(plan,**md_dict)
+    xpdRE(plan,**md_dict)
 
     print('End of get_light_image...')
 
@@ -339,6 +297,41 @@ def collect_time_series_dryrun(metadata_object, num, exposure=1.0, delay=0.,  **
 #    plan = Count([area_det], num=num, delay=real_delay)
 #    return gs.RE(plan, **md)
 
+################# private module ###########################
+"""
+def _bluesky_global_state():
+    '''Import and return the global state from bluesky.'''
+
+    from bluesky.standard_config import gs
+    return gs
+    
+def _bluesky_metadata_store():
+    '''Return the dictionary of bluesky global metadata.'''
+
+    gs = _bluesky_global_state()
+    return gs.RE.md
+
+def _bluesky_RE():
+    import bluesky
+    from bluesky.run_engine import RunEngine
+    from bluesky.register_mds import register_mds
+    #from bluesky.run_engine import DocumentNames
+    RE = RunEngine()
+    register_mds(RE)
+    return RE
+
+RE = _bluesky_RE()
+gs = _bluesky_global_state()
+
+old_validator = RE.md_validator
+def ensure_sc_uid(md):
+    old_validator(md)
+    if 'sc_uid' not in md:
+        raise ValueError("scan metadata needed to run scan.  Please create a scan metadata object and rerun.")
+RE.md_validator = ensure_sc_uid
+"""
+
+##############################################################
 '''
 def _xpd_plan_1(num_saturation, num_unsaturation, det=None):
     's' type-1 plan: change image_per_set on the fly with Count
