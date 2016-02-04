@@ -19,6 +19,9 @@ def _get_obj(name):
     return ip.user_ns[name]
 
 def _open_shutter():
+    pass
+"""    
+def _open_shutter():
     ''' open the shutter that is currently working. Maintain at every beamtime
     ''' 
     import time
@@ -46,7 +49,11 @@ def _open_shutter():
             return
 
     print('Shutter opened')
+"""
 
+def _close_shutter():
+    pass
+"""    
 def _close_shutter():
     ''' close the shutter that is currently working. Maintain at every beamtime
     '''
@@ -75,3 +82,4 @@ def _close_shutter():
             return
 
     print('Shutter closed')
+"""

@@ -13,10 +13,6 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-## testing section ##
-from bluesky.plans import Count # fake object but exact syntax
-#####################
-
 from xpdacq.beamtime import Union, Xposure
 from bluesky.plans import Count
 from xpdacq.control import _get_obj   
@@ -55,7 +51,6 @@ def dryrun(sample,scan,**kwargs):
             elif i == 'verify_write':
                 subs.update({'stop':verify_files_saved})
 
-
     if scan.scan == 'ct':
        get_light_images_dryrun(cmdo,parms['exposure'],'pe1c',parms['subs'],**kwargs)
     elif scan.scan == 'tseries':
@@ -66,20 +61,12 @@ def dryrun(sample,scan,**kwargs):
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
     
-def run(sample,scan,**kwargs):
-    '''same as run but scans are not executed.
-    
-    for testing
-    
-    Arguments:
-    sample - sample metadata object
-    scan - scan metadata object
-    '''
+def _unpack_and_run(sample,scan,**kwargs):
     cmdo = Union(sample,scan)
-    parms = scan.sc_params
     area_det = _get_obj('pe1c')
-    subs={}
 
+    parms = scan.sc_params
+    subs={}
     if 'subs' in parms: subsc = parms['subs']
     for i in subsc:
         if i == 'livetable':
@@ -97,7 +84,33 @@ def run(sample,scan,**kwargs):
     else:
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
+
+def run(sample,scan,**kwargs):
+    '''on this 'sample' run this 'scan'
+        
+    Arguments:
+    sample - sample metadata object
+    scan - scan metadata object
+    **kwargs - dictionary that will be passed through to the run-engine metadata
+    '''
+    if scan.shutter: _open_shutter()
+    _unpack_and_run(sample,scan,**kwargs)
+    parms = scan.sc_params
+    if scan.shutter: _close_shutter()
+
+def dark(sample,scan,**kwargs):
+    '''on this 'scan' get dark images
     
+    Arguments:
+    sample - sample metadata object
+    scan - scan metadata object
+    **kwargs - dictionary that will be passed through to the run-engine metadata
+    '''
+    _close_shutter()
+    _unpack_and_run(sample,scan,**kwargs)
+    scan.md.update({'isdark':True})
+    _close_shutter()
+   
 def setupscan(scan):
     '''used for setup scans NOT production scans
     

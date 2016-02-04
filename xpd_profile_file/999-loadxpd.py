@@ -17,7 +17,7 @@ import os
 from xpdacq.config import DataPath
 from xpdacq.beamtimeSetup import *
 from xpdacq.beamtimeSetup import _make_clean_env
-from xpdacq.beamtime import XPD
+from xpdacq.beamtime import *
 #from xpdacq.xpdacq import *
 #from xpdacq.xpdacq import get_light_images 
 
