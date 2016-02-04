@@ -16,6 +16,8 @@
 #from dataportal import DataBroker as db
 #from dataportal import get_events, get_table, get_images
 #from metadatastore.commands import find_run_starts
+from xpdacq.control import _get_obj
+
 bt = _get_obj('bt')
 
 def bt_uid():
