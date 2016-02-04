@@ -16,6 +16,7 @@
 import uuid
 import yaml
 import os
+from xpdacq.config import DataPath
 
 
 class XPD():
