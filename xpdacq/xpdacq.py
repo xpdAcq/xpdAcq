@@ -93,12 +93,10 @@ def run(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    if scan.shutter:
-        _open_shutter()
+    if scan.shutter: _open_shutter()
     _unpack_and_run(sample,scan,**kwargs)
     parms = scan.sc_params
-    if scan.shutter:
-        _close_shutter()
+    if scan.shutter: _close_shutter()
 
 def dark(sample,scan,**kwargs):
     '''on this 'scan' get dark images
