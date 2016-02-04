@@ -117,6 +117,8 @@ def get_light_images(mdo, exposure = 1.0, area_det=area_det):
 def collect_time_series(metadata_object, num, delay, exposure=1.0, **kwargs):
     """Collect a time series
 
+    Any extra keywords are passed through to RE() as metadata
+
     Parameters
     ----------
     metadata_object : XPD
@@ -124,7 +126,12 @@ def collect_time_series(metadata_object, num, delay, exposure=1.0, **kwargs):
     num : int
         The number of points in the time series
 
+    delay : float
+        Time between starts of time points in [s].  If less than exposure, the
+        exposure time will be maintained and this time will be increased.
 
+    exposure : float, optional
+        Total integration time per data point in [s]
     """
     # get a local copy of md to update
     md = dict(metadata_object.md)
