@@ -20,7 +20,7 @@ from xpdacq.control import _open_shutter
 from xpdacq.control import _close_shutter
 xpdRE = _get_obj('xpdRE')
 
-print('Before you start, make sure the area detector IOC is in "Continuous mode"')
+print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 #expo_threshold = 60 # in seconds Deprecated!
 FRAME_ACQUIRE_TIME = 0.1 
 AREA_DET_NAME = 'pe1c'
@@ -194,14 +194,18 @@ def collect_Temp_series(mdo, T_start, Tstop, T_step, exposure = 1.0, det='pe1c',
     exp.md.update({'xp_requested_exposure':exposure,'xp_computed_exposure':computed_exposure}) 
     exp.md.update({'xp_time_per_frame':acq_time,'xp_num_frames':num_frame})
     
+    _Tstep = _nstep(Tstart, Tstop, Tstep) # computed steps
+    exp.md.update({'sc_startingT':Tstart,'sc_endingT':Tstop}) 
+    print('INFO: requested temperature step = ',Tstep,' -> computed temperature step:', _Tstep)
+
     area_det.images_per_set.put(num_frame)
     md_dict = exp.md
     md_dict.update(kwargs)
-    _Tstep = _nstep(Tstart, Tstop, Tstep) # computed stepe
+        
     plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, _Tstep)
     xpdRE(plan,subs_dict, **md_dict)
 
-    print('End of collect_Tseries_scans....')
+    print('End of collect_Temp_scans....')
 
 def _nstep(start, stop, step_size):
     ''' return (start, stop, step)'''
