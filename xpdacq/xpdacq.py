@@ -19,8 +19,14 @@ from bluesky.plans import Count # fake object but exact syntax
 
 import numpy as np
 import matplotlib.pyplot as plt
-from xpdacq.beamtime import Union
+from xpdacq.beamtime import Union, Xposure
 from xpdacq.control import _get_obj
+from bluesky.plans import Count
+#from xpdanl.xpdanl import plot_last_one
+from xpdacq.control import _get_obj   
+# FIXME - proper command to close and open shutter
+from xpdacq.control import _open_shutter
+from xpdacq.control import _close_shutter
 
 
 print('Before you start, make sure the area detector IOC is in "Continuous mode"')
@@ -63,7 +69,17 @@ def run(sample,scan):
     sample - sample metadata object
     scan - scan metadata object
     '''
-    pass
+    cmdo = Union(sample,scan)
+    parms = scan.sc_params
+    if scan.scan == 'ct':
+       get_light_images(cmdo,parms[0],'pe1c',**kwargs)
+    elif scan.scan == 'tseries':
+       collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
+    elif scan.scan == 'Tseries':
+       pass
+    else:
+       print('unrecognized scan type.  Please rerun with a different scan object')
+       return
     
 def setupscan(scan):
     '''used for setup scans NOT production scans
@@ -123,19 +139,10 @@ def get_light_images(mdo, exposure = 1.0, area_det='pe1c', **kwargs):
     Returns:
       nothing
     '''   
-    from bluesky.plans import Count
-    #from xpdanl.xpdanl import plot_last_one
-    from xpdacq.control import _get_obj
-        
-    # FIXME - proper command to close and open shutter
-    from xpdacq.control import _open_shutter
-    from xpdacq.control import _close_shutter
     
     # default setting for pe1c
     area_det = _get_obj('pe1c')
     area_det.number_of_sets.put(1)
-    #from xpdanl.xpdanl import plot_last_one
-    from xpdacq.beamtime import Xposure
 
     exp = Xposure(mdo)
     area_det = _get_obj('pe1c')
@@ -223,19 +230,10 @@ def get_light_images_dryrun(mdo, exposure = 1.0, area_det='pe1c',**kwargs):
     Returns:
       nothing
     ''' 
-    from bluesky.plans import Count
-    #from xpdanl.xpdanl import plot_last_one
-    from xpdacq.control import _get_obj
-        
-    # FIXME - proper command to close and open shutter
-    from xpdacq.control import _open_shutter
-    from xpdacq.control import _close_shutter
     
     # default setting for pe1c
 #    area_det = _get_obj('pe1c')
 #    area_det.number_of_sets.put(1)
-    #from xpdanl.xpdanl import plot_last_one
-    from xpdacq.beamtime import Xposure
 
     exp = Xposure(mdo)
 #    acq_time = area_det.cam.acquire_time.get()
