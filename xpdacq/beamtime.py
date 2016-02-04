@@ -7,7 +7,7 @@
 #                        New York.
 #                   All rights reserved
 #
-# File coded by:    Timothy Liu, Simon Billinge
+# File coded by:    Timothy Liu, Simon Billinge, Tom Caswell
 #
 # See AUTHORS.txt for a list of people who contributed.
 # See LICENSE.txt for license information.
