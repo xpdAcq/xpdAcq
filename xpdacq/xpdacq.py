@@ -19,6 +19,7 @@ from xpdacq.control import _get_obj
 from xpdacq.control import _open_shutter
 from xpdacq.control import _close_shutter
 xpdRE = _get_obj('xpdRE')
+LiveTable = _get_obj('LiveTable')
 
 print('Before you start, make sure the area detector IOC is in "Continuous mode"')
 #expo_threshold = 60 # in seconds Deprecated!
@@ -64,6 +65,7 @@ def dryrun(sample,scan,**kwargs):
 def _unpack_and_run(sample,scan,**kwargs):
     cmdo = Union(sample,scan)
     area_det = _get_obj('pe1c')
+    
 
     parms = scan.sc_params
     subs={}
@@ -85,7 +87,7 @@ def _unpack_and_run(sample,scan,**kwargs):
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
 
-def run(sample,scan,**kwargs):
+def prun(sample,scan,**kwargs):
     '''on this 'sample' run this 'scan'
         
     Arguments:
