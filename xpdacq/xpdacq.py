@@ -114,6 +114,47 @@ def get_light_images(mdo, exposure = 1.0, area_det=area_det):
     print('End of get_light_image...')
 
 
+def collect_time_series(metadata_object, num, delay, exposure=1.0, **kwargs):
+    """Collect a time series
+
+    Parameters
+    ----------
+    metadata_object : XPD
+        Object to carry around the metadata
+    num : int
+        The number of points in the time series
+
+
+    """
+    # get a local copy of md to update
+    md = dict(metadata_object.md)
+
+    # grab the area detector
+    area_det = _get_obj('pe1c')
+
+    acq_time = area_det.cam.acquire_time.get()
+
+    # compute how many frames to collect
+    num_frame = max(int(exposure / acq_time), 1)
+    computed_exposure = num_frame * acq_time
+    num_sets = 1
+
+    real_delay = max(0, delay - computed_exposure)
+    period = max(computed_exposure, real_delay + computed_exposure)
+    # set how many frames to average
+    area_det.image_per_set.put(num_frame)
+    area_det.number_of_sets.put(num_sets)
+
+    md.update({'requested_exposure': exposure,
+               'computed_exposure': computed_exposure,
+               'period': period})
+    md.update({'time_per_frame': acq_time,
+               'num_frames': num_frame,
+               'number_of_sets': num_sets})
+    md.update(kwargs)
+    plan = Count([area_det], num=num, delay=real_delay)
+    return gs.RE(plan, **md)
+
 
 '''
 def _xpd_plan_1(num_saturation, num_unsaturation, det=None):
