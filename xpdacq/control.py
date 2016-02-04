@@ -12,7 +12,6 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-
 def _get_obj(name):
     ip = get_ipython() # build-in function
     return ip.user_ns[name]

@@ -13,6 +13,10 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
+def _get_obj(name):
+    ip = get_ipython() # build-in function
+    return ip.user_ns[name]
+
 from xpdacq.beamtime import Union, Xposure
 from bluesky.plans import Count
 from xpdacq.control import _get_obj   
@@ -109,8 +113,8 @@ def dark(sample,scan,**kwargs):
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
     _close_shutter()
+    scan.md.update({'xp_isdark':True})
     _unpack_and_run(sample,scan,**kwargs)
-    scan.md.update({'isdark':True})
     _close_shutter()
    
 def setupscan(scan):
