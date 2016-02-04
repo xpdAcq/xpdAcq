@@ -33,9 +33,8 @@ class XPD():
 
     def export(self):
         return self.md
-
-    @staticmethod
-    def _yaml_path():
+        
+    def _yaml_path(self):
         if os.path.isdir(os.path.join(self._base_path,'config_base/yml')):
             pass
         elif os.path.isdir(os.path.join(self._base_path,'config_base')):
@@ -49,7 +48,7 @@ class XPD():
     def _yamify(self):
         fname = self.name
         ftype = self.type
-        fpath = self._yaml_path()+ftype+'_'+fname+'.yml'
+        fpath = os.path.join(self._yaml_path(),ftype+'_'+fname+'.yml')
         if isinstance(fpath, str):
             with open(fpath, 'w') as fout:
                 yaml.dump(self, fout)
