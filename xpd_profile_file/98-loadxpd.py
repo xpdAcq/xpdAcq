@@ -18,7 +18,6 @@ from xpdacq.config import DataPath
 from xpdacq.beamtimeSetup import *
 from xpdacq.beamtimeSetup import _make_clean_env
 from xpdacq.beamtime import XPD 
-from simulator.areadetector import AreaDetector
 
 # These are needed in the real XPD
 WORKING_DIR = 'xpdUser'
