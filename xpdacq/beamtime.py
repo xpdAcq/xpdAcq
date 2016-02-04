@@ -140,20 +140,45 @@ class Sample(XPD):
 class Scan(XPD):
     '''metadata container for scan infor
     
-    currently supported scans are "ct","tseries","Tramp" 
-    where "ct"=count, "tseries=time series (series of counts)",
-    and "Tramp"=Temperature ramp.
+    Arguments:
+    scanname - string - scan name.  Important as new scans will overwrite older
+           scans with the same name.
+    scan_type - string - type of scan. allowed values are 'ct','tseries', 'Tramp' 
+           where  ct=count, tseries=time series (series of counts),
+           and Tramp=Temperature ramp.
+    scan_params - dictionary - contains all scan parameters that will be passed
+           and used at run-time.  Don't make typos in the dictionary keywords
+           or your scans won't work.  The list of allowed keywords is in the 
+           documentation, but 'exposure' sets exposure time and is all that is needed
+           for a simple count. 'num' and 'delay' are the number of images and the
+           delay time between exposures in a tseries.
+    shutter - bool - default=True.  If true shutter will be opened before a scan and
+                closed afterwards.  Otherwise control of the shutter is left external.
+    livetable - bool - default=True. gives LiveTable output when True, not otherwise
+    verify_write - bool - default=False.  This verifies that tiff files have been written
+                   for each event.  It introduces a significant overhead.
     '''
-    def __init__(self,scanname, scan_type, scan_params):
+    def __init__(self,scanname, scan_type, scan_params, shutter=True, livetable=True, verify_write=False):
         self.name = scanname
         self.type = 'sc'
         self.scan = scan_type
         self.sc_params = scan_params 
+        self.shutter = shutter
         self.md = {}
         self.md.update({'sc_name': scanname})
         self.md.update({'sc_type': scan_type})
-        self.md.update({'sc_params': scan_params})
         self.md.update({'sc_uid': self._getuid()})
+        if self.shutter: 
+            self.md.update({'sc_shutter_control':'in-scan'})
+        else:
+            self.md.update({'sc_shutter_control':'external'})
+        
+        subs=[]
+        if livetable: subs = ['livetable']
+        if verify_write: subs.append('verify_write')
+        if len(subs) > 0: scan_params.update({'subs':subs}) 
+        self.md.update({'sc_params': scan_params})
+        
         self._yamify()
 
 class Union(XPD):
