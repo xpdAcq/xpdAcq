@@ -60,7 +60,7 @@ def _make_clean_env(datapath):
 
 
 
-def _end_beamtime(base_dir=None, archive_dir=None):
+def _end_beamtime(base_dir=None, archive_dir=None, bto = None):
     '''cleans up at the end of a beamtime
 
     Function takes all the user-generated tifs and config files, etc.,
@@ -84,8 +84,10 @@ def _end_beamtime(base_dir=None, archive_dir=None):
     ext = get_full_ext(tar_ball)
     os.makedirs(archive_dir, exist_ok=True)
     try:
-        saf_num = bt.md['bt_safN']
-        PI_name = bt.md['bt_piLast']
+        if bto is None:
+            bto = bt
+        saf_num = bto.md['bt_safN']
+        PI_name = bto.md['bt_piLast']
     except NameError:
         saf_num = input('Please enter your SAF number to this beamtime: ')
         PI_name = input('Please enter PI name to this beamtime: ')
