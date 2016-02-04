@@ -42,7 +42,7 @@ bt = XPD.loadyamls()[0]
 import bluesky
 from bluesky.run_engine import RunEngine
 
-xpdRE = RunEnginge()
+xpdRE = RunEngine()
 bluesky.register_mds.register_mds(xpdRE)
 xpdRE.md['owner'] = 'xf28id1'
 xpdRE.md['beamline_id'] = 'xpd'
