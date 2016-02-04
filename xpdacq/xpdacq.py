@@ -76,13 +76,13 @@ def setupscan(scan):
     '''
     pass
 ################# private module ###########################
-"""
+
 def _bluesky_global_state():
     '''Import and return the global state from bluesky.'''
 
     from bluesky.standard_config import gs
     return gs
-
+"""
 def _bluesky_metadata_store():
     '''Return the dictionary of bluesky global metadata.'''
 
@@ -109,6 +109,7 @@ def ensure_sc_uid(md):
 RE.md_validator = ensure_sc_uid
 """
 ##############################################################
+gs = _bluesky_global_state()
 
 
 def get_light_images(mdo, exposure = 1.0, area_det='pe1c', **kwargs):
@@ -150,13 +151,13 @@ def get_light_images(mdo, exposure = 1.0, area_det='pe1c', **kwargs):
     exp.md.update({'xp_requested_exposure':exposure,'xp_computed_exposure':computed_exposure}) 
     exp.md.update({'xp_time_per_frame':acq_time,'xp_num_frames':num_frame})
     
-    area_det.image_per_set.put(num_frame)
+    area_det.images_per_set.put(num_frame)
     md_dict = exp.md
     md_dict.update(kwargs)
     
     plan = Count([area_det])
     gs.RE(plan,**md_dict)
-        
+
     print('End of get_light_image...')
 
 
