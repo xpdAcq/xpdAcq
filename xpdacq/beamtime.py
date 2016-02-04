@@ -138,17 +138,32 @@ class Sample(XPD):
 
 
 class Scan(XPD):
-    def __init__(self,scanname,sample):
+    '''metadata container for scan infor
+    
+    currently supported scans are "ct","tseries","Tramp" 
+    where "ct"=count, "tseries=time series (series of counts)",
+    and "Tramp"=Temperature ramp.
+    '''
+    def __init__(self,scanname, scan_type, scan_params):
         self.name = scanname
         self.type = 'sc'
-        self.sa = sample
-        self.md = self.sa.md
+        self.scan = scan_type
+        self.sc_params = scan_params 
+        self.md = {}
         self.md.update({'sc_name': scanname})
+        self.md.update({'sc_type': scan_type})
+        self.md.update({'sc_params': scan_params})
         self.md.update({'sc_uid': self._getuid()})
         self._yamify()
-        #self.test1 = 'test'
-        #self.test2 = 123
 
+class Union(XPD):
+    def __init__(self,sample,scan):
+        self.type = 'cmdo'
+        self.sc = scan
+        self.sa = sample
+        self.md = self.sc.md
+        self.md.update(self.sa.md)
+ #       self._yamify()    # no need to yamify this
 
 class Xposure(XPD):
     def __init__(self,scan):
