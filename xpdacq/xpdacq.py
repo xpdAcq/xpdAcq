@@ -13,12 +13,17 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
+def _get_obj(name):
+    ip = get_ipython() # build-in function
+    return ip.user_ns[name]
+
 from xpdacq.beamtime import Union, Xposure
 from bluesky.plans import Count
 from xpdacq.control import _get_obj   
 from xpdacq.control import _open_shutter
 from xpdacq.control import _close_shutter
 xpdRE = _get_obj('xpdRE')
+LiveTable = _get_obj('LiveTable')
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 #expo_threshold = 60 # in seconds Deprecated!
@@ -64,6 +69,7 @@ def dryrun(sample,scan,**kwargs):
 def _unpack_and_run(sample,scan,**kwargs):
     cmdo = Union(sample,scan)
     area_det = _get_obj('pe1c')
+    
 
     parms = scan.sc_params
     subs={}
@@ -85,7 +91,7 @@ def _unpack_and_run(sample,scan,**kwargs):
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
 
-def run(sample,scan,**kwargs):
+def prun(sample,scan,**kwargs):
     '''on this 'sample' run this 'scan'
         
     Arguments:
@@ -107,8 +113,8 @@ def dark(sample,scan,**kwargs):
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
     _close_shutter()
+    scan.md.update({'xp_isdark':True})
     _unpack_and_run(sample,scan,**kwargs)
-    scan.md.update({'isdark':True})
     _close_shutter()
    
 def setupscan(scan):

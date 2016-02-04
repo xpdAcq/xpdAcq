@@ -95,10 +95,12 @@ class XPD:
         return list[index]
 
 class Beamtime(XPD):
-    def __init__(self, pi_last, safn):
+    def __init__(self, pi_last, safn, wavelength, experimenters = []):
         self.name = 'bt'
         self.type = 'bt'
         self.md = {'bt_piLast': pi_last, 'bt_safN': safn}
+        self.md.update({'bt_wavelength': wavelength})
+        self.md.update({'bt_experimenters': experimenters})
         self.md.update({'bt_uid': self._getuid()})
         self._yamify()
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 ##############################################################################
 #
 # xpdacq            by Billinge Group
@@ -6,29 +7,18 @@
 #                        New York.
 #                   All rights reserved
 #
-# File coded by:    Timothy Liu
+# File coded by:    Timothy Liu, Simon Billinge
 #
 # See AUTHORS.txt for a list of people who contributed.
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-def _get_obj(name):
-    ip = get_ipython() # build-in function
-    return ip.user_ns[name]
+#from dataportal import DataBroker as db
+#from dataportal import get_events, get_table, get_images
+#from metadatastore.commands import find_run_starts
+from xpdacq.control import _get_obj
 
-shctl1 = _get_obj('shctl1')
+bt = _get_obj('bt')
 
-def _open_shutter():
-    shctl1.put(1)
-    while True:
-        if shctl1.get():
-            break
-            time.sleep(0.5)
-    return 
-           
-def _close_shutter():
-    shctl1.put(0)
-    while True:
-        if not shctl1.get():
-            break
-            time.sleep(0.5)
+def bt_uid():
+    return bt.get(0).md['bt_uid']
