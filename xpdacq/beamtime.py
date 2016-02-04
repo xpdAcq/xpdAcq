@@ -23,6 +23,7 @@ from xpdacq.config import DataPath
 
 
 class XPD():
+    _base_path = ''
     def _getuid(self):
         return str(uuid.uuid1())
 
@@ -35,15 +36,15 @@ class XPD():
 
     @staticmethod
     def _yaml_path():
-        if os.path.isdir('./config_base/yml'):
+        if os.path.isdir(os.path.join(self._base_path,'config_base/yml')):
             pass
-        elif os.path.isdir('./config_base'):
-            os.mkdir('./config_base/yml')
+        elif os.path.isdir(os.path.join(self._base_path,'config_base')):
+            os.mkdir(os.path.join(self._base_path,'config_base/yml'))
         else:
-            os.mkdir('./config_base/')
-            os.mkdir('./config_base/yml')
+            os.mkdir(os.path.join(self._base_path,'config_base'))
+            os.mkdir(os.path.join(self._base_path,'config_base/yml'))
 
-        return './config_base/yml/'
+        return os.path.join(self._base_path,'config_base/yml')
 
     def _yamify(self):
         fname = self.name

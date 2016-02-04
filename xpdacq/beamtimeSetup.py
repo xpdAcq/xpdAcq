@@ -19,7 +19,7 @@ import datetime
 import shutil
 from time import strftime
 from xpdacq.config import DataPath
-from xpdacq.beamtime import Beamtime
+from xpdacq.beamtime import Beamtime, XPD
 from xpdacq.beamtime import export_data
 
 B_DIR = os.getcwd()
@@ -134,5 +134,6 @@ def _start_beamtime(base_dir=None):
     _make_clean_env(dp)
     PI_name = input('Please enter the PI last name to this beamtime: ')
     saf_num = input('Please enter the SAF number to this beamtime: ')
+    XPD._base_path = dp.base
     bt = Beamtime(PI_name,saf_num)
     return bt
