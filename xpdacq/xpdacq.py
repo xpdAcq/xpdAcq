@@ -61,7 +61,7 @@ def dryrun(sample,scan,**kwargs):
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
     
-def _unpack_and_run():
+def _unpack_and_run(sample,scan,**kwargs):
     cmdo = Union(sample,scan)
     area_det = _get_obj('pe1c')
 
