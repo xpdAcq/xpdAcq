@@ -14,9 +14,10 @@
 ##############################################################################
 
 def _get_obj(name):
-
     ip = get_ipython() # build-in function
     return ip.user_ns[name]
+
+shctl1 = _get_obj('shctl1')
 
 def _open_shutter():
     shctl1.put(1)
@@ -26,7 +27,6 @@ def _open_shutter():
             time.sleep(0.5)
     return 
            
-
 def _close_shutter():
     shctl1.put(0)
     while True:
