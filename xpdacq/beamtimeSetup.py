@@ -17,13 +17,14 @@ import sys
 import os
 import datetime
 import shutil
+from time import strftime
 from xpdacq.config import DataPath
 from xpdacq.beamtime import Beamtime
 from xpdacq.beamtime import export_data
 
 B_DIR = os.getcwd()
 
-from time import strftime
+
 
 def _make_clean_env(datapath):
     '''Make a clean environment for a new user
@@ -90,7 +91,8 @@ def _end_beamtime(base_dir=None, archive_dir=None):
         PI_name = input('Please enter PI name to this beamtime: ')
 
     full_info = '_'.join([PI_name.strip().replace(' ', ''),
-                          saf_num.strip()])
+                          saf_num.strip(), strftime('%Y-%m-%d-%H%M')
+                         ])
 
     archive_f_name = os.path.join(archive_dir, full_info) + ext
     shutil.copyfile(tar_ball, archive_f_name)
