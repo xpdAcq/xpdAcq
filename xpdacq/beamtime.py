@@ -57,7 +57,7 @@ class XPD():
 
     @classmethod
     def _get_ymls(cls):
-        fpath = cls._yaml_path()
+        fpath = cls._yaml_path
         yamls = os.listdir(fpath)
         return yamls
 
