@@ -22,6 +22,8 @@ from bluesky.plans import Count
 from xpdacq.control import _get_obj   
 from xpdacq.control import _open_shutter
 from xpdacq.control import _close_shutter
+from bluesky.plans.AbsScanPlan
+
 xpdRE = _get_obj('xpdRE')
 LiveTable = _get_obj('LiveTable')
 
@@ -180,10 +182,7 @@ def collect_Temp_series(mdo, T_start, Tstop, T_step, exposure = 1.0, det='pe1c',
     Returns:
       nothing
     '''   
-    from bluesky.plans.AbsScanPlan
-    from xpdacq.control import _get_obj
-    
-    temp_controller = _get_obj('cs700') # unless xpd has other one
+    temp_controller = _get_obj('cs700')
     
     # setting up detector
     area_det = _get_obj(det)
@@ -200,8 +199,9 @@ def collect_Temp_series(mdo, T_start, Tstop, T_step, exposure = 1.0, det='pe1c',
     exp.md.update({'xp_requested_exposure':exposure,'xp_computed_exposure':computed_exposure}) 
     exp.md.update({'xp_time_per_frame':acq_time,'xp_num_frames':num_frame})
     
-    _Tstep = _nstep(Tstart, Tstop, Tstep) # computed steps
-    exp.md.update({'sc_startingT':Tstart,'sc_endingT':Tstop}) 
+    Nsteps = _nstep(Tstart, Tstop, Tstep) # computed steps
+    exp.md.update({'sc_startingT':Tstart,'sc_endingT':Tstop,'sc_requested_Tstep':Tstep}) 
+    exp.md.update({'sc_Nsteps':Nsteps}) 
     print('INFO: requested temperature step = ',Tstep,' -> computed temperature step:', _Tstep)
 
     area_det.images_per_set.put(num_frame)
@@ -214,15 +214,15 @@ def collect_Temp_series(mdo, T_start, Tstop, T_step, exposure = 1.0, det='pe1c',
     print('End of collect_Temp_scans....')
 
 def _nstep(start, stop, step_size):
-    ''' return (start, stop, step)'''
-    require_step = (stop - stop) / step_size
+    ''' return (start, stop, nsteps)'''
+    requested_nsteps = abs((start - stop) / step_size)
     
-    computed_step = np.ceil(require_step)
+    computed_nsteps = np.ceil(requested_nsteps)
     computed_step_list = np.linspace(start, stop, computed_step)
     computed_step_size = computed_step_list[2]- computed_step_list[1]
-    print('required step size = %s' % str(step_size) )    
+    print('requested step size = %s' % str(step_size) )    
     print('computed step size = %s' % str(computed_step_size))
-    return computed_step
+    return computed_nsteps
 
 def get_bluesky_run(mdo, plan, det='pe1c', subs_dict={}, **kwargs):
     '''An xpdAcq function for executing a custom (user defined) bluesky plan
