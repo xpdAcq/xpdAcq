@@ -18,6 +18,7 @@ import os
 import datetime
 import shutil
 from xpdacq.config import DataPath
+from xpdacq.beamtime import Beamtime
 
 B_DIR = os.getcwd()
 
