@@ -13,6 +13,10 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-from dataportal import DataBroker as db
-from dataportal import get_events, get_table, get_images
-from metadatastore.commands import find_run_starts
+#from dataportal import DataBroker as db
+#from dataportal import get_events, get_table, get_images
+#from metadatastore.commands import find_run_starts
+bt = _get_obj('bt')
+
+def bt_uid():
+    return bt.get(0).md['bt_uid']
