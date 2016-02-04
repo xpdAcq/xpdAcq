@@ -54,7 +54,7 @@ def dryrun(sample,scan,**kwargs):
                 subs.update({'all':LiveTable([area_det])})
             elif i == 'verify_write':
                 subs.update({'stop':verify_files_saved})
-
+    
     if scan.scan == 'ct':
        get_light_images_dryrun(cmdo,parms['exposure'],'pe1c',parms['subs'],**kwargs)
     elif scan.scan == 'tseries':
