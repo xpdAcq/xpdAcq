@@ -44,8 +44,18 @@ def dryrun(sample,scan,**kwargs):
     '''
     cmdo = Union(sample,scan)
     parms = scan.sc_params
+
+    subsc = parms['subs']
+    subs = {}
+    if 'subs' in subsc:
+        for i in subsc['subs']:
+            if i == 'livetable':
+                subs.update({'all':LiveTable([area_det])})
+            elif i == 'verify_write':
+                subs.update({'stop':verify_files_saved})
+
     if scan.scan == 'ct':
-       get_light_images_dryrun(cmdo,parms[0],'pe1c',**kwargs)
+       get_light_images_dryrun(cmdo,parms['exposure'],'pe1c',parms['subs'],**kwargs)
     elif scan.scan == 'tseries':
        collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
     elif scan.scan == 'Tseries':
@@ -54,7 +64,7 @@ def dryrun(sample,scan,**kwargs):
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
     
-def run(sample,scan):
+def run(sample,scan,**kwargs):
     '''same as run but scans are not executed.
     
     for testing
@@ -65,8 +75,19 @@ def run(sample,scan):
     '''
     cmdo = Union(sample,scan)
     parms = scan.sc_params
+    area_det = _get_obj('pe1c')
+    
+    subsc = parms['subs']
+    subs = {}
+    if 'subs' in subsc:
+        for i in subsc['subs']:
+            if i == 'livetable':
+                subs.update({'all':LiveTable([area_det])})
+            elif i == 'verify_write':
+                subs.update({'stop':verify_files_saved})
+                
     if scan.scan == 'ct':
-       get_light_images(cmdo,parms[0],'pe1c',**kwargs)
+       get_light_images(cmdo,parms['exposure'],'pe1c',subs,**kwargs)
     elif scan.scan == 'tseries':
        collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
     elif scan.scan == 'Tseries':
@@ -86,7 +107,7 @@ def setupscan(scan):
     '''
     pass
 
-def get_light_images(mdo, exposure = 1.0, area_det='pe1c', **kwargs):
+def get_light_images(mdo, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
     '''the main xpdAcq function for getting an exposure
     
     Arguments:
@@ -99,15 +120,13 @@ def get_light_images(mdo, exposure = 1.0, area_det='pe1c', **kwargs):
       nothing
     '''   
     
-    # default setting for pe1c
-    area_det = _get_obj('pe1c')
+    # setting up detector
+    area_det = _get_obj(det)
     area_det.number_of_sets.put(1)
-
-    exp = Xposure(mdo)
-    area_det = _get_obj('pe1c')
     acq_time = area_det.cam.acquire_time.get()
 
-
+    exp = Xposure(mdo)
+    
     # compute number of frames and save metadata
     num_frame = int(exposure / acq_time)
     if num_frame == 0: num_frame = 1
@@ -121,7 +140,7 @@ def get_light_images(mdo, exposure = 1.0, area_det='pe1c', **kwargs):
     md_dict.update(kwargs)
     
     plan = Count([area_det])
-    xpdRE(plan,**md_dict)
+    xpdRE(plan,subs_dict,**md_dict)
 
     print('End of get_light_image...')
 
@@ -177,7 +196,7 @@ def collect_time_series(metadata_object, num, exposure=1.0, delay=0.,  **kwargs)
 ##########################################################
 #    Dry Run thingys
 ######################################################
-def get_light_images_dryrun(mdo, exposure = 1.0, area_det='pe1c',**kwargs):
+def get_light_images_dryrun(mdo, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
     '''the main xpdAcq function for getting an exposure
     
     Arguments:
