@@ -132,7 +132,7 @@ def _start_beamtime(base_dir=None):
             os.unlink(os.path.join(dp.base, tf))
 
     _make_clean_env(dp)
-    saf_num = input('Please enter your SAF number to this beamtime: ')
-    PI_name = input('Please enter PI name to this beamtime: ')
+    PI_name = input('Please enter the PI last name to this beamtime: ')
+    saf_num = input('Please enter the SAF number to this beamtime: ')
     bt = Beamtime(PI_name,saf_num)
-    return
+    return bt
