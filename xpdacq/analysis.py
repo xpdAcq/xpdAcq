@@ -143,9 +143,10 @@ def save_tif(headers, tif_name = False ):
             if not tif_name:
                 W_DIR = datapath.tif_dir
                 dummy_name = _feature_gen(header)
-                # FIXME - need to test if motor point is saved once I got chance to use bluesky
-                if 'temperature' in header['descriptors']:
-                    f_name = dummy_name + str(i) # for now
+               
+                # temperautre is a typo from Dan but it is there...
+                if 'temperautre' in header_events[0]['data']:
+                    f_name = dummy_name + header_events[0]['data']['temperautre']
                 else:
                     f_name = dummy_name
                 w_name = os.path.join(W_DIR,f_name)

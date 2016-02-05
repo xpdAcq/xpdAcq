@@ -1,198 +1,26 @@
 import os
 import time
 import copy
-import datetime
-import matplotlib.pyplot as plt
-import matplotlib as mpl
 import numpy as np
 import pandas as pd
+import datetime
+from tifffile import *
+import matplotlib.pyplot as plt
 import json
 
-import bluesky
-from bluesky.scans import *
-from bluesky.broker_callbacks import LiveImage
-from bluesky.callbacks import CallbackBase, LiveTable, LivePlot
-
-from ophyd.commands import *
-from ophyd.controls import *
-
-from dataportal import DataBroker as db
-from dataportal import get_events, get_table, get_images
-from metadatastore.commands import find_run_starts
-
-from xpdacquire.config import datapath
-from xpdacquire.utils import composition_analysis
-from tifffile import *
-
+from xpdacq.config import datapath
+from xpdacq.utils import composition_analysis
+from xpdacq.control import _get_obj
+from xpdacq.analysis import *
 
 pd.set_option('max_colwidth',40)
 pd.set_option('colheader_justify','left')
 
-default_keys = ['owner', 'beamline_id', 'group', 'config', 'scan_id'] # required by dataBroker
-feature_keys = ['sample_name','experimenters'] # required by XPD, time_stub and uid will be automatically added up as well
 
-# These are the default directory paths on the XPD data acquisition computer.  Change if needed here
-W_DIR = datapath.tif                # where the user-requested tif's go.  Local drive
-R_DIR = datapath.config             # where the xPDFsuite generated config files go.  Local drive
-D_DIR = datapath.dark               # where the tifs from dark-field collections go. Local drive
-S_DIR = datapath.script             # where the user scripts go. Local drive
+db = _get_obj('db')
+get_images = _get_obj('get_images')
+get_events = _get_obj('get_events')
 
-# Instanciate bluesky objects
-
-def _bluesky_RE():
-    import bluesky
-    from bluesky.run_engine import RunEngine
-    from bluesky.run_engine import DocumentNames
-    RE = RunEngine()
-    bluesky.register_mds.register_mds(RE)
-    return RE
-
-'''def _bluesky_metadata_store():
-    Return the dictionary of bluesky global metadata.
-    
-    gs = _bluesky_global_state()
-    return gs.RE.md
-'''
-
-ipshell = get_ipython()
-gs = ipshell.user_ns['gs']
-RE = _bluesky_RE()
-pe1 = ipshell.user_ns['pe1']
-cs700 = ipshell.user_ns['cs700']
-sh1 = ipshell.user_ns['sh1']
-gs.TEMP_CONTROLLER = cs700
-tth_cal = ipshell.user_ns['tth_cal']
-th_cal = ipshell.user_ns['th_cal']
-photon_shutter = ipshell.user_ns['photon_shutter']
-
-def feature_gen(header):
-    ''' generate a human readable file name. It is made of time + uid + sample_name + user
-
-    field will be skipped if it doesn't exist
-    '''
-    uid = header.start.uid
-    time_stub = _timestampstr(header.start.time)
-
-    dummy_list = []
-    for key in feature_keys:
-        try:
-            # truncate length
-            if len(header.start[key])>12:
-                value = header.start[key][:12]
-            else:
-                value = header.start[key]
-            # clear space
-            dummy = [ ch for ch in list(value) if ch!=' ']
-            dummy_list.append(''.join(dummy))  # feature list elements is at the first level, as it should be
-        except KeyError:
-            pass
-
-    inter_list = []
-    for el in dummy_list:
-        if isinstance(el, list): # if element is a list
-            join_list = "_".join(el)
-            inter_list.append(join_list)
-        else:
-            inter_list.append(el)
-    feature = "_".join(inter_list)
-    return feature
-
-def _timestampstr(timestamp):
-    time = str(datetime.datetime.fromtimestamp(timestamp))
-    date = time[:10]
-    hour = time[11:16]
-    m_hour = hour.replace(':','-')
-    timestampstring = '_'.join([date,hour])
-    #corrected_timestampstring = timestampstring.replace(':','-')
-    return timestampstring
-
-def _MD_template():
-    ''' use to generate idealized metadata structure, for pictorial memory and
-    also for data cleaning.
-    '''
-    #gs = _bluesky_global_state()
-    _clean_metadata()
-    gs.RE.md['iscalib'] = 0
-    gs.RE.md['isdark'] = 0
-    gs.RE.md['isbackground'] = 0 # back ground image
-    gs.RE.md['experimenters'] = []
-    gs.RE.md['sample_name'] = ''
-    gs.RE.md['calibrant'] = '' # transient, only for calibration set
-    gs.RE.md['user_supply'] = {}
-    gs.RE.md['commenets'] = ''
-    gs.RE.md['SAF_number'] = ''
-
-    gs.RE.md['sample'] = {}
-    gs.RE.md['sample']['composition'] = {}
-
-    gs.RE.md['dark_scan_info'] = {}
-    gs.RE.md['scan_info'] = {}
-
-    gs.RE.md['calibration_scan_info'] = {}
-    gs.RE.md['calibration_scan_info']['calibration_information'] = {}
-
-    return gs.RE.md
-
-def scan_info():
-    ''' hard coded scan information. Aiming for our standardized metadata
-    dictionary'''
-    #gs = _bluesky_global_state()
-    all_scan_info = []
-    try:
-        all_scan_info.append(gs.RE.md['scan_info']['scan_exposure_time'])
-    except KeyError:
-        all_scan_info.append('')
-    try:
-        all_scan_info.append(gs.RE.md['calibration_scan_info']['calibration_scan_exposure_time'])
-    except KeyError:
-        all_scan_info.append('')
-    try:
-        all_scan_info.append(gs.RE.md['dark_scan_info']['dark_scan_exposure_time'])
-    except KeyError:
-        all_scan_info.append('')
-    print('scan exposure time is %s, calibration exposure time is %s, dark scan exposure time is %s' % (all_scan_info[0], all_scan_info[1], all_scan_info[2]))
-
-
-def write_config(d, config_f_name):
-    '''reproduce information stored in config file and save it as a config file
-
-    argument:
-    d - dict - a dictionary that stores config data
-    f_name - str - name of your config_file, usually is 'config+tif_file_name.cfg'
-    '''
-    # temporarily solution, need a more robust one later on
-    import configparser
-    config = configparser.ConfigParser()
-    for k,v in _dig_dict(d).items():
-        config[k] = {}
-        config[k] = v # temporarily use
-    with open(config_f_name+'.cfg', 'w') as configfile:
-        config.write(configfile)
-
-def filename_gen(header):
-    '''generate a file name of tif file. It contains time_stub, uid and feature
-    of your header'''
-
-    uid = header.start.uid[:5]
-    try:
-        time_stub = _timestampstr(header.start.time)
-    except KeyError:
-        tim_stub = 'Imcomplete_Scan'
-    feature = feature_gen(header)
-    file_name = '_'.join([time_stub, uid, feature])
-    return file_name
-
-
-
-def run_script(script_name):
-    ''' Run user script in script base
-
-    argument:
-    script_name - str - name of script user wants to run. It must be sit under script_base to avoid confusion when asking Python to run script.
-    '''
-    module = script_name
-    m_name = os.path.join('S_DIR', module)
-    #%run -i $m_name
 
 ##### common functions #####
 
@@ -207,7 +35,6 @@ def table_gen(headers):
     '''
     plt_list = list()
     feature_list = list()
-    comment_list = list()
     uid_list = list()
 
     if type(list(headers)[0]) == str:
@@ -217,18 +44,8 @@ def table_gen(headers):
         header_list = headers
 
     for header in header_list:
-        #feature = _feature_gen(header)
-        #time_stub = _timestampstr(header.stop.time)
-        #header_uid = header.start.uid
-        #uid_list.append(header_uid[:5])
-        #f_name = "_".join([time_stub, feature])
-        f_name =filename_gen(header)
+        f_name =_feature_gen(header)
         feature_list.append(f_name)
-
-        try:
-            comment_list.append(header.start['comments'])
-        except KeyError:
-            comment_list.append('None')
         try:
             uid_list.append(header.start['uid'][:5])
         except KeyError:
@@ -300,7 +117,7 @@ def time_search(startTime,stopTime=False,exp_day1=False,exp_day2=False):
 
     return header_time
 
-
+# FIXME - Refactor search function !!!!!!
 #### block of search functions ####
 def _list_keys( d, container):
     ''' list out all keys in dictionary, d
