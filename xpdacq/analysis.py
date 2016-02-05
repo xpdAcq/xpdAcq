@@ -13,12 +13,17 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-from dataportal import DataBroker as db
-from dataportal import get_events, get_table, get_images
+#from dataportal import DataBroker as db
+#from dataportal import get_events, get_table, get_images
 #from metadatastore.commands import find_run_starts
 
-from xpdacq.control import _get_obj
+import os
+import datetime
+import numpy as np
 import tifffile as tif
+import matplotlib as plt
+
+from xpdacq.control import _get_obj
 from xpdacq.config import datapath # at xpd
 
 # fileds used to generate tiff file name. Could be maintained later
@@ -26,6 +31,11 @@ _fname_field = ['sa_name', 'bt_experimenters']
 #_scan_property = ['xp_isdark']
 
 bt = _get_obj('bt')
+db = _get_obj('db')
+get_events = _get_obj('get_events')
+get_images = _get_obj('get_images')
+
+
 def bt_uid():
     return bt.get(0).md['bt_uid']
 
@@ -37,19 +47,22 @@ def _feature_gen(header):
     uid = header.start.uid
     time_stub = _timestampstr(header.start.time)
     feature_list = []
+    
+    try:
+        if header.start['xp_isdark']:
+            feature_list.append('dark')
+    except KeyError:
+        pass
 
-    if header.start['xp_isdark']:
-        feature_list.append('dark')
-        
+    field = header['start']
     for key in _fname_field:
-        field = header['start']
-        for el in field[key]:
+        try:
+            el = field[key]
             if isinstance(el, list):
                 # grab the first two experimenters
-                feature_list.append(el[0])
-                feature_list.append(el[1])
-        else:
-            try:
+                feature_list.append(str(el[0]))
+                feature_list.append(str(el[1]))
+            else:
                 # truncate length
                 if len(el)>12:
                     value = el[:12]
@@ -57,14 +70,15 @@ def _feature_gen(header):
                     value = el
                 # clear space
                 feature = [ ch for ch in list(el) if ch!=' ']
-                feature_list.append(''.join(feature))  # feature list elements is at the first level
-            except KeyError:
-                # exceptioin handle. If user forgot to define require fields
-                pass
+                feature_list.append(''.join(feature))
+        except KeyError:
+            # exceptioin handle. If user forgot to define require fields
+            pass
 
+    print(feature_list)
     f_name = "_".join(feature_list)
-    exp_time = _timestampstr(headr.start.time)
-    return '_'.join(f_name, exp_time)
+    exp_time = _timestampstr(header.start.time)
+    return '_'.join([exp_time, f_name])
 
 def _timestampstr(timestamp):
     time = str(datetime.datetime.fromtimestamp(timestamp))
@@ -75,9 +89,8 @@ def _timestampstr(timestamp):
     #corrected_timestampstring = timestampstring.replace(':','-')
     return timestampstring
 
-def save_last_tif()
+def save_last_tif():
     save_tif(db[-1])
-
 
 def save_tif(headers, tif_name = False ):
     ''' save images obtained from dataBroker as tiff format files. It returns nothing.
@@ -112,8 +125,12 @@ def save_tif(headers, tif_name = False ):
         header_events = list(get_events(header))
 
         # get events from header
-        cnt_time = header.start['sc_prams']['exposure']
-        print('cnt_time = %s' % cnt_time)
+        try:
+            cnt_time = header.start['sc_params']['exposure']
+            print('cnt_time = %s' % cnt_time)
+        except KeyError:
+            print('Opps you forgot to enter exposure time')
+            pass
         
         
         # container for final image 
@@ -127,10 +144,10 @@ def save_tif(headers, tif_name = False ):
                 W_DIR = datapath.tif_dir
                 dummy_name = _feature_gen(header)
                 # FIXME - need to test if motor point is saved once I got chance to use bluesky
-                if 'temperature' in header.start['descriptors']:
+                if 'temperature' in header['descriptors']:
                     f_name = dummy_name + str(i) # for now
                 else:
-                    f_namme = dummy_name
+                    f_name = dummy_name
                 w_name = os.path.join(W_DIR,f_name)
             try:
                 fig = plt.figure(f_name)
@@ -138,9 +155,11 @@ def save_tif(headers, tif_name = False ):
                 plt.show()
             except:
                 pass # allow matplotlib to crach without stopping experiment
-            imsave(w_name, img) 
+            
+            tif.imsave(w_name, img) 
             if os.path.isfile(w_name):
-                print('dark corrected image "%s" has been saved at "%s"' % (f_name, W_DIR))
+                print('image "%s" has been saved at "%s"' % (f_name, W_DIR))
+                print('if you do not see as much as metadata in file name, that means you forgot to enter it')
             else:
                 print('Sorry, something went wrong with your tif saving')
                 return
