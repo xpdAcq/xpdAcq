@@ -19,15 +19,15 @@
 
 from xpdacq.control import _get_obj
 import tifffile as tif
+from xpdacq.config import datapath # at xpd
 
 # fileds used to generate tiff file name. Could be maintained later
-_fname_field = ['sa_name']
+_fname_field = ['sa_name', 'bt_experimenters']
 #_scan_property = ['xp_isdark']
 
 bt = _get_obj('bt')
 def bt_uid():
     return bt.get(0).md['bt_uid']
-
 
 def _feature_gen(header):
     ''' generate a human readable file name. 
@@ -36,35 +36,35 @@ def _feature_gen(header):
     '''
     uid = header.start.uid
     time_stub = _timestampstr(header.start.time)
-    dummy_list = []
+    feature_list = []
 
-    if header['xp_isdark']:
-        dummy_list.append('dark')
-    if list(get_events(header))[0]['data']
-
+    if header.start['xp_isdark']:
+        feature_list.append('dark')
+        
     for key in _fname_field:
-        try:
-            # truncate length
-            if len(header.start[key])>12:
-                value = header.start[key][:12]
-            else:
-                value = header.start[key]
-            # clear space
-            dummy = [ ch for ch in list(value) if ch!=' ']
-            dummy_list.append(''.join(dummy))  # feature list elements is at the first level
-        except KeyError:
-            pass
-
-    inter_list = []
-    for el in dummy_list:
-        if isinstance(el, list): # handling experimenters
-            join_list = "_".join(el)
-            inter_list.append(join_list)
+        field = header['start']
+        for el in field[key]
+            if isinstance(el, list):
+                # grab the first two experimenters
+                feature_list.append(el[0])
+                feature_list.append(el[1])
         else:
-            inter_list.append(el)
-    feature = "_".join(inter_list)
+            try:
+                # truncate length
+                if len(el)>12:
+                    value = el[:12]
+                else:
+                    value = el
+                # clear space
+                feature = [ ch for ch in list(el) if ch!=' ']
+                feature_list.append(''.join(feature))  # feature list elements is at the first level
+            except KeyError:
+                # exceptioin handle. If user forgot to define require fields
+                pass
+
+    f_name = "_".join(feature_list)
     exp_time = _timestampstr(headr.start.time)
-    return '_'.join(feature, time)
+    return '_'.join(f_name, exp_time)
 
 def _timestampstr(timestamp):
     time = str(datetime.datetime.fromtimestamp(timestamp))
@@ -76,8 +76,71 @@ def _timestampstr(timestamp):
     return timestampstring
 
 
+def save_tif(headers, tif_name = False ):
+    ''' save images obtained from dataBroker as tiff format files. It returns nothing.
 
+    arguments:
+        headers - list - a list of header objects obtained from a query to dataBroker
+        file_name - str - optional. File name of tif file being saved. default setting yields a name made of time, uid, feature of your header
+      
+    '''
+    # prepare header
+    if type(list(headers)[1]) == str:
+        header_list = list()
+        header_list.append(headers)
+    else:
+        header_list = headers
+    
+    # iterate over header(s)
+    for header in header_list:
+        print('Plotting and saving your image(s) now....')
+        # get images and exposure time from headers
+        try:
+            img_field =[el for el in header.descriptors[0]['data_keys'] if el.endswith('_image')][0]
+            print('Images are pulling out from %s' % img_field)
+            light_imgs = np.array(get_images(header,img_field))
+        except IndexError:
+            uid = header.start.uid
+            print('This header with uid = %s does not contain any image' % uid)
+            print('Was area detector correctly mounted then?')
+            print('Stop saving')
+            return
+        
+        header_events = list(get_events(header))
 
+        # get events from header
+        cnt_time = header.start['sc_prams']['exposure']
+        print('cnt_time = %s' % cnt_time)
+        
+        
+        # container for final image 
+        img_list = list()
+        for i in range(light_imgs.shape[0]):
+            dummy = light_imgs[i] 
+            img_list.append(dummy)
+        
+        for img in img_list:
+            # TODO - better way to get motor point
+                            
+            if not tif_name:
+                W_DIR = datapath.tif_dir
+                dummy_name = _feature_gen(header)
+                # FIXME - need to test if motor point is saved once I got chance to use bluesky
+                if 'temperature' in header.start['descriptors']:
+                    pass
+                w_name = os.path.join(W_DIR,f_name)
+            try:
+                fig = plt.figure(f_name)
+                plt.imshow(img)
+                plt.show()
+            except:
+                pass # allow matplotlib to crach without stopping experiment
+            imsave(w_name, img) # overwrite mode now !!!!
+            if os.path.isfile(w_name):
+                print('dark corrected image "%s" has been saved at "%s"' % (f_name, W_DIR))
+            else:
+                print('Sorry, something went wrong with your tif saving')
+                return
 
-
+                print('||********Saving process SUCCEEDED********||')
 
