@@ -69,7 +69,18 @@ and then compare them.
   >>> setupscan(bt.get(3),bt.get(10))  #100.5 seconds
   [Fixme] output here
 
-what is nice about these is that they are tagged with an ``'xp_isprun':True`` metadata field
+what is nice about these is that they are tagged with an ``'xp_isprun':False`` metadata field
 which means that, by default, they will not be retrieved when searching for production data.  It
 keeps our setup scans and production scans nicely separated in the database, though
-the underlying scans that are carried out are the same.
+the underlying scans that are carried out are all still there and can be retrieved if need
+be.
+
+It seems that the 2 second scans are the best, so let's do a production run
+to get the first data-set.
+
+.. code-block:: python
+
+  >>> prun(bt.get(3),bt.get(11))  #2 seconds
+  [Fixme] output here
+
+
