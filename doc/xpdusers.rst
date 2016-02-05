@@ -21,11 +21,10 @@ Where did my Sample and Scan Objects go????
 
  * :ref:`usb_where`
 
+Set up Scan objects
++++++++++++++++++++++++++
 
-Calibration
-+++++++++++
-
-*contents*
+ * :ref:`usb_scan`
 
 Run scans
 +++++++++
@@ -46,3 +45,9 @@ Take out your data
 ++++++++++++++++++
 
 *contents*
+
+Calibration etc.
+++++++++++++++++
+
+*contents*
+
