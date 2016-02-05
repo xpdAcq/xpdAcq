@@ -109,7 +109,7 @@ in the list returned by ``bt.list()`` . And it persists for your entire beamtime
 even if you hang up the entire software and have to have it restarted by one of the
 IT guys.
 
-Just remember.  First time ``bt.list()`` to locate the object you want, then type
+Just remember.  First type ``bt.list()`` to locate the object you want, then type
 ``bt.get(#)`` to get it.  Don't forget the ``bt.list()`` first because your object
 may change its position in the list over time.
 
