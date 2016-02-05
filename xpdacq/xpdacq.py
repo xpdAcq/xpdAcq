@@ -23,6 +23,7 @@ from bluesky.plans import Count
 from xpdacq.control import _get_obj   
 from xpdacq.control import _open_shutter
 from xpdacq.control import _close_shutter
+from xpdacq.analysis import *
 from bluesky.plans import AbsScanPlan
 
 xpdRE = _get_obj('xpdRE')
@@ -211,7 +212,8 @@ def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det='pe1c', s
     md_dict = exp.md
     md_dict.update(kwargs)
         
-    plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
+    #plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
+    plan = xpd_Tseries_plan([area_det], temp_controller, Tstart, Tstop, Nsteps)
     xpdRE(plan,subs_dict, **md_dict)
 
     print('End of collect_Temp_scans....')
@@ -225,6 +227,20 @@ def _nstep(start, stop, step_size):
     computed_step_size = computed_step_list[2]- computed_step_list[1]
     print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',computed_step_size)
     return computed_nsteps
+
+def xpd_Tseries_plan(detector, motor, start, stop, steps):
+    yield Msg('open_run')
+    for i in np.linspace(start, stop, steps):
+        yield Msg('create')
+        yield Msg('set', motor, i)
+        yield Msg('trigger', det)
+        yield Msg('read', motor)
+        yield Msg('read', det)
+        yield Msg('save')
+        save_tif(db[-1])
+    yield Msg('close_run')
+    
+
 
 def get_bluesky_run(mdo, plan, det='pe1c', subs_dict={}, **kwargs):
     '''An xpdAcq function for executing a custom (user defined) bluesky plan
