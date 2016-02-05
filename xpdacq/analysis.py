@@ -43,7 +43,7 @@ def _feature_gen(header):
         
     for key in _fname_field:
         field = header['start']
-        for el in field[key]
+        for el in field[key]:
             if isinstance(el, list):
                 # grab the first two experimenters
                 feature_list.append(el[0])
@@ -120,14 +120,14 @@ def save_tif(headers, tif_name = False ):
             img_list.append(dummy)
         
         for img in img_list:
-            # TODO - better way to get motor point
-                            
             if not tif_name:
                 W_DIR = datapath.tif_dir
                 dummy_name = _feature_gen(header)
                 # FIXME - need to test if motor point is saved once I got chance to use bluesky
                 if 'temperature' in header.start['descriptors']:
-                    pass
+                    f_name = dummy_name + str(i)
+                else:
+                    f_namme = dummy_name
                 w_name = os.path.join(W_DIR,f_name)
             try:
                 fig = plt.figure(f_name)
@@ -135,7 +135,7 @@ def save_tif(headers, tif_name = False ):
                 plt.show()
             except:
                 pass # allow matplotlib to crach without stopping experiment
-            imsave(w_name, img) # overwrite mode now !!!!
+            imsave(w_name, img) 
             if os.path.isfile(w_name):
                 print('dark corrected image "%s" has been saved at "%s"' % (f_name, W_DIR))
             else:

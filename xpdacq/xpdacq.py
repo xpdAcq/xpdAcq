@@ -20,6 +20,7 @@ def _get_obj(name):
 import numpy as np
 from xpdacq.beamtime import Union, Xposure
 from bluesky.plans import Count
+from bluesky import Msg
 from xpdacq.control import _get_obj   
 from xpdacq.control import _open_shutter
 from xpdacq.control import _close_shutter
@@ -33,11 +34,14 @@ print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 #expo_threshold = 60 # in seconds Deprecated!
 FRAME_ACQUIRE_TIME = 0.1 
 AREA_DET_NAME = 'pe1c'
+TEMP_CONTROLLER_NAME = 'cs700'
 
 # set up the detector    
 # default settings for pe1c
 area_det = _get_obj(AREA_DET_NAME)
 area_det.cam.acquire_time.put(FRAME_ACQUIRE_TIME)
+temp_controller = _get_obj(TEMP_CONTROLLER_NAME)
+
 
 def dryrun(sample,scan,**kwargs):
     '''same as run but scans are not executed.
@@ -80,7 +84,7 @@ def _unpack_and_run(sample,scan,**kwargs):
     if 'subs' in parms: subsc = parms['subs']
     for i in subsc:
         if i == 'livetable':
-            subs.update({'all':LiveTable([area_det])})
+            subs.update({'all':LiveTable([area_det, temp_controller])})
         elif i == 'verify_write':
             subs.update({'stop':verify_files_saved})
     print(subs)
@@ -212,8 +216,8 @@ def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det='pe1c', s
     md_dict = exp.md
     md_dict.update(kwargs)
         
-    #plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
-    plan = xpd_Tseries_plan([area_det], temp_controller, Tstart, Tstop, Nsteps)
+    plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
+    #plan = xpd_Tseries_plan([area_det], temp_controller, Tstart, Tstop, Nsteps)
     xpdRE(plan,subs_dict, **md_dict)
 
     print('End of collect_Temp_scans....')
