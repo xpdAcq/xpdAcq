@@ -6,7 +6,7 @@ Setting up your Beamtime
 This should have been carried out by the beamline responsible.  To check all is ok,
 carry out the following steps:
 
- #. Check you are in the collection environment
+ #. Check you are in the collection environment 
  #. Type ``bt``.  It should return an ``Beamtime`` object.  If not, please contact your beamline responsible.
  
 .. code-block:: python

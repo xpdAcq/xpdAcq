@@ -11,15 +11,11 @@ Set up beamtime
  
  * :ref:`usb_beamtime`
 
-Set up experiment
-+++++++++++++++++
+Set up xpdacquire objects
++++++++++++++++++++++++++
 
-*contents*
+ * :ref:`usb_experiment`
 
-Set up samples
-++++++++++++++
-
-*contents*
 
 Calibration
 +++++++++++
