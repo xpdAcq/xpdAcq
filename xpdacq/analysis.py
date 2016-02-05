@@ -13,8 +13,8 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-#from dataportal import DataBroker as db
-#from dataportal import get_events, get_table, get_images
+from dataportal import DataBroker as db
+from dataportal import get_events, get_table, get_images
 #from metadatastore.commands import find_run_starts
 
 from xpdacq.control import _get_obj
@@ -75,6 +75,9 @@ def _timestampstr(timestamp):
     #corrected_timestampstring = timestampstring.replace(':','-')
     return timestampstring
 
+def save_last_tif()
+    save_tif(db[-1])
+
 
 def save_tif(headers, tif_name = False ):
     ''' save images obtained from dataBroker as tiff format files. It returns nothing.
@@ -125,7 +128,7 @@ def save_tif(headers, tif_name = False ):
                 dummy_name = _feature_gen(header)
                 # FIXME - need to test if motor point is saved once I got chance to use bluesky
                 if 'temperature' in header.start['descriptors']:
-                    f_name = dummy_name + str(i)
+                    f_name = dummy_name + str(i) # for now
                 else:
                     f_namme = dummy_name
                 w_name = os.path.join(W_DIR,f_name)
@@ -142,5 +145,5 @@ def save_tif(headers, tif_name = False ):
                 print('Sorry, something went wrong with your tif saving')
                 return
 
-                print('||********Saving process SUCCEEDED********||')
+    print('||********Saving process SUCCEEDED********||')
 
