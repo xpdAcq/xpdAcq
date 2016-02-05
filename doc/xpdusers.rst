@@ -15,6 +15,10 @@ Set up xpdacquire objects
 +++++++++++++++++++++++++
 
  * :ref:`usb_experiment`
+
+Where did my Sample and Scan Objects go????
++++++++++++++++++++++++++++++++++++++++++++
+
  * :ref:`usb_where`
 
 

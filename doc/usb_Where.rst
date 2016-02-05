@@ -31,7 +31,7 @@ to you, type ``bt.list()`` .  This lists the name and type of all
 the acquisition objects that are on the hard-drive and available
 to you....your objects: e.g., 
 
-.. code-block: python
+.. code-block:: python
 
   >>> bt.list()
   bt object bt has list index  0
@@ -51,7 +51,7 @@ To get them we use ``bt.get()`` .  We can explicitly reload them again
 or usually just use ``bt.get(#)`` where ``#`` is the list index (a number) as a  for example,
 to refer to them directly. For example, consider the following sequence of code blocks:
 
-.. code-block: python
+.. code-block:: python
   
   >>> s1
   ---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ to refer to them directly. For example, consider the following sequence of code 
 
 Oh no, my ``s1`` sample object, which as my sampled named `GaAs` , has disappeared!  ``bt.list()`` to the rescue...
 
-.. code-block: python
+.. code-block:: python
 
   >>> bt.list()
   bt object bt has list index  0
@@ -80,7 +80,7 @@ That's it with a list index of 3, the ``sa`` sample type object called ``GaAs`` 
 Just to be sane, let's reload it. We can give it any name, it doesn't have to be
 the same name as last time, so let's reload it as ``s1_again`` :
 
-.. code-block: python
+.. code-block:: python
 
   >>> s1_again = bt.get(3)
   >>> s1.name
@@ -90,7 +90,7 @@ As you get used to this, you will realize that you don't actually have to reload
 it at all, and can just refer directly to it.  For example, type ``bt.get(3).md``
 and see what you get
 
-.. code-block: python
+.. code-block:: python
 
   >>> bt.get(3).md
   {'bt_experimenters': {('Chia-Hao', 'Liu'), ('Simon', 'Billinge')},
@@ -117,7 +117,7 @@ A little hint too.  If it is late in your beamtime and you have hundreds of thos
 select to list them by type, e.g. if you just want the Sample (``sa`` ) type objects then
 type ``bt.list('sa')`` :
 
-.. code-block: python
+.. code-block:: python
 
   >>> bt.list('sa')
   sa object GaAs has list index  3
@@ -142,7 +142,8 @@ confusion until you get used to them.
  
     This is actually a feature of the code (we want each object to be unique and the only thing that makes it unique from one ``collection`` session to the next is its name and type). But please be careful about your naming! Why is it a feature?  You can use this to update an object by redefining it with the same name.
  
- #. Objects may change their position in the ``bt.list()`` as new objects are created.  Just because the object you want was in position ``4`` before, doesn't mean it will be now. **So get used to always typing** ``bt.list()`` **FIRST then** ``bt.get()``
+ #. Objects may change their position in the ``bt.list()`` as new objects are created.  Just because the object you want was in position ``4`` before, doesn't mean it will be now. **So get used to always typing** ``bt.list()`` **FIRST then** ``bt.get()`` .
 
   
 return to :ref:`xpdu`
+
