@@ -9,7 +9,7 @@ XPD Users
 Set up beamtime
 +++++++++++++++
  
- * :ref:`usb_Beamtime`
+ * :ref:`usb_beamtime`
 
 Set up experiment
 +++++++++++++++++

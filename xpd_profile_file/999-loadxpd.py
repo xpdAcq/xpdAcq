@@ -33,7 +33,8 @@ _make_clean_env(datapath)
 # These are needed in real XPD
 os.chdir(os.path.join(B_DIR,WORKING_DIR))
 #if there is a yml file in the normal place, then load the beamtime object
-bt = XPD.loadyamls()[0]
+if len(XPD.loadyamls()) > 0:
+    bt = XPD.loadyamls()[0]
 
 
 # instanciate RE:

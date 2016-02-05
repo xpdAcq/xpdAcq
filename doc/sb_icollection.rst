@@ -10,7 +10,7 @@ session. By typing ``icollection`` at the unix prompt (command line) in a termin
 window at the XPD computer you begin an ipython session and preload an ipython
 profile (called ``collection``) that contains all the software to run the NSLS-II 
 data collection software.  You can tell when you are in the ``collection`` environment
-because you will see ``[collection]`` at the beginning of the command-line.  When
+because you will see ``(collection)`` at the beginning of the command-line.  When
 you are not in the environment you won't see that.
 
 Inside this ``collection`` environment you can type commands that will control the
