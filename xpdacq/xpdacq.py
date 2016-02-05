@@ -17,12 +17,13 @@ def _get_obj(name):
     ip = get_ipython() # build-in function
     return ip.user_ns[name]
 
+import numpy as np
 from xpdacq.beamtime import Union, Xposure
 from bluesky.plans import Count
 from xpdacq.control import _get_obj   
 from xpdacq.control import _open_shutter
 from xpdacq.control import _close_shutter
-from bluesky.plans.AbsScanPlan
+from bluesky.plans import AbsScanPlan
 
 xpdRE = _get_obj('xpdRE')
 LiveTable = _get_obj('LiveTable')
@@ -88,7 +89,8 @@ def _unpack_and_run(sample,scan,**kwargs):
     elif scan.scan == 'tseries':
        collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
     elif scan.scan == 'Tseries':
-       collect_Temp_seres(scan, parms[0], 'pe1c', **kwargs)
+       #collect_Temp_series(scan, parms[0], 'pe1c', **kwargs)
+        collect_Temp_series(cmdo, parms['startingT'], parms['endingT'], parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
     else:
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
@@ -168,7 +170,7 @@ def get_light_images(mdo, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
     print('End of get_light_image...')
 
 
-def collect_Temp_series(mdo, T_start, Tstop, T_step, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
+def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
     '''the main xpdAcq function for getting an exposure
     
     Arguments:
@@ -202,13 +204,14 @@ def collect_Temp_series(mdo, T_start, Tstop, T_step, exposure = 1.0, det='pe1c',
     Nsteps = _nstep(Tstart, Tstop, Tstep) # computed steps
     exp.md.update({'sc_startingT':Tstart,'sc_endingT':Tstop,'sc_requested_Tstep':Tstep}) 
     exp.md.update({'sc_Nsteps':Nsteps}) 
-    print('INFO: requested temperature step = ',Tstep,' -> computed temperature step:', _Tstep)
+    #print('INFO: requested temperature step = ',Tstep,' -> computed temperature step:', _Tstep)
+    # information is taking care in _nstep
 
     area_det.images_per_set.put(num_frame)
     md_dict = exp.md
     md_dict.update(kwargs)
         
-    plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, _Tstep)
+    plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
     xpdRE(plan,subs_dict, **md_dict)
 
     print('End of collect_Temp_scans....')
@@ -218,10 +221,9 @@ def _nstep(start, stop, step_size):
     requested_nsteps = abs((start - stop) / step_size)
     
     computed_nsteps = np.ceil(requested_nsteps)
-    computed_step_list = np.linspace(start, stop, computed_step)
+    computed_step_list = np.linspace(start, stop, computed_nsteps)
     computed_step_size = computed_step_list[2]- computed_step_list[1]
-    print('requested step size = %s' % str(step_size) )    
-    print('computed step size = %s' % str(computed_step_size))
+    print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',computed_step_size)
     return computed_nsteps
 
 def get_bluesky_run(mdo, plan, det='pe1c', subs_dict={}, **kwargs):
