@@ -99,12 +99,15 @@ Here are some examples of valid count-type ScanPlan definitions:
 .. code-block:: python
 
   >>> sc = Scan('ct1.5','ct',{'exposure':1.5})                      # the simplest count scan definition
-  >>> sc = Scan('ct1.5_nosh','ct',{'exposure':1.5},shutter=False)    # same scan as before but let's do the shutter by hand (be careful!)
+  >>> sc = Scan('ct1.5_nosh','ct',{'exposure':1.5},shutter=False)   # same scan as before but let's do the shutter by hand (be careful!)
   >>> sc = Scan('ct100.5_nolt','ct',{'exposure':100.5},livetable=False)    # nice long scan but we don't want to clutter our terminal with the table showing the counts
-  >>> sc = Scan('ct2_vw','ct',{'exposure':2},verify_write=True)    # we want to be sure the tiff was written in pe1_data, but pay a price of a ~ 1 second overhead.
+  >>> sc = Scan('ct2_vw','ct',{'exposure':2},verify_write=True)     # we want to be sure the tiff was written in pe1_data, but pay a price of a ~ 1 second overhead.
   >>> sc = Scan('ct2_vw_nosh','ct',{'exposure':2},verify_write=True,shutter=False) # hopefully you are getting the idea.
+  >>> Scan('ct2','ct',{'exposure':2})                               # this will also work in xpdAcq because we can reference this object with bt.list() and bt.get()
 
 A few things to note:
 
- * because all these are count ScanPlans, the second argument is ``'ct'`` for all of them.
- * They all have different names (the first argument!).  It is OK for you to make the assignment ``sc = ...`` the same in each case. This would be bad in regular python programming because you would be repeatedly reassigning the same python object (``sc``)
+ * Because all these are count ScanPlans, the second argument is ``'ct'`` for all of them.
+ * **They all have different names** (the first argument!).  This is necessary in xpdAcq!  On a side note, though it is not OK in Python in general, it is OK for you to make the assignment ``sc = ...`` the same in each case. This would be bad in regular python programming because you would be repeatedly reassigning the same python object (``sc``) with different definitions and they will all be lost except the most recent definition.  However, in xpdAcq we should always reference our objects using ``bt.list()`` then ``bt.get()`` (:ref:`remember? <usb_where>`).  This means that the objects instantiated this way are all saved correctly even with the same assignment, *as long as they have different names*. We can even do some Python insanity such as the last ScanPlan definition shown in the examples.  This object is created with no assignment so there is no way for Python to reference it, but we can in xpdAcq with ``bt.list()`` and ``bt.get()``.
+ * It is quite possible to successfully define an incorrectly composed ScanPlan object. You will only know this when you try and run it.  later we will give tools that can validate your scan objects for you, but for now you have to do it by hand.  You can do this by running them in ``dryrun()``, see :ref:`usb_running`.
+ * The scan_params syntax is a bit clunky and delicate.  Please just be careful for now.  Later we will give helper functions and maybe a GUI (if we can get funding for a summer student).  Let's all pray to the funding gods!
