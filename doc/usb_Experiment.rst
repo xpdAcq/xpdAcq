@@ -141,8 +141,8 @@ us to search, for example, for all the scans done on a sample as
 part of this experiment.
 
 At the time of writing, each object, such as Sample, is a container
-for the barest minimum of metadata.  As time goes on we will increas
+for the barest minimum of metadata.  As time goes on we will increase
 the number of things that you may save about samples and experiments.
-Send us your requests!
+Send us your requests (sb2896@columbia.edu)!
 
 return to :ref:`xpdu`

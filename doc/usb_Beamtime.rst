@@ -15,7 +15,7 @@ carry out the following steps:
   <xpdacq.beamtime.Beamtime at 0x4b112b0>
   
 This object is like a container that contains some critical information about 
-your beamtime.  You can investigate what is inside...
+your beamtime.  You can investigate what is inside.
 
 To see the kinds of things that container contains, place a dot after bt and hit `tab`,
 and all things it contains (but not their values) will be listed.
@@ -78,6 +78,17 @@ and hit return.  So far there is only 1 object, it is the `bt` object with name 
   Use bt.get(index) to get the one you want
 
 Before we move on, one more thing.  As we mentioned before, if ``bt`` doesn't exist,
+
+.. code-block:: python
+
+  >>> bt
+  ---------------------------------------------------------------------------
+  NameError                                 Traceback (most recent call last)
+  <ipython-input-1-d0d7ab093f8d> in <module>()
+  ----> 1 bt
+
+  NameError: name 'bt' is not defined
+
 please go and talk to your instrument responsible as there may be other aspects of the
 environment setup that need to be fixed, but if you ever do have to create
 (we call it `instantiate`) a new ``bt`` object, it is done like this:
@@ -90,4 +101,3 @@ We will assume that ``bt`` exists.  Now we move on to the next step, :ref:`usb_e
 
 return to :ref:`xpdu`
 
-return to :ref:`xpdu`

@@ -15,6 +15,7 @@ Set up xpdacquire objects
 +++++++++++++++++++++++++
 
  * :ref:`usb_experiment`
+ * :ref:`usb_where`
 
 
 Calibration
