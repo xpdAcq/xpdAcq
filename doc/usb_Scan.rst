@@ -12,7 +12,7 @@ Firstly, what is a scan?  A scan is a grouped set of detector exposures.  The se
 contain just one exposure (we call that a count scan, ``'ct'`` ).  Or it may be a series of exposures 
 taken one after the other, possibly with a delay between.  We
 call that a time-series (or ``'tseries'`` ).  Another popular one that is supported is the
-a temperature series, or temperature ramp, ``Tramp'``.  More are also on the way, but
+a temperature series, or temperature ramp, ``'Tramp'``.  More are also on the way, but
 these simple scans may also be combined together in scripts, giving the user significant
 control over how to construct their experiment.
 
@@ -80,16 +80,16 @@ programmer and may be more or less valuable and accurate (though good programmer
 write good Docstrings!).  The ``Init signature`` is absolutely accurate and
 up to date, so if they are not 100% in agreement, go with the signature.
 
-The arguments types are given in the Docstring. ``self`` is always ignored, so
-the first given argument is ``scanname`` and is a string (make sure to enclose it in 
+The argument types are given in the Docstring. ``self`` is always ignored, so
+the first given argument is ``scanname`` and is a string (make sure to enclose strings in 
 single or double quotes when you give it, i.e., ``'myscan'`` or ``"myscan"`` will 
 work but ``myscan`` will not).  The second argument is a string that denotes the scan type. At the time
-or writing the only ones available are 'ct', 'tseries' and 'Tramp'.  If you give
+or writing the only ones available are ``'ct'``, ``'tseries'`` and ``'Tramp'``.  If you give
 any other string values the ScanPlan will be created no problem, but it
 will not run if you try it!  The third and last given required-argument is ``scan_params``
 and is a dictionary that contains one or more key:value pairs.  In this case
-the keys are fixed quantities, and the required keys depends on the scan-type.  Please see
-the examples below.  The values are the values of those parameters that you want
+the "keys" are fixed quantities, where the required keys depends on the scan-type.  Please see
+the examples below.  The "values" are the values of those parameters that you want
 for your particular scan-plan.  Python dictionaries are written in the form ``{key1:value1,key2:value2,....,lastkey:lastvalue}``
 
 *Count scan*
@@ -108,6 +108,10 @@ Here are some examples of valid count-type ScanPlan definitions:
 A few things to note:
 
  * Because all these are count ScanPlans, the second argument is ``'ct'`` for all of them.
- * **They all have different names** (the first argument!).  This is necessary in xpdAcq!  On a side note, though it is not OK in Python in general, it is OK for you to make the assignment ``sc = ...`` the same in each case. This would be bad in regular python programming because you would be repeatedly reassigning the same python object (``sc``) with different definitions and they will all be lost except the most recent definition.  However, in xpdAcq we should always reference our objects using ``bt.list()`` then ``bt.get()`` (:ref:`remember? <usb_where>`).  This means that the objects instantiated this way are all saved correctly even with the same assignment, *as long as they have different names*. We can even do some Python insanity such as the last ScanPlan definition shown in the examples.  This object is created with no assignment so there is no way for Python to reference it, but we can in xpdAcq with ``bt.list()`` and ``bt.get()``.
+ * **They all have different names** (the first argument!).  This is necessary in xpdAcq!  On a side note, though it is not OK in Python in general, in xpdAcq it *is* OK for you to make the assignment (i.e., ``sc = ...``) the same in each case. This would be bad in regular python programming because you would be repeatedly reassigning the same python object (``sc``) with different definitions and they will all be lost except the most recent definition.  However, in xpdAcq we should always reference our objects using ``bt.list()`` then ``bt.get()`` (:ref:`remember? <usb_where>`).  This means that the objects instantiated this way are all saved correctly even with the same assignment, *as long as they have different names*. We can even do some Python insanity such as the last ScanPlan definition shown in the examples.  This object is created with no assignment so there is no way for Python to reference it, but we can in xpdAcq with ``bt.list()`` and ``bt.get()``.
  * It is quite possible to successfully define an incorrectly composed ScanPlan object. You will only know this when you try and run it.  later we will give tools that can validate your scan objects for you, but for now you have to do it by hand.  You can do this by running them in ``dryrun()``, see :ref:`usb_running`.
  * The scan_params syntax is a bit clunky and delicate.  Please just be careful for now.  Later we will give helper functions and maybe a GUI (if we can get funding for a summer student).  Let's all pray to the funding gods!
+
+OK, it is time to :ref:`run our scans <usb_running>`
+
+return to :ref:`xpdu`

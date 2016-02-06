@@ -119,8 +119,8 @@ For the InGaAs phase diagram study for example, we may have to make 5 samples:
   'bt_safN': 300256,
   'bt_uid': '9b0c5878-cba4-11e5-8984-28b2bd4521c0',
   'bt_wavelength': 0.1818,
-  'ex_name': 'ProteinFolding',
-  'ex_uid': 'c89120dc-cbc8-11e5-ac9b-28b2bd4521c0',
+  'ex_name': 'InGaAsAlloyPD',
+  'ex_uid': '4e45bf3e-cbc7-11e5-8b67-28b2bd4521c0
   'sa_name': 'InAs',
   'sa_uid': '415f8e06-cbca-11e5-92fe-28b2bd4521c0'}
   >>> s3.md
@@ -129,20 +129,29 @@ For the InGaAs phase diagram study for example, we may have to make 5 samples:
   'bt_safN': 300256,
   'bt_uid': '9b0c5878-cba4-11e5-8984-28b2bd4521c0',
   'bt_wavelength': 0.1818,
-  'ex_name': 'ProteinFolding',
-  'ex_uid': 'c89120dc-cbc8-11e5-ac9b-28b2bd4521c0',
+  'ex_name': 'InGaAsAlloyPD',
+  'ex_uid': '4e45bf3e-cbc7-11e5-8b67-28b2bd4521c0
   'sa_name': 'InAs',
   'sa_uid': '7c73f3a7-cbca-11e5-a0cb-28b2bd4521c0'} 
 
 Hopefully you are getting the picture.  We will hand these sample
-objects to the run engine when each scan or count is launched and
-all the metadata will be associated with each scan, easily allowing
-us to search, for example, for all the scans done on a sample as
-part of this experiment.
+objects to the run engine when each scan is launched and
+all the metadata up the stack will be associated with each scan, easily allowing
+us to search, for example, for "all the scans done on sample ``'InGas'`` as
+part of this beamtime" or perhaps "all the scans done in experiment ``'ProteinFolding'``.
+Other metadata is saved such as date-time at the time of running, so we could
+search for "the scan that was running at 5pm on Friday".  We also differentiate
+production runs and setup scans.  By default the search will not return the
+setup scans, though they can be retrieved if and when needed.  You can also
+store any other metadata that you want at each level so you can tag data
+and search in a very powerful way.  The search capabilities in the xpdAcq suite
+are still under development, so please share your requests (sb2896@columbia.edu).
 
 At the time of writing, each object, such as Sample, is a container
 for the barest minimum of metadata.  As time goes on we will increase
 the number of things that you may save about samples and experiments.
-Send us your requests (sb2896@columbia.edu)!
+Send us your requests here too (sb2896@columbia.edu)!
+
+:ref:`moving on... <usb_where>`
 
 return to :ref:`xpdu`

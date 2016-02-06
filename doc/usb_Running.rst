@@ -3,10 +3,15 @@
 Running scans
 -------------
 
-The hard work of the experimental setup is now creating all the objects, making
-it easy and low overhead to run the scans.  There are just a few xpdAcq
-run engines that you need.  Each on you simply give a Sample object and
-a ScanPlan object and hit return, and your scan will be carried out.
+The hard work of the experimental setup is now done.  It involved creating all the 
+rich metadata container and scan objects, but with this in the past it makes 
+it easy and low overhead to run the scans, allowing the experimenter to concentrate
+on the science and not the experimental process.  
+
+To run scans there are just a few xpdAcq
+run engines that you need.  To run a scan you simply pick the run engine you want
+and give it a predefined Sample object and
+a predefined ScanPlan object, then hit return and sit back, your scan will be carried out.
 
 The allowed scan types are:
 
@@ -28,9 +33,11 @@ also for estimating how long a ``tseries`` or ``Tramp`` might take.
 
 Here are some examples of a workflow.  Assume a GaAs sample is loaded on the diffractometer
 and the ``'GaAs'`` Sample object is created as well as all the ScanPlans we need.
-We will start by doing a dry-run on our ``'ct2"`` count ScanPlan.
+We will start by doing a dry-run on our ``'ct2'`` count ScanPlan.
 
-. code-block:: python
+Remember, always start with ``bt.list()``
+
+.. code-block:: python
 
   >>> bt.list()
   bt object bt has list index  0
@@ -83,4 +90,6 @@ to get the first data-set.
   >>> prun(bt.get(3),bt.get(11))  #2 seconds
   [Fixme] output here
 
+Let's :ref:`take a quick look at our data <usb_quickassess>`
 
+return to :ref:`xpdu`

@@ -9,7 +9,7 @@ objects, and now they have suddenly disappeared!  This
 is a disaster!
 
 As Douglas Adams taught us `DON'T PANIC` .  This is actually
-`normal` (or at least `expected` ) behavior.  Remember that
+`normal` (or at least `expected` ) behavior in xpdAcq.  Remember that
 one of the design goals of the software project was to minimize
 users' typing.  The design had to take into account that the
 collection ipython environment is not so stable 
@@ -23,7 +23,7 @@ But don't worry, they are all safe and sound.
 
 .. _usb_bt_list:
 
-bt_list() and bt_get() are your friends
+bt.list() and bt.get() are your friends
 ---------------------------------------
 
 To see what xpdAcquire acquisition objects you have available 
@@ -61,7 +61,7 @@ to refer to them directly. For example, consider the following sequence of code 
 
   NameError: name 's1' is not defined
 
-Oh no, my ``s1`` sample object, which as my sampled named `GaAs` , has disappeared!  ``bt.list()`` to the rescue...
+Oh no, my ``s1`` sample object, which as my sample named `GaAs` , has disappeared!  ``bt.list()`` to the rescue...
 
 .. code-block:: python
 
@@ -83,7 +83,7 @@ the same name as last time, so let's reload it as ``s1_again`` :
 .. code-block:: python
 
   >>> s1_again = bt.get(3)
-  >>> s1.name
+  >>> s1_again.name
   'GaAs'
 
 As you get used to this, you will realize that you don't actually have to reload
@@ -131,7 +131,7 @@ Make sure to refer to that object by the written index number and not where you 
 
 .. _usb_gotchas:
 
-bt_list() and bt_get() Gotchas
+bt.list() and bt.get() Gotchas
 ------------------------------
 
 Once you get used to this design we hope you will like it, but there are a 
@@ -143,7 +143,11 @@ confusion until you get used to them.
     This is actually a feature of the code (we want each object to be unique and the only thing that makes it unique from one ``collection`` session to the next is its name and type). But please be careful about your naming! Why is it a feature?  You can use this to update an object by redefining it with the same name.
  
  #. Objects may change their position in the ``bt.list()`` as new objects are created.  Just because the object you want was in position ``4`` before, doesn't mean it will be now. **So get used to always typing** ``bt.list()`` **FIRST then** ``bt.get()`` .
+ #. At the time of writing, our xpdacq objects incorporate metadata from higher in the stack (e.g., Sample inheriting Experiment metadata) statically at the time they are created.  If you update information higher in the stack, for example, add some experiment information, the new information will only appear in objects created (or updated by reinstantiating) after this upstream change.  We hope to fix this in the future.
+ 
+go to :ref:`usb_scan`
 
-  
+go to :ref:`usb_running`
+ 
 return to :ref:`xpdu`
 

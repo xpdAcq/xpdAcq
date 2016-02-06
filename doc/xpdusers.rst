@@ -11,8 +11,8 @@ Set up beamtime
  
  * :ref:`usb_beamtime`
 
-Set up xpdacquire objects
-+++++++++++++++++++++++++
+Set up Experiment and Sample objects
+++++++++++++++++++++++++++++++++++++
 
  * :ref:`usb_experiment`
 
@@ -29,20 +29,21 @@ Set up Scan objects
 Run scans
 +++++++++
 
-scans
+ * :ref:`usb_running`
+ * :ref:`usb_quickassess`
 
 View data
 +++++++++
 
 *contents*
 
-Analysis
-++++++++
+Data Analysis
++++++++++++++
 
 *contents*
 
-Take out your data
-++++++++++++++++++
+Export your data and your work
+++++++++++++++++++++++++++++++
 
 *contents*
 
