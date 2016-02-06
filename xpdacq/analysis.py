@@ -110,7 +110,7 @@ def save_tif(headers, tif_name = False ):
     # iterate over header(s)
     for header in header_list:
         print('Plotting and saving your image(s) now....')
-        # get images and exposure time from headers
+        # get images and exposure time from headers level
         try:
             img_field =[el for el in header.descriptors[0]['data_keys'] if el.endswith('_image')][0]
             print('Images are pulling out from %s' % img_field)
@@ -121,10 +121,10 @@ def save_tif(headers, tif_name = False ):
             print('Was area detector correctly mounted then?')
             print('Stop saving')
             return
-        
+
+        # working on events level
         header_events = list(get_events(header))
 
-        # get events from header
         try:
             cnt_time = header.start['sc_params']['exposure']
             print('cnt_time = %s' % cnt_time)
@@ -139,17 +139,18 @@ def save_tif(headers, tif_name = False ):
             dummy = light_imgs[i] 
             img_list.append(dummy)
         
-        for img in img_list:
+        for i in range(len(img_list)):
+            img = img_list[i]
             if not tif_name:
                 W_DIR = datapath.tif_dir
                 dummy_name = _feature_gen(header)
                
                 # temperautre is a typo from Dan but it is there...
-                if 'temperautre' in header_events[0]['data']:
-                    f_name = dummy_name + header_events[0]['data']['temperautre']
+                if 'temperautre' in header_events[i]['data']:
+                    f_name = dummy_name + '_'+str(header_events[i]['data']['temperautre'])+'K'
                 else:
                     f_name = dummy_name
-                w_name = os.path.join(W_DIR,f_name)
+                w_name = os.path.join(W_DIR,f_name+'.tiff')
             try:
                 fig = plt.figure(f_name)
                 plt.imshow(img)

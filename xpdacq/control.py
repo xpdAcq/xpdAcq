@@ -32,3 +32,4 @@ def _close_shutter():
         if not shctl1.get():
             break
             time.sleep(0.5)
+    return        
