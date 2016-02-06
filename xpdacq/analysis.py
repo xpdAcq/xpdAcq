@@ -126,7 +126,7 @@ def save_tif(headers, tif_name = False ):
         header_events = list(get_events(header))
 
         try:
-            cnt_time = header.start['sc_params']['exposure']
+            cnt_time = header.start['xp_computed_exposure']
             print('cnt_time = %s' % cnt_time)
         except KeyError:
             print('Opps you forgot to enter exposure time')
@@ -142,7 +142,7 @@ def save_tif(headers, tif_name = False ):
         for i in range(len(img_list)):
             img = img_list[i]
             if not tif_name:
-                W_DIR = datapath.tif_dir
+                w_dir = datapath.tif_dir
                 dummy_name = _feature_gen(header)
                
                 # temperautre is a typo from Dan but it is there...
@@ -150,7 +150,10 @@ def save_tif(headers, tif_name = False ):
                     f_name = dummy_name + '_'+str(header_events[i]['data']['temperautre'])+'K'
                 else:
                     f_name = dummy_name
-                w_name = os.path.join(W_DIR,f_name+'.tiff')
+                w_name = os.path.join(w_dir,f_name+'.tiff')
+            
+            #### remove this.  Plotting should not be in a function called "save_tif"
+            #### put this in a function called "plot_data" and remove all the tiff-saving stuff from that file
             try:
                 fig = plt.figure(f_name)
                 plt.imshow(img)
