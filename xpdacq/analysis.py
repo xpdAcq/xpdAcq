@@ -36,6 +36,7 @@ get_events = _get_obj('get_events')
 get_images = _get_obj('get_images')
 
 
+
 def bt_uid():
     return bt.get(0).md['bt_uid']
 
@@ -81,14 +82,13 @@ def _feature_gen(header):
     exp_time = _timestampstr(header.start.time)
     return '_'.join([exp_time, f_name])
 
-def _timestampstr(timestamp):
-    time = str(datetime.datetime.fromtimestamp(timestamp))
-    date = time[:10]
-    hour = time[11:16]
-    m_hour = hour.replace(':','-')
-    timestampstring = '_'.join([date,hour])
-    #corrected_timestampstring = timestampstring.replace(':','-')
-    return timestampstring
+def _timestampstr(timestamp, hour=False):
+    ''' convert timestamp to strftime formate '''
+    if not hour:
+        timestring = datetime.date.fromtimestamp(float(timestamp)).strftime('%Y_%m_%d')
+    elif hour:
+        timestring = datetime.date.fromtimestamp(float(timestamp)).strftime('%Y_%m_%d-%H')
+    return timestring
 
 def save_last_tiff():
     save_tif(db[-1])
@@ -153,8 +153,8 @@ def save_tiff(headers):
 
     print('||********Saving process SUCCEEDED********||')
 
-
-
+# make sure codes at XPD is still working after renaming
+save_tif = save_tiff
 
 
 def plot_images(header):
@@ -170,6 +170,7 @@ def plot_images(header):
     else:
         header_list = headers
     
+     
     for header in header_list:
         _identify_image_field(header)
         f_name = _feature_gen(header)
@@ -193,11 +194,15 @@ def plot_images(header):
                 f_name = dummy_name
 
             try:
+                print('Plotting your data now...')
                 fig = plt.figure(f_name)
                 plt.imshow(img)
                 plt.show()
             except:
                 pass # allow matplotlib to crash without stopping other function
+
+def plot_last_scan():
+    plot_images(db[-1])
 
 
 def _indentify_image_field(header):
