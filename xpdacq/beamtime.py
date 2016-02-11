@@ -197,14 +197,14 @@ class ScanPlan(XPD):
         self.type = 'sc'
         self.scan = _clean_md_input(scan_type)
         self.sc_params = _clean_md_input(scan_params) # sc_parms is a dictionary
-        _plan_validator(self.name)
+        _plan_validator(self.scan) # correct logic: get scan_type
 
         self.shutter = shutter
         self.md = {}
-        self.md.update({'sc_name': self._clean_md_input(name)})
-        self.md.update({'sc_type': self._clean_md_input(type)})
+        self.md.update({'sc_name': _clean_md_input(self.name)})
+        self.md.update({'sc_type': _clean_md_input(self.scan)})
         self.md.update({'sc_uid': self._getuid()})
-        self.md.update({'sc_usermd':self._clean_md_input(kwargs)})
+        self.md.update({'sc_usermd':_clean_md_input(kwargs)})
         if self.shutter: 
             self.md.update({'sc_shutter_control':'in-scan'})
         else:
@@ -301,13 +301,15 @@ def _clean_md_input(obj):
     else:
         return obj
 
-def _plan_validator(obj_name):
-    ''' validator for ScanPlan object
+def _plan_validator(scan_type):
+    ''' Validator for ScanPlan object
+    
+    It validates if required scan parameters for certain scan type are properly defined in object
 
     Parameters
     ----------
-        obj_name : str
-            name of XPD beamtime object
+        scan_type : str
+            scan tyoe of XPD Scan object
     '''
     # based on structures in xpdacq.xpdacq.py
     _Tseries_required_params = ['startingT', 'endingT', 'requested_Tstep', 'exposure']
@@ -321,7 +323,7 @@ def _plan_validator(obj_name):
     # params in tseries is not completely finalized
     _tseries_required_params = ['num', 'exposure']
      
-    if obj_name == 'ct':
+    if scan_type == 'ct':
         for el in _ct_required_params:
             try:
                 sc_parms[el]
@@ -330,7 +332,7 @@ def _plan_validator(obj_name):
                 print('Pleas revisit your ScanPlan object')
                 return     
 
-    if obj_name == 'Tseries':
+    elif scan_type == 'Tseries':
         for el in _Tseries_required_params:
             try:
                 sc_parms[el]
@@ -339,14 +341,19 @@ def _plan_validator(obj_name):
                 print('Pleas revisit your ScanPlan object')
                 return 
 
-    if obj_name == 'tseries':
+    elif scan_type == 'tseries':
         for el in _tseries_required_params:
             try:
                 sc_parms[el]
             except KeyError:
                 print('It seems you are using a tseries scan plan but you missed %s' % (el))
                 print('Pleas revisit your ScanPlan object')
-                return                    
+                return
+    else:
+        print('It seems you are using a scan type we do not recongize')
+        print('That is fine but please make sure you have all required parameters defined')
+        pass
+    
 '''
 class XPDSTATE():
        def __init__(self, dirpath='./config_base', md={}  ):
