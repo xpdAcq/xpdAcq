@@ -28,7 +28,6 @@ from xpdacq.config import datapath # at xpd
 
 # fileds used to generate tiff file name. Could be maintained later
 _fname_field = ['sa_name', 'bt_experimenters']
-#_scan_property = ['xp_isdark']
 
 bt = _get_obj('bt')
 db = _get_obj('db')
@@ -158,11 +157,16 @@ save_tif = save_tiff
 
 
 def plot_images(header):
-    ''' function to plot images
+    ''' function to plot images from header.
+    
+    It plots images, return nothing
+
+    Parameters
+    ----------
+        header : databroker header object
+            header pulled out from central file system
 
     '''
-   
-    # FIXME - need a better logic in _featuregen and so to plot_images 
     # prepare header
     if type(list(headers)[1]) == str:
         header_list = list()
@@ -170,38 +174,25 @@ def plot_images(header):
     else:
         header_list = headers
     
-     
     for header in header_list:
-        _identify_image_field(header)
-        f_name = _feature_gen(header)
-        header_events = list(get_events(header))
-        light_images = get_images(header)
-
-        img_list = list() # dark correction functionality could be included in here later
-        for i in range(light_imgs.shape[0]):
-            dummy = light_imgs[i] 
-            img_list.append(dummy)
-        
-        for i in range(len(img_list)):
-            img = img_list[i]
-            dummy_name = _feature_gen(header)
-            
-            # get temperature label
-            if 'temperautre' in header_events[i]['data']:
-                # temperautre is a typo from Dan but it is there...
-                f_name = dummy_name + '_'+str(header_events[i]['data']['temperautre'])+'K'
-            else:
-                f_name = dummy_name
-
+        uid = header.start.uid 
+        img_field = _identify_image_field(header)
+        imgs = np.array(get_images(header, img_field))
+        print('Plotting your data now...')
+        for i in range(imgs.shape[0]):
+            img = imgs[i]
+            plot_title = '_'.join(uid, str(i))
+            # just display user uid and index of this image
             try:
-                print('Plotting your data now...')
-                fig = plt.figure(f_name)
+                fig = plt.figure(plot_title)
                 plt.imshow(img)
                 plt.show()
             except:
                 pass # allow matplotlib to crash without stopping other function
 
 def plot_last_scan():
+    ''' function to plot images from last header
+    '''
     plot_images(db[-1])
 
 
@@ -211,7 +202,7 @@ def _indentify_image_field(header):
     try:
         img_field =[el for el in header.descriptors[0]['data_keys'] if el.endswith('_image')][0]
         print('Images are pulling out from %s' % img_field)
-        light_imgs = np.array(get_images(header,img_field))
+        return img_field
     except IndexError:
         uid = header.start.uid
         print('This header with uid = %s does not contain any image' % uid)
