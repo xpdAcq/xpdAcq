@@ -95,7 +95,7 @@ class XPD:
         return list[index]
 
     @classmethod
-    def delete(cls, index):
+    def remove(cls, index):
         garage_path = cls._yaml_garage_path(cls)
         read_path = cls._yaml_path(cls)
 
@@ -105,6 +105,7 @@ class XPD:
         f_name = os.join(read_path, obj_type+'_'+obj_name+'.yml')
 
         print("You are about to remove %s object with name %s from current object list" % (obj_type, obj_name))
+        print("Removed object will be moved to %s. You can still reuse it if you need to" % garage_path) 
         user_confirm = input("Do you want to continue y/[n]: ")
         if user_confirm in ('n',''):
             print('Stopped. Nothing was removed')
