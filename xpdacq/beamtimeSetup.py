@@ -136,6 +136,7 @@ def _start_beamtime(base_dir=None):
     _make_clean_env(dp)
     PI_name = input('Please enter the PI last name to this beamtime: ')
     saf_num = input('Please enter the SAF number to this beamtime: ')
+    wavelength = input('Please enter wavelength you obtained from beamline scientist')
     XPD._base_path = dp.base
-    bt = Beamtime(PI_name,saf_num)
+    bt = Beamtime(PI_name,saf_num, wavelength)
     return bt
