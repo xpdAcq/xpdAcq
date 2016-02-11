@@ -120,22 +120,23 @@ def _start_beamtime(base_dir=None):
     if os.path.exists(dp.base):
         if not os.path.isdir(dp.base):
             raise RuntimeError("Expected a folder, got a file.  "
-                               "Talk to beamline staff")
+                               "Please Talk to beamline staff")
         files = os.listdir(dp.base)
         if len(files) > 1:
             raise RuntimeError("Unexpected files in {}, you need to run"
-                               "Talk to beamline staff".format(dp.base))
+                               "Please Talk to beamline staff".format(dp.base))
         elif len(files) == 1:
             tf, = files
             if 'tar' not in tf:
                 raise RuntimeError("Expected a tarball of some sort, found {} "
-                                   "Talk to beamline staff"
+                                   "Please talk to beamline staff"
                                    .format(tf))
             os.unlink(os.path.join(dp.base, tf))
 
     _make_clean_env(dp)
+    os.chdir(dp.base)
     PI_name = input('Please enter the PI last name to this beamtime: ')
     saf_num = input('Please enter the SAF number to this beamtime: ')
-    XPD._base_path = dp.base
-    bt = Beamtime(PI_name,saf_num)
+    wavelength = input('Please enter the x-ray wavelength: ')
+    bt = Beamtime(PI_name,saf_num,wavelength)
     return bt
