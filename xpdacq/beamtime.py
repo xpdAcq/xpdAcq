@@ -46,7 +46,7 @@ class XPD:
         return yaml_garage_dir_path
 
                     
-    def _yamify(self):t 
+    def _yamify(self):
         fname = self.name
         ftype = self.type
         fpath = os.path.join(self._yaml_path(), ftype+'_'+ fname +'.yml')
