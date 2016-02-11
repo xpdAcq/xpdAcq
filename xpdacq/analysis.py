@@ -28,12 +28,12 @@ from xpdacq.config import datapath # at xpd
 
 # fileds used to generate tiff file name. Could be maintained later
 _fname_field = ['sa_name', 'bt_experimenters']
-#_scan_property = ['xp_isdark']
 
 bt = _get_obj('bt')
 db = _get_obj('db')
 get_events = _get_obj('get_events')
 get_images = _get_obj('get_images')
+
 
 
 def bt_uid():
@@ -48,6 +48,7 @@ def _feature_gen(header):
     time_stub = _timestampstr(header.start.time)
     feature_list = []
     
+    # get dark label
     try:
         if header.start['xp_isdark']:
             feature_list.append('dark')
@@ -63,7 +64,7 @@ def _feature_gen(header):
                 feature_list.append(str(el[0]))
                 feature_list.append(str(el[1]))
             else:
-                # truncate length
+                # truncate string length
                 if len(el)>12:
                     value = el[:12]
                 else:
@@ -74,31 +75,28 @@ def _feature_gen(header):
         except KeyError:
             # exceptioin handle. If user forgot to define require fields
             pass
-
-    print(feature_list)
+    
+    # FIXME - find a way to include motor information
     f_name = "_".join(feature_list)
     exp_time = _timestampstr(header.start.time)
     return '_'.join([exp_time, f_name])
 
-def _timestampstr(timestamp):
-    time = str(datetime.datetime.fromtimestamp(timestamp))
-    date = time[:10]
-    hour = time[11:16]
-    m_hour = hour.replace(':','-')
-    timestampstring = '_'.join([date,hour])
-    #corrected_timestampstring = timestampstring.replace(':','-')
-    return timestampstring
+def _timestampstr(timestamp, hour=False):
+    ''' convert timestamp to strftime formate '''
+    if not hour:
+        timestring = datetime.date.fromtimestamp(float(timestamp)).strftime('%Y_%m_%d')
+    elif hour:
+        timestring = datetime.date.fromtimestamp(float(timestamp)).strftime('%Y_%m_%d-%H')
+    return timestring
 
-def save_last_tif():
+def save_last_tiff():
     save_tif(db[-1])
 
-def save_tif(headers, tif_name = False ):
+def save_tiff(headers):
     ''' save images obtained from dataBroker as tiff format files. It returns nothing.
 
     arguments:
         headers - list - a list of header objects obtained from a query to dataBroker
-        file_name - str - optional. File name of tif file being saved. default setting yields a name made of time, uid, feature of your header
-      
     '''
     # prepare header
     if type(list(headers)[1]) == str:
@@ -109,22 +107,13 @@ def save_tif(headers, tif_name = False ):
     
     # iterate over header(s)
     for header in header_list:
-        print('Plotting and saving your image(s) now....')
+        print('Saving your image(s) now....')
         # get images and exposure time from headers level
-        try:
-            img_field =[el for el in header.descriptors[0]['data_keys'] if el.endswith('_image')][0]
-            print('Images are pulling out from %s' % img_field)
-            light_imgs = np.array(get_images(header,img_field))
-        except IndexError:
-            uid = header.start.uid
-            print('This header with uid = %s does not contain any image' % uid)
-            print('Was area detector correctly mounted then?')
-            print('Stop saving')
-            return
-
-        # working on events level
+        
+        # prepare imgs and events
         header_events = list(get_events(header))
-
+        light_imgs = get_images(header)
+        
         try:
             cnt_time = header.start['xp_computed_exposure']
             print('cnt_time = %s' % cnt_time)
@@ -134,34 +123,26 @@ def save_tif(headers, tif_name = False ):
         
         
         # container for final image 
-        img_list = list()
+        img_list = list() # dark correction functionality could be included in here later
         for i in range(light_imgs.shape[0]):
             dummy = light_imgs[i] 
             img_list.append(dummy)
         
         for i in range(len(img_list)):
             img = img_list[i]
-            if not tif_name:
-                w_dir = datapath.tif_dir
-                dummy_name = _feature_gen(header)
-               
+            w_dir = datapath.tif_dir
+            dummy_name = _feature_gen(header)
+            
+            # get temperature label
+            if 'temperautre' in header_events[i]['data']:
                 # temperautre is a typo from Dan but it is there...
-                if 'temperautre' in header_events[i]['data']:
-                    f_name = dummy_name + '_'+str(header_events[i]['data']['temperautre'])+'K'
-                else:
-                    f_name = dummy_name
-                w_name = os.path.join(w_dir,f_name+'.tiff')
-            
-            #### remove this.  Plotting should not be in a function called "save_tif"
-            #### put this in a function called "plot_data" and remove all the tiff-saving stuff from that file
-            try:
-                fig = plt.figure(f_name)
-                plt.imshow(img)
-                plt.show()
-            except:
-                pass # allow matplotlib to crach without stopping experiment
-            
+                f_name = dummy_name + '_'+str(header_events[i]['data']['temperautre'])+'K'
+            else:
+                f_name = dummy_name
+
+            w_name = os.path.join(w_dir,f_name+'.tiff')
             tif.imsave(w_name, img) 
+            
             if os.path.isfile(w_name):
                 print('image "%s" has been saved at "%s"' % (f_name, W_DIR))
                 print('if you do not see as much as metadata in file name, that means you forgot to enter it')
@@ -170,4 +151,62 @@ def save_tif(headers, tif_name = False ):
                 return
 
     print('||********Saving process SUCCEEDED********||')
+
+# make sure codes at XPD is still working after renaming
+save_tif = save_tiff
+
+
+def plot_images(header):
+    ''' function to plot images from header.
+    
+    It plots images, return nothing
+
+    Parameters
+    ----------
+        header : databroker header object
+            header pulled out from central file system
+
+    '''
+    # prepare header
+    if type(list(headers)[1]) == str:
+        header_list = list()
+        header_list.append(headers)
+    else:
+        header_list = headers
+    
+    for header in header_list:
+        uid = header.start.uid 
+        img_field = _identify_image_field(header)
+        imgs = np.array(get_images(header, img_field))
+        print('Plotting your data now...')
+        for i in range(imgs.shape[0]):
+            img = imgs[i]
+            plot_title = '_'.join(uid, str(i))
+            # just display user uid and index of this image
+            try:
+                fig = plt.figure(plot_title)
+                plt.imshow(img)
+                plt.show()
+            except:
+                pass # allow matplotlib to crash without stopping other function
+
+def plot_last_scan():
+    ''' function to plot images from last header
+    '''
+    plot_images(db[-1])
+
+
+def _indentify_image_field(header):
+    ''' small function to identify image filed key words in header
+    '''
+    try:
+        img_field =[el for el in header.descriptors[0]['data_keys'] if el.endswith('_image')][0]
+        print('Images are pulling out from %s' % img_field)
+        return img_field
+    except IndexError:
+        uid = header.start.uid
+        print('This header with uid = %s does not contain any image' % uid)
+        print('Was area detector correctly mounted then?')
+        print('Stop here')
+        return
 
