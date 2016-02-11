@@ -35,21 +35,15 @@ class XPD:
         return self.md
     
     def _yaml_path(self):
-        if os.path.isdir(os.path.join(self._base_path,'config_base/yml/')):
-            pass
-        elif os.path.isdir(os.path.join(self._base_path,'config_base/')):
-            os.mkdir(os.path.join(self._base_path,'config_base/yml/'))
-        else:
-            os.mkdir(os.path.join(self._base_path,'config_base/'))
-            os.mkdir(os.path.join(self._base_path,'config_base/yml/'))
-
-        return os.path.join(self._base_path,'config_base/yml/')
+        yaml_dir_path = os.path.join(self._base_path, 'config_base', 'yml')
+        os.makedirs(yaml_dir_path, exist_ok = True) ## replace with os.makedirs function
+        return yaml_dir_path
 
                     
     def _yamify(self):
         fname = self.name
         ftype = self.type
-        fpath = os.path.join(self._yaml_path(),ftype+'_'+fname+'.yml')
+        fpath = os.path.join(self._yaml_path(), ftype+'_'+ fname +'.yml')
         if isinstance(fpath, str):
             with open(fpath, 'w') as fout:
                 yaml.dump(self, fout)
@@ -95,24 +89,28 @@ class XPD:
         return list[index]
 
 class Beamtime(XPD):
-    def __init__(self, pi_last, safn, wavelength, experimenters = []):
+    def __init__(self, pi_last, safn, wavelength, experimenters = [], **kwargs):
         self.name = 'bt'
         self.type = 'bt'
-        self.md = {'bt_piLast': pi_last, 'bt_safN': safn}
-        self.md.update({'bt_wavelength': wavelength})
-        self.md.update({'bt_experimenters': experimenters})
+        self.md = {'bt_piLast': _clean_md_input(pi_last), 'bt_safN': _clean_md_input(safn), 
+                    'bt_usermd':_clean_md_input(kwargs)}
+        self.md.update({'bt_wavelength': _clean_md_input(wavelength)})
+        self.md.update({'bt_experimenters': _clean_md_input(experimenters)})
         self.md.update({'bt_uid': self._getuid()})
+        self.md.update({'bt_usermd': _clean_md_input(kwargs)})
         self._yamify()
 
 class Experiment(XPD):
-    def __init__(self, expname, beamtime):
+    def __init__(self, expname, beamtime, **kwarg):
         self.name = expname
         self.type = 'ex'
         self.bt = beamtime
         self.md = self.bt.md
-        self.md.update({'ex_name': expname})
+        self.md.update({'ex_name': _clean_md_input(expname)})
         self.md.update({'ex_uid': self._getuid()})
+        self.md.update({'ex_usermd':_clean_md_input(expname)})
         self._yamify()
+        
 
 '''
         @property
@@ -129,13 +127,14 @@ class Experiment(XPD):
 
 
 class Sample(XPD):
-    def __init__(self, samname, experiment):
-        self.name = samname
+    def __init__(self, samname, experiment, **kwargs):
+        self.name = _clean_md_input(samname)
         self.type = 'sa'
-        self.ex = experiment
+        self.ex = _clean_md_input(experiment)
         self.md = self.ex.md
-        self.md.update({'sa_name': samname})
+        self.md.update({'sa_name': _clean_md_input(samname)})
         self.md.update({'sa_uid': self._getuid()})
+        self.md.update({'sa_usermd': _clean_md_input(kwargs)})
         self._yamify()
 
 
@@ -162,15 +161,15 @@ class Scan(XPD):
                    for each event.  It introduces a significant overhead so mostly used for
                    testing.
     '''
-    def __init__(self,name, scan_type, scan_params, shutter=True, livetable=True, verify_write=False):
-        self.name = name
+    def __init__(self,name, scan_type, scan_params, shutter=True, livetable=True, verify_write=False, **kwargs):
+        self.name = _clean_md_input(name)
         self.type = 'sc'
-        self.scan = scan_type
-        self.sc_params = scan_params 
+        self.scan = _clean_md_input(scan_type)
+        self.sc_params = _clean_md_input(scan_params) # sc_parms is a dictionary
         self.shutter = shutter
         self.md = {}
-        self.md.update({'sc_name': self.name})
-        self.md.update({'sc_type': self.type})
+        self.md.update({'sc_name': self._clean_md_input(name)})
+        self.md.update({'sc_type': self._clean_md_input(type)})
         self.md.update({'sc_uid': self._getuid()})
         if self.shutter: 
             self.md.update({'sc_shutter_control':'in-scan'})
@@ -180,8 +179,8 @@ class Scan(XPD):
         subs=[]
         if livetable: subs.append('livetable')
         if verify_write: subs.append('verify_write')
-        if len(subs) > 0: scan_params.update({'subs':subs}) 
-        self.md.update({'sc_params': scan_params})
+        if len(subs) > 0: scan_params.update({'subs':_clean_md_input(subs)}) 
+        self.md.update({'sc_params': _clean_md_input(scan_params)})
         
         self._yamify()
 
@@ -237,6 +236,22 @@ def export_data(root_dir=None, ar_format='gztar'):
     print('Please copy this to your local computer or external hard-drive')
     return out_file
 
+def _clean_md_input(obj):
+    ''' strip white space '''
+    if isinstance(obj, str):
+        return obj.strip()
+    
+    if isinstance(obj, list):
+        clean_list = list()
+        for el in obj:
+            clean_list.append(el.strip())
+        return clean_list
+
+    if isinstance(obj, dict):
+        clean_dict = dict()
+        for k,v in obj.items():
+            clean_dict[k.strip()] = v.strip()
+        return clean_dict
 
 '''
 class XPDSTATE():
