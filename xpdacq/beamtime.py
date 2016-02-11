@@ -46,7 +46,7 @@ class XPD:
         return yaml_garage_dir_path
 
                     
-    def _yamify(self):
+    def _yamify(self):t 
         fname = self.name
         ftype = self.type
         fpath = os.path.join(self._yaml_path(), ftype+'_'+ fname +'.yml')
@@ -104,13 +104,13 @@ class XPD:
         obj_type = list[index].type
         f_name = os.join(read_path, obj_type+'_'+obj_name+'.yml')
 
-        print("You are about to delete %s object with name %s from current object list" % (obj_type, obj_name))
+        print("You are about to remove %s object with name %s from current object list" % (obj_type, obj_name))
         user_confirm = input("Do you want to continue y/[n]: ")
         if user_confirm in ('n',''):
-            print('Deletion stop. Nothing was deleted')
+            print('Stopped. Nothing was removed')
             return
         elif user_confirm == 'y':
-            print('Deleted %s object with name %s from current object list' % (obj_type, obj_name))
+            print('Remove %s object with name %s from current object list' % (obj_type, obj_name))
             shutil.move(f_name, garage_path)
 
         else:
