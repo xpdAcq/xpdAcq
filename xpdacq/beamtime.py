@@ -39,11 +39,11 @@ class XPD:
         os.makedirs(yaml_dir_path, exist_ok = True) # replace with os.makedirs function
         return yaml_dir_path
 
-    def _yaml_backup_path(self):
-        yaml_backup_dir_path = os.path.join(self._base_path, 'config_base', 'yml_backup')
-        os.makedirs(yaml_backup_dir_path, exist_ok = True)
+    def _yaml_garage_path(self):
+        yaml_garage_dir_path = os.path.join(self._base_path, 'config_base', 'yml_garage')
+        os.makedirs(yaml_garage_dir_path, exist_ok = True)
         # backup directory when user wants to move out objects from default reading list
-        return yaml_backup_dir_path
+        return yaml_garage_dir_path
 
                     
     def _yamify(self):
@@ -95,8 +95,8 @@ class XPD:
         return list[index]
 
     @classmethod
-    def del(cls, index):
-        backup_path = cls._yaml_backup_path(cls)
+    def delete(cls, index):
+        garage_path = cls._yaml_garage_path(cls)
         read_path = cls._yaml_path(cls)
 
         list = cls.loadyamls()
@@ -111,7 +111,7 @@ class XPD:
             return
         elif user_confirm == 'y':
             print('Deleted %s object with name %s from current object list' % (obj_type, obj_name))
-            shutil.move(f_name, backup_path)
+            shutil.move(f_name, garage_path)
 
         else:
             print('Unrecongnized input, abort and not any action was taken')
@@ -130,11 +130,12 @@ class Beamtime(XPD):
         self._yamify()
 
 class Experiment(XPD):
-    def __init__(self, expname, beamtime, **kwarg):
-        self.name = expname
+    def __init__(self, expname, beamtime, **kwargs):
+        self.name = _clean_md_input(expname)
         self.type = 'ex'
         self.bt = beamtime
         self.md = self.bt.md
+        self.md.update({'ex_usermd':_clean_md_input(kwargs)})
         self.md.update({'ex_name': _clean_md_input(expname)})
         self.md.update({'ex_uid': self._getuid()})
         self.md.update({'ex_usermd':_clean_md_input(expname)})
@@ -202,6 +203,7 @@ class ScanPlan(XPD):
         self.md.update({'sc_name': self._clean_md_input(name)})
         self.md.update({'sc_type': self._clean_md_input(type)})
         self.md.update({'sc_uid': self._getuid()})
+        self.md.update({'sc_usermd':self._clean_md_input(kwargs)})
         if self.shutter: 
             self.md.update({'sc_shutter_control':'in-scan'})
         else:
@@ -272,17 +274,31 @@ def _clean_md_input(obj):
     if isinstance(obj, str):
         return obj.strip()
     
-    if isinstance(obj, list):
+    elif isinstance(obj, list):
         clean_list = list()
         for el in obj:
-            clean_list.append(el.strip())
+            if isinstance(el, str):
+                clean_list.append(el.strip())
+            else: # if not string, just pass
+                clean_list.append(el)
         return clean_list
 
-    if isinstance(obj, dict):
+    elif isinstance(obj, dict):
         clean_dict = dict()
         for k,v in obj.items():
-            clean_dict[k.strip()] = v.strip()
+            if isinstance(k, str):
+                clean_key = k.strip()
+            else: # if not string, just pass
+                clean_key = k
+            if isinstance(v, str):
+                clean_val = v.strip()
+            else: # if not string, just pass
+                clean_val = v
+            clean_dict[clean_key] = clean_val
         return clean_dict
+
+    else:
+        return obj
 
 def _plan_validator(obj_name):
     ''' validator for ScanPlan object
@@ -298,7 +314,7 @@ def _plan_validator(obj_name):
 
     _ct_required_params = ['exposure']
     _ct_optional_params = ['det','subs_dict'] 
-    # leave two optional params separated here, if we need to use them in the future
+    # leave optional parameter list here, in case we need to use them in the future
     
     
     # params in tseries is not completely finalized

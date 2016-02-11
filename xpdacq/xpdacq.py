@@ -19,14 +19,16 @@ def _get_obj(name):
     return ip.user_ns[name]
 
 import numpy as np
-from xpdacq.beamtime import Union, Xposure
-from bluesky.plans import Count
+
 from bluesky import Msg
+from bluesky.plans import AbsScanPlan
+from bluesky.plans import Count
+
+from xpdacq.beamtime import Union, Xposure
 from xpdacq.control import _get_obj   
 from xpdacq.control import _open_shutter
 from xpdacq.control import _close_shutter
 from xpdacq.analysis import *
-from bluesky.plans import AbsScanPlan
 
 xpdRE = _get_obj('xpdRE')
 LiveTable = _get_obj('LiveTable')
@@ -237,7 +239,7 @@ def _nstep(start, stop, step_size):
     ''' return (start, stop, nsteps)'''
     requested_nsteps = abs((start - stop) / step_size)
     
-    computed_nsteps = np.ceil(requested_nsteps)
+    computed_nsteps = int(requested_nsteps) # round down for finer step_size
     computed_step_list = np.linspace(start, stop, computed_nsteps)
     computed_step_size = computed_step_list[2]- computed_step_list[1]
     print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',computed_step_size)
