@@ -36,8 +36,14 @@ class XPD:
     
     def _yaml_path(self):
         yaml_dir_path = os.path.join(self._base_path, 'config_base', 'yml')
-        os.makedirs(yaml_dir_path, exist_ok = True) ## replace with os.makedirs function
+        os.makedirs(yaml_dir_path, exist_ok = True) # replace with os.makedirs function
         return yaml_dir_path
+
+    def _yaml_garage_path(self):
+        yaml_garage_dir_path = os.path.join(self._base_path, 'config_base', 'yml_garage')
+        os.makedirs(yaml_garage_dir_path, exist_ok = True)
+        # backup directory when user wants to move out objects from default reading list
+        return yaml_garage_dir_path
 
                     
     def _yamify(self):
@@ -88,6 +94,30 @@ class XPD:
         list = cls.loadyamls()
         return list[index]
 
+    @classmethod
+    def remove(cls, index):
+        garage_path = cls._yaml_garage_path(cls)
+        read_path = cls._yaml_path(cls)
+
+        list = cls.loadyamls()
+        obj_name = list[index].name
+        obj_type = list[index].type
+        f_name = os.join(read_path, obj_type+'_'+obj_name+'.yml')
+
+        print("You are about to remove %s object with name %s from current object list" % (obj_type, obj_name))
+        print("Removed object will be moved to %s. You can still reuse it if you need to" % garage_path) 
+        user_confirm = input("Do you want to continue y/[n]: ")
+        if user_confirm in ('n',''):
+            print('Stopped. Nothing was removed')
+            return
+        elif user_confirm == 'y':
+            print('Remove %s object with name %s from current object list' % (obj_type, obj_name))
+            shutil.move(f_name, garage_path)
+
+        else:
+            print('Unrecongnized input, abort and not any action was taken')
+            return
+    
 class Beamtime(XPD):
     def __init__(self, pi_last, safn, wavelength, experimenters = [], **kwargs):
         self.name = 'bt'
@@ -101,11 +131,12 @@ class Beamtime(XPD):
         self._yamify()
 
 class Experiment(XPD):
-    def __init__(self, expname, beamtime, **kwarg):
-        self.name = expname
+    def __init__(self, expname, beamtime, **kwargs):
+        self.name = _clean_md_input(expname)
         self.type = 'ex'
         self.bt = beamtime
         self.md = self.bt.md
+        self.md.update({'ex_usermd':_clean_md_input(kwargs)})
         self.md.update({'ex_name': _clean_md_input(expname)})
         self.md.update({'ex_uid': self._getuid()})
         self.md.update({'ex_usermd':_clean_md_input(expname)})
@@ -138,7 +169,7 @@ class Sample(XPD):
         self._yamify()
 
 
-class Scan(XPD):
+class ScanPlan(XPD):
     '''ScanPlan object that defines scans to run.  To run them: prun(Sample,ScanPlan)
     
     Arguments:
@@ -166,11 +197,14 @@ class Scan(XPD):
         self.type = 'sc'
         self.scan = _clean_md_input(scan_type)
         self.sc_params = _clean_md_input(scan_params) # sc_parms is a dictionary
+        _plan_validator(self.scan) # correct logic: get scan_type
+
         self.shutter = shutter
         self.md = {}
-        self.md.update({'sc_name': self._clean_md_input(name)})
-        self.md.update({'sc_type': self._clean_md_input(type)})
+        self.md.update({'sc_name': _clean_md_input(self.name)})
+        self.md.update({'sc_type': _clean_md_input(self.scan)})
         self.md.update({'sc_uid': self._getuid()})
+        self.md.update({'sc_usermd':_clean_md_input(kwargs)})
         if self.shutter: 
             self.md.update({'sc_shutter_control':'in-scan'})
         else:
@@ -241,18 +275,85 @@ def _clean_md_input(obj):
     if isinstance(obj, str):
         return obj.strip()
     
-    if isinstance(obj, list):
+    elif isinstance(obj, list):
         clean_list = list()
         for el in obj:
-            clean_list.append(el.strip())
+            if isinstance(el, str):
+                clean_list.append(el.strip())
+            else: # if not string, just pass
+                clean_list.append(el)
         return clean_list
 
-    if isinstance(obj, dict):
+    elif isinstance(obj, dict):
         clean_dict = dict()
         for k,v in obj.items():
-            clean_dict[k.strip()] = v.strip()
+            if isinstance(k, str):
+                clean_key = k.strip()
+            else: # if not string, just pass
+                clean_key = k
+            if isinstance(v, str):
+                clean_val = v.strip()
+            else: # if not string, just pass
+                clean_val = v
+            clean_dict[clean_key] = clean_val
         return clean_dict
 
+    else:
+        return obj
+
+def _plan_validator(scan_type):
+    ''' Validator for ScanPlan object
+    
+    It validates if required scan parameters for certain scan type are properly defined in object
+
+    Parameters
+    ----------
+        scan_type : str
+            scan tyoe of XPD Scan object
+    '''
+    # based on structures in xpdacq.xpdacq.py
+    _Tseries_required_params = ['startingT', 'endingT', 'requested_Tstep', 'exposure']
+    _Tseries_optional_params = ['det', 'subs_dict']
+
+    _ct_required_params = ['exposure']
+    _ct_optional_params = ['det','subs_dict'] 
+    # leave optional parameter list here, in case we need to use them in the future
+    
+    
+    # params in tseries is not completely finalized
+    _tseries_required_params = ['num', 'exposure']
+     
+    if scan_type == 'ct':
+        for el in _ct_required_params:
+            try:
+                sc_parms[el]
+            except KeyError:
+                print('It seems you are using a Count scan but you missed %s' % (el))
+                print('Pleas revisit your ScanPlan object')
+                return     
+
+    elif scan_type == 'Tseries':
+        for el in _Tseries_required_params:
+            try:
+                sc_parms[el]
+            except KeyError:
+                print('It seems you are using a Tseries scan plan but you missed %s' % (el))
+                print('Pleas revisit your ScanPlan object')
+                return 
+
+    elif scan_type == 'tseries':
+        for el in _tseries_required_params:
+            try:
+                sc_parms[el]
+            except KeyError:
+                print('It seems you are using a tseries scan plan but you missed %s' % (el))
+                print('Pleas revisit your ScanPlan object')
+                return
+    else:
+        print('It seems you are using a scan type we do not recongize')
+        print('That is fine but please make sure you have all required parameters defined')
+        pass
+    
 '''
 class XPDSTATE():
        def __init__(self, dirpath='./config_base', md={}  ):
