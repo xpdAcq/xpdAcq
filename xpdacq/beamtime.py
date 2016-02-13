@@ -31,16 +31,12 @@ class XPD:
     def _getuid(self):
         return str(uuid.uuid1())
 
-#    def _gohome(self):
-#        datapath = DataPath('./')
-#        os.chdir(datapath.base)
-
     def export(self):
         return self.md
     
     def _yaml_path(self):
         yaml_dir_path = os.path.join(self._base_path, 'config_base', 'yml')
-        os.makedirs(yaml_dir_path, exist_ok = True) # replace with os.makedirs function
+        os.makedirs(yaml_dir_path, exist_ok = True) 
         return yaml_dir_path
 
     def _yaml_garage_path(self):
@@ -51,6 +47,7 @@ class XPD:
 
                     
     def _yamify(self):
+        '''write a yaml file for this object and place it in config_base/yml'''
         fname = self.name
         ftype = self.type
         fpath = os.path.join(self._yaml_path(), str(ftype) +'_'+ str(fname) +'.yml')
@@ -109,17 +106,10 @@ class XPD:
         f_name = os.join(read_path, obj_type+'_'+obj_name+'.yml')
 
         print("You are about to remove %s object with name %s from current object list" % (obj_type, obj_name))
-        print("Removed object will be moved to %s. You can still reuse it if you need to" % garage_path) 
         user_confirm = input("Do you want to continue y/[n]: ")
-        if user_confirm in ('n',''):
-            print('Stopped. Nothing was removed')
-            return
-        elif user_confirm == 'y':
-            print('Remove %s object with name %s from current object list' % (obj_type, obj_name))
+        if user_confirm in ('y','Y'):
             shutil.move(f_name, garage_path)
-
         else:
-            print('Unrecongnized input, abort and not any action was taken')
             return
     
 class Beamtime(XPD):
@@ -145,34 +135,18 @@ class Experiment(XPD):
         self.md.update({'ex_uid': self._getuid()})
         self.md.update({'ex_usermd':_clean_md_input(expname)})
         self._yamify()
-        
-
-'''
-        @property
-        def _private_md(self):
-            retrun {}
-
-        @property
-        def md(self):
-            out = {}
-            out.update(self.bt.md)
-            out.update(self._private_md)
-            self._yamify()
-'''
-
 
 class Sample(XPD):
     def __init__(self, samname, experiment, **kwargs):
         self.name = _clean_md_input(samname)
         self.type = 'sa'
-        self.ex = _clean_md_input(experiment)
+        self.ex = experiment
         self.md = self.ex.md
-        self.md.update({'sa_name': _clean_md_input(samname)})
+        self.md.update({'sa_name': self.name})
         self.md.update({'sa_uid': self._getuid()})
         self.md.update({'sa_usermd': _clean_md_input(kwargs)})
         self._yamify()
 
-#FIXME - cannot find 'Scan' in the module 'xpdacq.beamtime'
 class ScanPlan(XPD):
     '''ScanPlan object that defines scans to run.  To run them: prun(Sample,ScanPlan)
     
@@ -222,10 +196,6 @@ class ScanPlan(XPD):
         self.md.update({'sc_params': _clean_md_input(scan_params)})
         
         self._yamify()
-        
-
-        
-
 
     def _plan_validator(self):
         ''' Validator for ScanPlan object
@@ -247,7 +217,7 @@ class ScanPlan(XPD):
         
         
         # params in tseries is not completely finalized
-        _tseries_required_params = ['num', 'exposure']
+        _tseries_required_params = ['num', 'exposure', 'delay']
         
         if self.scan == 'ct':
             for el in _ct_required_params:
@@ -256,16 +226,16 @@ class ScanPlan(XPD):
                 except KeyError:
                     print('It seems you are using a Count scan but the scan_params dictionary does not contain %s which is needed.' % (el))
                     print('Please use uparrow to edit and retry making your ScanPlan object')
-                    sys.exit('DONT PANIC, just an error message. You are fine :)')
+                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
-        elif self.scan == 'Tseries':
-            for el in _Tseries_required_params:
+        elif self.scan == 'Tramp':
+            for el in _Tramp_required_params:
                 try:
                     self.sc_params[el]
                 except KeyError:
-                    print('It seems you are using a Tseries scan but the scan_params dictionary does not contain %s which is needed.' % (el))
+                    print('It seems you are using a temperature ramp scan but the scan_params dictionary does not contain %s which is needed.' % (el))
                     print('Please use uparrow to edit and retry making your ScanPlan object')
-                    sys.exit('DONT PANIC, just an error message. You are fine :)')
+                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
         elif self.scan == 'tseries':
             for el in _tseries_required_params:
@@ -274,15 +244,7 @@ class ScanPlan(XPD):
                 except KeyError:
                     print('It seems you are using a tseries scan but the scan_params dictionary does not contain %s which is needed.' % (el))
                     print('Please use uparrow to edit and retry making your ScanPlan object')
-                    sys.exit('DONT PANIC, just an error message. You are fine :)')
-
-        else:
-            print('It seems you are using a scan type we do not recongize')
-            print('That is fine but please make sure you have all required parameters defined')
-            pass
-
-
-
+                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
 class Union(XPD):
     def __init__(self,sample,scan):
@@ -301,9 +263,9 @@ class Xposure(XPD):
  #       self._yamify()    # no need to yamify this
 
 def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
-    """Create a tarball of all of the data is the user folders.
+    """Create a tarball of all of the data in the user folders.
 
-    This assumes that the root directory is layed out prescribed by DataPath.
+    This assumes that the root directory is laid out prescribed by DataPath.
 
     This function will:
 
@@ -369,64 +331,3 @@ def _clean_md_input(obj):
 
 
     
-'''
-class XPDSTATE():
-       def __init__(self, dirpath='./config_base', md={}  ):
-           self._cur_beamtime = cb
-           self._cur_experiment = {}
-           self._cur_sample = {}
-           self._cur_scan = {}
-           self._cur_exposure = {}
-           self._done_measurements = []
-
-       def start_beamtime(self, pi_last ):
-           self._cur_beamtime.update({'piLast': pi_last})
-
-       def start_expt(self, name ):
-           self._cur_beamtime.update({'expName': name})
-
-       def change_sample(self, sample_details):
-           pass
-
-       def export_for_BS(self):
-           out = dict()
-           out.update(self._cur_beamtime)
-           out.update(self._cur_exposure)
-
-       def export_for_testing(self):
-           out = dict()
-           out.update(self._cur_beamtime)
-           out.update(self._cur_experiment)
-           out.update(self._cur_sample)
-           return out
-
-
-    def export_to_yaml(self):
-        pass
-
-    @classmethod
-    def from_yaml(cls, fname):
-        new_state = cls('test')
-        with fopen(fname) as f:
-            for k, v in yaml.read(f):
-                pass
-'''
-'''
-class Beamtime(object):
-    def __init__(self,piLast):
-        self.beamtime_uid  = str(uuid.uuid1())
-        self.piLast = piLast
-
-
-    self.safn
-
-
-
-    @property
-    def beamtime_uid(self):
-        return self.__beamtime_uid
-
-    @beamtime_uid.setter
-    def beamtime_uid(self,beamtime_uid):
-        uid = str(uuid.uuid1())
-'''

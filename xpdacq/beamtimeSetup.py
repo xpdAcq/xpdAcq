@@ -33,7 +33,7 @@ B_DIR = os.path.expanduser('~')
 
 # just a note. Assign by Sanjit
 REMOTE_DIR = os.path.expanduser('~/pe2_data/')
-BACKUP_DIR = os.path.join([REMOTE_DIR, strftime('%Y'), 'userBeamtimeArchive'])
+BACKUP_DIR = os.path.join(REMOTE_DIR, strftime('%Y'), 'userBeamtimeArchive')
 
 
 def _make_clean_env(datapath):
@@ -89,27 +89,32 @@ def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
 
     if base_dir is None:
         base_dir = B_DIR
+    if bto is None:
+        bto = bt
     dp = DataPath(base_dir)
     files = os.listdir(dp.base)
     if len(files)==1:
         print('It appears that end_beamtime may have been run.  If so, do not run again')
         return
+
     tar_ball = export_data(base_dir, end_beamtime=True)
     ext = get_full_ext(tar_ball)
     os.makedirs(archive_dir, exist_ok=True)
     try:
-        if bto is None:
-            bto = bt
         saf_num = bto.md['bt_safN']
-        PI_name = bto.md['bt_piLast']
-        #bt_uid = bto.md['bt_uid'][:7]
     except NameError:
         saf_num = input('Please enter your SAF number to this beamtime: ')
+    try:
+        PI_name = bto.md['bt_piLast']
+    except NameError:
         PI_name = input('Please enter PI name to this beamtime: ')
+    try:
+        bt_uid = bto.md['bt_uid'][:7]
+    except NameError:
         bt_uid = ''
         
-        full_info = '_'.join([PI_name.strip().replace(' ', ''),
-                            saf_num.strip(), strftime('%Y-%m-%d-%H%M'), bt_uid
+    full_info = '_'.join([PI_name.strip().replace(' ', ''),
+                            str(saf_num).strip(), strftime('%Y-%m-%d-%H%M'), bt_uid
                             ])
     #print('Backup your data now. It takes sometime as well, please be patient :)')
     archive_f_name = os.path.join(archive_dir, full_info) + ext
@@ -155,10 +160,10 @@ def _start_beamtime(base_dir=None):
                                    "Please talk to beamline staff"
                                    .format(tf))
             os.unlink(os.path.join(dp.base, tf))
-    _make_clean_env(dp)
-    os.chdir(dp.base)
     PI_name = input('Please enter the PI last name to this beamtime: ')
     saf_num = input('Please enter the SAF number to this beamtime: ')
     wavelength = input('Please enter the x-ray wavelength: ')
+    _make_clean_env(dp)
+    os.chdir(dp.base)
     bt = Beamtime(PI_name,saf_num,wavelength)
     return bt
