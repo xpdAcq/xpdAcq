@@ -19,11 +19,15 @@ import os
 import shutil
 import datetime
 from time import strftime
+import sys
 from xpdacq.config import DataPath
 
 
 class XPD:
     _base_path = ''
+    if not _base_path:
+        dp = DataPath(os.path.expanduser('~'))
+        _base_path = dp.base
     def _getuid(self):
         return str(uuid.uuid1())
 
@@ -49,7 +53,7 @@ class XPD:
     def _yamify(self):
         fname = self.name
         ftype = self.type
-        fpath = os.path.join(self._yaml_path(), ftype+'_'+ fname +'.yml')
+        fpath = os.path.join(self._yaml_path(), str(ftype) +'_'+ str(fname) +'.yml')
         if isinstance(fpath, str):
             with open(fpath, 'w') as fout:
                 yaml.dump(self, fout)
@@ -68,7 +72,7 @@ class XPD:
         yamls = os.listdir(fpath)
         olist = []
         for f in yamls:
-            fname = fpath+f
+            fname = os.path.join(fpath,f)
             with open(fname, 'r') as fout:
                 olist.append(yaml.load(fout))
         return olist
@@ -80,13 +84,13 @@ class XPD:
             iter = 0
             for i in list:
                 iter += 1
-                print(i.type+' object '+i.name+' has list index ', iter-1)
+                print(i.type+' object '+str(i.name)+' has list index ', iter-1)
         else:
             iter = 0
             for i in list:
                 iter += 1
                 if i.type == type:
-                    print(i.type+' object '+i.name+' has list index ', iter-1)
+                    print(i.type+' object '+str(i.name)+' has list index ', iter-1)
         print('Use bt.get(index) to get the one you want')
 
     @classmethod
@@ -168,7 +172,7 @@ class Sample(XPD):
         self.md.update({'sa_usermd': _clean_md_input(kwargs)})
         self._yamify()
 
-
+#FIXME - cannot find 'Scan' in the module 'xpdacq.beamtime'
 class ScanPlan(XPD):
     '''ScanPlan object that defines scans to run.  To run them: prun(Sample,ScanPlan)
     
@@ -197,8 +201,9 @@ class ScanPlan(XPD):
         self.type = 'sc'
         self.scan = _clean_md_input(scan_type)
         self.sc_params = _clean_md_input(scan_params) # sc_parms is a dictionary
-        _plan_validator(self.scan) # correct logic: get scan_type
-
+        
+        self._plan_validator()
+        
         self.shutter = shutter
         self.md = {}
         self.md.update({'sc_name': _clean_md_input(self.name)})
@@ -217,6 +222,67 @@ class ScanPlan(XPD):
         self.md.update({'sc_params': _clean_md_input(scan_params)})
         
         self._yamify()
+        
+
+        
+
+
+    def _plan_validator(self):
+        ''' Validator for ScanPlan object
+        
+        It validates if required scan parameters for certain scan type are properly defined in object
+
+        Parameters
+        ----------
+            scan_type : str
+                scan tyoe of XPD Scan object
+        '''
+        # based on structures in xpdacq.xpdacq.py
+        _Tseries_required_params = ['startingT', 'endingT', 'requested_Tstep', 'exposure']
+        _Tseries_optional_params = ['det', 'subs_dict']
+
+        _ct_required_params = ['exposure']
+        _ct_optional_params = ['det','subs_dict'] 
+        # leave optional parameter list here, in case we need to use them in the future
+        
+        
+        # params in tseries is not completely finalized
+        _tseries_required_params = ['num', 'exposure']
+        
+        if self.scan == 'ct':
+            for el in _ct_required_params:
+                try:
+                    self.sc_params[el]
+                except KeyError:
+                    print('It seems you are using a Count scan but the scan_params dictionary does not contain %s which is needed.' % (el))
+                    print('Please use uparrow to edit and retry making your ScanPlan object')
+                    sys.exit('DONT PANIC, just an error message. You are fine :)')
+
+        elif self.scan == 'Tseries':
+            for el in _Tseries_required_params:
+                try:
+                    self.sc_params[el]
+                except KeyError:
+                    print('It seems you are using a Tseries scan but the scan_params dictionary does not contain %s which is needed.' % (el))
+                    print('Please use uparrow to edit and retry making your ScanPlan object')
+                    sys.exit('DONT PANIC, just an error message. You are fine :)')
+
+        elif self.scan == 'tseries':
+            for el in _tseries_required_params:
+                try:
+                    self.sc_params[el]
+                except KeyError:
+                    print('It seems you are using a tseries scan but the scan_params dictionary does not contain %s which is needed.' % (el))
+                    print('Please use uparrow to edit and retry making your ScanPlan object')
+                    sys.exit('DONT PANIC, just an error message. You are fine :)')
+
+        else:
+            print('It seems you are using a scan type we do not recongize')
+            print('That is fine but please make sure you have all required parameters defined')
+            pass
+
+
+
 
 class Union(XPD):
     def __init__(self,sample,scan):
@@ -234,7 +300,7 @@ class Xposure(XPD):
         self.md = self.sc.md
  #       self._yamify()    # no need to yamify this
 
-def export_data(root_dir=None, ar_format='gztar'):
+def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
     """Create a tarball of all of the data is the user folders.
 
     This assumes that the root directory is layed out prescribed by DataPath.
@@ -245,29 +311,29 @@ def export_data(root_dir=None, ar_format='gztar'):
       - create a new (timestamped) tarball
 
     """
+    # FIXME - test purpose
+    B_DIR = os.path.expanduser('~')
     if root_dir is None:
         root_dir = B_DIR
     dp = DataPath(root_dir)
     # remove any existing exports
-    shutil.rmtree(dp.export_dir)
-    # tiff name
-    print('Deleting any existing archive files in the Export directory')
+    if os.path.isdir(dp.export_dir):
+        shutil.rmtree(dp.export_dir)
     f_name = strftime('data4export_%Y-%m-%dT%H%M')
-    os.makedirs(dp.export_dir)
+    os.makedirs(dp.export_dir, exist_ok=True)
     cur_path = os.getcwd()
     try:
         os.chdir(dp.stem)
-        tar_return = shutil.make_archive(f_name, ar_format,
-                                         root_dir=dp.stem,
-                                         base_dir='xpdUser',
-                                         verbose=1, dry_run=False)
+        print('Compressing your data now. That may take several minutes, please be patient :)' )
+        tar_return = shutil.make_archive(f_name, ar_format, root_dir=dp.stem,
+                base_dir='xpdUser', verbose=1, dry_run=False)
         shutil.move(tar_return, dp.export_dir)
-        print(dp.export_dir)
     finally:
         os.chdir(cur_path)
     out_file = os.path.join(dp.export_dir, os.path.basename(tar_return))
-    print('New archive file with name '+out_file+' written.')
-    print('Please copy this to your local computer or external hard-drive')
+    if not end_beamtime:
+        print('New archive file with name '+out_file+' written.')
+        print('Please copy this to your local computer or external hard-drive')
     return out_file
 
 def _clean_md_input(obj):
@@ -301,58 +367,7 @@ def _clean_md_input(obj):
     else:
         return obj
 
-def _plan_validator(scan_type):
-    ''' Validator for ScanPlan object
-    
-    It validates if required scan parameters for certain scan type are properly defined in object
 
-    Parameters
-    ----------
-        scan_type : str
-            scan tyoe of XPD Scan object
-    '''
-    # based on structures in xpdacq.xpdacq.py
-    _Tseries_required_params = ['startingT', 'endingT', 'requested_Tstep', 'exposure']
-    _Tseries_optional_params = ['det', 'subs_dict']
-
-    _ct_required_params = ['exposure']
-    _ct_optional_params = ['det','subs_dict'] 
-    # leave optional parameter list here, in case we need to use them in the future
-    
-    
-    # params in tseries is not completely finalized
-    _tseries_required_params = ['num', 'exposure']
-     
-    if scan_type == 'ct':
-        for el in _ct_required_params:
-            try:
-                sc_parms[el]
-            except KeyError:
-                print('It seems you are using a Count scan but you missed %s' % (el))
-                print('Pleas revisit your ScanPlan object')
-                return     
-
-    elif scan_type == 'Tseries':
-        for el in _Tseries_required_params:
-            try:
-                sc_parms[el]
-            except KeyError:
-                print('It seems you are using a Tseries scan plan but you missed %s' % (el))
-                print('Pleas revisit your ScanPlan object')
-                return 
-
-    elif scan_type == 'tseries':
-        for el in _tseries_required_params:
-            try:
-                sc_parms[el]
-            except KeyError:
-                print('It seems you are using a tseries scan plan but you missed %s' % (el))
-                print('Pleas revisit your ScanPlan object')
-                return
-    else:
-        print('It seems you are using a scan type we do not recongize')
-        print('That is fine but please make sure you have all required parameters defined')
-        pass
     
 '''
 class XPDSTATE():

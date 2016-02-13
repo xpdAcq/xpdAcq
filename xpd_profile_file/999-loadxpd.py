@@ -17,6 +17,8 @@ import os
 from xpdacq.config import DataPath
 from xpdacq.beamtimeSetup import *
 from xpdacq.beamtimeSetup import _make_clean_env
+from xpdacq.beamtimeSetup import _start_beamtime  # Tim test
+from xpdacq.beamtimeSetup import _end_beamtime  # Tim test
 from xpdacq.beamtime import *
 #from xpdacq.xpdacq import *
 #from xpdacq.xpdacq import get_light_images 
@@ -28,7 +30,7 @@ B_DIR = os.path.expanduser('~')
 datapath = DataPath(B_DIR)
 
 print('Initializing the XPD data acquisition simulation environment') 
-_make_clean_env(datapath)
+#_make_clean_env(datapath)
 
 # These are needed in real XPD
 os.chdir(os.path.join(B_DIR,WORKING_DIR))

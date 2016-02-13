@@ -82,13 +82,14 @@ def _unpack_and_run(sample,scan,**kwargs):
 
     parms = scan.sc_params
     subs={}
-    if 'subs' in parms: subsc = parms['subs']
-    for i in subsc:
-        if i == 'livetable':
-            subs.update({'all':LiveTable([area_det, temp_controller])})
-        elif i == 'verify_write':
-            subs.update({'stop':verify_files_saved})
-    print(subs)
+    if 'subs' in parms: 
+        subsc = parms['subs']
+        for i in subsc:
+            if i == 'livetable':
+                subs.update({'all':LiveTable([area_det, temp_controller])})
+            elif i == 'verify_write':
+                subs.update({'stop':verify_files_saved})
+        print(subs)
 
     if scan.scan == 'ct':
        get_light_images(cmdo,parms['exposure'],'pe1c',subs,**kwargs)
@@ -239,7 +240,7 @@ def _nstep(start, stop, step_size):
     
     computed_nsteps = int(requested_nsteps) # round down for finer step size
     computed_step_list = np.linspace(start, stop, computed_nsteps)
-    computed_step_size = computed_step_list[2]- computed_step_list[1]
+    computed_step_size = computed_step_list[1]- computed_step_list[0]
     print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',computed_step_size)
     return computed_nsteps
 
