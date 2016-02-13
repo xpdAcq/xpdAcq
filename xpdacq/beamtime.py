@@ -121,7 +121,6 @@ class Beamtime(XPD):
         self.md.update({'bt_wavelength': _clean_md_input(wavelength)})
         self.md.update({'bt_experimenters': _clean_md_input(experimenters)})
         self.md.update({'bt_uid': self._getuid()})
-        self.md.update({'bt_usermd': _clean_md_input(kwargs)})
         self._yamify()
 
 class Experiment(XPD):
@@ -130,10 +129,9 @@ class Experiment(XPD):
         self.type = 'ex'
         self.bt = beamtime
         self.md = self.bt.md
-        self.md.update({'ex_usermd':_clean_md_input(kwargs)})
-        self.md.update({'ex_name': _clean_md_input(expname)})
+        self.md.update({'ex_name': self.name})
         self.md.update({'ex_uid': self._getuid()})
-        self.md.update({'ex_usermd':_clean_md_input(expname)})
+        self.md.update({'ex_usermd':_clean_md_input(kwargs)})
         self._yamify()
 
 class Sample(XPD):
@@ -161,7 +159,8 @@ class ScanPlan(XPD):
            or your scans won't work.  The list of allowed keywords is in the 
            documentation, but 'exposure' sets exposure time and is all that is needed
            for a simple count. 'num' and 'delay' are the number of images and the
-           delay time between exposures in a tseries.
+           delay time between exposures in a tseries. In Tramps the required keys are
+           'Tstart', 'Tstop'
     shutter - bool - default=True.  If True, in-hutch fast shutter will be opened before a scan and
                 closed afterwards.  Otherwise control of the shutter is left external. Set to False
                 if you want to control the shutter by hand.

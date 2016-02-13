@@ -69,7 +69,7 @@ def dryrun(sample,scan,**kwargs):
        get_light_images_dryrun(cmdo,parms['exposure'],'pe1c',parms['subs'],**kwargs)
     elif scan.scan == 'tseries':
        collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
-    elif scan.scan == 'Tseries':
+    elif scan.scan == 'Tramp':
        pass
     else:
        print('unrecognized scan type.  Please rerun with a different scan object')
@@ -95,7 +95,7 @@ def _unpack_and_run(sample,scan,**kwargs):
        get_light_images(cmdo,parms['exposure'],'pe1c',subs,**kwargs)
     elif scan.scan == 'tseries':
        collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
-    elif scan.scan == 'Tseries':
+    elif scan.scan == 'Tramp':
         #collect_Temp_series(scan, parms[0], 'pe1c', **kwargs)
         collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
         #SPEC_Temp_series(cmdo, parms['startingT'], parms['endingT'], parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)

@@ -89,16 +89,17 @@ def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
 
     if base_dir is None:
         base_dir = B_DIR
-    try:
-        if bto is None:
-        bto = bt
-    except NameError:
-        bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
+
+    if bto is None:
+        try:
+            bto = bt
+        except NameError:
+            bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
 
     dp = DataPath(base_dir)
     files = os.listdir(dp.base)
     if len(files)==1:
-        print('It appears that end_beamtime may have been run.  If so, do not run again')
+        print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
         return
 
     tar_ball = export_data(base_dir, end_beamtime=True)
@@ -118,8 +119,8 @@ def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
         bt_uid = ''
         
     full_info = '_'.join([PI_name.strip().replace(' ', ''),
-                            str(saf_num).strip(), strftime('%Y-%m-%d-%H%M'), bt_uid
-                            ])
+                            str(saf_num).strip(), strftime('%Y-%m-%d-%H%M'), bt_uid]
+                            )
     #print('Backup your data now. It takes sometime as well, please be patient :)')
     archive_f_name = os.path.join(archive_dir, full_info) + ext
     shutil.copyfile(tar_ball, archive_f_name) # remote archive
