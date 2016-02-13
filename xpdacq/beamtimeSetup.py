@@ -89,8 +89,12 @@ def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
 
     if base_dir is None:
         base_dir = B_DIR
-    if bto is None:
+    try:
+        if bto is None:
         bto = bt
+    except NameError:
+        bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
+
     dp = DataPath(base_dir)
     files = os.listdir(dp.base)
     if len(files)==1:
@@ -101,16 +105,16 @@ def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
     ext = get_full_ext(tar_ball)
     os.makedirs(archive_dir, exist_ok=True)
     try:
+        PI_name = bto.md['bt_piLast']
+    except KeyError:
+        PI_name = input('Please enter PI last name for this beamtime: ')
+    try:
         saf_num = bto.md['bt_safN']
-    except NameError:
+    except KeyError:
         saf_num = input('Please enter your SAF number to this beamtime: ')
     try:
-        PI_name = bto.md['bt_piLast']
-    except NameError:
-        PI_name = input('Please enter PI name to this beamtime: ')
-    try:
         bt_uid = bto.md['bt_uid'][:7]
-    except NameError:
+    except KeyError:
         bt_uid = ''
         
     full_info = '_'.join([PI_name.strip().replace(' ', ''),
