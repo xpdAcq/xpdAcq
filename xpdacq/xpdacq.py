@@ -238,10 +238,10 @@ def _nstep(start, stop, step_size):
     ''' return (start, stop, nsteps)'''
     requested_nsteps = abs((start - stop) / step_size)
     
-    computed_nsteps = int(requested_nsteps) # round down for finer step size
+    computed_nsteps = int(requested_nsteps)+1 # round down for finer step size
     computed_step_list = np.linspace(start, stop, computed_nsteps)
     computed_step_size = computed_step_list[1]- computed_step_list[0]
-    print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',computed_step_size)
+    print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',abs(computed_step_size))
     return computed_nsteps
 
 
