@@ -159,8 +159,8 @@ class ScanPlan(XPD):
            or your scans won't work.  The list of allowed keywords is in the 
            documentation, but 'exposure' sets exposure time and is all that is needed
            for a simple count. 'num' and 'delay' are the number of images and the
-           delay time between exposures in a tseries. In Tramps the required keys are
-           'Tstart', 'Tstop'
+           delay time between exposures in a tseries. In Tramps as well as 'exposure' 
+           the required keys are 'Tstart', 'Tstop', 'Tstep'.
     shutter - bool - default=True.  If True, in-hutch fast shutter will be opened before a scan and
                 closed afterwards.  Otherwise control of the shutter is left external. Set to False
                 if you want to control the shutter by hand.
