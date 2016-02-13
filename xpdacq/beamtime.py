@@ -19,11 +19,15 @@ import os
 import shutil
 import datetime
 from time import strftime
+import sys
 from xpdacq.config import DataPath
 
 
 class XPD:
     _base_path = ''
+    if not _base_path:
+        dp = DataPath(os.path.expanduser('~'))
+        _base_path = dp.base
     def _getuid(self):
         return str(uuid.uuid1())
 
@@ -36,14 +40,20 @@ class XPD:
     
     def _yaml_path(self):
         yaml_dir_path = os.path.join(self._base_path, 'config_base', 'yml')
-        os.makedirs(yaml_dir_path, exist_ok = True) ## replace with os.makedirs function
+        os.makedirs(yaml_dir_path, exist_ok = True) # replace with os.makedirs function
         return yaml_dir_path
+
+    def _yaml_garage_path(self):
+        yaml_garage_dir_path = os.path.join(self._base_path, 'config_base', 'yml_garage')
+        os.makedirs(yaml_garage_dir_path, exist_ok = True)
+        # backup directory when user wants to move out objects from default reading list
+        return yaml_garage_dir_path
 
                     
     def _yamify(self):
         fname = self.name
         ftype = self.type
-        fpath = os.path.join(self._yaml_path(), ftype+'_'+ fname +'.yml')
+        fpath = os.path.join(self._yaml_path(), str(ftype) +'_'+ str(fname) +'.yml')
         if isinstance(fpath, str):
             with open(fpath, 'w') as fout:
                 yaml.dump(self, fout)
@@ -62,7 +72,7 @@ class XPD:
         yamls = os.listdir(fpath)
         olist = []
         for f in yamls:
-            fname = fpath+f
+            fname = os.path.join(fpath,f)
             with open(fname, 'r') as fout:
                 olist.append(yaml.load(fout))
         return olist
@@ -74,13 +84,13 @@ class XPD:
             iter = 0
             for i in list:
                 iter += 1
-                print(i.type+' object '+i.name+' has list index ', iter-1)
+                print(i.type+' object '+str(i.name)+' has list index ', iter-1)
         else:
             iter = 0
             for i in list:
                 iter += 1
                 if i.type == type:
-                    print(i.type+' object '+i.name+' has list index ', iter-1)
+                    print(i.type+' object '+str(i.name)+' has list index ', iter-1)
         print('Use bt.get(index) to get the one you want')
 
     @classmethod
@@ -88,6 +98,30 @@ class XPD:
         list = cls.loadyamls()
         return list[index]
 
+    @classmethod
+    def remove(cls, index):
+        garage_path = cls._yaml_garage_path(cls)
+        read_path = cls._yaml_path(cls)
+
+        list = cls.loadyamls()
+        obj_name = list[index].name
+        obj_type = list[index].type
+        f_name = os.join(read_path, obj_type+'_'+obj_name+'.yml')
+
+        print("You are about to remove %s object with name %s from current object list" % (obj_type, obj_name))
+        print("Removed object will be moved to %s. You can still reuse it if you need to" % garage_path) 
+        user_confirm = input("Do you want to continue y/[n]: ")
+        if user_confirm in ('n',''):
+            print('Stopped. Nothing was removed')
+            return
+        elif user_confirm == 'y':
+            print('Remove %s object with name %s from current object list' % (obj_type, obj_name))
+            shutil.move(f_name, garage_path)
+
+        else:
+            print('Unrecongnized input, abort and not any action was taken')
+            return
+    
 class Beamtime(XPD):
     def __init__(self, pi_last, safn, wavelength, experimenters = [], **kwargs):
         self.name = 'bt'
@@ -101,11 +135,12 @@ class Beamtime(XPD):
         self._yamify()
 
 class Experiment(XPD):
-    def __init__(self, expname, beamtime, **kwarg):
-        self.name = expname
+    def __init__(self, expname, beamtime, **kwargs):
+        self.name = _clean_md_input(expname)
         self.type = 'ex'
         self.bt = beamtime
         self.md = self.bt.md
+        self.md.update({'ex_usermd':_clean_md_input(kwargs)})
         self.md.update({'ex_name': _clean_md_input(expname)})
         self.md.update({'ex_uid': self._getuid()})
         self.md.update({'ex_usermd':_clean_md_input(expname)})
@@ -137,8 +172,8 @@ class Sample(XPD):
         self.md.update({'sa_usermd': _clean_md_input(kwargs)})
         self._yamify()
 
-
-class Scan(XPD):
+#FIXME - cannot find 'Scan' in the module 'xpdacq.beamtime'
+class ScanPlan(XPD):
     '''ScanPlan object that defines scans to run.  To run them: prun(Sample,ScanPlan)
     
     Arguments:
@@ -166,11 +201,15 @@ class Scan(XPD):
         self.type = 'sc'
         self.scan = _clean_md_input(scan_type)
         self.sc_params = _clean_md_input(scan_params) # sc_parms is a dictionary
+        
+        self._plan_validator()
+        
         self.shutter = shutter
         self.md = {}
-        self.md.update({'sc_name': self._clean_md_input(name)})
-        self.md.update({'sc_type': self._clean_md_input(type)})
+        self.md.update({'sc_name': _clean_md_input(self.name)})
+        self.md.update({'sc_type': _clean_md_input(self.scan)})
         self.md.update({'sc_uid': self._getuid()})
+        self.md.update({'sc_usermd':_clean_md_input(kwargs)})
         if self.shutter: 
             self.md.update({'sc_shutter_control':'in-scan'})
         else:
@@ -183,6 +222,67 @@ class Scan(XPD):
         self.md.update({'sc_params': _clean_md_input(scan_params)})
         
         self._yamify()
+        
+
+        
+
+
+    def _plan_validator(self):
+        ''' Validator for ScanPlan object
+        
+        It validates if required scan parameters for certain scan type are properly defined in object
+
+        Parameters
+        ----------
+            scan_type : str
+                scan tyoe of XPD Scan object
+        '''
+        # based on structures in xpdacq.xpdacq.py
+        _Tseries_required_params = ['startingT', 'endingT', 'requested_Tstep', 'exposure']
+        _Tseries_optional_params = ['det', 'subs_dict']
+
+        _ct_required_params = ['exposure']
+        _ct_optional_params = ['det','subs_dict'] 
+        # leave optional parameter list here, in case we need to use them in the future
+        
+        
+        # params in tseries is not completely finalized
+        _tseries_required_params = ['num', 'exposure']
+        
+        if self.scan == 'ct':
+            for el in _ct_required_params:
+                try:
+                    self.sc_params[el]
+                except KeyError:
+                    print('It seems you are using a Count scan but the scan_params dictionary does not contain %s which is needed.' % (el))
+                    print('Please use uparrow to edit and retry making your ScanPlan object')
+                    sys.exit('DONT PANIC, just an error message. You are fine :)')
+
+        elif self.scan == 'Tseries':
+            for el in _Tseries_required_params:
+                try:
+                    self.sc_params[el]
+                except KeyError:
+                    print('It seems you are using a Tseries scan but the scan_params dictionary does not contain %s which is needed.' % (el))
+                    print('Please use uparrow to edit and retry making your ScanPlan object')
+                    sys.exit('DONT PANIC, just an error message. You are fine :)')
+
+        elif self.scan == 'tseries':
+            for el in _tseries_required_params:
+                try:
+                    self.sc_params[el]
+                except KeyError:
+                    print('It seems you are using a tseries scan but the scan_params dictionary does not contain %s which is needed.' % (el))
+                    print('Please use uparrow to edit and retry making your ScanPlan object')
+                    sys.exit('DONT PANIC, just an error message. You are fine :)')
+
+        else:
+            print('It seems you are using a scan type we do not recongize')
+            print('That is fine but please make sure you have all required parameters defined')
+            pass
+
+
+
 
 class Union(XPD):
     def __init__(self,sample,scan):
@@ -200,7 +300,7 @@ class Xposure(XPD):
         self.md = self.sc.md
  #       self._yamify()    # no need to yamify this
 
-def export_data(root_dir=None, ar_format='gztar'):
+def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
     """Create a tarball of all of the data is the user folders.
 
     This assumes that the root directory is layed out prescribed by DataPath.
@@ -211,29 +311,29 @@ def export_data(root_dir=None, ar_format='gztar'):
       - create a new (timestamped) tarball
 
     """
+    # FIXME - test purpose
+    B_DIR = os.path.expanduser('~')
     if root_dir is None:
         root_dir = B_DIR
     dp = DataPath(root_dir)
     # remove any existing exports
-    shutil.rmtree(dp.export_dir)
-    # tiff name
-    print('Deleting any existing archive files in the Export directory')
+    if os.path.isdir(dp.export_dir):
+        shutil.rmtree(dp.export_dir)
     f_name = strftime('data4export_%Y-%m-%dT%H%M')
-    os.makedirs(dp.export_dir)
+    os.makedirs(dp.export_dir, exist_ok=True)
     cur_path = os.getcwd()
     try:
         os.chdir(dp.stem)
-        tar_return = shutil.make_archive(f_name, ar_format,
-                                         root_dir=dp.stem,
-                                         base_dir='xpdUser',
-                                         verbose=1, dry_run=False)
+        print('Compressing your data now. That may take several minutes, please be patient :)' )
+        tar_return = shutil.make_archive(f_name, ar_format, root_dir=dp.stem,
+                base_dir='xpdUser', verbose=1, dry_run=False)
         shutil.move(tar_return, dp.export_dir)
-        print(dp.export_dir)
     finally:
         os.chdir(cur_path)
     out_file = os.path.join(dp.export_dir, os.path.basename(tar_return))
-    print('New archive file with name '+out_file+' written.')
-    print('Please copy this to your local computer or external hard-drive')
+    if not end_beamtime:
+        print('New archive file with name '+out_file+' written.')
+        print('Please copy this to your local computer or external hard-drive')
     return out_file
 
 def _clean_md_input(obj):
@@ -241,18 +341,34 @@ def _clean_md_input(obj):
     if isinstance(obj, str):
         return obj.strip()
     
-    if isinstance(obj, list):
+    elif isinstance(obj, list):
         clean_list = list()
         for el in obj:
-            clean_list.append(el.strip())
+            if isinstance(el, str):
+                clean_list.append(el.strip())
+            else: # if not string, just pass
+                clean_list.append(el)
         return clean_list
 
-    if isinstance(obj, dict):
+    elif isinstance(obj, dict):
         clean_dict = dict()
         for k,v in obj.items():
-            clean_dict[k.strip()] = v.strip()
+            if isinstance(k, str):
+                clean_key = k.strip()
+            else: # if not string, just pass
+                clean_key = k
+            if isinstance(v, str):
+                clean_val = v.strip()
+            else: # if not string, just pass
+                clean_val = v
+            clean_dict[clean_key] = clean_val
         return clean_dict
 
+    else:
+        return obj
+
+
+    
 '''
 class XPDSTATE():
        def __init__(self, dirpath='./config_base', md={}  ):

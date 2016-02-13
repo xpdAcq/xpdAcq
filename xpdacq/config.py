@@ -46,7 +46,7 @@ class DataPath(object):
 
     @property
     def base(self):
-        ''' base dir of entire configuration '''
+        ''' base dir of entire configuration, normally xpdUser '''
         return os.path.join(self.stem, WORKING_DIR)
 
     @property
