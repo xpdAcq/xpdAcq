@@ -33,7 +33,7 @@ bt = _get_obj('bt')
 db = _get_obj('db')
 get_events = _get_obj('get_events')
 get_images = _get_obj('get_images')
-
+W_DIR = datapath.tif_dir
 
 
 def bt_uid():
@@ -60,9 +60,12 @@ def _feature_gen(header):
         try:
             el = field[key]
             if isinstance(el, list):
-                # grab the first two experimenters
-                feature_list.append(str(el[0]))
-                feature_list.append(str(el[1]))
+                try:
+                # grab the first two experimenters if exist
+                    feature_list.append(str(el[0]))
+                    feature_list.append(str(el[1]))
+                except IndexError:
+                    feature_list.append('default_experimenter')
             else:
                 # truncate string length
                 if len(el)>12:
@@ -112,8 +115,10 @@ def save_tiff(headers):
         
         # prepare imgs and events
         header_events = list(get_events(header))
-        light_imgs = get_images(header)
         
+        img_field = _identify_image_field(header)
+        light_imgs = np.array(get_images(header, img_field))
+
         try:
             cnt_time = header.start['xp_computed_exposure']
             print('cnt_time = %s' % cnt_time)
@@ -196,7 +201,7 @@ def plot_last_scan():
     plot_images(db[-1])
 
 
-def _indentify_image_field(header):
+def _identify_image_field(header):
     ''' small function to identify image filed key words in header
     '''
     try:

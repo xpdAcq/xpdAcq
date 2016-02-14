@@ -69,7 +69,7 @@ def dryrun(sample,scan,**kwargs):
        get_light_images_dryrun(cmdo,parms['exposure'],'pe1c',parms['subs'],**kwargs)
     elif scan.scan == 'tseries':
        collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
-    elif scan.scan == 'Tseries':
+    elif scan.scan == 'Tramp':
        pass
     else:
        print('unrecognized scan type.  Please rerun with a different scan object')
@@ -82,19 +82,20 @@ def _unpack_and_run(sample,scan,**kwargs):
 
     parms = scan.sc_params
     subs={}
-    if 'subs' in parms: subsc = parms['subs']
-    for i in subsc:
-        if i == 'livetable':
-            subs.update({'all':LiveTable([area_det, temp_controller])})
-        elif i == 'verify_write':
-            subs.update({'stop':verify_files_saved})
-    print(subs)
+    if 'subs' in parms: 
+        subsc = parms['subs']
+        for i in subsc:
+            if i == 'livetable':
+                subs.update({'all':LiveTable([area_det, temp_controller])})
+            elif i == 'verify_write':
+                subs.update({'stop':verify_files_saved})
+        print(subs)
 
     if scan.scan == 'ct':
        get_light_images(cmdo,parms['exposure'],'pe1c',subs,**kwargs)
     elif scan.scan == 'tseries':
        collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
-    elif scan.scan == 'Tseries':
+    elif scan.scan == 'Tramp':
         #collect_Temp_series(scan, parms[0], 'pe1c', **kwargs)
         collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
         #SPEC_Temp_series(cmdo, parms['startingT'], parms['endingT'], parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
@@ -237,10 +238,10 @@ def _nstep(start, stop, step_size):
     ''' return (start, stop, nsteps)'''
     requested_nsteps = abs((start - stop) / step_size)
     
-    computed_nsteps = np.ceil(requested_nsteps)
+    computed_nsteps = int(requested_nsteps)+1 # round down for finer step size
     computed_step_list = np.linspace(start, stop, computed_nsteps)
-    computed_step_size = computed_step_list[2]- computed_step_list[1]
-    print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',computed_step_size)
+    computed_step_size = computed_step_list[1]- computed_step_list[0]
+    print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',abs(computed_step_size))
     return computed_nsteps
 
 
