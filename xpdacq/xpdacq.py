@@ -54,23 +54,22 @@ def dryrun(sample,scan,**kwargs):
 
     '''
     cmdo = Union(sample,scan)
-    parms = scan.sc_params
-
-    subsc = parms['subs']
-    subs = {}
-    if 'subs' in subsc:
-        for i in subsc['subs']:
-            if i == 'livetable':
-                subs.update({'all':LiveTable([area_det])})
-            elif i == 'verify_write':
-                subs.update({'stop':verify_files_saved})
-
+    area_det = _get_obj('pe1c')
+    parms = scan.md['sc_params']
+    subs={}
+    if 'subs' in parms: subsc = parms['subs']
+    for i in subsc:
+        if i == 'livetable':
+            subs.update({'all':LiveTable([area_det, temp_controller])})
+        elif i == 'verify_write':
+            subs.update({'stop':verify_files_saved})
+   
     if scan.scan == 'ct':
        get_light_images_dryrun(cmdo,parms['exposure'],'pe1c',parms['subs'],**kwargs)
     elif scan.scan == 'tseries':
        collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
     elif scan.scan == 'Tramp':
-       pass
+       collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
     else:
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
@@ -78,27 +77,21 @@ def dryrun(sample,scan,**kwargs):
 def _unpack_and_run(sample,scan,**kwargs):
     cmdo = Union(sample,scan)
     area_det = _get_obj('pe1c')
-    
-
-    parms = scan.sc_params
+    parms = scan.md['sc_params']
     subs={}
-    if 'subs' in parms: 
-        subsc = parms['subs']
-        for i in subsc:
-            if i == 'livetable':
-                subs.update({'all':LiveTable([area_det, temp_controller])})
-            elif i == 'verify_write':
-                subs.update({'stop':verify_files_saved})
-        print(subs)
+    if 'subs' in parms: subsc = parms['subs']
+    for i in subsc:
+        if i == 'livetable':
+            subs.update({'all':LiveTable([area_det, temp_controller])})
+        elif i == 'verify_write':
+            subs.update({'stop':verify_files_saved})
 
     if scan.scan == 'ct':
        get_light_images(cmdo,parms['exposure'],'pe1c',subs,**kwargs)
     elif scan.scan == 'tseries':
        collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
     elif scan.scan == 'Tramp':
-        #collect_Temp_series(scan, parms[0], 'pe1c', **kwargs)
         collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
-        #SPEC_Temp_series(cmdo, parms['startingT'], parms['endingT'], parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
     else:
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
@@ -114,7 +107,7 @@ def prun(sample,scan,**kwargs):
     if scan.shutter: _open_shutter()
     scan.md.update({'xp_isprun':True})
     _unpack_and_run(sample,scan,**kwargs)
-    parms = scan.sc_params
+    #parms = scan.sc_params
     if scan.shutter: _close_shutter()
 
 def dark(sample,scan,**kwargs):
@@ -146,7 +139,7 @@ def setupscan(sample,scan,**kwargs):
     if scan.shutter: _open_shutter()
     scan.md.update({'xp_isprun':False})
     _unpack_and_run(sample,scan,**kwargs)
-    parms = scan.sc_params
+    #parms = scan.sc_params
     if scan.shutter: _close_shutter()
 
 def get_light_images(mdo, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
@@ -229,7 +222,6 @@ def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det='pe1c', s
     md_dict.update(kwargs)
         
     plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
-    #plan = xpd_Tseries_plan([area_det], temp_controller, Tstart, Tstop, Nsteps)
     xpdRE(plan,subs_dict, **md_dict)
 
     print('End of collect_Temp_scans....')
