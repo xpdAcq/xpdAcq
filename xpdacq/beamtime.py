@@ -173,7 +173,7 @@ class ScanPlan(XPD):
         self.name = _clean_md_input(name)
         self.type = 'sc'
         self.scan = _clean_md_input(scan_type)
-        self.sc_params = _clean_md_input(scan_params) # sc_parms is a dictionary
+        self.sc_params = scan_params # sc_parms is a dictionary
         
         self._plan_validator()
         
