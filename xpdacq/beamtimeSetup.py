@@ -146,6 +146,12 @@ def get_full_ext(path, post_ext=''):
         return get_full_ext(path, ext + post_ext)
     return post_ext
 
+def _prompt_for_PIname():
+    return input('Please enter the PI last name to this beamtime: ')
+
+def _set_PIname(input_func):
+    name = input_func()
+    return name
 
 def _start_beamtime(base_dir=None):
     if base_dir is None:
@@ -156,7 +162,8 @@ def _start_beamtime(base_dir=None):
             raise RuntimeError("Expected a folder, got a file.  "
                                "Please Talk to beamline staff")
         files = os.listdir(dp.base) # that also list dirs that have been created
-        if len(files) > 2:
+        if len(files) > 1:
+            print(len(files))
             raise RuntimeError("Unexpected files in {}, you need to run _end_beamtime(). Please Talk to beamline staff".format(dp.base))
         elif len(files) == 1:
             tf, = files
@@ -165,7 +172,11 @@ def _start_beamtime(base_dir=None):
                                    "Please talk to beamline staff"
                                    .format(tf))
             os.unlink(os.path.join(dp.base, tf))
-    PI_name = input('Please enter the PI last name to this beamtime: ')
+    else:
+        raise RuntimeError("The xpdUser directory appears not to exist "
+                               "Please Talk to beamline staff")
+    PI_name = _set_PIname(_prompt_for_PIname())
+    #PI_name = input('Please enter the PI last name to this beamtime: ')
     saf_num = input('Please enter the SAF number to this beamtime: ')
     wavelength = input('Please enter the x-ray wavelength: ')
     _make_clean_env(dp)
