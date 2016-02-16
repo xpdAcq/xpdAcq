@@ -217,8 +217,40 @@ class ScanPlan(XPD):
         
         
         # params in tseries is not completely finalized
-        _tseries_required_params = ['num', 'exposure', 'delay']
+        _tseries_required_params = ['exposure', 'delay', 'num']
         
+        if self.scan == 'ct':
+            for el in _ct_required_params:
+                try:
+                    self.sc_params[el]
+                except KeyError:
+                    print('It seems you are using a Count scan but the scan_params dictionary does not contain {}  which is needed.'.format(el))
+                    print('Please use uparrow to edit and retry making your ScanPlan object')
+                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+
+        elif self.scan == 'Tramp':
+            for el in _Tramp_required_params:
+                try:
+                   self.sc_params[el]
+                except KeyError:
+                   print('It seems you are using a temperature ramp scan but the scan_params dictionary does not contain {} which is needed.'.format(el))
+                   print('Please use uparrow to edit and retry making your ScanPlan object')
+                   sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+        
+        elif self.scan == 'tseries':
+           for el in _tseries_required_params:
+               try:
+                   self.sc_params[el]
+               except KeyError:
+                   print('It seems you are using a tseries scan but the scan_params dictionary does not contain {} which is needed.'.format(el))
+                   print('Please use uparrow to edit and retry making your ScanPlan object')
+                   sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+        else:
+            print('It seems you are defining an unknown scan')
+            print('Please use uparrow to edit and retry making your ScanPlan object')
+            sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+
+        ''' bad logic, will be discarded
         if self.scan == 'ct':
             if list(self.sc_params.keys()) == _ct_required_params:
                 pass
@@ -287,12 +319,8 @@ class ScanPlan(XPD):
                 
                 print('Please use uparrow to edit and retry making your ScanPlan object')
                 sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
-
-        else:
-            print('It seems you are defining an unknown scan')
-            print('Please use uparrow to edit and retry making your ScanPlan object')
-            sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
-
+        '''
+        
 
 class Union(XPD):
     def __init__(self,sample,scan):
