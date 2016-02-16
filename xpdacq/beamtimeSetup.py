@@ -146,12 +146,24 @@ def get_full_ext(path, post_ext=''):
         return get_full_ext(path, ext + post_ext)
     return post_ext
 
-def _prompt_for_PIname():
-    return input('Please enter the PI last name to this beamtime: ')
+def _any_input_method(inp_func):
+    return inp_func()
 
-def _set_PIname(input_func):
-    name = input_func()
-    return name
+def _prompt_for_PIname():
+    ans = _any_input_method('Please enter the PI last name to this beamtime: ')
+    return ans
+def _prompt_for_safN():
+    ans = _any_input_method('Please enter the SAF number for this beamtime: ')
+    return ans
+def _prompt_for_wavelength():
+    ans = _any_input_method('Please enter the x-ray wavelength: ')
+    return ans
+def _prompt_for_experimenters():
+    print('Please enter a list of experimenters with syntax [("lastName","firstName",userID)]')
+    ans = _any_input_method('default = []')
+    if ans == '':
+        ans = []
+    return ans
 
 def _check_empty_environment(base_dir=None):
     if base_dir is None:
@@ -175,16 +187,19 @@ def _check_empty_environment(base_dir=None):
     else:
         raise RuntimeError("The xpdUser directory appears not to exist "
                                "Please Talk to beamline staff")
-
+        
 def _start_beamtime(base_dir=None):
     if base_dir is None:
         base_dir = B_DIR
     _check_empty_environment(base_dir)
-    PI_name = _set_PIname(_prompt_for_PIname())
-    #PI_name = input('Please enter the PI last name to this beamtime: ')
-    saf_num = input('Please enter the SAF number to this beamtime: ')
-    wavelength = input('Please enter the x-ray wavelength: ')
+    PI_name = _any_input_method(_prompt_for_PIname)
+    saf_num = _any_input_method(_prompt_for_safN)
+    wavelength = _any_input_method(_prompt_for_wavelength)
+    experimenters = _any_input_method(_prompt_for_experimenters)
     _make_clean_env(dp)
     os.chdir(dp.base)
-    bt = Beamtime(PI_name,saf_num,wavelength)
+    bt = Beamtime(PI_name,saf_num,wavelength,experimenters)
     return bt
+
+
+
