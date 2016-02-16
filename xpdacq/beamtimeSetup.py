@@ -92,7 +92,8 @@ def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
 
     if bto is None:
         try:
-            bto = bt
+            bto = bt  # problem comes from bt only exists if _start_beamtime has been run and ipython never crash
+                      # FIXME - load_yaml directly ?
         except NameError:
             bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
 
@@ -107,15 +108,15 @@ def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
     os.makedirs(archive_dir, exist_ok=True)
     try:
         PI_name = bto.md['bt_piLast']
-    except KeyError:
+    except AttributeError:
         PI_name = input('Please enter PI last name for this beamtime: ')
     try:
         saf_num = bto.md['bt_safN']
-    except KeyError:
+    except AttributeError:
         saf_num = input('Please enter your SAF number to this beamtime: ')
     try:
         bt_uid = bto.md['bt_uid'][:7]
-    except KeyError:
+    except AttributeError:
         bt_uid = ''
         
     full_info = '_'.join([PI_name.strip().replace(' ', ''),
