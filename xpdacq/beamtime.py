@@ -103,7 +103,7 @@ class XPD:
         list = cls.loadyamls()
         obj_name = list[index].name
         obj_type = list[index].type
-        f_name = os.join(read_path, obj_type+'_'+obj_name+'.yml')
+        f_name = os.path.join(read_path, obj_type+'_'+obj_name+'.yml')
 
         print("You are about to remove %s object with name %s from current object list" % (obj_type, obj_name))
         user_confirm = input("Do you want to continue y/[n]: ")
@@ -207,8 +207,8 @@ class ScanPlan(XPD):
                 scan tyoe of XPD Scan object
         '''
         # based on structures in xpdacq.xpdacq.py
-        _Tseries_required_params = ['startingT', 'endingT', 'requested_Tstep', 'exposure']
-        _Tseries_optional_params = ['det', 'subs_dict']
+        _Tramp_required_params = ['startingT', 'endingT', 'requested_Tstep', 'exposure']
+        _Tramp_optional_params = ['det', 'subs_dict']
 
         _ct_required_params = ['exposure']
         _ct_optional_params = ['det','subs_dict'] 
