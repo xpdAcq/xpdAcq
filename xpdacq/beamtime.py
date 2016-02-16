@@ -196,6 +196,7 @@ class ScanPlan(XPD):
         
         self._yamify()
 
+    #FIXME - make validator clean later
     def _plan_validator(self):
         ''' Validator for ScanPlan object
         
@@ -219,31 +220,79 @@ class ScanPlan(XPD):
         _tseries_required_params = ['num', 'exposure', 'delay']
         
         if self.scan == 'ct':
-            for el in _ct_required_params:
-                try:
-                    self.sc_params[el]
-                except KeyError:
-                    print('It seems you are using a Count scan but the scan_params dictionary does not contain %s which is needed.' % (el))
-                    print('Please use uparrow to edit and retry making your ScanPlan object')
-                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+            if list(self.sc_params.keys()) == _ct_required_params:
+                pass
+            else:
+                extra_sc_params = list()
+                for el in list(self.sc_params.keys()):
+                    if el not in _ct_required_params:
+                        extra_sc_params.append(el)
+                if extra_sc_params:
+                    print('It seems you are using a Count scan but the scan_params dictionary contain extra parameters {}'.format(extra_sc_params))
+
+                required_sc_params = list()
+                for el in _ct_required_params:
+                    try:
+                        self.sc_params[el]
+                    except KeyError:
+                        required_sc_params.append(el)
+                if required_sc_params:
+                    print('It seems you are using a Count scan but the scan_params dictionary doesn not contain {} which is needed'.format(required_sc_params))
+                
+                print('Please use uparrow to edit and retry making your ScanPlan object')
+                sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
         elif self.scan == 'Tramp':
-            for el in _Tramp_required_params:
-                try:
-                    self.sc_params[el]
-                except KeyError:
-                    print('It seems you are using a temperature ramp scan but the scan_params dictionary does not contain %s which is needed.' % (el))
-                    print('Please use uparrow to edit and retry making your ScanPlan object')
-                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+            if list(self.sc_params.keys()) == _Tramp_required_params:
+                pass
+            else:
+                extra_sc_params = list()
+                for el in list(self.sc_params.keys()):
+                    if el not in _Tramp_required_params:
+                        extra_sc_params.append(el)
+                if extra_sc_params:
+                    print('It seems you are using a Tramp scan but the scan_params dictionary contain extra parameters {}'.format(extra_sc_params))
 
+                required_sc_params = list()
+                for el in _Tramp_required_params:
+                    try:
+                        self.sc_params[el]
+                    except KeyError:
+                        required_sc_params.append(el)
+                if required_sc_params:
+                    print('It seems you are using a Tramp scan but the scan_params dictionary doesn not contain {} which is needed'.format(required_sc_params))
+                
+                print('Please use uparrow to edit and retry making your ScanPlan object')
+                sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+                   
         elif self.scan == 'tseries':
-            for el in _tseries_required_params:
-                try:
-                    self.sc_params[el]
-                except KeyError:
-                    print('It seems you are using a tseries scan but the scan_params dictionary does not contain %s which is needed.' % (el))
-                    print('Please use uparrow to edit and retry making your ScanPlan object')
-                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+            if list(self.sc_params.keys()) == _tseries_required_params:
+                pass
+            else:
+                extra_sc_params = list()
+                for el in list(self.sc_params.keys()):
+                    if el not in _tseries_required_params:
+                        extra_sc_params.append(el)
+                if extra_sc_params:
+                    print('It seems you are using a tseries scan but the scan_params dictionary contain extra parameters {}'.format(extra_sc_params))
+
+                required_sc_params = list()
+                for el in _tseries_required_params:
+                    try:
+                        self.sc_params[el]
+                    except KeyError:
+                        required_sc_params.append(el)
+                if required_sc_params:
+                    print('It seems you are using a tseries scan but the scan_params dictionary doesn not contain {} which is needed'.format(required_sc_params))
+                
+                print('Please use uparrow to edit and retry making your ScanPlan object')
+                sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+
+        else:
+            print('It seems you are defining an unknown scan')
+            print('Please use uparrow to edit and retry making your ScanPlan object')
+            sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+
 
 class Union(XPD):
     def __init__(self,sample,scan):
