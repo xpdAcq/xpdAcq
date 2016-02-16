@@ -69,7 +69,7 @@ def dryrun(sample,scan,**kwargs):
     elif scan.scan == 'tseries':
        collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
     elif scan.scan == 'Tramp':
-       collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
+        pass
     else:
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
