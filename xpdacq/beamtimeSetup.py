@@ -153,7 +153,7 @@ def _set_PIname(input_func):
     name = input_func()
     return name
 
-def _start_beamtime(base_dir=None):
+def _check_empty_environment(base_dir=None):
     if base_dir is None:
         base_dir = B_DIR
     dp = DataPath(base_dir)
@@ -175,6 +175,11 @@ def _start_beamtime(base_dir=None):
     else:
         raise RuntimeError("The xpdUser directory appears not to exist "
                                "Please Talk to beamline staff")
+
+def _start_beamtime(base_dir=None):
+    if base_dir is None:
+        base_dir = B_DIR
+    _check_empty_environment(base_dir)
     PI_name = _set_PIname(_prompt_for_PIname())
     #PI_name = input('Please enter the PI last name to this beamtime: ')
     saf_num = input('Please enter the SAF number to this beamtime: ')
