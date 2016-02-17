@@ -147,8 +147,26 @@ def get_full_ext(path, post_ext=''):
         return get_full_ext(path, ext + post_ext)
     return post_ext
 
+def _any_input_method(inp_func):
+    return inp_func()
 
-def _start_beamtime(base_dir=None):
+def _prompt_for_PIname():
+    ans = _any_input_method('Please enter the PI last name to this beamtime: ')
+    return ans
+def _prompt_for_safN():
+    ans = _any_input_method('Please enter the SAF number for this beamtime: ')
+    return ans
+def _prompt_for_wavelength():
+    ans = _any_input_method('Please enter the x-ray wavelength: ')
+    return ans
+def _prompt_for_experimenters():
+    print('Please enter a list of experimenters with syntax [("lastName","firstName",userID)]')
+    ans = _any_input_method('default = []')
+    if ans == '':
+        ans = []
+    return ans
+
+def _check_empty_environment(base_dir=None):
     if base_dir is None:
         base_dir = B_DIR
     dp = DataPath(base_dir)
@@ -157,7 +175,8 @@ def _start_beamtime(base_dir=None):
             raise RuntimeError("Expected a folder, got a file.  "
                                "Please Talk to beamline staff")
         files = os.listdir(dp.base) # that also list dirs that have been created
-        if len(files) > 2:
+        if len(files) > 1:
+            print(len(files))
             raise RuntimeError("Unexpected files in {}, you need to run _end_beamtime(). Please Talk to beamline staff".format(dp.base))
         elif len(files) == 1:
             tf, = files
@@ -166,10 +185,22 @@ def _start_beamtime(base_dir=None):
                                    "Please talk to beamline staff"
                                    .format(tf))
             os.unlink(os.path.join(dp.base, tf))
-    PI_name = input('Please enter the PI last name to this beamtime: ')
-    saf_num = input('Please enter the SAF number to this beamtime: ')
-    wavelength = input('Please enter the x-ray wavelength: ')
+    else:
+        raise RuntimeError("The xpdUser directory appears not to exist "
+                               "Please Talk to beamline staff")
+        
+def _start_beamtime(base_dir=None):
+    if base_dir is None:
+        base_dir = B_DIR
+    _check_empty_environment(base_dir)
+    PI_name = _any_input_method(_prompt_for_PIname)
+    saf_num = _any_input_method(_prompt_for_safN)
+    wavelength = _any_input_method(_prompt_for_wavelength)
+    experimenters = _any_input_method(_prompt_for_experimenters)
     _make_clean_env(dp)
     os.chdir(dp.base)
-    bt = Beamtime(PI_name,saf_num,wavelength)
+    bt = Beamtime(PI_name,saf_num,wavelength,experimenters)
     return bt
+
+
+
