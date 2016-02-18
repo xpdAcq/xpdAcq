@@ -1,14 +1,21 @@
 import unittest
 import os
 import shutil
+from time import strftime
 import xpdacq.beamtimeSetup as bts
-from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_prompt_for_PIname,_check_empty_environment
+from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment
 
 class NewBeamtimeTest(unittest.TestCase): 
 
     def setUp(self):
         self.base_dir = os.getcwd()
         self.home_dir = os.path.join(self.base_dir,'xpdUser')
+        self.PI_name = 'Billinge'
+        self.saf_num = 123
+        self.wavelength = 0.1812
+        self.experimenters = [('Banerjee','Soham',1),('Terban','Max',2)]
+        self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
+
 
     def tearDown(self):
         if os.path.isdir(self.home_dir):
@@ -58,18 +65,12 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertRaises(RuntimeError, lambda:_check_empty_environment(base_dir = self.base_dir))
         os.remove(self.newfile)
 
-
     def test_bt_creation(self):
-        self.PI_name = 'Billinge'
-        self.saf_num = 123
-        self.wavelength = 0.1812
-        self.experimenters = [('Banerjee','Soham',1),('Terban','Max',2)]
-        bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
-        self.assertIsInstance(bt,bts.Beamtime)
-        self.assertEqual(bt.md['bt_experimenters'],[('Banerjee','Soham',1),('Terban','Max',2)])
-        self.assertEqual(bt.md['bt_piLast'],'Billinge')
-        self.assertEqual(bt.md['bt_safN'],123)
-        self.assertEqual(bt.md['bt_wavelength'],0.1812)
+        self.assertIsInstance(self.bt,bts.Beamtime)
+        self.assertEqual(self.bt.md['bt_experimenters'],[('Banerjee','Soham',1),('Terban','Max',2)])
+        self.assertEqual(self.bt.md['bt_piLast'],'Billinge')
+        self.assertEqual(self.bt.md['bt_safN'],123)
+        self.assertEqual(self.bt.md['bt_wavelength'],0.1812)
         # test empty experimenters
         self.experimenters = []
         bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
@@ -79,6 +80,17 @@ class NewBeamtimeTest(unittest.TestCase):
         bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
         self.assertIsInstance(bt,bts.Beamtime)
 
+    def test_start_beamtime(self):
+        os.chdir(self.base_dir)
+        os.mkdir(self.home_dir)
+        piname = 'Billinge'
+        safn = 1234
+        wavelength = 0.1818
+        explist = [('Banerjee','Soham',1),('Terban','Max',2)]
+        tryagain = _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=self.base_dir)
+
     def test_end_beamtime(self):
         os.mkdir(self.home_dir)
-        self.assertRaises(RuntimeError, lambda: _end_beamtime(base_dir=self.base_dir,bto=self.bt))
+        #self.assertRaises(OSError, lambda: _end_beamtime(base_dir=self.base_dir,bto=self.bt))
+        #self.fail('finish making the test')
+        archive_dir = os.path.expanduser(strftime('./pe2_data/2016/userBeamtimeArchive'))

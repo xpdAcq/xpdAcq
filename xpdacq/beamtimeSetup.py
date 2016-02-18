@@ -35,6 +35,10 @@ B_DIR = os.path.expanduser('~')
 REMOTE_DIR = os.path.expanduser('~/pe2_data/')
 BACKUP_DIR = os.path.join(REMOTE_DIR, strftime('%Y'), 'userBeamtimeArchive')
 
+# depracated, but keeping it around because I think it is cool, may want to use it later
+def _any_input_method(inp_func):
+    return inp_func()
+
 
 def _make_clean_env(datapath):
     '''Make a clean environment for a new user
@@ -146,24 +150,6 @@ def get_full_ext(path, post_ext=''):
         return get_full_ext(path, ext + post_ext)
     return post_ext
 
-def _any_input_method(inp_func):
-    return inp_func()
-
-def _prompt_for_PIname():
-    ans = _any_input_method('Please enter the PI last name to this beamtime: ')
-    return ans
-def _prompt_for_safN():
-    ans = _any_input_method('Please enter the SAF number for this beamtime: ')
-    return ans
-def _prompt_for_wavelength():
-    ans = _any_input_method('Please enter the x-ray wavelength: ')
-    return ans
-def _prompt_for_experimenters():
-    print('Please enter a list of experimenters with syntax [("lastName","firstName",userID)]')
-    ans = _any_input_method('default = []')
-    if ans == '':
-        ans = []
-    return ans
 
 def _check_empty_environment(base_dir=None):
     if base_dir is None:
@@ -187,15 +173,25 @@ def _check_empty_environment(base_dir=None):
     else:
         raise RuntimeError("The xpdUser directory appears not to exist "
                                "Please Talk to beamline staff")
-        
+
 def _start_beamtime(base_dir=None):
+    piname = input('Please enter the PI last name to this beamtime: ')
+    safn = input('Please enter the SAF number for this beamtime: ')
+    wavelength = input('Please enter the x-ray wavelength: ')
+    print('Please enter a list of experimenters with syntax [("lastName","firstName",userID)]')
+    explist = list(input('default = []'))
+    if explist == '':
+        explist = []
+    _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None,)
+
+def _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None,):
     if base_dir is None:
         base_dir = B_DIR
     _check_empty_environment(base_dir)
-    PI_name = _any_input_method(_prompt_for_PIname)
-    saf_num = _any_input_method(_prompt_for_safN)
-    wavelength = _any_input_method(_prompt_for_wavelength)
-    experimenters = _any_input_method(_prompt_for_experimenters)
+    PI_name = piname
+    saf_num = safn
+    wavelength = wavelength
+    experimenters = explist
     _make_clean_env(dp)
     os.chdir(dp.base)
     bt = Beamtime(PI_name,saf_num,wavelength,experimenters)
