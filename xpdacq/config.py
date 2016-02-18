@@ -24,6 +24,7 @@ import runpy
 WORKING_DIR = 'xpdUser'
 CONFIG_DIR = 'xpdConfig'
 XPD_PROFILE_PATH = 'home/xf28id1/.ipython/profile_collection/startup' # make it exact
+STARTUP_PATH = os.path.join(XPD_PROFILE_PATH, '00-startup.py')
 AREA_DET_PATH = os.path.join(XPD_PROFILE_PATH, '80-areadetector.py')
 TEMP_CONTROL_PATH = os.path.join(XPD_PROFILE_PATH, '11-temperature-controller.py')
 
@@ -39,7 +40,11 @@ if os.path.isdir(XPD_PROFILE_PATH):
     B_DIR = os.path.expanduser('~/')
     pe1c = run_file(AREA_DET_PATH)['pe1c']
     cs700 = run_file(TEMP_CONTROL_PATH)['cs700']
-    # add more stuff needed
+    db = run_file(STARTUP_PATH)['db']
+    get_events = run_file(STARTUP_PATH)['get_events']
+    get_images = run_file(STARTUP_PATH)['get_images']
+
+    # add more stuff if needed
 
 else:
     from simulator.areadetector import AreaDetector 
@@ -47,6 +52,9 @@ else:
     B_DIR = os.getcwd()
     pe1c = AreaDetector(0.1)
     # cs700  is not coded yet at this stage
+    # db is not ready yet at this stage
+    # get_images is not ready yet at this stage
+    # get_events is not ready yet at this stage
 
 
 class DataPath(object):
