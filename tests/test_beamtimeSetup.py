@@ -78,3 +78,7 @@ class NewBeamtimeTest(unittest.TestCase):
         self.PI_name = None
         bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
         self.assertIsInstance(bt,bts.Beamtime)
+
+    def test_end_beamtime(self):
+        os.mkdir(self.home_dir)
+        self.assertRaises(RuntimeError, lambda: _end_beamtime(base_dir=self.base_dir,bto=self.bt))
