@@ -9,7 +9,7 @@
 #                   All rights reserved
 #
 # File coded by:    Timothy Liu, Simon Billinge
-#`
+#
 # See AUTHORS.txt for a list of people who contributed.
 # See LICENSE.txt for license information.
 #
