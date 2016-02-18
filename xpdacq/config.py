@@ -9,7 +9,7 @@
 #                   All rights reserved
 #
 # File coded by:    Timothy Liu, Simon Billinge
-#
+#`
 # See AUTHORS.txt for a list of people who contributed.
 # See LICENSE.txt for license information.
 #
@@ -17,13 +17,36 @@
 '''Constants and other global definitions.
 '''
 
-import os.path
+import os
+import runpy
 
-#from xpdacq.main_config import main_config
 
-B_DIR = '~/'
 WORKING_DIR = 'xpdUser'
 CONFIG_DIR = 'xpdConfig'
+XPD_PROFILE_PATH = 'home/xf28id1/.ipython/profile_collection/startup' # make it exact
+AREA_DET_PATH = os.path.join(XPD_PROFILE_PATH, '80-areadetector.py')
+TEMP_CONTROL_PATH = os.path.join(XPD_PROFILE_PATH, '11-temperature-controller.py')
+
+
+def run_file(full_path):
+    ''' run file without importing'''
+    return runpy.run_path(full_path)
+
+
+# import object depends on environment
+
+if os.path.isdir(XPD_PROFILE_PATH):
+    B_DIR = os.path.expanduser('~/')
+    pe1c = run_file(AREA_DET_PATH)['pe1c']
+    cs700 = run_file(TEMP_CONTROL_PATH)['cs700']
+    # add more stuff needed
+
+else:
+    from simulator.areadetector import AreaDetector 
+    # can't top import as it might not exist
+    B_DIR = os.getcwd()
+    pe1c = AreaDetector(0.1)
+    # cs700  is not coded yet at this stage
 
 
 class DataPath(object):
@@ -67,7 +90,7 @@ class DataPath(object):
     @property
     def tif_dir(self):
         "Folder for saving tiff files."
-        return os.path.join(self.base, 'tif_base')
+        return os.path.join(self.base, 'tiff_base')
 
     @property
     def dark_dir(self):
@@ -101,7 +124,6 @@ class DataPath(object):
     def __repr__(self):
         return 'DataPath({!r})'.format(self.stem)
 
-# class DataPath
-
 # unique instance of the DataPath class.
-datapath = DataPath(B_DIR)
+# datapath = DataPath(B_DIR)
+# instance might not be needed now
