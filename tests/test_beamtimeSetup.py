@@ -118,8 +118,11 @@ class NewBeamtimeTest(unittest.TestCase):
         # program places the file in Export directory
         # program gives friendly informational statement to user to email the file to Instr. Scientist.
 
-    def test_end_beamtime(self):
+    def test_execute_end_beamtime(self):
         os.mkdir(self.home_dir)
         #self.assertRaises(OSError, lambda: _end_beamtime(base_dir=self.base_dir,bto=self.bt))
         #self.fail('finish making the test')
         archive_dir = os.path.expanduser(strftime('./pe2_data/2016/userBeamtimeArchive'))
+
+    def test_delete_home_dir_tree(self):
+        self.fail('need to build tests for this function')

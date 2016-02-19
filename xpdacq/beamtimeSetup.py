@@ -63,9 +63,38 @@ def _make_clean_env(datapath):
         out.append(d)
     return out
 
+def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
+    if archive_dir is None:
+        archive_dir = os.path.expanduser(strftime('~/pe2_data/%Y/userBeamtimeArchive'))
+    if base_dir is None:
+        base_dir = B_DIR
+    if bto is None:
+        try:
+            bto = bt
+        except NameError:
+            bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
+    dp = DataPath(base_dir)
+    files = os.listdir(dp.base)
+    if len(files)==1:
+        print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
+        return
+    try:
+        PI_name = bto.md['bt_piLast']
+    except KeyError:
+        PI_name = input('Please enter PI last name for this beamtime: ')
+    try:
+        saf_num = bto.md['bt_safN']
+    except KeyError:
+        saf_num = input('Please enter your SAF number to this beamtime: ')
+    try:
+        bt_uid = bto.md['bt_uid'][:7]
+    except KeyError:
+        bt_uid = ''
+    archive_f = _execute_end_beamtime(piname,safn,btuid,base_dir,archive_dir,bto)
+    _confirm_archive()
+    _delete_home_dir_tree(base_dir,archive_f)
 
-
-def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
+def _execute_end_beamtime(piname,safn,btuid,base_dir,archive_dir,bto):
     '''cleans up at the end of a beamtime
 
     Function takes all the user-generated tifs and config files, etc.,
@@ -79,61 +108,36 @@ def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
       3. removes all the un-tarred data
 
     '''
-    if archive_dir is None:
-        archive_dir = os.path.expanduser(strftime('~/pe2_data/%Y/userBeamtimeArchive'))
-
-    if base_dir is None:
-        base_dir = B_DIR
-
-    if bto is None:
-        try:
-            bto = bt
-        except NameError:
-            bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
-
-    dp = DataPath(base_dir)
-    files = os.listdir(dp.base)
-    if len(files)==1:
-        print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
-        return
 
     tar_ball = export_data(base_dir, end_beamtime=True)
     ext = get_full_ext(tar_ball)
     os.makedirs(archive_dir, exist_ok=True)
-    try:
-        PI_name = bto.md['bt_piLast']
-    except KeyError:
-        PI_name = input('Please enter PI last name for this beamtime: ')
-    try:
-        saf_num = bto.md['bt_safN']
-    except KeyError:
-        saf_num = input('Please enter your SAF number to this beamtime: ')
-    try:
-        bt_uid = bto.md['bt_uid'][:7]
-    except KeyError:
-        bt_uid = ''
-        
+
     full_info = '_'.join([PI_name.strip().replace(' ', ''),
                             str(saf_num).strip(), strftime('%Y-%m-%d-%H%M'), bt_uid]
                             )
-    #print('Backup your data now. It takes sometime as well, please be patient :)')
     archive_f_name = os.path.join(archive_dir, full_info) + ext
-    shutil.copyfile(tar_ball, archive_f_name) # remote archive
+    shutil.copyfile(tar_ball, archive_f_name) # remote archive'
+    return archive_f_name
+
+def _confirm_archive():
     print("tarball archived to {}".format(archive_f_name))
     conf = input("Please confirm data are backed up. Are you ready to continue with xpdUser directory contents deletion (y,[n])?: ")
     if conf in ('y','Y'):
-        pass
-    else:
         return
-    
+    else:
+        raise RuntimeError('xpdUser directory delete operation cancelled')
+
+def _delete_home_dir_tree(base_dir,archive_f_name,bto):
+    dp = DataPath(base_dir)
+    os.chdir(dp.stem)   # don't remember the name, but move up one directory out of xpdUser before deleting it!
     shutil.rmtree(dp.base)
     os.makedirs(dp.base, exist_ok=True)
     shutil.copy(archive_f_name, dp.base)
+    os.chdir(dp.base)   # now move back into xpdUser so everyone is not confused....
     final_path = os.path.join(dp.base, os.path.basename(archive_f_name)) # local archive
     #print("Final archive file at {}".format(final_path))
-    
     return 'local copy of tarball for user: '+final_path
-
 
 def get_full_ext(path, post_ext=''):
     path, ext = os.path.splitext(path)
