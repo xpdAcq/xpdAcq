@@ -12,13 +12,11 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-#def _get_obj(name):
-    #ip = get_ipython() # build-in function
-    #return ip.user_ns[name]
+def _get_obj(name):
+    ip = get_ipython() # build-in function
+    return ip.user_ns[name]
 
-#shctl1 = _get_obj('shctl1')
-
-from xpdacq.config import shctl1
+shctl1 = _get_obj('shctl1')
 
 def _open_shutter():
     shctl1.put(1)

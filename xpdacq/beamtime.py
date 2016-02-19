@@ -21,14 +21,13 @@ import datetime
 from time import strftime
 import sys
 from xpdacq.config import DataPath
-from xpdacq.config import B_DIR
+
 
 class XPD:
-    #_base_path = ''
-    #if not _base_path:
-    dp = DataPath(B_DIR)
-    _base_path = dp.base
-
+    _base_path = ''
+    if not _base_path:
+        dp = DataPath(os.path.expanduser('~'))
+        _base_path = dp.base
     def _getuid(self):
         return str(uuid.uuid1())
 
@@ -37,10 +36,7 @@ class XPD:
     
     def _yaml_path(self):
         yaml_dir_path = os.path.join(self._base_path, 'config_base', 'yml')
-        if not os.path.isdir(yaml_dir_path):
-            os.makedirs(yaml_dir_path, exist_ok = True)
-        else:
-            pass
+        os.makedirs(yaml_dir_path, exist_ok = True) 
         return yaml_dir_path
 
     def _yaml_garage_path(self):
