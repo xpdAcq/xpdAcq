@@ -1,14 +1,22 @@
 import unittest
 import os
 import shutil
+from time import strftime
 import xpdacq.beamtimeSetup as bts
-from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_prompt_for_PIname,_check_empty_environment
+from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment
+from xpdacq.config import DataPath
 
 class NewBeamtimeTest(unittest.TestCase): 
 
     def setUp(self):
         self.base_dir = os.getcwd()
         self.home_dir = os.path.join(self.base_dir,'xpdUser')
+        self.PI_name = 'Billinge'
+        self.saf_num = 123
+        self.wavelength = 0.1812
+        self.experimenters = [('Banerjee','Soham',1),('Terban','Max',2)]
+        self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
+
 
     def tearDown(self):
         if os.path.isdir(self.home_dir):
@@ -58,19 +66,13 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertRaises(RuntimeError, lambda:_check_empty_environment(base_dir = self.base_dir))
         os.remove(self.newfile)
 
-
     def test_bt_creation(self):
-        self.PI_name = 'Billinge'
-        self.saf_num = 123
-        self.wavelength = 0.1812
-        self.experimenters = [('Banerjee','Soham',1),('Terban','Max',2)]
-        bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
-        self.assertIsInstance(bt,bts.Beamtime)
-        self.assertEqual(bt.md['bt_experimenters'],[('Banerjee','Soham',1),('Terban','Max',2)])
-        self.assertEqual(bt.md['bt_piLast'],'Billinge')
-        self.assertEqual(bt.md['bt_safN'],123)
-        self.assertEqual(bt.md['bt_wavelength'],0.1812)
-        # test empty experimenters
+        self.assertIsInstance(self.bt,bts.Beamtime)
+        self.assertEqual(self.bt.md['bt_experimenters'],[('Banerjee','Soham',1),('Terban','Max',2)])
+        self.assertEqual(self.bt.md['bt_piLast'],'Billinge')
+        self.assertEqual(self.bt.md['bt_safN'],123)
+        self.assertEqual(self.bt.md['bt_wavelength'],0.1812)
+        # test empty experimenter
         self.experimenters = []
         bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
         self.assertIsInstance(bt,bts.Beamtime)
@@ -78,3 +80,49 @@ class NewBeamtimeTest(unittest.TestCase):
         self.PI_name = None
         bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
         self.assertIsInstance(bt,bts.Beamtime)
+        #maybe some more edge cases tested here?
+
+    def test_make_clean_env(self):
+        home_dir = os.path.join(self.base_dir,'xpdUser')
+        conf_dir = os.path.join(self.base_dir,'xpdConfig')
+        tiff_dir = os.path.join(self.home_dir,'tiff_base')
+        dark_dir = os.path.join(self.home_dir,'dark_base')
+        usrconfig_dir = os.path.join(self.home_dir,'config_base')
+        export_dir = os.path.join(self.home_dir,'Export')
+        import_dir = os.path.join(self.home_dir,'Import')
+        userysis_dir = os.path.join(self.home_dir,'userAnalysis')
+        userscripts_dir = os.path.join(self.home_dir,'userScripts')
+        yml_dir = os.path.join(self.home_dir,usrconfig_dir,'yml')
+        dp = DataPath(self.base_dir)
+        dirs = _make_clean_env(dp)
+        self.assertEqual(dirs,[home_dir,conf_dir,tiff_dir,dark_dir,usrconfig_dir,
+            userscripts_dir,export_dir,import_dir,userysis_dir])
+
+    def test_start_beamtime(self):
+        os.chdir(self.base_dir)
+        os.mkdir(self.home_dir)
+        dp = DataPath(self.base_dir)
+        tryagain = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.wavelength,base_dir=self.base_dir)
+        os.chdir(self.base_dir)
+
+    def test_load_user_yml(self):
+        self.fail('need to build this function and the tests')
+        # after start_beamtime, Sanjit places user yml.tar (or some other archive format) file into xpdUser directory
+        # then runs _load_user_yml() which unpacks and installs it in yml_dir
+
+    def test_export_bt_objects(self):
+        self.fail('need to build this function and the tests')
+        # user has finished building her yaml files and wants to export to send to Sanjit
+        # user types export_bt_objects()
+        # program creates an archive file (standard format, autonamed from info in the session)
+        # program places the file in Export directory
+        # program gives friendly informational statement to user to email the file to Instr. Scientist.
+
+    def test_execute_end_beamtime(self):
+        os.mkdir(self.home_dir)
+        #self.assertRaises(OSError, lambda: _end_beamtime(base_dir=self.base_dir,bto=self.bt))
+        #self.fail('finish making the test')
+        archive_dir = os.path.expanduser(strftime('./pe2_data/2016/userBeamtimeArchive'))
+
+    def test_delete_home_dir_tree(self):
+        self.fail('need to build tests for this function')

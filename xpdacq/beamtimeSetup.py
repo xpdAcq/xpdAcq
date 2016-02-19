@@ -35,18 +35,13 @@ B_DIR = os.path.expanduser('~')
 REMOTE_DIR = os.path.expanduser('~/pe2_data/')
 BACKUP_DIR = os.path.join(REMOTE_DIR, strftime('%Y'), 'userBeamtimeArchive')
 
+# depracated, but keeping it around because I think it is cool, may want to use it later
+def _any_input_method(inp_func):
+    return inp_func()
+
 
 def _make_clean_env(datapath):
     '''Make a clean environment for a new user
-
-    1. make sure that that the user is currently in /xpdUser
-       if not move to ~/xpdUser and try again
-
-    2. make sure that xpdUser is completely empty or contains just
-       <tarArchive>.tar and/or <PIname>_<saf#>_config.yml
-      a. if no, request the user runs end_beamtime and exit
-      b. if yes, delete the tar file (it is archived elsewhere),
-         and create the working directories. Do not delete the yml file.
 
     3. look for a <PIname>_<saf#>_config.yml and load it.  Ask the user if
        this is the right one before loading it.  If yes, load, if no exit
@@ -68,9 +63,39 @@ def _make_clean_env(datapath):
         out.append(d)
     return out
 
+def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
+    if archive_dir is None:
+        archive_dir = os.path.expanduser(strftime('~/pe2_data/%Y/userBeamtimeArchive'))
+    if base_dir is None:
+        base_dir = B_DIR
+    if bto is None:
+        try:
+            bto = bt  # problem comes from bt only exists if _start_beamtime has been run and ipython never crash
+                      # FIXME - load_yaml directly ?
+        except NameError:
+            bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
+    dp = DataPath(base_dir)
+    files = os.listdir(dp.base)
+    if len(files)==1:
+        print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
+        return
+    try:
+        PI_name = bto.md['bt_piLast']
+    except AttributeError:
+        PI_name = input('Please enter PI last name for this beamtime: ')
+    try:
+        saf_num = bto.md['bt_safN']
+    except AttributeError:
+        saf_num = input('Please enter your SAF number to this beamtime: ')
+    try:
+        bt_uid = bto.md['bt_uid'][:7]
+    except AttributeError:
+        bt_uid = ''
+    archive_f = _execute_end_beamtime(piname,safn,btuid,base_dir,archive_dir,bto)
+    _confirm_archive()
+    _delete_home_dir_tree(base_dir,archive_f)
 
-
-def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
+def _execute_end_beamtime(piname,safn,btuid,base_dir,archive_dir,bto):
     '''cleans up at the end of a beamtime
 
     Function takes all the user-generated tifs and config files, etc.,
@@ -84,62 +109,36 @@ def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
       3. removes all the un-tarred data
 
     '''
-    if archive_dir is None:
-        archive_dir = os.path.expanduser(strftime('~/pe2_data/%Y/userBeamtimeArchive'))
-
-    if base_dir is None:
-        base_dir = B_DIR
-
-    if bto is None:
-        try:
-            bto = bt  # problem comes from bt only exists if _start_beamtime has been run and ipython never crash
-                      # FIXME - load_yaml directly ?
-        except NameError:
-            bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
-
-    dp = DataPath(base_dir)
-    files = os.listdir(dp.base)
-    if len(files)==1:
-        print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
-        return
 
     tar_ball = export_data(base_dir, end_beamtime=True)
     ext = get_full_ext(tar_ball)
     os.makedirs(archive_dir, exist_ok=True)
-    try:
-        PI_name = bto.md['bt_piLast']
-    except AttributeError:
-        PI_name = input('Please enter PI last name for this beamtime: ')
-    try:
-        saf_num = bto.md['bt_safN']
-    except AttributeError:
-        saf_num = input('Please enter your SAF number to this beamtime: ')
-    try:
-        bt_uid = bto.md['bt_uid'][:7]
-    except AttributeError:
-        bt_uid = ''
-        
+
     full_info = '_'.join([PI_name.strip().replace(' ', ''),
                             str(saf_num).strip(), strftime('%Y-%m-%d-%H%M'), bt_uid]
                             )
-    #print('Backup your data now. It takes sometime as well, please be patient :)')
     archive_f_name = os.path.join(archive_dir, full_info) + ext
-    shutil.copyfile(tar_ball, archive_f_name) # remote archive
+    shutil.copyfile(tar_ball, archive_f_name) # remote archive'
+    return archive_f_name
+
+def _confirm_archive():
     print("tarball archived to {}".format(archive_f_name))
     conf = input("Please confirm data are backed up. Are you ready to continue with xpdUser directory contents deletion (y,[n])?: ")
     if conf in ('y','Y'):
-        pass
-    else:
         return
-    
+    else:
+        raise RuntimeError('xpdUser directory delete operation cancelled')
+
+def _delete_home_dir_tree(base_dir,archive_f_name,bto):
+    dp = DataPath(base_dir)
+    os.chdir(dp.stem)   # don't remember the name, but move up one directory out of xpdUser before deleting it!
     shutil.rmtree(dp.base)
     os.makedirs(dp.base, exist_ok=True)
     shutil.copy(archive_f_name, dp.base)
+    os.chdir(dp.base)   # now move back into xpdUser so everyone is not confused....
     final_path = os.path.join(dp.base, os.path.basename(archive_f_name)) # local archive
     #print("Final archive file at {}".format(final_path))
-    
     return 'local copy of tarball for user: '+final_path
-
 
 def get_full_ext(path, post_ext=''):
     path, ext = os.path.splitext(path)
@@ -147,24 +146,6 @@ def get_full_ext(path, post_ext=''):
         return get_full_ext(path, ext + post_ext)
     return post_ext
 
-def _any_input_method(inp_func):
-    return inp_func()
-
-def _prompt_for_PIname():
-    ans = _any_input_method('Please enter the PI last name to this beamtime: ')
-    return ans
-def _prompt_for_safN():
-    ans = _any_input_method('Please enter the SAF number for this beamtime: ')
-    return ans
-def _prompt_for_wavelength():
-    ans = _any_input_method('Please enter the x-ray wavelength: ')
-    return ans
-def _prompt_for_experimenters():
-    print('Please enter a list of experimenters with syntax [("lastName","firstName",userID)]')
-    ans = _any_input_method('default = []')
-    if ans == '':
-        ans = []
-    return ans
 
 def _check_empty_environment(base_dir=None):
     if base_dir is None:
@@ -188,19 +169,29 @@ def _check_empty_environment(base_dir=None):
     else:
         raise RuntimeError("The xpdUser directory appears not to exist "
                                "Please Talk to beamline staff")
-        
+
 def _start_beamtime(base_dir=None):
+    piname = input('Please enter the PI last name to this beamtime: ')
+    safn = input('Please enter the SAF number for this beamtime: ')
+    wavelength = input('Please enter the x-ray wavelength: ')
+    print('Please enter a list of experimenters with syntax [("lastName","firstName",userID)]')
+    explist = list(input('default = []'))
+    if explist == '':
+        explist = []
+    _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None,)
+
+def _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None,):
     if base_dir is None:
         base_dir = B_DIR
+    dp = DataPath(base_dir)
     _check_empty_environment(base_dir)
-    PI_name = _any_input_method(_prompt_for_PIname)
-    saf_num = _any_input_method(_prompt_for_safN)
-    wavelength = _any_input_method(_prompt_for_wavelength)
-    experimenters = _any_input_method(_prompt_for_experimenters)
+    PI_name = piname
+    saf_num = safn
+    wavelength = wavelength
+    experimenters = explist
     _make_clean_env(dp)
     os.chdir(dp.base)
     bt = Beamtime(PI_name,saf_num,wavelength,experimenters)
     return bt
-
 
 
