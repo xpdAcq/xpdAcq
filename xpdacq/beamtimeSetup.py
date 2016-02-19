@@ -43,15 +43,6 @@ def _any_input_method(inp_func):
 def _make_clean_env(datapath):
     '''Make a clean environment for a new user
 
-    1. make sure that that the user is currently in /xpdUser
-       if not move to ~/xpdUser and try again
-
-    2. make sure that xpdUser is completely empty or contains just
-       <tarArchive>.tar and/or <PIname>_<saf#>_config.yml
-      a. if no, request the user runs end_beamtime and exit
-      b. if yes, delete the tar file (it is archived elsewhere),
-         and create the working directories. Do not delete the yml file.
-
     3. look for a <PIname>_<saf#>_config.yml and load it.  Ask the user if
        this is the right one before loading it.  If yes, load, if no exit
        telling user to manually delete the yml file stall the correct one in
@@ -187,6 +178,7 @@ def _start_beamtime(base_dir=None):
 def _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None,):
     if base_dir is None:
         base_dir = B_DIR
+    dp = DataPath(base_dir)
     _check_empty_environment(base_dir)
     PI_name = piname
     saf_num = safn
@@ -196,6 +188,5 @@ def _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None,):
     os.chdir(dp.base)
     bt = Beamtime(PI_name,saf_num,wavelength,experimenters)
     return bt
-
 
 
