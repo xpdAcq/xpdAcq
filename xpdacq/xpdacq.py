@@ -54,23 +54,22 @@ def dryrun(sample,scan,**kwargs):
 
     '''
     cmdo = Union(sample,scan)
-    parms = scan.sc_params
-
-    subsc = parms['subs']
-    subs = {}
-    if 'subs' in subsc:
-        for i in subsc['subs']:
-            if i == 'livetable':
-                subs.update({'all':LiveTable([area_det])})
-            elif i == 'verify_write':
-                subs.update({'stop':verify_files_saved})
-
+    area_det = _get_obj('pe1c')
+    parms = scan.md['sc_params']
+    subs={}
+    if 'subs' in parms: subsc = parms['subs']
+    for i in subsc:
+        if i == 'livetable':
+            subs.update({'all':LiveTable([area_det, temp_controller])})
+        elif i == 'verify_write':
+            subs.update({'stop':verify_files_saved})
+   
     if scan.scan == 'ct':
        get_light_images_dryrun(cmdo,parms['exposure'],'pe1c',parms['subs'],**kwargs)
     elif scan.scan == 'tseries':
        collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
     elif scan.scan == 'Tramp':
-       pass
+        pass
     else:
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
@@ -78,27 +77,21 @@ def dryrun(sample,scan,**kwargs):
 def _unpack_and_run(sample,scan,**kwargs):
     cmdo = Union(sample,scan)
     area_det = _get_obj('pe1c')
-    
-
-    parms = scan.sc_params
+    parms = scan.md['sc_params']
     subs={}
-    if 'subs' in parms: 
-        subsc = parms['subs']
-        for i in subsc:
-            if i == 'livetable':
-                subs.update({'all':LiveTable([area_det, temp_controller])})
-            elif i == 'verify_write':
-                subs.update({'stop':verify_files_saved})
-        print(subs)
+    if 'subs' in parms: subsc = parms['subs']
+    for i in subsc:
+        if i == 'livetable':
+            subs.update({'all':LiveTable([area_det, temp_controller])})
+        elif i == 'verify_write':
+            subs.update({'stop':verify_files_saved})
 
     if scan.scan == 'ct':
        get_light_images(cmdo,parms['exposure'],'pe1c',subs,**kwargs)
     elif scan.scan == 'tseries':
-       collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
+       collect_time_series(cmdo,parms['exposure'], parms['delay'], parms['num'],'pe1c', subs, **kwargs)
     elif scan.scan == 'Tramp':
-        #collect_Temp_series(scan, parms[0], 'pe1c', **kwargs)
         collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
-        #SPEC_Temp_series(cmdo, parms['startingT'], parms['endingT'], parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
     else:
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
@@ -114,7 +107,7 @@ def prun(sample,scan,**kwargs):
     if scan.shutter: _open_shutter()
     scan.md.update({'xp_isprun':True})
     _unpack_and_run(sample,scan,**kwargs)
-    parms = scan.sc_params
+    #parms = scan.sc_params
     if scan.shutter: _close_shutter()
 
 def dark(sample,scan,**kwargs):
@@ -146,7 +139,7 @@ def setupscan(sample,scan,**kwargs):
     if scan.shutter: _open_shutter()
     scan.md.update({'xp_isprun':False})
     _unpack_and_run(sample,scan,**kwargs)
-    parms = scan.sc_params
+    #parms = scan.sc_params
     if scan.shutter: _close_shutter()
 
 def get_light_images(mdo, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
@@ -229,7 +222,6 @@ def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det='pe1c', s
     md_dict.update(kwargs)
         
     plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
-    #plan = xpd_Tseries_plan([area_det], temp_controller, Tstart, Tstop, Nsteps)
     xpdRE(plan,subs_dict, **md_dict)
 
     print('End of collect_Temp_scans....')
@@ -243,6 +235,63 @@ def _nstep(start, stop, step_size):
     computed_step_size = computed_step_list[1]- computed_step_list[0]
     print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',abs(computed_step_size))
     return computed_nsteps
+
+def collect_time_series(mdo, exposure=1.0, delay=0., num=1, det='pe1c', subs_dict={}, **kwargs):
+    """Collect a time series
+
+    Any extra keywords are passed through to RE() as metadata
+
+    Parameters
+    ----------
+    mdo : XPD
+        Object to carry around the metadata
+    num : int
+        The number of points in the time series
+
+    delay : float
+        Time between starts of time points in [s].  If less than exposure, the
+        exposure time will be maintained and this time will be increased.
+
+    exposure : float, optional
+        Total integration time per data point in [s]
+    """
+   
+    # arrange md object
+    exp = Xposure(mdo)
+    #md_dict = exp.md
+    #md_dict.update(kwargs)
+
+    # get a local copy of md to update
+    md = dict(exp.md)
+
+    # grab the area detector
+    area_det = _get_obj(det)
+
+    acq_time = area_det.cam.acquire_time.get()
+
+    # compute how many frames to collect
+    num_frame = max(int(exposure / acq_time), 1)
+    computed_exposure = num_frame * acq_time
+    num_sets = 1
+    
+        
+    real_delay = max(0, delay - computed_exposure)
+    period = max(computed_exposure, real_delay + computed_exposure)
+    # set how many frames to average
+    area_det.images_per_set.put(num_frame)
+    area_det.number_of_sets.put(num_sets)
+
+    md.update({'requested_exposure': exposure,
+               'computed_exposure': computed_exposure,
+               'period': period})
+    md.update({'time_per_frame': acq_time,
+               'num_frames': num_frame,
+               'number_of_sets': num_sets})
+    md.update(kwargs)
+    plan = Count([area_det], num=num, delay=real_delay)
+    xpdRE(plan, subs_dict, **md)
+
+    print('End of time series scan ....')
 
 
 ######## temporarily solution to user's unstoppable desire to SPEC-like behavior.... #########
@@ -345,53 +394,6 @@ def get_bluesky_run(mdo, plan, det='pe1c', subs_dict={}, **kwargs):
     xpdRE(plan,subs_dict,**md_dict)
 
 
-def collect_time_series(metadata_object, num, exposure=1.0, delay=0.,  **kwargs):
-    """Collect a time series
-
-    Any extra keywords are passed through to RE() as metadata
-
-    Parameters
-    ----------
-    metadata_object : XPD
-        Object to carry around the metadata
-    num : int
-        The number of points in the time series
-
-    delay : float
-        Time between starts of time points in [s].  If less than exposure, the
-        exposure time will be maintained and this time will be increased.
-
-    exposure : float, optional
-        Total integration time per data point in [s]
-    """
-    # get a local copy of md to update
-    md = dict(metadata_object.md)
-
-    # grab the area detector
-    area_det = _get_obj('pe1c')
-
-    acq_time = area_det.cam.acquire_time.get()
-
-    # compute how many frames to collect
-    num_frame = max(int(exposure / acq_time), 1)
-    computed_exposure = num_frame * acq_time
-    num_sets = 1
-
-    real_delay = max(0, delay - computed_exposure)
-    period = max(computed_exposure, real_delay + computed_exposure)
-    # set how many frames to average
-    area_det.image_per_set.put(num_frame)
-    area_det.number_of_sets.put(num_sets)
-
-    md.update({'requested_exposure': exposure,
-               'computed_exposure': computed_exposure,
-               'period': period})
-    md.update({'time_per_frame': acq_time,
-               'num_frames': num_frame,
-               'number_of_sets': num_sets})
-    md.update(kwargs)
-    plan = Count([area_det], num=num, delay=real_delay)
-    return gs.RE(plan, **md)
 
 ##########################################################
 #    Dry Run thingys
