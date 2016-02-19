@@ -19,8 +19,7 @@
 
 import os
 import runpy
-from bluesky.register_mds import register_mds
-from bluesky.run_engine import RunEngine
+
 
 # Constants and exact path
 WORKING_DIR = 'xpdUser'
@@ -29,6 +28,7 @@ XPD_PROFILE_PATH = 'home/xf28id1/.ipython/profile_collection/startup' # make it 
 STARTUP_PATH = os.path.join(XPD_PROFILE_PATH, '00-startup.py')
 AREA_DET_PATH = os.path.join(XPD_PROFILE_PATH, '80-areadetector.py')
 TEMP_CONTROL_PATH = os.path.join(XPD_PROFILE_PATH, '11-temperature-controller.py')
+<<<<<<< HEAD
 SHUTTER_PATH = os.path.join(XPD_PROFILE_PATH, '80-areadetector.py')
 
 

@@ -18,16 +18,23 @@ import os
 import datetime
 import shutil
 from time import strftime
-from xpdacq.config import B_DIR
 from xpdacq.config import DataPath
 from xpdacq.beamtime import Beamtime, XPD
 from xpdacq.beamtime import export_data
+#from xpdacq.control import _get_obj
+
+B_DIR = os.path.expanduser('~')
+#def _get_obj(name):
+    #ip = get_ipython() # build-in function
+    #return ip.user_ns[name]
+
+#B_DIR = _get_obj('B_DIR')
+
 
 # just a note. Assign by Sanjit
 REMOTE_DIR = os.path.expanduser('~/pe2_data/')
 BACKUP_DIR = os.path.join(REMOTE_DIR, strftime('%Y'), 'userBeamtimeArchive')
 
-dp = DataPath(B_DIR)
 
 def _make_clean_env(datapath):
     '''Make a clean environment for a new user
@@ -79,9 +86,9 @@ def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
     '''
     if archive_dir is None:
         archive_dir = os.path.expanduser(strftime('~/pe2_data/%Y/userBeamtimeArchive'))
-    
-    # ensure dp exists
-    dp = DataPath(base_dir)
+
+    if base_dir is None:
+        base_dir = B_DIR
 
     if bto is None:
         try:
@@ -90,6 +97,7 @@ def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
         except NameError:
             bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
 
+    dp = DataPath(base_dir)
     files = os.listdir(dp.base)
     if len(files)==1:
         print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
@@ -112,8 +120,8 @@ def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
         bt_uid = ''
         
     full_info = '_'.join([PI_name.strip().replace(' ', ''),
-                            str(saf_num).strip(), strftime('%Y-%m-%d-%H%M'), bt_uid])
-
+                            str(saf_num).strip(), strftime('%Y-%m-%d-%H%M'), bt_uid]
+                            )
     #print('Backup your data now. It takes sometime as well, please be patient :)')
     archive_f_name = os.path.join(archive_dir, full_info) + ext
     shutil.copyfile(tar_ball, archive_f_name) # remote archive
@@ -123,9 +131,7 @@ def _end_beamtime(base_dir=B_DIR, archive_dir=None, bto = None):
         pass
     else:
         return
-   
-    # move up to db.base before flushing directories to avoid error
-    os.chdir(dp.base)
+    
     shutil.rmtree(dp.base)
     os.makedirs(dp.base, exist_ok=True)
     shutil.copy(archive_f_name, dp.base)
@@ -170,6 +176,7 @@ def _check_empty_environment(base_dir=None):
                                "Please Talk to beamline staff")
         files = os.listdir(dp.base) # that also list dirs that have been created
         if len(files) > 1:
+            print(len(files))
             raise RuntimeError("Unexpected files in {}, you need to run _end_beamtime(). Please Talk to beamline staff".format(dp.base))
         elif len(files) == 1:
             tf, = files
@@ -185,19 +192,11 @@ def _check_empty_environment(base_dir=None):
 def _start_beamtime(base_dir=None):
     if base_dir is None:
         base_dir = B_DIR
-    dp = DataPath(base_dir)
     _check_empty_environment(base_dir)
-
-    piname = input('Please enter your PI last name: ')
-    safn = input('Please enter your SAF number: ')
-    wavelength = input('Please enter x-ray wavelength: ')
-    explist = 'defaultExperimenter'
-    
-    PI_name = piname
-    saf_num = safn
-    wavelength = wavelength
-    experimenters = explist
-    
+    PI_name = _any_input_method(_prompt_for_PIname)
+    saf_num = _any_input_method(_prompt_for_safN)
+    wavelength = _any_input_method(_prompt_for_wavelength)
+    experimenters = _any_input_method(_prompt_for_experimenters)
     _make_clean_env(dp)
     os.chdir(dp.base)
     bt = Beamtime(PI_name,saf_num,wavelength,experimenters)

@@ -14,8 +14,6 @@
 #
 #
 ##############################################################################
-
-'''
 def _get_obj(name):
     ip = get_ipython() # build-in function
     return ip.user_ns[name]
@@ -44,31 +42,7 @@ TEMP_CONTROLLER_NAME = 'cs700'
 area_det = _get_obj(AREA_DET_NAME)
 area_det.cam.acquire_time.put(FRAME_ACQUIRE_TIME)
 temp_controller = _get_obj(TEMP_CONTROLLER_NAME)
-'''
-import numpy as np
 
-from bluesky import Msg
-from bluesky.plans import Count
-from bluesky.plans import AbsScanPlan
-
-from xpdacq.control import _open_shutter
-from xpdacq.control import _close_shutter
-from xpdacq.beamtime import Union, Xposure
-
-# import collection object
-from xpdacq.config import pe1c
-from xpdacq.config import xpdRE
-from xpdacq.config import cs700
-# FIXME - get it work in simulation
-from xpdacq.config import verify_files_saved
-from xpdacq.config import LiveTable
-print('Before you start, make sure the area detector IOC is in "Acquire mode"')
-
-FRAME_ACQUIRE_TIME = 0.1
-# assigning for xpdacq namespace
-area_det = pe1c
-area_det.cam.acquire_time.put(FRAME_ACQUIRE_TIME)
-temp_controller = cs700
 
 def dryrun(sample,scan,**kwargs):
     '''same as run but scans are not executed.
@@ -102,7 +76,7 @@ def dryrun(sample,scan,**kwargs):
     
 def _unpack_and_run(sample,scan,**kwargs):
     cmdo = Union(sample,scan)
-    area_det = pe1c # Tim edit
+    area_det = _get_obj('pe1c')
     parms = scan.md['sc_params']
     subs={}
     if 'subs' in parms: subsc = parms['subs']
@@ -113,17 +87,11 @@ def _unpack_and_run(sample,scan,**kwargs):
             subs.update({'stop':verify_files_saved})
 
     if scan.scan == 'ct':
-        #get_light_images(cmdo,parms['exposure'],'pe1c',subs,**kwargs)
-        get_light_images(cmdo,parms['exposure'], area_det ,subs,**kwargs)
-
+       get_light_images(cmdo,parms['exposure'],'pe1c',subs,**kwargs)
     elif scan.scan == 'tseries':
-        #collect_time_series(cmdo,parms['exposure'], parms['delay'], parms['num'],'pe1c', subs, **kwargs)
-        collect_time_series(cmdo,parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
-
+       collect_time_series(cmdo,parms['exposure'], parms['delay'], parms['num'],'pe1c', subs, **kwargs)
     elif scan.scan == 'Tramp':
-        #collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
-        collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], area_det, subs, **kwargs)
-
+        collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
     else:
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
@@ -174,7 +142,7 @@ def setupscan(sample,scan,**kwargs):
     #parms = scan.sc_params
     if scan.shutter: _close_shutter()
 
-def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
+def get_light_images(mdo, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
     '''the main xpdAcq function for getting an exposure
     
     Arguments:
@@ -188,8 +156,7 @@ def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
     '''   
     
     # setting up detector
-    #area_det = _get_obj(det)
-    area_det = det
+    area_det = _get_obj(det)
     area_det.number_of_sets.put(1)
     acq_time = area_det.cam.acquire_time.get()
 
@@ -213,7 +180,7 @@ def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
     print('End of get_light_image...')
 
 
-def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
+def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
     '''the main xpdAcq function for getting a temperature series
     
     Arguments:
@@ -227,11 +194,10 @@ def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det=area_det,
     Returns:
       nothing
     '''   
-    temp_controller = cs700
+    temp_controller = _get_obj('cs700')
     
     # setting up detector
-    #area_det = _get_obj(det)
-    area_det = det
+    area_det = _get_obj(det)
     area_det.number_of_sets.put(1)
     acq_time = area_det.cam.acquire_time.get()
 
@@ -270,7 +236,7 @@ def _nstep(start, stop, step_size):
     print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',abs(computed_step_size))
     return computed_nsteps
 
-def collect_time_series(mdo, exposure=1.0, delay=0., num=1, det=area_det, subs_dict={}, **kwargs):
+def collect_time_series(mdo, exposure=1.0, delay=0., num=1, det='pe1c', subs_dict={}, **kwargs):
     """Collect a time series
 
     Any extra keywords are passed through to RE() as metadata
@@ -299,8 +265,7 @@ def collect_time_series(mdo, exposure=1.0, delay=0., num=1, det=area_det, subs_d
     md = dict(exp.md)
 
     # grab the area detector
-    #area_det = _get_obj(det)
-    area_det = det
+    area_det = _get_obj(det)
 
     acq_time = area_det.cam.acquire_time.get()
 
