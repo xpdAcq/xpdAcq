@@ -19,7 +19,8 @@
 
 import os
 import runpy
-
+from bluesky.register_mds import register_mds
+from bluesky.run_engine import RunEngine
 
 # Constants and exact path
 WORKING_DIR = 'xpdUser'
