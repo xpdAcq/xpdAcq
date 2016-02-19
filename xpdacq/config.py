@@ -19,7 +19,8 @@
 
 import os
 import runpy
-
+from bluesky.register_mds import register_mds
+from bluesky.run_engine import RunEngine
 
 WORKING_DIR = 'xpdUser'
 CONFIG_DIR = 'xpdConfig'
@@ -27,6 +28,13 @@ XPD_PROFILE_PATH = 'home/xf28id1/.ipython/profile_collection/startup' # make it 
 STARTUP_PATH = os.path.join(XPD_PROFILE_PATH, '00-startup.py')
 AREA_DET_PATH = os.path.join(XPD_PROFILE_PATH, '80-areadetector.py')
 TEMP_CONTROL_PATH = os.path.join(XPD_PROFILE_PATH, '11-temperature-controller.py')
+SHUTTER_PATH = os.path.join(XPD_PROFILE_PATH, '80-areadetector.py')
+
+
+xpdRE = RunEngine()
+xpdRE.md['owner'] = 'xf28id1'
+xpdRE.md['beamline_id'] = 'xpd'
+xpdRE.md['group'] = 'XPD'
 
 
 def run_file(full_path):
@@ -37,24 +45,44 @@ def run_file(full_path):
 # import object depends on environment
 
 if os.path.isdir(XPD_PROFILE_PATH):
+    print('at XPD')
     B_DIR = os.path.expanduser('~/')
+    register_mds(xpdRE)
+    
+    # collection objects
     pe1c = run_file(AREA_DET_PATH)['pe1c']
     cs700 = run_file(TEMP_CONTROL_PATH)['cs700']
+    schtl1 = run_file(SHUTTER_PATH)['schtl1']
+    
+    from bluesky.broker_callbacks import LiveTables
+    LiveTable = LiveTable # TODO - check it!!
+
+    # analysis objects 
     db = run_file(STARTUP_PATH)['db']
     get_events = run_file(STARTUP_PATH)['get_events']
     get_images = run_file(STARTUP_PATH)['get_images']
 
-    # add more stuff if needed
-
 else:
-    from simulator.areadetector import AreaDetector 
+    print('=== simulation ====')
+    from simulator.areadetector import AreaDetector
+    from simulator.shutter import shctl1
+    from simulator.analysis_obj import verify_files_saved
+    from bluesky.examples import motor
+    from bluesky.callbacks import LiveTable
     # can't top import as it might not exist
+
+    # collection objects
     B_DIR = os.getcwd()
     pe1c = AreaDetector(0.1)
-    # cs700  is not coded yet at this stage
-    # db is not ready yet at this stage
-    # get_images is not ready yet at this stage
-    # get_events is not ready yet at this stage
+    cs700 = motor
+    shctl1 = shctl1
+    LiveTable = LiveTable
+
+    # analysis objects
+
+    # db
+    # get_images
+    # get_events
 
 
 class DataPath(object):
@@ -132,6 +160,5 @@ class DataPath(object):
     def __repr__(self):
         return 'DataPath({!r})'.format(self.stem)
 
-# unique instance of the DataPath class.
-# datapath = DataPath(B_DIR)
-# instance might not be needed now
+
+
