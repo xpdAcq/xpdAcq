@@ -12,9 +12,9 @@ class NewBeamtimeTest(unittest.TestCase):
         self.base_dir = os.getcwd()
         self.home_dir = os.path.join(self.base_dir,'xpdUser')
         self.PI_name = 'Billinge'
-        self.saf_num = 123
+        self.saf_num = 123.67
         self.wavelength = 0.1812
-        self.experimenters = [('Banerjee','Soham',1),('Terban','Max',2)]
+        self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
         self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
 
 
@@ -23,7 +23,7 @@ class NewBeamtimeTest(unittest.TestCase):
             shutil.rmtree(self.home_dir)
 
     def test_check_empty_environment(self):
-        #sanity check. xpdUser directory exists.  First make sure it doesn't exist.
+        #sanity check. xpdUser directory exists.  First make sure the code works right when it doesn't exist.
         self.assertFalse(os.path.exists(self.home_dir))
         self.assertRaises(RuntimeError, lambda:_check_empty_environment(base_dir = self.base_dir))
         #now put something there but make it a file instead of a directory
@@ -126,3 +126,6 @@ class NewBeamtimeTest(unittest.TestCase):
 
     def test_delete_home_dir_tree(self):
         self.fail('need to build tests for this function')
+
+    def test_inputs_in_end_beamtime(self):
+        self.fail('need to refactor this function and build the tests')
