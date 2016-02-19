@@ -28,7 +28,6 @@ XPD_PROFILE_PATH = 'home/xf28id1/.ipython/profile_collection/startup' # make it 
 STARTUP_PATH = os.path.join(XPD_PROFILE_PATH, '00-startup.py')
 AREA_DET_PATH = os.path.join(XPD_PROFILE_PATH, '80-areadetector.py')
 TEMP_CONTROL_PATH = os.path.join(XPD_PROFILE_PATH, '11-temperature-controller.py')
-<<<<<<< HEAD
 SHUTTER_PATH = os.path.join(XPD_PROFILE_PATH, '80-areadetector.py')
 
 
