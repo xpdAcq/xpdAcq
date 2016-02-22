@@ -8,14 +8,16 @@ _start_beamtime()
     #Not implemented##
     #Program requests Sanjit to move a tar file containing the user yaml files to the xpdUser directory, then hit return to continue 
     #Not implemented##
-    Billinge
+    Testing
     200384
     0.182
     [('Liu','Timothy',789123),('Terban','Max',2342134),('Ghose','Sanjit',2870)]
     #Program builds directories
     #If there is a yaml file tarball, unpack it to config_base/yaml
     #Create the bt data object
+bt.list()
     #Return bt.md for checking
+bt.md
     #Exit
 
 *********************************
