@@ -121,17 +121,17 @@ def _execute_end_beamtime(piname,safn,btuid,base_dir,archive_dir,bto):
     shutil.copyfile(tar_ball, archive_f_name) # remote archive'
     return archive_f_name
 
-#def  _get_user_confirmation(text):
-#    input()
-#"Please confirm data are backed up. Are you ready to continue with xpdUser directory contents deletion (y,[n])?: "
+def  _get_user_confirmation():
+    conf = input("Please confirm data are backed up. Are you ready to continue with xpdUser directory contents deletion (y,[n])?: ")
+    return conf
+
 def _confirm_archive():
     print("tarball archived to {}".format(archive_f_name))
-#    conf = _any_input_method(input)
-#  can't remember how to do this.....
+    conf = _any_input_method(_get_user_confirmation)
     if conf in ('y','Y'):
         return
     else:
-        raise RuntimeError('xpdUser directory delete operation cancelled')
+        raise RuntimeError('xpdUser directory delete operation cancelled at Users request')
 
 def _delete_home_dir_tree(base_dir,archive_f_name,bto):
     dp = DataPath(base_dir)
