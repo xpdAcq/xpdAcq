@@ -195,3 +195,40 @@ def _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None,):
     return bt
 
 
+def _load_user_yml():
+    ''' load compressed user yaml file located in /xpdUser directory
+        
+        unpack tar ball and move user yaml files into xpdUser/config_base/yml so that user can use acquire objects created in advance
+
+    Parameters
+    ----------
+        none
+
+    Returrns
+    --------
+        yml_to_load : str
+            file name of yaml tar ball to be loaded
+    '''
+    dp = DataPath(B_DIR)
+    xpdUser_dir = dp.base
+    XPD._yaml_path # this will create ~/xpdUser/config_base/yaml/
+    yml_dir = os.path.join(dp.config_dir, 'yml')
+
+    # TODO - keep update naming schema of user yaml file. Current format "<user_info>_yaml.tar"
+    identifier = 'yaml.tar'
+    compress_f_list = [ f for f in os.listdir(xpdUser_dir) if f.endswith(identifier)]
+    print(compress_f_list)
+    
+    if len(compress_f_list)  == 1:
+        yml_to_load = compress_f_list[0]
+
+    else:
+        if not compress_f_list:
+            raise RuntimeError('It seems there is no yaml tarball in /xpdUser directory, please make sure you have properly loaded user information')
+        else:
+            raise RuntimeError('It seems there are more than one yaml tarballs in /xpdUser directory, please make sure you properly loaded user information')
+ 
+    # unpack and move
+    shutil.unpack_archive(yml_to_load, yml_dir)
+    print('user yaml tarball {} has been upacked and moved to {}'.format(yml_to_load, yml_dir))
+    return yml_to_load

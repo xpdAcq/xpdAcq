@@ -3,7 +3,8 @@ import os
 import shutil
 from time import strftime
 import xpdacq.beamtimeSetup as bts
-from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment
+from xpdacq.beamtime import XPD # Tim test
+from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment, _load_user_yml
 from xpdacq.config import DataPath
 
 class NewBeamtimeTest(unittest.TestCase): 
@@ -106,7 +107,40 @@ class NewBeamtimeTest(unittest.TestCase):
         os.chdir(self.base_dir)
 
     def test_load_user_yml(self):
-        self.fail('need to build this function and the tests')
+        
+        home_dir = os.path.join(self.base_dir,'xpdUser')
+        usrconfig_dir = os.path.join(self.home_dir,'config_base')
+        yml_dir = os.path.join(self.home_dir,usrconfig_dir,'yml')
+        
+        # make sure ~/xpdUser/config_base/yml directory has not been created at this point
+        self.assertFalse(os.path.isdir(yml_dir))
+        os.makedirs(yml_dir, exist_ok=True)
+        # scenario 1: only one yaml tarball in xpdUser
+        touched_f_name = 'touched_yaml.tar'
+        self.newfile = os.path.join(self.home_dir, touched_f_name)
+        open(self.newfile, 'a').close()
+        #(h,t) = os.path.splitext(self.newfile)
+        #tar_name = h + '.tar'
+        #shutil.make_archive(h, 'tar', base_dir=home_dir, root_dir=home_dir) # make a really one
+        self.assertEqual(touched_f_name, _load_user_yml())
+        os.remove(self.newfile)
+        #os.remove(h+'.tar')
+
+        # scenario 2: more than one yaml tarballs in xpdUser
+        self.newfile2 = os.path.join(self.home_dir,'touched1_yaml.tar')
+        open(self.newfile2, 'a').close()
+        self.newfile3 = os.path.join(self.home_dir,'touched2_yaml.tar')
+        open(self.newfile3, 'a').close()
+        self.assertRaises(RuntimeError, lambda:_load_user_yml())
+        os.remove(self.newfile2)
+        os.remove(self.newfile3)
+
+        # scenario 3: no yaml tarball in xpdUser
+        self.assertRaises(RuntimeError, lambda:_load_user_yml())
+
+        
+        #self.fail('need to build this function and the tests')
+        
         # after start_beamtime, Sanjit places user yml.tar (or some other archive format) file into xpdUser directory
         # then runs _load_user_yml() which unpacks and installs it in yml_dir
 
