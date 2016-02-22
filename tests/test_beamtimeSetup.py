@@ -116,12 +116,13 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertFalse(os.path.isdir(yml_dir))
         os.makedirs(yml_dir, exist_ok=True)
         # scenario 1: only one yaml tarball in xpdUser
-        self.newfile = os.path.join(self.home_dir,'touched_yaml.tar')
+        touched_f_name = 'touched_yaml.tar'
+        self.newfile = os.path.join(self.home_dir, touched_f_name)
         open(self.newfile, 'a').close()
         #(h,t) = os.path.splitext(self.newfile)
         #tar_name = h + '.tar'
         #shutil.make_archive(h, 'tar', base_dir=home_dir, root_dir=home_dir) # make a really one
-        self.assertEqual(self.newfile, _load_user_yml())
+        self.assertEqual(touched_f_name, _load_user_yml())
         os.remove(self.newfile)
         #os.remove(h+'.tar')
 

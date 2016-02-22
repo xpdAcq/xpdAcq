@@ -67,7 +67,7 @@ class DataPath(object):
     @property
     def tif_dir(self):
         "Folder for saving tiff files."
-        return os.path.join(self.base, 'tif_base')
+        return os.path.join(self.base, 'tiff_base')
 
     @property
     def dark_dir(self):

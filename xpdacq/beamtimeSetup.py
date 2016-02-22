@@ -211,8 +211,9 @@ def _load_user_yml():
     '''
     dp = DataPath(B_DIR)
     xpdUser_dir = dp.base
-    yml_dir = XPD._yaml_path # this will create ~/xpdUser/config_base/yaml/
-    
+    XPD._yaml_path # this will create ~/xpdUser/config_base/yaml/
+    yml_dir = os.path.join(dp.config_dir, 'yml')
+
     # TODO - keep update naming schema of user yaml file. Current format "<user_info>_yaml.tar"
     identifier = 'yaml.tar'
     compress_f_list = [ f for f in os.listdir(xpdUser_dir) if f.endswith(identifier)]
