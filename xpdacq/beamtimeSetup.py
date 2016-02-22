@@ -121,9 +121,13 @@ def _execute_end_beamtime(piname,safn,btuid,base_dir,archive_dir,bto):
     shutil.copyfile(tar_ball, archive_f_name) # remote archive'
     return archive_f_name
 
+#def  _get_user_confirmation(text):
+#    input()
+#"Please confirm data are backed up. Are you ready to continue with xpdUser directory contents deletion (y,[n])?: "
 def _confirm_archive():
     print("tarball archived to {}".format(archive_f_name))
-    conf = input("Please confirm data are backed up. Are you ready to continue with xpdUser directory contents deletion (y,[n])?: ")
+#    conf = _any_input_method(input)
+#  can't remember how to do this.....
     if conf in ('y','Y'):
         return
     else:
