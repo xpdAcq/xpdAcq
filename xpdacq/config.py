@@ -25,7 +25,7 @@ from bluesky.run_engine import RunEngine
 # Constants and exact path
 WORKING_DIR = 'xpdUser'
 CONFIG_DIR = 'xpdConfig'
-XPD_PROFILE_PATH = 'home/xf28id1/.ipython/profile_collection/startup' # make it exact
+XPD_PROFILE_PATH = '/home/xf28id1/.ipython/profile_collection/startup' # make it exact
 STARTUP_PATH = os.path.join(XPD_PROFILE_PATH, '00-startup.py')
 AREA_DET_PATH = os.path.join(XPD_PROFILE_PATH, '80-areadetector.py')
 TEMP_CONTROL_PATH = os.path.join(XPD_PROFILE_PATH, '11-temperature-controller.py')
@@ -123,13 +123,14 @@ xpdRE.md['group'] = 'XPD'
 
 # create objects depends on environment
 if os.path.isdir(XPD_PROFILE_PATH):
+    print('===At XPD===')
     B_DIR = os.path.expanduser('~/')
     register_mds(xpdRE)
     
     # collection objects
     pe1c = run_file(AREA_DET_PATH)['pe1c']
     cs700 = run_file(TEMP_CONTROL_PATH)['cs700']
-    schtl1 = run_file(SHUTTER_PATH)['schtl1']
+    shctl1 = run_file(SHUTTER_PATH)['shctl1']
     
     from bluesky.broker_callbacks import LiveTables
     # TODO - confirm that is the right object to use in beamline
