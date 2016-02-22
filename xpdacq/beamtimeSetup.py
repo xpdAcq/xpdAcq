@@ -80,22 +80,22 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
         print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
         return
     try:
-        PI_name = bto.md['bt_piLast']
+        piname = bto.md['bt_piLast']
     except AttributeError:
-        PI_name = input('Please enter PI last name for this beamtime: ')
+        piname = input('Please enter PI last name for this beamtime: ')
     try:
-        saf_num = bto.md['bt_safN']
+        safn = bto.md['bt_safN']
     except AttributeError:
-        saf_num = input('Please enter your SAF number to this beamtime: ')
+        safn = input('Please enter your SAF number to this beamtime: ')
     try:
-        bt_uid = bto.md['bt_uid'][:7]
+        btuid = bto.md['bt_uid'][:7]
     except AttributeError:
-        bt_uid = ''
-    archive_f = _execute_end_beamtime(piname,safn,btuid,base_dir,archive_dir,bto)
-    _confirm_archive()
-    _delete_home_dir_tree(base_dir,archive_f)
+        btuid = ''
+    archive_f = _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto)
+    _confirm_archive(archive_f)
+    _delete_home_dir_tree(base_dir,archive_f, bto)
 
-def _execute_end_beamtime(piname,safn,btuid,base_dir,archive_dir,bto):
+def _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto):
     '''cleans up at the end of a beamtime
 
     Function takes all the user-generated tifs and config files, etc.,
@@ -114,8 +114,8 @@ def _execute_end_beamtime(piname,safn,btuid,base_dir,archive_dir,bto):
     ext = get_full_ext(tar_ball)
     os.makedirs(archive_dir, exist_ok=True)
 
-    full_info = '_'.join([PI_name.strip().replace(' ', ''),
-                            str(saf_num).strip(), strftime('%Y-%m-%d-%H%M'), bt_uid]
+    full_info = '_'.join([piname.strip().replace(' ', ''),
+                            str(safn).strip(), strftime('%Y-%m-%d-%H%M'), btuid]
                             )
     archive_f_name = os.path.join(archive_dir, full_info) + ext
     shutil.copyfile(tar_ball, archive_f_name) # remote archive'
@@ -125,7 +125,7 @@ def  _get_user_confirmation():
     conf = input("Please confirm data are backed up. Are you ready to continue with xpdUser directory contents deletion (y,[n])?: ")
     return conf
 
-def _confirm_archive():
+def _confirm_archive(archive_f_name):
     print("tarball archived to {}".format(archive_f_name))
     conf = _any_input_method(_get_user_confirmation)
     if conf in ('y','Y'):
@@ -133,7 +133,7 @@ def _confirm_archive():
     else:
         raise RuntimeError('xpdUser directory delete operation cancelled at Users request')
 
-def _delete_home_dir_tree(base_dir,archive_f_name,bto):
+def _delete_home_dir_tree(base_dir, archive_f_name, bto):
     dp = DataPath(base_dir)
     os.chdir(dp.stem)   # don't remember the name, but move up one directory out of xpdUser before deleting it!
     shutil.rmtree(dp.base)
@@ -179,10 +179,10 @@ def _start_beamtime(base_dir=None):
     safn = input('Please enter the SAF number for this beamtime: ')
     wavelength = input('Please enter the x-ray wavelength: ')
     print('Please enter a list of experimenters with syntax [("lastName","firstName",userID)]')
-    explist = list(input('default = []'))
+    explist = list(input('default = []  '))
     if explist == '':
         explist = []
-    _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None,)
+    return _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None,)
 
 def _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None,):
     if base_dir is None:
