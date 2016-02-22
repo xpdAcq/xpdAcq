@@ -161,7 +161,7 @@ def _check_empty_environment(base_dir=None):
                                "Please Talk to beamline staff")
         files = os.listdir(dp.base) # that also list dirs that have been created
         if len(files) > 1:
-            print(len(files))
+            #print(len(files))
             raise RuntimeError("Unexpected files in {}, you need to run _end_beamtime(). Please Talk to beamline staff".format(dp.base))
         elif len(files) == 1:
             tf, = files
@@ -175,6 +175,7 @@ def _check_empty_environment(base_dir=None):
                                "Please Talk to beamline staff")
 
 def _start_beamtime(base_dir=None):
+    _check_empty_environment(base_dir)
     piname = input('Please enter the PI last name to this beamtime: ')
     safn = input('Please enter the SAF number for this beamtime: ')
     wavelength = input('Please enter the x-ray wavelength: ')
@@ -188,7 +189,6 @@ def _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None,):
     if base_dir is None:
         base_dir = B_DIR
     dp = DataPath(base_dir)
-    _check_empty_environment(base_dir)
     PI_name = piname
     saf_num = safn
     wavelength = wavelength
