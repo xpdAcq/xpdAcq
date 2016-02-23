@@ -40,7 +40,7 @@ class NewBeamtimeTest(unittest.TestCase):
         self.saf_num = 123.67
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
-        self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=glbl.B_DIR)
+        #self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=glbl.B_DIR)
 
     def tearDown(self):
         if os.path.isdir(self.home_dir):
