@@ -18,7 +18,7 @@
 '''
 
 import os.path
-import xpdacq.xpdacq as main
+import xpdacq.object_manage as main
 
 B_DIR = main.B_DIR
 HOME_DIR = 'xpdUser'

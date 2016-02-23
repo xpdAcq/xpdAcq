@@ -22,7 +22,7 @@ from time import strftime
 import sys
 
 from xpdacq.config import DataPath
-import xpdacq.xpdacq as main
+import xpdacq.object_manage as main
 B_DIR = main.B_DIR
 print('heyyyy B_DIR= {}'.format(B_DIR))
 

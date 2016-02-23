@@ -15,14 +15,16 @@
 #
 ##############################################################################
 import numpy as np
-#from xpdacq.beamtime import Union, Xposure
+from xpdacq.beamtime import Union, Xposure
 from bluesky.plans import Count
 from bluesky import Msg
-#from xpdacq.control import _get_obj   
 #from xpdacq.control import _open_shutter
 #from xpdacq.control import _close_shutter
-#from xpdacq.analysis import *
 from bluesky.plans import AbsScanPlan
+
+import xpdacq.object_manage as main
+B_DIR = main.B_DIR
+print('B_DIR from xpdacq.py {}'.format(B_DIR))
 
 ''' things that should be created and imported during start_up
 #xpdRE = _get_obj('xpdRE')
@@ -39,27 +41,6 @@ from bluesky.plans import AbsScanPlan
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 #expo_threshold = 60 # in seconds Deprecated!
 
-def _areaDET(area_det_name):
-    global AREA_DET
-    AREA_DET = area_det_name
-
-def _tempController(temp_controller_name):
-    global TEMP_CONTROLLER
-    TEMP_CONTROLLER = temp_controller_name
-
-def _shutter(shutter_name):
-    global SHUTTER
-    SHUTTER = shutter_name
-
-def _bdir(b_dir_name):
-    global B_DIR
-    B_DIR = b_dir_name
-
-# analysis objects : not ready yet
-# db
-# LiveTable
-# get_events
-# get_images
 
 def dryrun(sample,scan,**kwargs):
     '''same as run but scans are not executed.

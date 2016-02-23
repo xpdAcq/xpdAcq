@@ -18,7 +18,7 @@ import os
 import datetime
 import shutil
 from time import strftime
-import xpdacq.xpdacq as main
+import xpdacq.object_manage as main
 from xpdacq.config import DataPath
 from xpdacq.beamtime import Beamtime, XPD
 from xpdacq.beamtime import export_data

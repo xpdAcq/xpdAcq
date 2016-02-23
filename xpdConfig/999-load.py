@@ -18,15 +18,15 @@
 
 import os
 import socket
-from xpdacq.xpdacq import _areaDET
-from xpdacq.xpdacq import _tempController
-from xpdacq.xpdacq import _shutter
-from xpdacq.xpdacq import _bdir
+from xpdacq.object_manage import _areaDET
+from xpdacq.object_manage import _tempController
+from xpdacq.object_manage import _shutter
+from xpdacq.object_manage import _bdir
 
 ''' not ready yet
-from xpdacq.xpdacq import _db
-from xpdacq.xpdacq import _getEvents
-from xpdacq.xpdacq import _getImages
+from xpdacq.object_manage import _db
+from xpdacq.object_manage import _getEvents
+from xpdacq.object_manage import _getImages
 '''
 
 import bluesky
