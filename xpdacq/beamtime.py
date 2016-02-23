@@ -42,15 +42,18 @@ class XPD:
         return self.md
 
     def _yaml_path(self):
-        yaml_dir_path = os.path.join(self._home_path, 'config_base', 'yml')
-        os.makedirs(yaml_dir_path, exist_ok = True)
-        return yaml_dir_path
+        self.yaml_dir_path = os.path.join(self._home_path, 'config_base', 'yml')
+        #os.makedirs(yaml_dir_path, exist_ok = True)
+        return self.yaml_dir_path
+
+    def _make_dirs(self, path_to_create):
+        os.makedirs(path_to_create, exist_ok = True)
 
     def _yaml_garage_path(self):
-        yaml_garage_dir_path = os.path.join(self._home_path, 'config_base', 'yml_garage')
+        self.yaml_garage_dir_path = os.path.join(self._home_path, 'config_base', 'yml_garage')
         # backup directory when user wants to move out objects from default reading list
-        os.makedirs(yaml_garage_dir_path, exist_ok = True)
-        return yaml_garage_dir_path
+        #os.makedirs(yaml_garage_dir_path, exist_ok = True)
+        return self.yaml_garage_dir_path
 
     def _yamify(self):
         '''write a yaml file for this object and place it in config_base/yml'''
@@ -66,12 +69,14 @@ class XPD:
     @classmethod
     def _get_ymls(cls):
         fpath = cls._yaml_path
+        cls._make_dirs(cls,fpath) # Tim test
         yamls = os.listdir(fpath)
         return yamls
 
     @classmethod
     def loadyamls(cls):
         fpath = cls._yaml_path(cls)
+        cls._make_dirs(cls,fpath) # Tim test
         yamls = os.listdir(fpath)
         olist = []
         for f in yamls:

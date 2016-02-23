@@ -178,8 +178,9 @@ def _start_beamtime(base_dir=None):
     explist = list(input('default = []  '))
     if explist == '':
         explist = []
+    #return _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None)
     return _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None)
-
+ 
 def _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None):
     if base_dir is None:
         base_dir = B_DIR

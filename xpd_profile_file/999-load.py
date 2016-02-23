@@ -135,7 +135,7 @@ class DataPath(object):
 hostname = socket.gethostname()
 if hostname == 'xf28id1-ws2':
     # real experiment
-    B_DIR = os.path.expanduser('~/')
+    B_DIR = os.path.expanduser('~/pe2_data')
     _bdir(B_DIR)
     dp = DataPath(B_DIR) 
     # TODO - haven't fully cleaned dp yet, but will refactor later
@@ -158,7 +158,7 @@ print('Initializing the XPD data acquisition simulation environment')
 os.chdir(os.path.join(B_DIR, HOME_DIR))
 
 #if there is a yml file in the normal place, then load the beamtime object
-#if len(XPD.loadyamls()) > 0:  --> this will create extra directory 
+#if len(XPD.loadyamls()) > 0: try alternative logic, load in yaml only if yaml_dir exists
 if os.path.isdir(dp.yaml_dir):
     bt = XPD.loadyamls()[0]
 
