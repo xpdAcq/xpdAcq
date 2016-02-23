@@ -19,11 +19,12 @@ import datetime
 import shutil
 from time import strftime
 from xpdacq.config import DataPath
+from xpdacq.config import B_DIR
 from xpdacq.beamtime import Beamtime, XPD
 from xpdacq.beamtime import export_data
 #from xpdacq.control import _get_obj
 
-B_DIR = os.path.expanduser('~')
+#B_DIR = os.path.expanduser('~')
 #def _get_obj(name):
     #ip = get_ipython() # build-in function
     #return ip.user_ns[name]
