@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#!/usr/bin/env python
 ##############################################################################
 #
 # xpdacq            by Billinge Group
@@ -14,19 +13,39 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-'''Constants and other global definitions.
+'''Configuration of python object and gloabal constents
 '''
 
-import os.path
-import xpdacq.object_manage as main
+import os
+import socket
+from xpdacq.object_manage import _areaDET
+from xpdacq.object_manage import _tempController
+from xpdacq.object_manage import _shutter
+from xpdacq.object_manage import _bdir
 
-B_DIR = main.B_DIR
+''' not ready yet
+from xpdacq.object_manage import _db
+from xpdacq.object_manage import _getEvents
+from xpdacq.object_manage import _getImages
+'''
+
+import bluesky
+from bluesky.run_engine import RunEngine
+
+# instanciate RE:
+# imports in this block can be moved up after making sure it is working
+xpdRE = RunEngine()
+xpdRE.md['owner'] = 'xf28id1'
+xpdRE.md['beamline_id'] = 'xpd'
+xpdRE.md['group'] = 'XPD'
+
 HOME_DIR = 'xpdUser'
 CONFIG_DIR = 'xpdConfig'
+XPD_HOST_NAME = 'xf28id1-ws2'
 
+# Note:
 # base = B_DIR = dp.base = '~'
 # home = HOME_DIR = dp.home = 'xpdUser'
-
 
 class DataPath(object):
     '''Absolute paths to data folders in XPD experiment.
@@ -110,3 +129,38 @@ class DataPath(object):
     def __repr__(self):
         return 'DataPath({!r})'.format(self.stem)
 
+# differentiate simulation or reall experiment based on hostname
+# this method might be refactored soon
+
+hostname = socket.gethostname()
+if hostname == 'xf28id1-ws2':
+    # real experiment
+    B_DIR = os.path.expanduser('~/pe2_data')
+    _bdir(B_DIR)
+    dp = DataPath(B_DIR) 
+    # TODO - haven't fully cleaned dp yet, but will refactor later
+    bluesky.register_mds.register_mds(xpdRE)
+
+
+else:
+    print('==== Simulation ====')
+    B_DIR = os.getcwd()
+    _bdir(B_DIR)
+    dp = DataPath(B_DIR)
+
+# can't top import as objects are just created above
+from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
+from xpdacq.beamtime import XPD
+# FIXME - extra directories are created when importing certain function, which leads logic loop hole in start_beamtime
+# XPD creates config_base/yml and export_data() creates Exports/
+
+print('Initializing the XPD data acquisition simulation environment') 
+os.chdir(os.path.join(B_DIR, HOME_DIR))
+
+#if there is a yml file in the normal place, then load the beamtime object
+#if len(XPD.loadyamls()) > 0: try alternative logic, load in yaml only if yaml_dir exists
+if os.path.isdir(dp.yaml_dir):
+    bt = XPD.loadyamls()[0]
+
+print('OK, ready to go.  To continue, follow the steps in the xpdAcq')
+print('documentation at http://xpdacq.github.io/xpdacq')

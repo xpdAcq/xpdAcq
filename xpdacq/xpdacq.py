@@ -14,34 +14,32 @@
 #
 #
 ##############################################################################
-def _get_obj(name):
-    ip = get_ipython() # build-in function
-    return ip.user_ns[name]
-
 import numpy as np
 from xpdacq.beamtime import Union, Xposure
 from bluesky.plans import Count
 from bluesky import Msg
-from xpdacq.control import _get_obj   
-from xpdacq.control import _open_shutter
-from xpdacq.control import _close_shutter
-from xpdacq.analysis import *
+#from xpdacq.control import _open_shutter
+#from xpdacq.control import _close_shutter
 from bluesky.plans import AbsScanPlan
 
-xpdRE = _get_obj('xpdRE')
-LiveTable = _get_obj('LiveTable')
+import xpdacq.object_manage as main
+B_DIR = main.B_DIR
+print('B_DIR from xpdacq.py {}'.format(B_DIR))
 
-print('Before you start, make sure the area detector IOC is in "Acquire mode"')
-#expo_threshold = 60 # in seconds Deprecated!
-FRAME_ACQUIRE_TIME = 0.1 
-AREA_DET_NAME = 'pe1c'
-TEMP_CONTROLLER_NAME = 'cs700'
+''' things that should be created and imported during start_up
+#xpdRE = _get_obj('xpdRE')
+#LiveTable = _get_obj('LiveTable')
 
 # set up the detector    
 # default settings for pe1c
-area_det = _get_obj(AREA_DET_NAME)
-area_det.cam.acquire_time.put(FRAME_ACQUIRE_TIME)
-temp_controller = _get_obj(TEMP_CONTROLLER_NAME)
+#area_det = _get_obj(AREA_DET_NAME)
+#area_det.cam.acquire_time.put(FRAME_ACQUIRE_TIME)
+#temp_controller = _get_obj(TEMP_CONTROLLER_NAME)
+
+'''
+
+print('Before you start, make sure the area detector IOC is in "Acquire mode"')
+#expo_threshold = 60 # in seconds Deprecated!
 
 
 def dryrun(sample,scan,**kwargs):

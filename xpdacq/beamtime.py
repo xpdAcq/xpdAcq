@@ -20,32 +20,41 @@ import shutil
 import datetime
 from time import strftime
 import sys
+
 from xpdacq.config import DataPath
+import xpdacq.object_manage as main
+B_DIR = main.B_DIR
+print('heyyyy B_DIR= {}'.format(B_DIR))
 
 
 class XPD:
-    _base_path = ''
-    if not _base_path:
-        dp = DataPath(os.path.expanduser('~'))
-        _base_path = dp.base
+    #_base_path = ''
+    #if not _base_path:
+        #dp = DataPath(os.path.expanduser('~'))
+        #_base_path = dp.base
+    dp = DataPath(B_DIR)
+    _home_path = dp.home
+
     def _getuid(self):
         return str(uuid.uuid1())
 
     def export(self):
         return self.md
-    
+
     def _yaml_path(self):
-        yaml_dir_path = os.path.join(self._base_path, 'config_base', 'yml')
-        os.makedirs(yaml_dir_path, exist_ok = True) 
-        return yaml_dir_path
+        self.yaml_dir_path = os.path.join(self._home_path, 'config_base', 'yml')
+        #os.makedirs(yaml_dir_path, exist_ok = True)
+        return self.yaml_dir_path
+
+    def _make_dirs(self, path_to_create):
+        os.makedirs(path_to_create, exist_ok = True)
 
     def _yaml_garage_path(self):
-        yaml_garage_dir_path = os.path.join(self._base_path, 'config_base', 'yml_garage')
-        os.makedirs(yaml_garage_dir_path, exist_ok = True)
+        self.yaml_garage_dir_path = os.path.join(self._home_path, 'config_base', 'yml_garage')
         # backup directory when user wants to move out objects from default reading list
-        return yaml_garage_dir_path
+        #os.makedirs(yaml_garage_dir_path, exist_ok = True)
+        return self.yaml_garage_dir_path
 
-                    
     def _yamify(self):
         '''write a yaml file for this object and place it in config_base/yml'''
         fname = self.name
@@ -60,12 +69,14 @@ class XPD:
     @classmethod
     def _get_ymls(cls):
         fpath = cls._yaml_path
+        cls._make_dirs(cls,fpath) # Tim test
         yamls = os.listdir(fpath)
         return yamls
 
     @classmethod
     def loadyamls(cls):
         fpath = cls._yaml_path(cls)
+        cls._make_dirs(cls,fpath) # Tim test
         yamls = os.listdir(fpath)
         olist = []
         for f in yamls:
@@ -250,77 +261,6 @@ class ScanPlan(XPD):
             print('Please use uparrow to edit and retry making your ScanPlan object')
             sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
-        ''' bad logic, will be discarded
-        if self.scan == 'ct':
-            if list(self.sc_params.keys()) == _ct_required_params:
-                pass
-            else:
-                extra_sc_params = list()
-                for el in list(self.sc_params.keys()):
-                    if el not in _ct_required_params:
-                        extra_sc_params.append(el)
-                if extra_sc_params:
-                    print('It seems you are using a Count scan but the scan_params dictionary contain extra parameters {}'.format(extra_sc_params))
-
-                required_sc_params = list()
-                for el in _ct_required_params:
-                    try:
-                        self.sc_params[el]
-                    except KeyError:
-                        required_sc_params.append(el)
-                if required_sc_params:
-                    print('It seems you are using a Count scan but the scan_params dictionary doesn not contain {} which is needed'.format(required_sc_params))
-                
-                print('Please use uparrow to edit and retry making your ScanPlan object')
-                sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
-
-        elif self.scan == 'Tramp':
-            if list(self.sc_params.keys()) == _Tramp_required_params:
-                pass
-            else:
-                extra_sc_params = list()
-                for el in list(self.sc_params.keys()):
-                    if el not in _Tramp_required_params:
-                        extra_sc_params.append(el)
-                if extra_sc_params:
-                    print('It seems you are using a Tramp scan but the scan_params dictionary contain extra parameters {}'.format(extra_sc_params))
-
-                required_sc_params = list()
-                for el in _Tramp_required_params:
-                    try:
-                        self.sc_params[el]
-                    except KeyError:
-                        required_sc_params.append(el)
-                if required_sc_params:
-                    print('It seems you are using a Tramp scan but the scan_params dictionary doesn not contain {} which is needed'.format(required_sc_params))
-                
-                print('Please use uparrow to edit and retry making your ScanPlan object')
-                sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
-                   
-        elif self.scan == 'tseries':
-            if list(self.sc_params.keys()) == _tseries_required_params:
-                pass
-            else:
-                extra_sc_params = list()
-                for el in list(self.sc_params.keys()):
-                    if el not in _tseries_required_params:
-                        extra_sc_params.append(el)
-                if extra_sc_params:
-                    print('It seems you are using a tseries scan but the scan_params dictionary contain extra parameters {}'.format(extra_sc_params))
-
-                required_sc_params = list()
-                for el in _tseries_required_params:
-                    try:
-                        self.sc_params[el]
-                    except KeyError:
-                        required_sc_params.append(el)
-                if required_sc_params:
-                    print('It seems you are using a tseries scan but the scan_params dictionary doesn not contain {} which is needed'.format(required_sc_params))
-                
-                print('Please use uparrow to edit and retry making your ScanPlan object')
-                sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
-        '''
-        
 
 class Union(XPD):
     def __init__(self,sample,scan):
@@ -350,7 +290,7 @@ def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
 
     """
     # FIXME - test purpose
-    B_DIR = os.path.expanduser('~')
+    #B_DIR = os.path.expanduser('~')
     if root_dir is None:
         root_dir = B_DIR
     dp = DataPath(root_dir)
