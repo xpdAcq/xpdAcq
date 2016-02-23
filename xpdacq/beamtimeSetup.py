@@ -195,7 +195,7 @@ def _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None,):
     experimenters = explist
     _make_clean_env(dp)
     os.chdir(dp.base)
-    bt = Beamtime(PI_name,saf_num,wavelength,experimenters)
+    bt = Beamtime(PI_name,saf_num,wavelength,experimenters,base_dir=base_dir)
     return bt
 
 

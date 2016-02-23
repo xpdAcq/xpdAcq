@@ -1,0 +1,14 @@
+!!python/object:xpdacq.beamtime.Beamtime
+_base_path: C:\Users\billinge\Documents\GitHub\xpdAcq\tests
+md:
+  bt_experimenters:
+  - !!python/tuple [Banerjee, Soham, 1]
+  - !!python/tuple ['Terban ', ' Max', 2]
+  bt_piLast: Billinge
+  bt_safN: 123.67
+  bt_uid: e571129a-d9a4-11e5-b444-28b2bd4521c0
+  bt_usermd: {}
+  bt_wavelength: 0.1812
+name: bt
+type: bt
+yaml_dir_path: C:\Users\billinge\Documents\GitHub\xpdAcq\tests\config_base\yml

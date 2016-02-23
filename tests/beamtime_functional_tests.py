@@ -2,6 +2,7 @@
 # user is ready to set up her acquire objects
 # user checks the current bt.list and sees just bt Beamtime object
 # user creates an experiment object by typing new_exp() 
+  simon working on this
 # program asks the exp name
 # program removes internal and external white-spaces and checks if the experiment exists
    # if name exists program exits with message "experiment with name %s exists.  If you are trying to update it please use 'edit_exp'"

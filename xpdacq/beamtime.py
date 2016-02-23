@@ -24,10 +24,7 @@ from xpdacq.config import DataPath
 
 
 class XPD:
-    _base_path = ''
-    if not _base_path:
-        dp = DataPath(os.path.expanduser('~'))
-        _base_path = dp.base
+
     def _getuid(self):
         return str(uuid.uuid1())
 
@@ -35,15 +32,15 @@ class XPD:
         return self.md
     
     def _yaml_path(self):
-        yaml_dir_path = os.path.join(self._base_path, 'config_base', 'yml')
-        os.makedirs(yaml_dir_path, exist_ok = True) 
-        return yaml_dir_path
+        self.yaml_dir_path = os.path.join(self._base_path, 'config_base', 'yml')
+        os.makedirs(self.yaml_dir_path, exist_ok = True) 
+        return self.yaml_dir_path
 
     def _yaml_garage_path(self):
-        yaml_garage_dir_path = os.path.join(self._base_path, 'config_base', 'yml_garage')
-        os.makedirs(yaml_garage_dir_path, exist_ok = True)
+        self.yaml_garage_dir_path = os.path.join(self._base_path, 'config_base', 'yml_garage')
+        os.makedirs(self.yaml_garage_dir_path, exist_ok = True)
         # backup directory when user wants to move out objects from default reading list
-        return yaml_garage_dir_path
+        return self.yaml_garage_dir_path
 
                     
     def _yamify(self):
@@ -59,7 +56,7 @@ class XPD:
 
     @classmethod
     def _get_ymls(cls):
-        fpath = cls._yaml_path
+        fpath = cls._yaml_path(cls)
         yamls = os.listdir(fpath)
         return yamls
 
@@ -113,7 +110,12 @@ class XPD:
             return
     
 class Beamtime(XPD):
-    def __init__(self, pi_last, safn, wavelength, experimenters = [], **kwargs):
+    def __init__(self, pi_last, safn, wavelength, experimenters = [], base_dir=None,**kwargs):
+        if not base_dir:
+            dp = DataPath(os.path.expanduser('~'))
+            self._base_path = dp.base
+        else:
+            self._base_path = base_dir
         self.name = 'bt'
         self.type = 'bt'
         self.md = {'bt_piLast': _clean_md_input(pi_last), 'bt_safN': _clean_md_input(safn), 
@@ -122,6 +124,7 @@ class Beamtime(XPD):
         self.md.update({'bt_experimenters': _clean_md_input(experimenters)})
         self.md.update({'bt_uid': self._getuid()})
         self._yamify()
+
 
 class Experiment(XPD):
     def __init__(self, expname, beamtime, **kwargs):
@@ -406,4 +409,10 @@ def _clean_md_input(obj):
         return obj
 
 
-    
+def new_exp():
+
+    return _execute_new_exp()
+
+def _execute_new_exp(expnam,btobj):
+    pass
+
