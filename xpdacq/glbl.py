@@ -1,32 +1,5 @@
-#!/usr/bin/env python
-#!/usr/bin/env python
-##############################################################################
-#
-# xpdacq            by Billinge Group
-#                   Simon J. L. Billinge sb2896@columbia.edu
-#                   (c) 2016 trustees of Columbia University in the City of
-#                        New York.
-#                   All rights reserved
-#
-# File coded by:    Timothy Liu, Simon Billinge
-#
-# See AUTHORS.txt for a list of people who contributed.
-# See LICENSE.txt for license information.
-#
-##############################################################################
-'''Constants and other global definitions.
-'''
-
-import os.path
-import xpdacq.xpdacq as main
-from xpdacq.glbl import glbl
-
-B_DIR = glbl.B_DIR
-HOME_DIR = glbl.HOME_DIR
-CONFIG_DIR = glbl.CONFIG_DIR
-
-# base = B_DIR = dp.base = '~'
-# home = HOME_DIR = dp.home = 'xpdUser'
+import os
+from time import strftime
 
 
 class DataPath(object):
@@ -51,12 +24,12 @@ class DataPath(object):
     @property
     def home(self):
         ''' base dir of entire configuration, normally xpdUser '''
-        return os.path.join(self.stem, HOME_DIR)
+        return os.path.join(self.stem, glbl.HOME_DIR)
 
     @property
     def raw_config(self):
         ''' config dir of entire configuration'''
-        return os.path.join(self.stem, CONFIG_DIR)
+        return os.path.join(self.stem, glbl.CONFIG_DIR)
 
     @property
     def import_dir(self):
@@ -111,3 +84,19 @@ class DataPath(object):
     def __repr__(self):
         return 'DataPath({!r})'.format(self.stem)
 
+class glbl():
+	#this behavior can be changed to include Tim's logic
+    B_DIR = os.getcwd()
+    HOME_DIR = 'xpdUser'
+    CONFIG_DIR = 'xpdConfig'
+    HOST_NAME = 'simulatedXPD'
+    REMOTE_DIR = os.path.expanduser('~/pe2_data/')
+    BACKUP_DIR = os.path.join(REMOTE_DIR, strftime('%Y'), 'userBeamtimeArchive')
+
+    @classmethod
+    def dp(cls,dir=B_DIR):
+        cls.dp = DataPath(dir)
+        return cls.dp
+
+if __name__ == '__main__':
+    print(glbl.dp().home)

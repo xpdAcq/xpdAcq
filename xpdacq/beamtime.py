@@ -20,20 +20,9 @@ import shutil
 import datetime
 from time import strftime
 import sys
-
-from xpdacq.config import DataPath
-import xpdacq.xpdacq as main
-B_DIR = main.B_DIR
-print('heyyyy B_DIR= {}'.format(B_DIR))
-
+from xpdacq.glbl import glbl
 
 class XPD:
-    #_base_path = ''
-    #if not _base_path:
-        #dp = DataPath(os.path.expanduser('~'))
-        #_base_path = dp.base
-    dp = DataPath(B_DIR)
-    _home_path = dp.home
 
     def _getuid(self):
         return str(uuid.uuid1())
@@ -42,7 +31,7 @@ class XPD:
         return self.md
 
     def _yaml_path(self):
-        yaml_dir_path = os.path.join(self._home_path, 'config_base', 'yml')
+        yaml_dir_path = os.path.join(glbl.dp().home, 'config_base', 'yml')
         os.makedirs(yaml_dir_path, exist_ok = True)
         return yaml_dir_path
 
@@ -285,25 +274,24 @@ def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
 
     """
     # FIXME - test purpose
-    #B_DIR = os.path.expanduser('~')
     if root_dir is None:
-        root_dir = B_DIR
+        root_dir = glbl.B_DIR
     dp = DataPath(root_dir)
     # remove any existing exports
-    if os.path.isdir(dp.export_dir):
-        shutil.rmtree(dp.export_dir)
+    if os.path.isdir(glbl.dp().export_dir):
+        shutil.rmtree(glbl.dp().export_dir)
     f_name = strftime('data4export_%Y-%m-%dT%H%M')
-    os.makedirs(dp.export_dir, exist_ok=True)
+    os.makedirs(glbl.dp().export_dir, exist_ok=True)
     cur_path = os.getcwd()
     try:
-        os.chdir(dp.stem)
+        os.chdir(glbl.dp().stem)
         print('Compressing your data now. That may take several minutes, please be patient :)' )
         tar_return = shutil.make_archive(f_name, ar_format, root_dir=dp.stem,
                 base_dir='xpdUser', verbose=1, dry_run=False)
-        shutil.move(tar_return, dp.export_dir)
+        shutil.move(tar_return, glbl.dp().export_dir)
     finally:
         os.chdir(cur_path)
-    out_file = os.path.join(dp.export_dir, os.path.basename(tar_return))
+    out_file = os.path.join(glbl.dp().export_dir, os.path.basename(tar_return))
     if not end_beamtime:
         print('New archive file with name '+out_file+' written.')
         print('Please copy this to your local computer or external hard-drive')

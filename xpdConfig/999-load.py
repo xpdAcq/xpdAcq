@@ -18,11 +18,14 @@
 
 import os
 import socket
+from xpdacq.glbl import glbl
 from xpdacq.xpdacq import _areaDET
 from xpdacq.xpdacq import _tempController
 from xpdacq.xpdacq import _shutter
 from xpdacq.xpdacq import _bdir
-
+from xpdacq.xpdacq import _hdir
+from xpdacq.xpdacq import _cdir
+from xpdacq.xpdacq import _hostname
 ''' not ready yet
 from xpdacq.xpdacq import _db
 from xpdacq.xpdacq import _getEvents

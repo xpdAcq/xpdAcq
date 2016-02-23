@@ -2,24 +2,45 @@ import unittest
 import os
 import shutil
 from time import strftime
-import socket
-import xpdConfig.load
-import xpdacq.xpdacq as main
+#import socket
+#import xpdConfig.load
+from xpdacq.xpdacq import _areaDET
+from xpdacq.xpdacq import _tempController
+from xpdacq.xpdacq import _shutter
+from xpdacq.xpdacq import _bdir
+from xpdacq.xpdacq import _cdir
+from xpdacq.xpdacq import _hdir
+from xpdacq.xpdacq import _hostname
+from xpdacq.glbl import glbl
+# set up globals
+
+
+#_hostname(HOST_NAME)
+#    _bdir(B_DIR)
+#_hdir(HOME_DIR)
+#_cdir(CONFIG_DIR)
+
+#from xpdacq.datapath import DataPath
+#dp = DataPath(glbl.B_DIR)
+
 import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment
-from xpdacq.config import DataPath
+
 
 class NewBeamtimeTest(unittest.TestCase): 
 
     def setUp(self):
-        self.base_dir = main.B_DIR
+        #B_DIR = os.getcwd()
+        #_bdir(B_DIR)
+        #dp = DataPath(B_DIR)
+        #import xpdacq.xpdacq as main
+        self.base_dir = glbl.B_DIR
         self.home_dir = os.path.join(self.base_dir,'xpdUser')
         self.PI_name = 'Billinge '
         self.saf_num = 123.67
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
-        self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=main.B_DIR)
-
+        self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=glbl.B_DIR)
 
     def tearDown(self):
         if os.path.isdir(self.home_dir):
@@ -86,7 +107,7 @@ class NewBeamtimeTest(unittest.TestCase):
         bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
         self.assertIsInstance(bt,bts.Beamtime)
         #maybe some more edge cases tested here?
-    '''
+    
     def test_make_clean_env(self):
         home_dir = os.path.join(self.base_dir,'xpdUser')
         conf_dir = os.path.join(self.base_dir,'xpdConfig')
@@ -134,3 +155,4 @@ class NewBeamtimeTest(unittest.TestCase):
 
     def test_inputs_in_end_beamtime(self):
         self.fail('need to refactor this function and build the tests')
+    '''

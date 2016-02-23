@@ -18,19 +18,10 @@ import os
 import datetime
 import shutil
 from time import strftime
-import xpdacq.xpdacq as main
-from xpdacq.config import DataPath
 from xpdacq.beamtime import Beamtime, XPD
 from xpdacq.beamtime import export_data
+from xpdacq.glbl import glbl
 
-B_DIR = main.B_DIR
-dp = DataPath(B_DIR)
-
-# just a note. Assigned by Sanjit
-REMOTE_DIR = os.path.expanduser('~/pe2_data/')
-BACKUP_DIR = os.path.join(REMOTE_DIR, strftime('%Y'), 'userBeamtimeArchive')
-
-# depracated, but keeping it around because I think it is cool, may want to use it later
 def _any_input_method(inp_func):
     return inp_func()
 
@@ -62,7 +53,7 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
     if archive_dir is None:
         archive_dir = os.path.expanduser(strftime('~/pe2_data/%Y/userBeamtimeArchive'))
     if base_dir is None:
-        base_dir = B_DIR
+        base_dir = glbl.B_DIR
     if bto is None:
         try:
             bto = bt  # problem comes from bt only exists if _start_beamtime has been run and ipython never crash
@@ -70,7 +61,7 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
         except NameError:
             bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
     #dp = DataPath(base_dir)
-    files = os.listdir(dp.home)
+    files = os.listdir(glbl.dp().home)
     if len(files)==1:
         print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
         return
@@ -129,13 +120,13 @@ def _confirm_archive(archive_f_name):
         raise RuntimeError('xpdUser directory delete operation cancelled at Users request')
 
 def _delete_home_dir_tree(base_dir, archive_f_name, bto):
-    dp = DataPath(base_dir)
-    os.chdir(dp.stem)   # don't remember the name, but move up one directory out of xpdUser before deleting it!
-    shutil.rmtree(dp.home)
-    os.makedirs(dp.home, exist_ok=True)
-    shutil.copy(archive_f_name, dp.home)
-    os.chdir(dp.home)   # now move back into xpdUser so everyone is not confused....
-    final_path = os.path.join(dp.home, os.path.basename(archive_f_name)) # local archive
+    #dp = DataPath(base_dir)
+    os.chdir(glbl.dp().stem)   # don't remember the name, but move up one directory out of xpdUser before deleting it!
+    shutil.rmtree(glbl.dp().home)
+    os.makedirs(glbl.dp().home, exist_ok=True)
+    shutil.copy(archive_f_name, glbl.dp().home)
+    os.chdir(glbl.dp().home)   # now move back into xpdUser so everyone is not confused....
+    final_path = os.path.join(glbl.dp().home, os.path.basename(archive_f_name)) # local archive
     #print("Final archive file at {}".format(final_path))
     return 'local copy of tarball for user: '+final_path
 
@@ -148,13 +139,13 @@ def get_full_ext(path, post_ext=''):
 
 def _check_empty_environment(base_dir=None):
     if base_dir is None:
-        base_dir = B_DIR
-    dp = DataPath(base_dir)
-    if os.path.exists(dp.home):
-        if not os.path.isdir(dp.home):
+        base_dir = glbl.B_DIR
+    #dp = DataPath(base_dir)
+    if os.path.exists(glbl.dp().home):
+        if not os.path.isdir(glbl.dp().home):
             raise RuntimeError("Expected a folder, got a file.  "
                                "Please Talk to beamline staff")
-        files = os.listdir(dp.home) # that also list dirs that have been created
+        files = os.listdir(glbl.dp().home) # that also list dirs that have been created
         if len(files) > 1:
             #print(len(files))
             raise RuntimeError("Unexpected files in {}, you need to run _end_beamtime(). Please Talk to beamline staff".format(dp.home))
@@ -164,7 +155,7 @@ def _check_empty_environment(base_dir=None):
                 raise RuntimeError("Expected a tarball of some sort, found {} "
                                    "Please talk to beamline staff"
                                    .format(tf))
-            os.unlink(os.path.join(dp.home, tf))
+            os.unlink(os.path.join(glbl.dp().home, tf))
     else:
         raise RuntimeError("The xpdUser directory appears not to exist "
                                "Please Talk to beamline staff")
@@ -182,14 +173,14 @@ def _start_beamtime(base_dir=None):
 
 def _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None):
     if base_dir is None:
-        base_dir = B_DIR
-    dp = DataPath(base_dir)
+        base_dir = glbl.B_DIR
+    #dp = DataPath(base_dir)
     PI_name = piname
     saf_num = safn
     wavelength = wavelength
     experimenters = explist
-    _make_clean_env(dp)
-    os.chdir(dp.home)
+    _make_clean_env(glbl.dp())
+    os.chdir(glbl.dp().home)
     bt = Beamtime(PI_name,saf_num,wavelength,experimenters)
     return bt
 

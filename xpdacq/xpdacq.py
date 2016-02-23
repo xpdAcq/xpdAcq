@@ -55,6 +55,17 @@ def _bdir(b_dir_name):
     global B_DIR
     B_DIR = b_dir_name
 
+def _hdir(h_dir_name):
+    global HOME_DIR
+    HOME_DIR = h_dir_name
+
+def _cdir(c_dir_name):
+    global CONFIG_DIR
+    CONFIG_DIR = c_dir_name
+
+def _hostname(host_name):
+    global HOST_NAME
+    HOST_NAME = host_name
 # analysis objects : not ready yet
 # db
 # LiveTable
