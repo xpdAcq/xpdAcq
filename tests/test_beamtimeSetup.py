@@ -2,8 +2,6 @@ import unittest
 import os
 import shutil
 from time import strftime
-#import socket
-#import xpdConfig.load
 from xpdacq.xpdacq import _areaDET
 from xpdacq.xpdacq import _tempController
 from xpdacq.xpdacq import _shutter
@@ -12,16 +10,6 @@ from xpdacq.xpdacq import _cdir
 from xpdacq.xpdacq import _hdir
 from xpdacq.xpdacq import _hostname
 from xpdacq.glbl import glbl
-# set up globals
-
-
-#_hostname(HOST_NAME)
-#    _bdir(B_DIR)
-#_hdir(HOME_DIR)
-#_cdir(CONFIG_DIR)
-
-#from xpdacq.datapath import DataPath
-#dp = DataPath(glbl.B_DIR)
 
 import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment
@@ -30,10 +18,6 @@ from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_
 class NewBeamtimeTest(unittest.TestCase): 
 
     def setUp(self):
-        #B_DIR = os.getcwd()
-        #_bdir(B_DIR)
-        #dp = DataPath(B_DIR)
-        #import xpdacq.xpdacq as main
         self.base_dir = glbl.base
         self.home_dir = os.path.join(self.base_dir,'xpdUser')
         self.PI_name = 'Billinge '
@@ -134,19 +118,21 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(os.getcwd(),self.home_dir)
         # there should be a bt object, is there?
         self.assertIsInstance(bt,bts.Beamtime)
+        # reinsert this when _clean_md passes
         #self.assertEqual(bt.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
         self.assertEqual(bt.md['bt_piLast'],'Billinge')
         self.assertEqual(bt.md['bt_safN'],123)
         self.assertEqual(bt.md['bt_wavelength'],0.1812)
-
         os.chdir(self.base_dir)
-        #self.fail('make tests here')
 
-    '''def test_load_user_yml(self):
+
+    @unittest.expectedFailure
+    def test_load_user_yml(self):
         self.fail('need to build this function and the tests')
         # after start_beamtime, Sanjit places user yml.tar (or some other archive format) file into xpdUser directory
         # then runs _load_user_yml() which unpacks and installs it in yml_dir
 
+    @unittest.expectedFailure
     def test_export_bt_objects(self):
         self.fail('need to build this function and the tests')
         # user has finished building her yaml files and wants to export to send to Sanjit
@@ -154,17 +140,20 @@ class NewBeamtimeTest(unittest.TestCase):
         # program creates an archive file (standard format, autonamed from info in the session)
         # program places the file in Export directory
         # program gives friendly informational statement to user to email the file to Instr. Scientist.
-
+    
+    @unittest.expectedFailure
     def test_execute_end_beamtime(self):
         os.mkdir(self.home_dir)
         #self.assertRaises(OSError, lambda: _end_beamtime(base_dir=self.base_dir,bto=self.bt))
-        #self.fail('finish making the test')
+        self.fail('finish making the test')
         archive_dir = os.path.expanduser(strftime('./pe2_data/2016/userBeamtimeArchive'))
 
+    @unittest.expectedFailure
     def test_delete_home_dir_tree(self):
         self.fail('need to build tests for this function')
 
+    @unittest.expectedFailure
     def test_inputs_in_end_beamtime(self):
         self.fail('need to refactor this function and build the tests')
-    '''
+
     
