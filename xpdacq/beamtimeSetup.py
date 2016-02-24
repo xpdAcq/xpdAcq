@@ -164,8 +164,12 @@ def _check_empty_environment(base_dir=None):
         raise RuntimeError("The xpdUser directory appears not to exist "
                                "Please Talk to beamline staff")
 
-def _start_beamtime(base_dir=None):
-    _check_empty_environment(base_dir)
+def _start_beamtime(home_dir=None):
+    if home_dir is None:
+        home_dir = glbl.home
+    if not os.path.exists(home_dir):
+        os.makedirs(home_dir)
+    _check_empty_environment()
     piname = input('Please enter the PI last name to this beamtime: ')
     safn = input('Please enter the SAF number for this beamtime: ')
     wavelength = input('Please enter the x-ray wavelength: ')
@@ -173,11 +177,9 @@ def _start_beamtime(base_dir=None):
     explist = list(input('default = []  '))
     if explist == '':
         explist = []
-    return _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None)
+    return _execute_start_beamtime(piname,safn,wavelength,explist,home_dir)
 
 def _execute_start_beamtime(piname,safn,wavelength,explist,home_dir=None):
-    if home_dir is None:
-        home_dir = glbl.home
     PI_name = piname
     saf_num = safn
     wavelength = wavelength
