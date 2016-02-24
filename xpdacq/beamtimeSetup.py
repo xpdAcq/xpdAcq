@@ -19,7 +19,7 @@ import datetime
 import shutil
 from time import strftime
 from xpdacq.beamtime import Beamtime, XPD
-from xpdacq.beamtime import export_data
+from xpdacq.beamtime import export_data, _clean_md_input
 from xpdacq.glbl import glbl
 
 #datapath = glbl.dp()
@@ -173,10 +173,12 @@ def _start_beamtime(home_dir=None):
     safn = input('Please enter the SAF number for this beamtime: ')
     wavelength = input('Please enter the x-ray wavelength: ')
     print('Please enter a list of experimenters with syntax [("lastName","firstName",userID)]')
-    explist = list(input('default = []  '))
+    explist = input('default = []  ')
+    _explist = _clean_md_input(eval(explist))
+    
     if explist == '':
         explist = []
-    bt = _execute_start_beamtime(piname,safn,wavelength,explist,home_dir)
+    bt = _execute_start_beamtime(piname, safn, wavelength, _explist, home_dir)
     return bt
 
 def _execute_start_beamtime(piname,safn,wavelength,explist,home_dir=None):
