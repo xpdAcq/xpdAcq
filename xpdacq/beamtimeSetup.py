@@ -175,10 +175,9 @@ def _start_beamtime(base_dir=None):
         explist = []
     return _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None)
 
-def _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None):
-    if base_dir is None:
-        base_dir = glbl.base
-    #dp = DataPath(base_dir)
+def _execute_start_beamtime(piname,safn,wavelength,explist,home_dir=None):
+    if home_dir is None:
+        home_dir = glbl.home
     PI_name = piname
     saf_num = safn
     wavelength = wavelength

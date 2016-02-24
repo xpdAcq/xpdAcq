@@ -113,7 +113,7 @@ class NewBeamtimeTest(unittest.TestCase):
         os.chdir(self.base_dir)
         os.mkdir(self.home_dir)
         #dp = DataPath(self.base_dir)
-        bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=self.base_dir)
+        bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
         # we should be in home, are we?
         self.assertEqual(os.getcwd(),self.home_dir)
         # there should be a bt object, is there?
