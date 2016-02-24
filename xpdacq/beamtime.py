@@ -281,7 +281,7 @@ def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
     # FIXME - test purpose
     if root_dir is None:
         root_dir = glbl.base
-    dp = DataPath(root_dir)
+    #dp = DataPath(root_dir)
     # remove any existing exports
     if os.path.isdir(glbl.export_dir):
         shutil.rmtree(glbl.export_dir)
@@ -291,7 +291,7 @@ def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
     try:
         os.chdir(glbl.base)
         print('Compressing your data now. That may take several minutes, please be patient :)' )
-        tar_return = shutil.make_archive(f_name, ar_format, root_dir=dp.stem,
+        tar_return = shutil.make_archive(f_name, ar_format, root_dir=glbl.base,
                 base_dir='xpdUser', verbose=1, dry_run=False)
         shutil.move(tar_return, glbl.export_dir)
     finally:

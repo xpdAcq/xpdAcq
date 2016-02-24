@@ -57,7 +57,7 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
     if archive_dir is None:
         archive_dir = os.path.expanduser(strftime('~/pe2_data/%Y/userBeamtimeArchive'))
     if base_dir is None:
-        base_dir = glbl.B_DIR
+        base_dir = glbl.base
     if bto is None:
         try:
             bto = bt  # problem comes from bt only exists if _start_beamtime has been run and ipython never crash
@@ -99,7 +99,6 @@ def _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto):
       3. removes all the un-tarred data
 
     '''
-
     tar_ball = export_data(base_dir, end_beamtime=True)
     ext = get_full_ext(tar_ball)
     os.makedirs(archive_dir, exist_ok=True)
