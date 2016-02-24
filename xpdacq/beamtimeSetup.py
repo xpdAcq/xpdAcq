@@ -22,11 +22,15 @@ from xpdacq.beamtime import Beamtime, XPD
 from xpdacq.beamtime import export_data
 from xpdacq.glbl import glbl
 
+#datapath = glbl.dp()
+home_dir = glbl.home
+all_folders = glbl.allfolders
+
 def _any_input_method(inp_func):
     return inp_func()
 
 
-def _make_clean_env(datapath):
+def _make_clean_env():
     '''Make a clean environment for a new user
 
     3. look for a <PIname>_<saf#>_config.yml and load it.  Ask the user if
@@ -44,7 +48,7 @@ def _make_clean_env(datapath):
         Base directory to work in
     '''
     out = []
-    for d in datapath.allfolders:
+    for d in all_folders:
         os.makedirs(d, exist_ok=True)
         out.append(d)
     return out
@@ -61,7 +65,7 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
         except NameError:
             bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
     #dp = DataPath(base_dir)
-    files = os.listdir(glbl.dp().home)
+    files = os.listdir(glbl.home)
     if len(files)==1:
         print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
         return
@@ -121,12 +125,12 @@ def _confirm_archive(archive_f_name):
 
 def _delete_home_dir_tree(base_dir, archive_f_name, bto):
     #dp = DataPath(base_dir)
-    os.chdir(glbl.dp().stem)   # don't remember the name, but move up one directory out of xpdUser before deleting it!
-    shutil.rmtree(glbl.dp().home)
-    os.makedirs(glbl.dp().home, exist_ok=True)
-    shutil.copy(archive_f_name, glbl.dp().home)
-    os.chdir(glbl.dp().home)   # now move back into xpdUser so everyone is not confused....
-    final_path = os.path.join(glbl.dp().home, os.path.basename(archive_f_name)) # local archive
+    os.chdir(glbl.base)   # don't remember the name, but move up one directory out of xpdUser before deleting it!
+    shutil.rmtree(glbl.home)
+    os.makedirs(glbl.home, exist_ok=True)
+    shutil.copy(archive_f_name, glbl.home)
+    os.chdir(glbl.home)   # now move back into xpdUser so everyone is not confused....
+    final_path = os.path.join(glbl.home, os.path.basename(archive_f_name)) # local archive
     #print("Final archive file at {}".format(final_path))
     return 'local copy of tarball for user: '+final_path
 
@@ -139,23 +143,23 @@ def get_full_ext(path, post_ext=''):
 
 def _check_empty_environment(base_dir=None):
     if base_dir is None:
-        base_dir = glbl.B_DIR
+        base_dir = glbl.base
     #dp = DataPath(base_dir)
-    if os.path.exists(glbl.dp().home):
-        if not os.path.isdir(glbl.dp().home):
+    if os.path.exists(home_dir):
+        if not os.path.isdir(home_dir):
             raise RuntimeError("Expected a folder, got a file.  "
                                "Please Talk to beamline staff")
-        files = os.listdir(glbl.dp().home) # that also list dirs that have been created
+        files = os.listdir(home_dir) # that also list dirs that have been created
         if len(files) > 1:
             #print(len(files))
-            raise RuntimeError("Unexpected files in {}, you need to run _end_beamtime(). Please Talk to beamline staff".format(dp.home))
+            raise RuntimeError("Unexpected files in {}, you need to run _end_beamtime(). Please Talk to beamline staff".format(home_dir))
         elif len(files) == 1:
             tf, = files
             if 'tar' not in tf:
                 raise RuntimeError("Expected a tarball of some sort, found {} "
                                    "Please talk to beamline staff"
                                    .format(tf))
-            os.unlink(os.path.join(glbl.dp().home, tf))
+            os.unlink(os.path.join(home_dir, tf))
     else:
         raise RuntimeError("The xpdUser directory appears not to exist "
                                "Please Talk to beamline staff")
@@ -173,15 +177,16 @@ def _start_beamtime(base_dir=None):
 
 def _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None):
     if base_dir is None:
-        base_dir = glbl.B_DIR
+        base_dir = glbl.base
     #dp = DataPath(base_dir)
     PI_name = piname
     saf_num = safn
     wavelength = wavelength
     experimenters = explist
-    _make_clean_env(glbl.dp())
-    os.chdir(glbl.dp().home)
+    _make_clean_env(glbl.dp)
+    os.chdir(glbl.home)
     bt = Beamtime(PI_name,saf_num,wavelength,experimenters)
     return bt
 
-
+if __name__ == '__main__':
+    print(glbl.home)

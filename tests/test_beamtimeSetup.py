@@ -34,13 +34,12 @@ class NewBeamtimeTest(unittest.TestCase):
         #_bdir(B_DIR)
         #dp = DataPath(B_DIR)
         #import xpdacq.xpdacq as main
-        self.base_dir = glbl.B_DIR
+        self.base_dir = glbl.base
         self.home_dir = os.path.join(self.base_dir,'xpdUser')
         self.PI_name = 'Billinge '
         self.saf_num = 123.67
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
-        #self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=glbl.B_DIR)
 
     def tearDown(self):
         if os.path.isdir(self.home_dir):
@@ -91,8 +90,25 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertTrue(os.path.isfile(self.newfile))
         self.assertRaises(RuntimeError, lambda:_check_empty_environment(base_dir = self.base_dir))
         os.remove(self.newfile)
-    '''
+
+    def test_make_clean_env(self):
+        home_dir = os.path.join(self.base_dir,'xpdUser')
+        conf_dir = os.path.join(self.base_dir,'xpdConfig')
+        tiff_dir = os.path.join(self.home_dir,'tiff_base')
+        dark_dir = os.path.join(self.home_dir,'dark_base')
+        usrconfig_dir = os.path.join(self.home_dir,'config_base')
+        export_dir = os.path.join(self.home_dir,'Export')
+        import_dir = os.path.join(self.home_dir,'Import')
+        userysis_dir = os.path.join(self.home_dir,'userAnalysis')
+        userscripts_dir = os.path.join(self.home_dir,'userScripts')
+        yml_dir = os.path.join(self.home_dir,usrconfig_dir,'yml')
+        #dp = DataPath(self.base_dir)
+        dirs = _make_clean_env()
+        self.assertEqual(dirs,[home_dir,conf_dir,tiff_dir,dark_dir,yml_dir,
+            usrconfig_dir,userscripts_dir,export_dir,import_dir,userysis_dir])
+
     def test_bt_creation(self):
+        self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=glbl.base)
         self.assertIsInstance(self.bt,bts.Beamtime)
         self.assertEqual(self.bt.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
         self.assertEqual(self.bt.md['bt_piLast'],'Billinge')
@@ -108,23 +124,7 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertIsInstance(bt,bts.Beamtime)
         #maybe some more edge cases tested here?
     
-    def test_make_clean_env(self):
-        home_dir = os.path.join(self.base_dir,'xpdUser')
-        conf_dir = os.path.join(self.base_dir,'xpdConfig')
-        tiff_dir = os.path.join(self.home_dir,'tiff_base')
-        dark_dir = os.path.join(self.home_dir,'dark_base')
-        usrconfig_dir = os.path.join(self.home_dir,'config_base')
-        export_dir = os.path.join(self.home_dir,'Export')
-        import_dir = os.path.join(self.home_dir,'Import')
-        userysis_dir = os.path.join(self.home_dir,'userAnalysis')
-        userscripts_dir = os.path.join(self.home_dir,'userScripts')
-        yml_dir = os.path.join(self.home_dir,usrconfig_dir,'yml')
-        dp = DataPath(self.base_dir)
-        dirs = _make_clean_env(dp)
-        self.assertEqual(dirs,[home_dir,conf_dir,tiff_dir,dark_dir,usrconfig_dir,
-            userscripts_dir,export_dir,import_dir,userysis_dir])
-
-    def test_start_beamtime(self):
+    '''def test_start_beamtime(self):
         os.chdir(self.base_dir)
         os.mkdir(self.home_dir)
         dp = DataPath(self.base_dir)

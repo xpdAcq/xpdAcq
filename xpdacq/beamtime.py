@@ -22,6 +22,9 @@ from time import strftime
 import sys
 from xpdacq.glbl import glbl
 
+#datapath = glbl.dp()
+home_dir = glbl.home
+
 class XPD:
 
     def _getuid(self):
@@ -31,7 +34,7 @@ class XPD:
         return self.md
 
     def _yaml_path(self):
-        yaml_dir_path = os.path.join(glbl.dp().home, 'config_base', 'yml')
+        yaml_dir_path = os.path.join(home_dir, 'config_base', 'yml')
         os.makedirs(yaml_dir_path, exist_ok = True)
         return yaml_dir_path
 
@@ -275,23 +278,23 @@ def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
     """
     # FIXME - test purpose
     if root_dir is None:
-        root_dir = glbl.B_DIR
+        root_dir = glbl.base
     dp = DataPath(root_dir)
     # remove any existing exports
-    if os.path.isdir(glbl.dp().export_dir):
-        shutil.rmtree(glbl.dp().export_dir)
+    if os.path.isdir(glbl.export_dir):
+        shutil.rmtree(glbl.export_dir)
     f_name = strftime('data4export_%Y-%m-%dT%H%M')
-    os.makedirs(glbl.dp().export_dir, exist_ok=True)
+    os.makedirs(glbl.export_dir, exist_ok=True)
     cur_path = os.getcwd()
     try:
-        os.chdir(glbl.dp().stem)
+        os.chdir(glbl.base)
         print('Compressing your data now. That may take several minutes, please be patient :)' )
         tar_return = shutil.make_archive(f_name, ar_format, root_dir=dp.stem,
                 base_dir='xpdUser', verbose=1, dry_run=False)
-        shutil.move(tar_return, glbl.dp().export_dir)
+        shutil.move(tar_return, glbl.export_dir)
     finally:
         os.chdir(cur_path)
-    out_file = os.path.join(glbl.dp().export_dir, os.path.basename(tar_return))
+    out_file = os.path.join(glbl.export_dir, os.path.basename(tar_return))
     if not end_beamtime:
         print('New archive file with name '+out_file+' written.')
         print('Please copy this to your local computer or external hard-drive')

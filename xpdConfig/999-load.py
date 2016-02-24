@@ -42,6 +42,7 @@ xpdRE.md['owner'] = 'xf28id1'
 xpdRE.md['beamline_id'] = 'xpd'
 xpdRE.md['group'] = 'XPD'
 
+#HOME_DIR = 'xpdUser'
 HOME_DIR = 'xpdUser'
 CONFIG_DIR = 'xpdConfig'
 XPD_HOST_NAME = 'xf28id1-ws2'
@@ -143,8 +144,6 @@ if hostname == 'xf28id1-ws2':
     dp = DataPath(B_DIR) 
     # TODO - haven't fully cleaned dp yet, but will refactor later
     bluesky.register_mds.register_mds(xpdRE)
-
-
 else:
     print('==== Simulation ====')
     B_DIR = os.getcwd()

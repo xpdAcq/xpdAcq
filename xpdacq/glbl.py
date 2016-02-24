@@ -84,19 +84,38 @@ class DataPath(object):
     def __repr__(self):
         return 'DataPath({!r})'.format(self.stem)
 
+BASE_DIR = os.getcwd()
+HOME_DIR = os.path.join(BASE_DIR, 'xpdUser')
+CONFIG_DIR = os.path.join(BASE_DIR,'xpdConfig')
+HOST_NAME = 'simulatedXPD'
+REMOTE_DIR = os.path.expanduser('~/pe2_data/')
+BACKUP_DIR = os.path.join(REMOTE_DIR, strftime('%Y'), 'userBeamtimeArchive')
+
+all_folders = [
+        HOME_DIR,
+        CONFIG_DIR,
+        os.path.join(HOME_DIR, 'tiff_base'),
+        os.path.join(HOME_DIR, 'dark_base'),
+        os.path.join(HOME_DIR, 'config_base', 'yml'),
+        os.path.join(HOME_DIR, 'config_base'),
+        os.path.join(HOME_DIR, 'userScripts'),
+        os.path.join(HOME_DIR, 'Export'),
+        os.path.join(HOME_DIR, 'Import'),
+        os.path.join(HOME_DIR, 'userAnalysis')
+]
+
 class glbl():
 	#this behavior can be changed to include Tim's logic
-    B_DIR = os.getcwd()
-    HOME_DIR = 'xpdUser'
-    CONFIG_DIR = 'xpdConfig'
-    HOST_NAME = 'simulatedXPD'
-    REMOTE_DIR = os.path.expanduser('~/pe2_data/')
-    BACKUP_DIR = os.path.join(REMOTE_DIR, strftime('%Y'), 'userBeamtimeArchive')
+    base = BASE_DIR
+    home = HOME_DIR
+    export_dir = os.path.join(home, 'Export')
+    allfolders = all_folders
 
+'''
     @classmethod
     def dp(cls,dir=B_DIR):
         cls.dp = DataPath(dir)
         return cls.dp
-
+'''
 if __name__ == '__main__':
     print(glbl.dp().home)
