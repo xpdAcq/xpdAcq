@@ -306,16 +306,13 @@ def _clean_md_input(obj):
     ''' strip white space '''
     if isinstance(obj, str):
         return obj.strip()
-    
     elif isinstance(obj, list):
-        clean_list = list()
-        for el in obj:
-            if isinstance(el, str):
-                clean_list.append(el.strip())
-            else: # if not string, just pass
-                clean_list.append(el)
+        clean_list = [_clean_md_input(i) for i in obj]
         return clean_list
-
+    elif isinstance(obj, tuple):
+        clean_tuple = tuple([_clean_md_input(i) for i in obj])
+        return clean_tuple
+    # fixme if we need it, but dicts won't be cleaned recursively......
     elif isinstance(obj, dict):
         clean_dict = dict()
         for k,v in obj.items():

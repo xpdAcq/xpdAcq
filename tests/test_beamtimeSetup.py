@@ -24,6 +24,7 @@ class NewBeamtimeTest(unittest.TestCase):
         self.saf_num = 123
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
+        #self.experimenters = [('me ',' you')]
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -96,6 +97,7 @@ class NewBeamtimeTest(unittest.TestCase):
         self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=self.base_dir)
         self.assertIsInstance(self.bt,bts.Beamtime)
         self.assertEqual(self.bt.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
+        #self.assertEqual(self.bt.md['bt_experimenters'],[('me','you')])
         self.assertEqual(self.bt.md['bt_piLast'],'Billinge')
         self.assertEqual(self.bt.md['bt_safN'],123)
         self.assertEqual(self.bt.md['bt_wavelength'],0.1812)
@@ -121,6 +123,21 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(bt.md['bt_safN'],123)
         self.assertEqual(bt.md['bt_wavelength'],0.1812)
         os.chdir(self.base_dir)
+    
+    @unittest.expectedFailure
+    def test_execute_end_beamtime(self):
+        os.mkdir(self.home_dir)
+        #self.assertRaises(OSError, lambda: _end_beamtime(base_dir=self.base_dir,bto=self.bt))
+        self.fail('finish making the test')
+        #archive_dir = os.path.expanduser(strftime('./pe2_data/2016/userBeamtimeArchive'))
+
+    @unittest.expectedFailure
+    def test_delete_home_dir_tree(self):
+        self.fail('need to build tests for this function')
+
+    @unittest.expectedFailure
+    def test_inputs_in_end_beamtime(self):
+        self.fail('need to refactor this function and build the tests')
 
     @unittest.expectedFailure
     def test_load_user_yml(self):
@@ -136,20 +153,5 @@ class NewBeamtimeTest(unittest.TestCase):
         # program creates an archive file (standard format, autonamed from info in the session)
         # program places the file in Export directory
         # program gives friendly informational statement to user to email the file to Instr. Scientist.
-    
-    @unittest.expectedFailure
-    def test_execute_end_beamtime(self):
-        os.mkdir(self.home_dir)
-        #self.assertRaises(OSError, lambda: _end_beamtime(base_dir=self.base_dir,bto=self.bt))
-        self.fail('finish making the test')
-        archive_dir = os.path.expanduser(strftime('./pe2_data/2016/userBeamtimeArchive'))
-
-    @unittest.expectedFailure
-    def test_delete_home_dir_tree(self):
-        self.fail('need to build tests for this function')
-
-    @unittest.expectedFailure
-    def test_inputs_in_end_beamtime(self):
-        self.fail('need to refactor this function and build the tests')
 
     
