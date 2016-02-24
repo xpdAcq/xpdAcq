@@ -20,32 +20,32 @@ import shutil
 import datetime
 from time import strftime
 import sys
-from xpdacq.config import DataPath
+import socket
+from xpdacq.glbl import glbl
 
+#datapath = glbl.dp()
+home_dir = glbl.home
+yaml_dir = glbl.yaml_dir
 
 class XPD:
-    _base_path = ''
-    if not _base_path:
-        dp = DataPath(os.path.expanduser('~'))
-        _base_path = dp.base
+
     def _getuid(self):
         return str(uuid.uuid1())
 
     def export(self):
         return self.md
-    
+
     def _yaml_path(self):
-        yaml_dir_path = os.path.join(self._base_path, 'config_base', 'yml')
-        os.makedirs(yaml_dir_path, exist_ok = True) 
+        yaml_dir_path = yaml_dir
+        os.makedirs(yaml_dir_path, exist_ok = True)
         return yaml_dir_path
 
     def _yaml_garage_path(self):
-        yaml_garage_dir_path = os.path.join(self._base_path, 'config_base', 'yml_garage')
-        os.makedirs(yaml_garage_dir_path, exist_ok = True)
+        yaml_garage_dir_path = os.path.join(self._home_path, 'config_base', 'yml_garage')
         # backup directory when user wants to move out objects from default reading list
+        os.makedirs(yaml_garage_dir_path, exist_ok = True)
         return yaml_garage_dir_path
 
-                    
     def _yamify(self):
         '''write a yaml file for this object and place it in config_base/yml'''
         fname = self.name
@@ -250,77 +250,6 @@ class ScanPlan(XPD):
             print('Please use uparrow to edit and retry making your ScanPlan object')
             sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
-        ''' bad logic, will be discarded
-        if self.scan == 'ct':
-            if list(self.sc_params.keys()) == _ct_required_params:
-                pass
-            else:
-                extra_sc_params = list()
-                for el in list(self.sc_params.keys()):
-                    if el not in _ct_required_params:
-                        extra_sc_params.append(el)
-                if extra_sc_params:
-                    print('It seems you are using a Count scan but the scan_params dictionary contain extra parameters {}'.format(extra_sc_params))
-
-                required_sc_params = list()
-                for el in _ct_required_params:
-                    try:
-                        self.sc_params[el]
-                    except KeyError:
-                        required_sc_params.append(el)
-                if required_sc_params:
-                    print('It seems you are using a Count scan but the scan_params dictionary doesn not contain {} which is needed'.format(required_sc_params))
-                
-                print('Please use uparrow to edit and retry making your ScanPlan object')
-                sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
-
-        elif self.scan == 'Tramp':
-            if list(self.sc_params.keys()) == _Tramp_required_params:
-                pass
-            else:
-                extra_sc_params = list()
-                for el in list(self.sc_params.keys()):
-                    if el not in _Tramp_required_params:
-                        extra_sc_params.append(el)
-                if extra_sc_params:
-                    print('It seems you are using a Tramp scan but the scan_params dictionary contain extra parameters {}'.format(extra_sc_params))
-
-                required_sc_params = list()
-                for el in _Tramp_required_params:
-                    try:
-                        self.sc_params[el]
-                    except KeyError:
-                        required_sc_params.append(el)
-                if required_sc_params:
-                    print('It seems you are using a Tramp scan but the scan_params dictionary doesn not contain {} which is needed'.format(required_sc_params))
-                
-                print('Please use uparrow to edit and retry making your ScanPlan object')
-                sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
-                   
-        elif self.scan == 'tseries':
-            if list(self.sc_params.keys()) == _tseries_required_params:
-                pass
-            else:
-                extra_sc_params = list()
-                for el in list(self.sc_params.keys()):
-                    if el not in _tseries_required_params:
-                        extra_sc_params.append(el)
-                if extra_sc_params:
-                    print('It seems you are using a tseries scan but the scan_params dictionary contain extra parameters {}'.format(extra_sc_params))
-
-                required_sc_params = list()
-                for el in _tseries_required_params:
-                    try:
-                        self.sc_params[el]
-                    except KeyError:
-                        required_sc_params.append(el)
-                if required_sc_params:
-                    print('It seems you are using a tseries scan but the scan_params dictionary doesn not contain {} which is needed'.format(required_sc_params))
-                
-                print('Please use uparrow to edit and retry making your ScanPlan object')
-                sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
-        '''
-        
 
 class Union(XPD):
     def __init__(self,sample,scan):
@@ -350,25 +279,24 @@ def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
 
     """
     # FIXME - test purpose
-    B_DIR = os.path.expanduser('~')
     if root_dir is None:
-        root_dir = B_DIR
-    dp = DataPath(root_dir)
+        root_dir = glbl.base
+    #dp = DataPath(root_dir)
     # remove any existing exports
-    if os.path.isdir(dp.export_dir):
-        shutil.rmtree(dp.export_dir)
+    if os.path.isdir(glbl.export_dir):
+        shutil.rmtree(glbl.export_dir)
     f_name = strftime('data4export_%Y-%m-%dT%H%M')
-    os.makedirs(dp.export_dir, exist_ok=True)
+    os.makedirs(glbl.export_dir, exist_ok=True)
     cur_path = os.getcwd()
     try:
-        os.chdir(dp.stem)
+        os.chdir(glbl.base)
         print('Compressing your data now. That may take several minutes, please be patient :)' )
-        tar_return = shutil.make_archive(f_name, ar_format, root_dir=dp.stem,
+        tar_return = shutil.make_archive(f_name, ar_format, root_dir=glbl.base,
                 base_dir='xpdUser', verbose=1, dry_run=False)
-        shutil.move(tar_return, dp.export_dir)
+        shutil.move(tar_return, glbl.export_dir)
     finally:
         os.chdir(cur_path)
-    out_file = os.path.join(dp.export_dir, os.path.basename(tar_return))
+    out_file = os.path.join(glbl.export_dir, os.path.basename(tar_return))
     if not end_beamtime:
         print('New archive file with name '+out_file+' written.')
         print('Please copy this to your local computer or external hard-drive')
@@ -378,16 +306,13 @@ def _clean_md_input(obj):
     ''' strip white space '''
     if isinstance(obj, str):
         return obj.strip()
-    
     elif isinstance(obj, list):
-        clean_list = list()
-        for el in obj:
-            if isinstance(el, str):
-                clean_list.append(el.strip())
-            else: # if not string, just pass
-                clean_list.append(el)
+        clean_list = [_clean_md_input(i) for i in obj]
         return clean_list
-
+    elif isinstance(obj, tuple):
+        clean_tuple = tuple([_clean_md_input(i) for i in obj])
+        return clean_tuple
+    # fixme if we need it, but dicts won't be cleaned recursively......
     elif isinstance(obj, dict):
         clean_dict = dict()
         for k,v in obj.items():
