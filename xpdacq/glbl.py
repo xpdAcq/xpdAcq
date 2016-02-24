@@ -16,9 +16,9 @@ if hostname == BEAMLINE_HOST_NAME:
     pass
     #bluesky.register_mds.register_mds(xpdRE)
 else:
-    print('==== Simulation ====')
     BASE_DIR = os.getcwd()
     ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')
+    print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
 CONFIG_DIR = os.path.join(BASE_DIR, CONFIG_DIR_NAME)
 EXPORT_DIR = os.path.join(HOME_DIR, 'Export')

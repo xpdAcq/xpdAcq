@@ -111,20 +111,16 @@ class NewBeamtimeTest(unittest.TestCase):
     
     def test_start_beamtime(self):
         os.chdir(self.base_dir)
+        # clean encironment checked above, so only check a case that works
         os.mkdir(self.home_dir)
-        #dp = DataPath(self.base_dir)
         bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
-        # we should be in home, are we?
-        self.assertEqual(os.getcwd(),self.home_dir)
-        # there should be a bt object, is there?
-        self.assertIsInstance(bt,bts.Beamtime)
-        # reinsert this when _clean_md passes
-        #self.assertEqual(bt.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
+        self.assertEqual(os.getcwd(),self.home_dir) # we should be in home, are we?
+        self.assertIsInstance(bt,bts.Beamtime) # there should be a bt object, is there?
+        self.assertEqual(bt.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
         self.assertEqual(bt.md['bt_piLast'],'Billinge')
         self.assertEqual(bt.md['bt_safN'],123)
         self.assertEqual(bt.md['bt_wavelength'],0.1812)
         os.chdir(self.base_dir)
-
 
     @unittest.expectedFailure
     def test_load_user_yml(self):

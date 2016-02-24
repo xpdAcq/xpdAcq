@@ -70,6 +70,7 @@ else:
 #if there is a yml file in the normal place, then this was an existing experiment that was interrupted.
 #if len(XPD.loadyamls()) > 0:  --> this will create extra directory 
 if os.path.isdir(YAML_DIR):
+    print("loading bt_bt.yml")
     bt = XPD.loadyamls()[0]
 
 print('OK, ready to go.  To continue, follow the steps in the xpdAcq')

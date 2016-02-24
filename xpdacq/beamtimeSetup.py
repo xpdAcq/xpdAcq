@@ -177,7 +177,8 @@ def _start_beamtime(home_dir=None):
     explist = list(input('default = []  '))
     if explist == '':
         explist = []
-    return _execute_start_beamtime(piname,safn,wavelength,explist,home_dir)
+    bt = _execute_start_beamtime(piname,safn,wavelength,explist,home_dir)
+    return bt
 
 def _execute_start_beamtime(piname,safn,wavelength,explist,home_dir=None):
     PI_name = piname
