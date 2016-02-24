@@ -20,10 +20,12 @@ import shutil
 import datetime
 from time import strftime
 import sys
+import socket
 from xpdacq.glbl import glbl
 
 #datapath = glbl.dp()
 home_dir = glbl.home
+yaml_dir = glbl.yaml_dir
 
 class XPD:
 
@@ -34,7 +36,7 @@ class XPD:
         return self.md
 
     def _yaml_path(self):
-        yaml_dir_path = os.path.join(home_dir, 'config_base', 'yml')
+        yaml_dir_path = yaml_dir
         os.makedirs(yaml_dir_path, exist_ok = True)
         return yaml_dir_path
 

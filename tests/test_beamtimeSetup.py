@@ -166,4 +166,5 @@ class NewBeamtimeTest(unittest.TestCase):
 
     def test_inputs_in_end_beamtime(self):
         self.fail('need to refactor this function and build the tests')
+    '''
     
