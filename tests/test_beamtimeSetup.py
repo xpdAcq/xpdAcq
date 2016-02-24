@@ -37,11 +37,12 @@ class NewBeamtimeTest(unittest.TestCase):
         self.base_dir = glbl.base
         self.home_dir = os.path.join(self.base_dir,'xpdUser')
         self.PI_name = 'Billinge '
-        self.saf_num = 123.67
+        self.saf_num = 123
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
 
     def tearDown(self):
+        os.chdir(self.base_dir)
         if os.path.isdir(self.home_dir):
             shutil.rmtree(self.home_dir)
         if os.path.isdir(os.path.join(self.base_dir,'xpdConfig')):
@@ -108,7 +109,7 @@ class NewBeamtimeTest(unittest.TestCase):
             usrconfig_dir,userscripts_dir,export_dir,import_dir,userysis_dir])
 
     def test_bt_creation(self):
-        self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=glbl.base)
+        self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=self.base_dir)
         self.assertIsInstance(self.bt,bts.Beamtime)
         self.assertEqual(self.bt.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
         self.assertEqual(self.bt.md['bt_piLast'],'Billinge')
@@ -124,14 +125,24 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertIsInstance(bt,bts.Beamtime)
         #maybe some more edge cases tested here?
     
-    '''def test_start_beamtime(self):
+    def test_start_beamtime(self):
         os.chdir(self.base_dir)
         os.mkdir(self.home_dir)
-        dp = DataPath(self.base_dir)
-        tryagain = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.wavelength,base_dir=self.base_dir)
-        os.chdir(self.base_dir)
+        #dp = DataPath(self.base_dir)
+        bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=self.base_dir)
+        # we should be in home, are we?
+        self.assertEqual(os.getcwd(),self.home_dir)
+        # there should be a bt object, is there?
+        self.assertIsInstance(bt,bts.Beamtime)
+        #self.assertEqual(bt.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
+        self.assertEqual(bt.md['bt_piLast'],'Billinge')
+        self.assertEqual(bt.md['bt_safN'],123)
+        self.assertEqual(bt.md['bt_wavelength'],0.1812)
 
-    def test_load_user_yml(self):
+        os.chdir(self.base_dir)
+        #self.fail('make tests here')
+
+    '''def test_load_user_yml(self):
         self.fail('need to build this function and the tests')
         # after start_beamtime, Sanjit places user yml.tar (or some other archive format) file into xpdUser directory
         # then runs _load_user_yml() which unpacks and installs it in yml_dir
@@ -155,4 +166,4 @@ class NewBeamtimeTest(unittest.TestCase):
 
     def test_inputs_in_end_beamtime(self):
         self.fail('need to refactor this function and build the tests')
-    '''
+    

@@ -183,8 +183,8 @@ def _execute_start_beamtime(piname,safn,wavelength,explist,base_dir=None):
     saf_num = safn
     wavelength = wavelength
     experimenters = explist
-    _make_clean_env(glbl.dp)
-    os.chdir(glbl.home)
+    _make_clean_env()
+    os.chdir(home_dir)
     bt = Beamtime(PI_name,saf_num,wavelength,experimenters)
     return bt
 
