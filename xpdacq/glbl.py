@@ -7,7 +7,7 @@ from time import strftime
 HOME_DIR_NAME = 'xpdUser'
 BLCONFIG_DIR_NAME = 'xpdConfig'
 BEAMLINE_HOST_NAME = 'xf28id1-ws2'
-BASE_DIR = os.path.expanduser('~/')
+BASE_DIR = os.path.expanduser('~/pe2_data')
 ARCHIVE_BASE_DIR = os.path.expanduser('~/pe2_data/.userBeamtimeArchive')
 USER_BACKUP_DIR_NAME = strftime('%Y')
 
@@ -48,7 +48,7 @@ if not os.path.isfile(tmp_safname):
 
 
 class glbl():
-	#this behavior can be changed to include Tim's logic
+    #this behavior can be changed to include Tim's logic
     base = BASE_DIR
     home = HOME_DIR
     xpdconfig = BLCONFIG_DIR
