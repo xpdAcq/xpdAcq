@@ -107,7 +107,10 @@ def _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto):
                             str(safn).strip(), strftime('%Y-%m-%d-%H%M'), btuid]
                             )
     archive_f_name = os.path.join(archive_dir, full_info) + ext
-    shutil.copyfile(tar_ball, archive_f_name) # remote archive'
+    shutil.copyfile(tar_ball, archive_f_name) # remote archive
+    if not os.path.isfile(archive_f_name):
+        raise RuntimeError('Your remote copy is not saved properly. Please rerun _end_beamtime() again')
+        # hope this never happen, but set a protection here
     return archive_f_name
 
 def  _get_user_confirmation():
@@ -123,7 +126,9 @@ def _confirm_archive(archive_f_name):
         raise RuntimeError('xpdUser directory delete operation cancelled at Users request')
 
 def _delete_home_dir_tree(base_dir, archive_f_name, bto):
-    #dp = DataPath(base_dir)
+    # extra step: to make sure remote archive exists
+    if not os.path.isdfile(archive_f_name):
+        raise FileNotFoundError ('Your remote copy does not exist, please make sure remote drive is properly mounted')
     os.chdir(glbl.base)   # don't remember the name, but move up one directory out of xpdUser before deleting it!
     shutil.rmtree(glbl.home)
     os.makedirs(glbl.home, exist_ok=True)
