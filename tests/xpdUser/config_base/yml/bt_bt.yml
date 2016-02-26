@@ -1,0 +1,10 @@
+!!python/object:xpdacq.beamtime.Beamtime
+md:
+  bt_experimenters: [a, s, d, f]
+  bt_piLast: asdf
+  bt_safN: asdf
+  bt_uid: 619c5930-dcdf-11e5-b3e9-28b2bd4521c0
+  bt_usermd: {}
+  bt_wavelength: asdf
+name: bt
+type: bt

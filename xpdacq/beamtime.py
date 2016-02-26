@@ -61,12 +61,16 @@ class XPD:
         XPD._update_objlist(fname)
         fpath = os.path.join(self._yaml_path(), fname)
         lname = os.path.join(yaml_dir,'_acqobj_list.yml')
-        if os.path.isfile(lname):
-            pass
-        else:
-            obj_list = [fname]
-            with open(lname, 'w') as fout:
-                yaml.dump(obj_list, fout)
+        with open(lname, 'w') as fout:
+            yaml.dump(XPD.objlist, fout)
+
+#        if os.path.isfile(lname):
+#            with open(lname, 'a') as fout:
+#                yaml.dump(, fout)
+#        else:
+#            obj_list = [XPD.obj_list]
+#            with open(lname, 'w') as fout:
+#                yaml.dump(obj_list, fout)
         if isinstance(fpath, str):
             with open(fpath, 'w') as fout:
                 yaml.dump(self, fout)
