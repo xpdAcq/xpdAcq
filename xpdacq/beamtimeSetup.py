@@ -18,6 +18,7 @@ import os
 import datetime
 import shutil
 from time import strftime
+from xpdacq.utils import _graceful_exit
 from xpdacq.beamtime import Beamtime, XPD
 from xpdacq.beamtime import export_data
 from xpdacq.glbl import glbl
@@ -28,7 +29,6 @@ all_folders = glbl.allfolders
 
 def _any_input_method(inp_func):
     return inp_func()
-
 
 def _make_clean_env():
     '''Make a clean environment for a new user
@@ -120,7 +120,7 @@ def _confirm_archive(archive_f_name):
     if conf in ('y','Y'):
         return
     else:
-        raise RuntimeError('xpdUser directory delete operation cancelled at Users request')
+        sys.exit(_graceful_exit('xpdUser directory delete operation cancelled at Users request'))
 
 def _delete_home_dir_tree(base_dir, archive_f_name, bto):
     #dp = DataPath(base_dir)
@@ -139,29 +139,27 @@ def get_full_ext(path, post_ext=''):
         return get_full_ext(path, ext + post_ext)
     return post_ext
 
-
 def _check_empty_environment(base_dir=None):
     if base_dir is None:
         base_dir = glbl.base
     #dp = DataPath(base_dir)
     if os.path.exists(home_dir):
         if not os.path.isdir(home_dir):
-            raise RuntimeError("Expected a folder, got a file.  "
-                               "Please Talk to beamline staff")
+            sys.exit(_graceful_exit("Expected a folder, got a file.  "
+                               "Please Talk to beamline staff"))
         files = os.listdir(home_dir) # that also list dirs that have been created
         if len(files) > 1:
-            #print(len(files))
-            raise RuntimeError("Unexpected files in {}, you need to run _end_beamtime(). Please Talk to beamline staff".format(home_dir))
+            sys.exit(_graceful_exit("Unexpected files in {}, you need to run _end_beamtime(). Please Talk to beamline staff".format(home_dir)))
         elif len(files) == 1:
             tf, = files
             if 'tar' not in tf:
-                raise RuntimeError("Expected a tarball of some sort, found {} "
+                sys.exit(_graceful_exit("Expected a tarball of some sort, found {} "
                                    "Please talk to beamline staff"
-                                   .format(tf))
+                                   .format(tf)))
             os.unlink(os.path.join(home_dir, tf))
     else:
-        raise RuntimeError("The xpdUser directory appears not to exist "
-                               "Please Talk to beamline staff")
+        sys.exit(_graceful_exit("The xpdUser directory appears not to exist "
+                               "Please Talk to beamline staff"))
 
 def _start_beamtime(home_dir=None):
     if home_dir is None:

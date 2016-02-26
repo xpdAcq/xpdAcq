@@ -36,12 +36,12 @@ class NewBeamtimeTest(unittest.TestCase):
     def test_check_empty_environment(self):
         #sanity check. xpdUser directory exists.  First make sure the code works right when it doesn't exist.
         self.assertFalse(os.path.isdir(self.home_dir))
-        self.assertRaises(RuntimeError, lambda:_check_empty_environment(base_dir = self.base_dir))
+        self.assertRaises(SystemExit, lambda:_check_empty_environment(base_dir = self.base_dir))
         #now put something there but make it a file instead of a directory
         self.newfile = os.path.join(self.base_dir,'touched.txt')
         open(self.newfile, 'a').close()
         self.assertTrue(os.path.isfile(self.newfile))
-        self.assertRaises(RuntimeError, lambda:_check_empty_environment(base_dir = self.base_dir))
+        self.assertRaises(SystemExit, lambda:_check_empty_environment(base_dir = self.base_dir))
         os.remove(self.newfile)
         #now make it the proper thing...xpdUser directory'
         os.mkdir(self.home_dir)
@@ -50,31 +50,31 @@ class NewBeamtimeTest(unittest.TestCase):
         self.newfile = os.path.join(self.home_dir,'touched.txt')
         open(self.newfile, 'a').close()
         self.assertTrue(os.path.isfile(self.newfile))
-        self.assertRaises(RuntimeError, lambda:_check_empty_environment(base_dir = self.base_dir))
+        self.assertRaises(SystemExit, lambda:_check_empty_environment(base_dir = self.base_dir))
         #os.remove(self.newfile)
         #if it is just a tar file it will pass (tested below) but if there is a tar file plus sthg else it should fail with RuntimeError
         self.newfile2 = os.path.join(self.home_dir,'touched.tar')
         open(self.newfile2, 'a').close()
         self.assertTrue(os.path.isfile(self.newfile2))
-        self.assertRaises(RuntimeError, lambda:_check_empty_environment(base_dir = self.base_dir))
+        self.assertRaises(SystemExit, lambda:_check_empty_environment(base_dir = self.base_dir))
         os.remove(self.newfile)
         os.remove(self.newfile2)
         #now do the same but with directories
         self.newdir = os.path.join(self.home_dir,'userJunk')
         os.mkdir(self.newdir)
         self.assertTrue(os.path.isdir(self.newdir))
-        self.assertRaises(RuntimeError, lambda:_check_empty_environment(base_dir = self.base_dir))
+        self.assertRaises(SystemExit, lambda:_check_empty_environment(base_dir = self.base_dir))
         #add a badly named file
         self.newfile = os.path.join(self.home_dir,'touched.txt')
         open(self.newfile, 'a').close()
         self.assertTrue(os.path.isfile(self.newfile))
-        self.assertRaises(RuntimeError, lambda:_check_empty_environment(base_dir = self.base_dir))
+        self.assertRaises(SystemExit, lambda:_check_empty_environment(base_dir = self.base_dir))
         os.remove(self.newfile)
         #add a tar file, but should still fail because there is also another directory there
         self.newfile = os.path.join(self.home_dir,'touched.tar')
         open(self.newfile, 'a').close()
         self.assertTrue(os.path.isfile(self.newfile))
-        self.assertRaises(RuntimeError, lambda:_check_empty_environment(base_dir = self.base_dir))
+        self.assertRaises(SystemExit, lambda:_check_empty_environment(base_dir = self.base_dir))
         os.remove(self.newfile)
 
     def test_make_clean_env(self):
