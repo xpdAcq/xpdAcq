@@ -19,7 +19,7 @@ import datetime
 import shutil
 from time import strftime
 from xpdacq.beamtime import Beamtime, XPD
-from xpdacq.beamtime import export_data, _clean_md_input
+from xpdacq.beamtime import _clean_md_input
 from xpdacq.glbl import glbl
 
 #datapath = glbl.dp()
@@ -94,12 +94,12 @@ def _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto):
 
     This function does three things:
 
-      1. runs export_data to get all of the current data
+      1. runs _bundle_and_archive_userarea() to get all of the current data
       2. copies the tarball off to an archive location
       3. removes all the un-tarred data
 
     '''
-    tar_ball = export_data(base_dir, end_beamtime=True)
+    tar_ball = _bundle_and_archive_userarea(base_dir, end_beamtime=True)
     ext = get_full_ext(tar_ball)
     os.makedirs(archive_dir, exist_ok=True)
 
@@ -137,6 +137,41 @@ def _delete_home_dir_tree(base_dir, archive_f_name, bto):
     final_path = os.path.join(glbl.home, os.path.basename(archive_f_name)) # local archive
     #print("Final archive file at {}".format(final_path))
     return 'local copy of tarball for user: '+final_path
+
+
+def _bundle_and_archive_userarea(root_dir=None, ar_format='gztar', end_beamtime=False):
+    """Create a tarball of all of the data in the user folders.
+
+    This assumes that the root directory is laid out prescribed by DataPath.
+
+    This function will:
+
+      - remove any existing tarball
+      - create a new (timestamped) tarball
+
+    """
+    if root_dir is None:
+        root_dir = glbl.base
+    #dp = DataPath(root_dir)
+    # remove any existing exports
+    if os.path.isdir(glbl.export_dir):
+        shutil.rmtree(glbl.export_dir)
+    f_name = strftime('data4export_%Y-%m-%dT%H%M')
+    os.makedirs(glbl.export_dir, exist_ok=True)
+    cur_path = os.getcwd()
+    try:
+        os.chdir(glbl.base)
+        print('Compressing your data now. That may take several minutes, please be patient :)' )
+        tar_return = shutil.make_archive(f_name, ar_format, root_dir=glbl.base,
+                base_dir='xpdUser', verbose=1, dry_run=False)
+        shutil.move(tar_return, glbl.export_dir)
+    finally:
+        os.chdir(cur_path)
+    out_file = os.path.join(glbl.export_dir, os.path.basename(tar_return))
+    if not end_beamtime:
+        print('New archive file with name '+out_file+' written.')
+        print('Please copy this to your local computer or external hard-drive')
+    return out_file
 
 def get_full_ext(path, post_ext=''):
     path, ext = os.path.splitext(path)
