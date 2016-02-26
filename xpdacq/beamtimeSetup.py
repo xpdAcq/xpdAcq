@@ -55,7 +55,7 @@ def _make_clean_env():
 
 def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
     if archive_dir is None:
-        archive_dir = os.path.expanduser(strftime('~/pe2_data/%Y/userBeamtimeArchive'))
+        archive_dir = glbl.archive_dir 
     if base_dir is None:
         base_dir = glbl.base
     if bto is None:
@@ -64,11 +64,13 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
                       # FIXME - load_yaml directly ?
         except NameError:
             bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
-    #dp = DataPath(base_dir)
     files = os.listdir(glbl.home)
+
+    # this logic might not be needed as we don't leave local tarball anymore
     if len(files)==1:
         print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
         return
+    
     try:
         piname = bto.md['bt_piLast']
     except AttributeError:
@@ -81,11 +83,11 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
         btuid = bto.md['bt_uid'][:7]
     except AttributeError:
         btuid = ''
-    archive_f = _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto)
+    archive_f = _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir)
     _confirm_archive(archive_f)
     _delete_home_dir_tree(base_dir,archive_f, bto)
 
-def _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto):
+def _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir):
     '''cleans up at the end of a beamtime
 
     Function takes all the user-generated tifs and config files, etc.,
@@ -99,18 +101,19 @@ def _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto):
       3. removes all the un-tarred data
 
     '''
-    tar_ball = _bundle_and_archive_userarea(base_dir, end_beamtime=True)
-    ext = get_full_ext(tar_ball)
+    #tar_ball = _bundle_and_archive_userarea(base_dir, end_beamtime=True)
+    #ext = get_full_ext(tar_ball)
     os.makedirs(archive_dir, exist_ok=True)
 
     full_info = '_'.join([piname.strip().replace(' ', ''),
                             str(safn).strip(), strftime('%Y-%m-%d-%H%M'), btuid]
                             )
-    archive_f_name = os.path.join(archive_dir, full_info) + ext
-    shutil.copyfile(tar_ball, archive_f_name) # remote archive
+    archive_f_name = os.path.join(archive_dir, full_info)
+    _bundle_and_archive_userarea(archive_f_name) # export data to remote drive
+    #shutil.copyfile(tar_ball, archive_f_name) # remote archive
     if not os.path.isfile(archive_f_name):
         raise RuntimeError('Your remote copy is not saved properly. Please rerun _end_beamtime() again')
-        # hope this never happen, but set a protection here
+        # usd gracefull_warning in util laster
     return archive_f_name
 
 def  _get_user_confirmation():
@@ -136,10 +139,10 @@ def _delete_home_dir_tree(base_dir, archive_f_name, bto):
     os.chdir(glbl.home)   # now move back into xpdUser so everyone is not confused....
     final_path = os.path.join(glbl.home, os.path.basename(archive_f_name)) # local archive
     #print("Final archive file at {}".format(final_path))
-    return 'local copy of tarball for user: '+final_path
+    #return 'local copy of tarball for user: '+final_path
+    return # retrun nothing
 
-
-def _bundle_and_archive_userarea(root_dir=None, ar_format='gztar', end_beamtime=False):
+def _bundle_and_archive_userarea(archive_f_name, root_dir=None, ar_format='gztar', end_beamtime=False):
     """Create a tarball of all of the data in the user folders.
 
     This assumes that the root directory is laid out prescribed by DataPath.
@@ -154,24 +157,24 @@ def _bundle_and_archive_userarea(root_dir=None, ar_format='gztar', end_beamtime=
         root_dir = glbl.base
     #dp = DataPath(root_dir)
     # remove any existing exports
-    if os.path.isdir(glbl.export_dir):
-        shutil.rmtree(glbl.export_dir)
-    f_name = strftime('data4export_%Y-%m-%dT%H%M')
-    os.makedirs(glbl.export_dir, exist_ok=True)
+    #if os.path.isdir(glbl.export_dir):
+        #shutil.rmtree(glbl.export_dir)
+    #f_name = archive_f_name
+    #os.makedirs(glbl.export_dir, exist_ok=True)
     cur_path = os.getcwd()
     try:
         os.chdir(glbl.base)
         print('Compressing your data now. That may take several minutes, please be patient :)' )
-        tar_return = shutil.make_archive(f_name, ar_format, root_dir=glbl.base,
+        tar_return = shutil.make_archive(archive_f_name, ar_format, root_dir=glbl.base,
                 base_dir='xpdUser', verbose=1, dry_run=False)
-        shutil.move(tar_return, glbl.export_dir)
+        #shutil.move(tar_return, glbl.export_dir)
     finally:
         os.chdir(cur_path)
-    out_file = os.path.join(glbl.export_dir, os.path.basename(tar_return))
-    if not end_beamtime:
-        print('New archive file with name '+out_file+' written.')
-        print('Please copy this to your local computer or external hard-drive')
-    return out_file
+    #out_file = os.path.join(glbl.archive_dir, os.path.basename(tar_return))
+    #if not end_beamtime:
+        #print('New archive file with name '+out_file+' written.')
+        #print('Please copy this to your local computer or external hard-drive')
+    return tar_return
 
 def get_full_ext(path, post_ext=''):
     path, ext = os.path.splitext(path)
