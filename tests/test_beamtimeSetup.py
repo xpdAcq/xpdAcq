@@ -12,7 +12,10 @@ from xpdacq.xpdacq import _hostname
 from xpdacq.glbl import glbl
 
 import xpdacq.beamtimeSetup as bts
-from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment
+from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_execute_start_beamtime,_check_empty_environment
+
+# block of functions used in _end_beamtime
+from xpdacq.beamtimeSetup import _end_beamtime, _execute_end_beamtime, _get_user_confirmation, _confirm_archive, _delete_home_dir_tree, get_full_ext 
 
 
 class NewBeamtimeTest(unittest.TestCase): 
@@ -123,7 +126,39 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(bt.md['bt_safN'],123)
         self.assertEqual(bt.md['bt_wavelength'],0.1812)
         os.chdir(self.base_dir)
+  
+    def test_end_beamtime(self):    
+         for el in glbl.allfolders:
+            os.makedirs(el, exist_ok =True)
+            dummy_f = os.path.join(el, 'touched.txt')
+            open(dummy_f, 'a').close()
+        
+        # is remote file saved?
+        #self.aeertTrue(
+
+    def test_delete_home_dir_tree(self):
+        # test _delete_home_dir_tree step by step
+        
+        # Ideal case: every directry was already created properly
+        for el in glbl.allfolders:
+            os.makedirs(el, exist_ok =True)
+            dummy_f = os.path.join(el, 'touched.txt')
+            open(dummy_f, 'a').close()
+                        
+        # no.1 change dir
+        os.chdir(glbl.tiff_dir) # wrong assumption
+        os.chdir(glbl.base)
+        self.assertEqual(os.getcwd(), glbl.base)
+        
+        # no.2 rmtree
+        shutil.rmtree(glbl.home)
+        for el in glbl.allfolders: # is it clean?
+            self.assertFalse(os.path.isdir(el))
     
+        # no.4 move back to xpdUser
+        os.chdir(glbl.home)
+        self.assertTrue(os.getcwd(), glbl.home)
+        
     @unittest.expectedFailure
     def test_execute_end_beamtime(self):
         os.mkdir(self.home_dir)
