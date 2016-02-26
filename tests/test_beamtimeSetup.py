@@ -126,22 +126,25 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(bt.md['bt_safN'],123)
         self.assertEqual(bt.md['bt_wavelength'],0.1812)
         os.chdir(self.base_dir)
-   
+  
+    def test_end_beamtime(self):    
+         for el in glbl.allfolders:
+            os.makedirs(el, exist_ok =True)
+            dummy_f = os.path.join(el, 'touched.txt')
+            open(dummy_f, 'a').close()
+        
+        # is remote file saved?
+        #self.aeertTrue(
+
     def test_delete_home_dir_tree(self):
         # test _delete_home_dir_tree step by step
         
         # Ideal case: every directry was already created properly
         for el in glbl.allfolders:
             os.makedirs(el, exist_ok =True)
-            dummy_f = 'touched.txt'
+            dummy_f = os.path.join(el, 'touched.txt')
             open(dummy_f, 'a').close()
-        
-        # no.0 does remote copy exist?
-        archive_f_name = os.path.join(glbl.archive_dir, 'end_beamtime.tar')
-        self.assertRaises(FileNotFoundError, lambda:_delete_home_dir_tree(glbl.base, archive_f_name, None))
-        open(archive_f_name, 'a').close()
-        self.assertTrue(os.path.isfile(archive_f_name))
-                
+                        
         # no.1 change dir
         os.chdir(glbl.tiff_dir) # wrong assumption
         os.chdir(glbl.base)
@@ -152,21 +155,10 @@ class NewBeamtimeTest(unittest.TestCase):
         for el in glbl.allfolders: # is it clean?
             self.assertFalse(os.path.isdir(el))
     
-        # no.3 makedirs and copy
-        os.makedirs(glbl.home, exist_ok=True)
-        shutil.copy(archive_f_name, glbl.home)
-        self.assertTrue(os.path.isfile(archive_f_name))
-        self.assertTrue(os.path.isdir(glbl.home))
-
         # no.4 move back to xpdUser
         os.chdir(glbl.home)
         self.assertTrue(os.getcwd(), glbl.home)
         
-        # no.5 return local tarball path
-        expected_final_path = os.path.join(glbl.home, os.path.basename(archive_f_name))
-        self.assertTrue(expected_final_path, lambda:_delete_home_dir_tree(glbl.base, archive_f_name, None))
-
-   
     @unittest.expectedFailure
     def test_execute_end_beamtime(self):
         os.mkdir(self.home_dir)

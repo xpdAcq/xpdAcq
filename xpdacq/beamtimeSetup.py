@@ -86,7 +86,9 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
     archive_f = _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir)
     _confirm_archive(archive_f)
     _delete_home_dir_tree(base_dir,archive_f, bto)
-
+    
+    return archive_f
+    
 def _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir):
     '''cleans up at the end of a beamtime
 
@@ -128,16 +130,15 @@ def _confirm_archive(archive_f_name):
     else:
         raise RuntimeError('xpdUser directory delete operation cancelled at Users request')
 
-def _delete_home_dir_tree(base_dir, archive_f_name, bto):
-    # extra step: to make sure remote archive exists
-    if not os.path.isdfile(archive_f_name):
-        raise FileNotFoundError ('Your remote copy does not exist, please make sure remote drive is properly mounted')
+def _delete_home_dir_tree(base_dir):
+    #if not os.path.isdfile(archive_f_name):
+        #raise FileNotFoundError ('Your remote copy does not exist, please make sure remote drive is properly mounted')
     os.chdir(glbl.base)   # don't remember the name, but move up one directory out of xpdUser before deleting it!
     shutil.rmtree(glbl.home)
     os.makedirs(glbl.home, exist_ok=True)
-    shutil.copy(archive_f_name, glbl.home)
+    #shutil.copy(archive_f_name, glbl.home)
     os.chdir(glbl.home)   # now move back into xpdUser so everyone is not confused....
-    final_path = os.path.join(glbl.home, os.path.basename(archive_f_name)) # local archive
+    #final_path = os.path.join(glbl.home, os.path.basename(archive_f_name)) # local archive
     #print("Final archive file at {}".format(final_path))
     #return 'local copy of tarball for user: '+final_path
     return # retrun nothing
