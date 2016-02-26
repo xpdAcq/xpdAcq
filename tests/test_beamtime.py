@@ -73,14 +73,12 @@ class NewExptTest(unittest.TestCase):
         xpdobj2.name = ' test2'
         xpdobj2.type = 'b t'
         yaml_dir = xpdobj2._yaml_path()
-        testfname = os.path.join(yaml_dir,'bt_test2.yml')
-        probe = xpdobj2._yamify()
+        testfname2 = os.path.join(yaml_dir,'bt_test2.yml')
+        probe2 = xpdobj2._yamify()
         self.assertEqual(XPD.objlist,['bt_test.yml','bt_test2.yml'])
 
-#        self.assertEqual(probe,testfname)
-#        self.assertTrue(os.path.isfile(probe))
-#        # should be no acqobj list initially
-#        self.assertTrue(os.path.isfile(os.path.join(yaml_dir,'_acqobj_list.yml')))
+        self.assertEqual(probe,testfname)
+        self.assertTrue(os.path.isfile(probe))
 #        olist = xpdobj.loadyamls()
 #        self.assertEqual(olist[0].name,'bt')
 #        self.assertEqual(olist[0].type,'bt')
