@@ -40,15 +40,39 @@ class NewExptTest(unittest.TestCase):
     def test_yaml_path(self):
     	self.fail('need a test for _yaml_path')
 
+    @unittest.expectedFailure
+    def test_list(self):
+        self.fail('need a test for list')
+    
+#    @unittest.skip('skipping yaml list')
+#    def test_get_yaml_list(self):
+#    	xpdobj = XPD()
+#    	yaml_dir = glbl.yaml_dir
+#        # create a yaml list yml file
+#    	lname = os.path.join(yaml_dir,'_acqobj_list.yml')
+#        open(lname, 'w').close()
+#        # now get the list of yamls.
+#    	olist = xpdobj._get_yaml_list()
+#        assertEqual(olist,[os.path.join(yaml_dir,'bt_b.yml')])
+#        #self.fail('need a test for list')
+
+    @unittest.expectedFailure
+    def test_loadyamls(self):
+        self.fail('need a test for list')
+
     def test_yamify(self):
         xpdobj = XPD()
-        xpdobj.name = 'test'
-        xpdobj.type = 'bt'
+        xpdobj.name = ' test'
+        xpdobj.type = 'b t'
         yaml_dir = xpdobj._yaml_path()
         testfname = os.path.join(yaml_dir,'bt_test.yml')
-        probe = xpdobj._yamify()
-        self.assertEqual(probe,testfname)
-
-
+#        probe = xpdobj._yamify()
+#        self.assertEqual(probe,testfname)
+#        self.assertTrue(os.path.isfile(probe))
+#        # should be no acqobj list initially
+#        self.assertTrue(os.path.isfile(os.path.join(yaml_dir,'_acqobj_list.yml')))
+#        olist = xpdobj.loadyamls()
+#        self.assertEqual(olist[0].name,'bt')
+#        self.assertEqual(olist[0].type,'bt')
 
 

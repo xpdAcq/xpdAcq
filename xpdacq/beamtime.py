@@ -37,9 +37,8 @@ class XPD:
         return self.md
 
     def _yaml_path(self):
-        yaml_dir_path = yaml_dir
-        os.makedirs(yaml_dir_path, exist_ok = True)
-        return yaml_dir_path
+        os.makedirs(yaml_dir, exist_ok = True)
+        return yaml_dir
 
     def _yaml_garage_path(self):
         yaml_garage_dir_path = os.path.join(self._home_path, 'config_base', 'yml_garage')
@@ -49,9 +48,18 @@ class XPD:
 
     def _yamify(self):
         '''write a yaml file for this object and place it in config_base/yml'''
-        fname = self.name
+        oname = self.name
         ftype = self.type
-        fpath = os.path.join(self._yaml_path(), str(ftype) +'_'+ str(fname) +'.yml')
+        cleaned_oname = _clean_name(oname)
+        cleaned_ftype = _clean_name(ftype)
+        fname = str(cleaned_ftype) +'_'+ str(cleaned_oname) +'.yml'
+        fpath = os.path.join(self._yaml_path(), fname)
+#        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
+#        if os.path.isfile(lname):
+#            pass
+#        else:
+#            obj_list = [fname]
+#            yaml.dump(obj_list,lname)
         if isinstance(fpath, str):
             with open(fpath, 'w') as fout:
                 yaml.dump(self, fout)
@@ -60,7 +68,7 @@ class XPD:
         return fpath
 
     @classmethod
-    def _get_ymls(cls):
+    def _get_yaml_list(cls):
         fpath = cls._yaml_path
         yamls = os.listdir(fpath)
         return yamls
