@@ -1,12 +1,12 @@
 #UC1
-# user is ready to set up her acquire objects
-# user checks the current bt.list and sees just bt Beamtime object
-# user creates an experiment object by typing new_exp() 
+# 1. user is ready to set up her acquire objects
+# 2. user checks the current bt.list and sees just bt Beamtime object
+# 3. user creates an experiment object by typing new_exp() 
   simon working on this
-# program asks the exp name
-# program removes internal and external white-spaces and checks if the experiment exists
-   # if name exists program exits with message "experiment with name %s exists.  If you are trying to update it please use 'edit_exp'"
-   # if it doesn't exist:
+# 4. program asks the exp name
+# 5. program removes internal and external white-spaces and checks if the experiment exists
+#   5.1 if name exists program exits with message "experiment with name %s exists.  If you are trying to update it please use 'edit_exp'"
+#   5.2 if it doesn't exist:
       # create exp uid
       # show user the existing metada that will be included from the bt object. Say "to change existing metadata for all experiments run edit_bt. To extend metadata just for current experiment ..." (have to think of a good way of doing this)
       # ask user for exp metadata and set it.

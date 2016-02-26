@@ -22,6 +22,7 @@ from time import strftime
 import sys
 import socket
 from xpdacq.glbl import glbl
+from xpdacq.utils import _graceful_exit
 
 #datapath = glbl.dp()
 home_dir = glbl.home
@@ -301,6 +302,14 @@ def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
         print('New archive file with name '+out_file+' written.')
         print('Please copy this to your local computer or external hard-drive')
     return out_file
+    
+def _clean_name(expname,max_length=25):
+    '''strips a string, but also removes internal whitespace
+    '''
+    cleaned = "".join(expname.split())
+    if len(cleaned) > max_length:
+        sys.exit(_graceful_exit('Please try a name for your object that is < {} characters long'.format(str(max_length))))
+    return cleaned
 
 def _clean_md_input(obj):
     ''' strip white space '''
@@ -329,6 +338,3 @@ def _clean_md_input(obj):
 
     else:
         return obj
-
-
-    

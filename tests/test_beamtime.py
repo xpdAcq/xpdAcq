@@ -4,6 +4,7 @@ import shutil
 from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment
 import xpdacq.beamtimeSetup as bts
 from xpdacq.glbl import glbl
+from xpdacq.beamtime import _clean_name
 
 class NewExptTest(unittest.TestCase): 
 
@@ -23,8 +24,10 @@ class NewExptTest(unittest.TestCase):
         if os.path.isdir(os.path.join(self.base_dir,'xpdConfig')):
             shutil.rmtree(os.path.join(self.base_dir,'xpdConfig'))        
 
-    def test_new_exp(self):
-    	self.yaml_dir = os.path.join(self.home_dir,'config_base','yml')
-    	self.assertIsInstance(self.bt,bts.Beamtime)
-    	self.assertTrue(os.path.exists(self.yaml_dir))
-    	#self.fail('need a test')
+    def test_clean_name(self):
+    	# make sure yaml dir and bt object exists
+    	name = ' my test experiment '
+    	cleaned = _clean_name(name)
+    	self.assertEqual(cleaned,'mytestexperiment')
+    	name = ' my way too long experiment name from hell. Dont let users do this already! '
+    	self.assertRaises(SystemExit, lambda:_clean_name(name))
