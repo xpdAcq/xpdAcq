@@ -7,7 +7,7 @@ from xpdacq.beamtime import XPD
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import _clean_name
 
-class NewExptTest(unittest.TestCase): 
+class NewExptTest(unittest.TestCase):
 
     def setUp(self):
         self.base_dir = glbl.base
@@ -66,7 +66,17 @@ class NewExptTest(unittest.TestCase):
         xpdobj.type = 'b t'
         yaml_dir = xpdobj._yaml_path()
         testfname = os.path.join(yaml_dir,'bt_test.yml')
-#        probe = xpdobj._yamify()
+        XPD.objlist = []
+        probe = xpdobj._yamify()
+        self.assertEqual(XPD.objlist,['bt_test.yml'])
+        xpdobj2 = XPD()
+        xpdobj2.name = ' test2'
+        xpdobj2.type = 'b t'
+        yaml_dir = xpdobj2._yaml_path()
+        testfname = os.path.join(yaml_dir,'bt_test2.yml')
+        probe = xpdobj2._yamify()
+        self.assertEqual(XPD.objlist,['bt_test.yml','bt_test2.yml'])
+
 #        self.assertEqual(probe,testfname)
 #        self.assertTrue(os.path.isfile(probe))
 #        # should be no acqobj list initially
@@ -75,4 +85,9 @@ class NewExptTest(unittest.TestCase):
 #        self.assertEqual(olist[0].name,'bt')
 #        self.assertEqual(olist[0].type,'bt')
 
+    def test_update_objlist(self):
+        xpdobj = XPD()
+        XPD.objlist = []
+        xpdobj._update_objlist('testme')
+        self.assertEqual(xpdobj.objlist,['testme'])
 

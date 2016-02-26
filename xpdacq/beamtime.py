@@ -29,12 +29,17 @@ home_dir = glbl.home
 yaml_dir = glbl.yaml_dir
 
 class XPD:
-
+    objlist = []
     def _getuid(self):
         return str(uuid.uuid1())
 
     def export(self):
         return self.md
+
+    @classmethod
+    def _update_objlist(cls,name):
+        cls.objlist.append(name)
+        return cls.objlist
 
     def _yaml_path(self):
         os.makedirs(yaml_dir, exist_ok = True)
@@ -53,6 +58,7 @@ class XPD:
         cleaned_oname = _clean_name(oname)
         cleaned_ftype = _clean_name(ftype)
         fname = str(cleaned_ftype) +'_'+ str(cleaned_oname) +'.yml'
+        XPD._update_objlist(fname)
         fpath = os.path.join(self._yaml_path(), fname)
 #        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
 #        if os.path.isfile(lname):
