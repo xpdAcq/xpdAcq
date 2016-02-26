@@ -3,6 +3,7 @@ import os
 import shutil
 from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment
 import xpdacq.beamtimeSetup as bts
+from xpdacq.beamtime import XPD
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import _clean_name
 
@@ -31,3 +32,23 @@ class NewExptTest(unittest.TestCase):
     	self.assertEqual(cleaned,'mytestexperiment')
     	name = ' my way too long experiment name from hell. Dont let users do this already! '
     	self.assertRaises(SystemExit, lambda:_clean_name(name))
+    	# what if user gives something that is not a string?
+    	name = []
+    	self.assertRaises(SystemExit, lambda:_clean_name(name))
+    
+    @unittest.expectedFailure
+    def test_yaml_path(self):
+    	self.fail('need a test for _yaml_path')
+
+    def test_yamify(self):
+        xpdobj = XPD()
+        xpdobj.name = 'test'
+        xpdobj.type = 'bt'
+        yaml_dir = xpdobj._yaml_path()
+        testfname = os.path.join(yaml_dir,'bt_test.yml')
+        probe = xpdobj._yamify()
+        self.assertEqual(probe,testfname)
+
+
+
+

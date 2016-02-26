@@ -57,6 +57,7 @@ class XPD:
                 yaml.dump(self, fout)
         else:
             yaml.dump(self, fpath)
+        return fpath
 
     @classmethod
     def _get_ymls(cls):
@@ -303,10 +304,12 @@ def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
         print('Please copy this to your local computer or external hard-drive')
     return out_file
     
-def _clean_name(expname,max_length=25):
+def _clean_name(name,max_length=25):
     '''strips a string, but also removes internal whitespace
     '''
-    cleaned = "".join(expname.split())
+    if not isinstance(name,str):
+        sys.exit(_graceful_exit('Your input, {}, appears not to be a string. Please try again'.format(str(name))))
+    cleaned = "".join(name.split())
     if len(cleaned) > max_length:
         sys.exit(_graceful_exit('Please try a name for your object that is < {} characters long'.format(str(max_length))))
     return cleaned
