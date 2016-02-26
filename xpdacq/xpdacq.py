@@ -240,11 +240,11 @@ def _save_dark_dict(dark_dict):
 
 def _execute_dark_recording(sample, scan, light_cnt_time, expire_time=15.0):
     dark_f_name = _pull_dark_pool()
-    dark_tuple = _find_right_dark(dark_f_name, light_cnt_time, expire_time)
-    _dark_tuple = _run_dark(dark_tuple, sample, scan) # internal one to capture situation when qualified dark is not found
+    _dark_tuple = _find_right_dark(dark_f_name, light_cnt_time, expire_time) # internal one to capture situation when qualified dark is not found
+    dark_tuple = _run_dark(_dark_tuple, sample, scan) 
     
     # update md
-    update_md = _update_md_dict(_dark_tuple, sample, scan)
+    update_md = _update_md_dict(dark_tuple, sample, scan)
     
     # update dark
     _dark_dict = _create_dark_dict(_dark_tuple) # internal one. As we will update it later
