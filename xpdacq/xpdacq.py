@@ -132,42 +132,6 @@ def _unpack_and_run(sample,scan,**kwargs):
 
 #### dark subtration code block ####
 
-'''
-def _pull_dark_pool():
-    # read dark dictionarty inside dark_base
-    D_DIR = [ el for el in glbl.allfolders if el.endswith('dark_base')][0]
-    dark_f_list = [f for f in os.listdir(D_DIR) if f.endswith('.yml')]
-    dark_f_path = list()
-    for i in range(len(dark_f_list)):
-        dark_f_path.append(os.path.join(D_DIR, dark_f_list[i]))
-    if not dark_f_path:
-        return # return None when dark yaml file name doesn't exist 
-    else:
-        sorted(dark_f_path, key = os.path.getmtime) # get the most recent one, but there should be only one
-        dark_f_name = dark_f_path[-1]
-        return dark_f_name
-
-
-def _run_dark(dark_tuple, sample, scan):
-    # logic of collecting a dark 
-        
-    # So far still calls dark() directly, but it can be changed later
-    if dark_tuple:
-        # if a qualified dark tuple is given, just return it
-        return dark_tuple
-    else:
-        # if qualified dark tuple is not given. collect a dark and return new dark tuple
-        dark(sample, scan)
-        h = db[-1]
-        new_dark_uid = h.start['uid']
-        new_dark_timestamp = h.start['time']
-        light_cnt_time = h.start.sc_params['exposure']
-        new_dark_tuple(light_cnt_time, new_dark_uid, new_dark_timestamp)
-        return new_dark_tuple
-
-
-'''
-
 # simplified approach : yamify every dark scan, load them in a time and find the best one!
 
 
@@ -200,7 +164,6 @@ def _find_right_dark(dark_pool, light_cnt_time):
         dark_field_uid = _qualified_uid(qualified_dark_dict)
         return dark_field_uid
     else:
-        
         return # an empty return means collect a dark anyway
 
 def _qualified_dark(dark_cnt_time_list, light_cnt_time):
@@ -232,58 +195,10 @@ def _read_dark_yaml(expire_time):
             dark_pool.append(dummy_dark_dict)
     return dark_pool # if an empty dark_pool return, it means collect a dark anyway
 
-def _update_md_dict(dark_tuple, sample, scan):
-    ''' update md_dict, insert dark_uid to md '''
-    dark_uid = dark_tuple[0]
-    updated_md = scan.md.update({'dark_uid':dark_uid})
-    return updated_md
-
-def _create_dark_dict(dark_tuple):
-    ''' only create a intermediate dark_dict, dark dict gets updated later'''
-    _dark_dict = dict()
-    _dark_dict[dark_tuple[0]] = tuple([dark_tuple[1], dark_tuple[2]])
-    return _dark_dict
-
-def _update_dark_dict(_dark_dict):
-    ''' Note: this step might be buggy and crucial
-
-        update the most recent dark dict read out from dark base
-    '''
-    dark_f_name = _pull_dark_pool()
-    if not dark_f_name: # if no any dark ymal. just create one 
-        dark_dict = dict()
-        dark_dict.update(_dark_dict)
-    else:
-        with open(dark_f_name) as f:
-            dark_dict = yaml.load(f)
-        dark_dict.update(_dark_dict)
-    return dark_dict
-
-def _save_dark_dict(dark_dict):
-    ''' overwrite the dark dict in the most recent dark yaml '''
-    dark_f_name = _pull_dark_pool() # up to this step, there should have at least one dark yaml
-    if not dark_f_name:
-        raise RuntimeError('opps. this function seems to crash in the end')
-    with open(dark_f_name, w) as f:
-        yaml.dump(dark_dict, f) # confirm it is in overwritten mode
-    return
-
-def _execute_dark_recording(sample, scan, light_cnt_time, expire_time=15.0):
-    dark_f_name = _pull_dark_pool()
-    print(dark_f_name)
-    _dark_tuple = _find_right_dark(dark_f_name, light_cnt_time, expire_time) # internal one to capture situation when qualified dark is not found
-    print('dark_tuple = {}'.format(_dark_tuple))
-    dark_tuple = _run_dark(_dark_tuple, sample, scan) 
-    
-    # update md
-    update_md = _update_md_dict(dark_tuple, sample, scan)
-    
-    # update dark
-    _dark_dict = _create_dark_dict(_dark_tuple) # internal one. As we will update it later
-    dark_dict = _update_dark_dict(_dark_dict)
-    _save_dark_dict(dark_dict)
-    
-    return update_md
+def _execute_find_right_dark(light_cnt_time, expire_time):
+    dark_pool = _read_dark_yaml(expire_time)
+    dark_uid = _find_right_dark(dark_pool, light_cnt_time)
+    return dark_uid # if it is empty, means collect a dark
 
 #### code block of dark subtraction ####
 
@@ -297,8 +212,16 @@ def prun(sample,scan,**kwargs):
     '''
     if scan.shutter: _open_shutter()
     scan.md.update({'xp_isprun':True})
-    # dark_filed_uid = _find_right_dark()
+    light_cnt_time = scan.md['sc_params']['exposure']
+    # expire_time = scan.md['sc_params']['expire_time']  FIXME : not ready yet
+    dark_filed_uid = _execute_find_right_dark(light_cnt_time, expire_time)
+    if dark_filed_uid:
+        scan.md.update({'dark_field_uid': dark_field_uid})
+    else:
+        dark(sampl, scan, **kwargs)
+
     _unpack_and_run(sample,scan,**kwargs)
+    # update_md_after_dark() FIXME
     #parms = scan.sc_params
     if scan.shutter: _close_shutter()
 
@@ -312,15 +235,23 @@ def dark(sample,scan,**kwargs):
     '''
     dark_time = time.time()
     dark_uid = str(uuid.uuid1())
-    dark_exp_t = scan.md['sc_params']
-    dark_def = { str(dark_exp_t), dark_uid, dark_time])
-    # bt.update_dark_list()  haven't wirtten yet
-    # bt._yamify_dark_list()
+    dark_exp_t = scan.md['sc_params']['exposure']
+    dark_def = { str(dark_exp_t) : (dark_uid, dark_time) }
+    _yamify_dark(dark_def)
+
     _close_shutter()
     scan.md.update({'xp_isdark':True})
+    scan.md.update({'xp_dark_def': dark_def}) # maybe not needed ?
     _unpack_and_run(sample,scan,**kwargs)
     _close_shutter()
 
+def _yamify_dark(dark_def):
+    dark_dir = [ el for el in glbl.allfolders if el.endswith('dark_base')][0]
+    f_name = 'dark_{}'.format(strftime('%Y-%m-%d-%H%M'))+'.yml'
+    w_name = os.path.join(dark_dir, f_name)
+    with open(w_name, 'r') as f:
+        yaml.dump(dark_def, f)
+    return
 
 def setupscan(sample,scan,**kwargs):
     '''used for setup scans NOT production scans
