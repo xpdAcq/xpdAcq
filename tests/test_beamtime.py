@@ -76,9 +76,11 @@ class NewExptTest(unittest.TestCase):
         testfname2 = os.path.join(yaml_dir,'bt_test2.yml')
         probe2 = xpdobj2._yamify()
         self.assertEqual(XPD.objlist,['bt_test.yml','bt_test2.yml'])
-
         self.assertEqual(probe,testfname)
         self.assertTrue(os.path.isfile(probe))
+        # try adding another item that is already there
+        probe3 = xpdobj2._yamify()
+        self.assertEqual(XPD.objlist,['bt_test.yml','bt_test2.yml'])
 #        olist = xpdobj.loadyamls()
 #        self.assertEqual(olist[0].name,'bt')
 #        self.assertEqual(olist[0].type,'bt')

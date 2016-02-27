@@ -38,7 +38,9 @@ class XPD:
 
     @classmethod
     def _update_objlist(cls,name):
-        cls.objlist.append(name)
+        # check whether this obj exists already
+        if name not in cls.objlist:
+            cls.objlist.append(name)
         return cls.objlist
 
     def _yaml_path(self):
@@ -61,6 +63,7 @@ class XPD:
         XPD._update_objlist(fname)
         fpath = os.path.join(self._yaml_path(), fname)
         lname = os.path.join(yaml_dir,'_acqobj_list.yml')
+        #FIXME, don't add to the list if it already exists
         with open(lname, 'w') as fout:
             yaml.dump(XPD.objlist, fout)
 
