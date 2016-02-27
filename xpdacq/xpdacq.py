@@ -37,6 +37,8 @@ from xpdacq.glbl import glbl
 
 '''
 
+FRAME_ACQUIRE_TIME = 0.1 # temeporarly place. It should be put into config.py or glbl.py
+
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 #expo_threshold = 60 # in seconds Deprecated!
 
@@ -182,15 +184,37 @@ def _find_right_dark(dark_pool, light_cnt_time):
             
         Returns
         -------
-            dark_uid - str
+            dark_field_uid - str
                 uid to qualified dark frame
     '''
     if dark_pool:
-        # blah blah, still working
+        #### this block of code is to extract dark cnt time. It can be improved later ####
+        dark_cnt_time_list = []
+        for ind, el in enumerate(dark_pool):
+            cnt_time_tuple = (ind, el)
+            dark_cnt_time_list.append(cnt_time_tuple)
+        ##########
+        
+        qualified_dark_index = _qualified_dark(dark_cnt_time_list, light_cnt_time)[-1] # get the last one
+        qualified_dark_dict = dark_pool[qualified_dark_index]
+        dark_field_uid = _qualified_uid(qualified_dark_dict)
         return dark_field_uid
     else:
         
         return # an empty return means collect a dark anyway
+
+def _qualified_dark(dark_cnt_time_list, light_cnt_time):
+    output_list = []
+    for el in dark_cnt_time_list:
+        if abs(float(el[1]) - light_cnt_time) < FRAME_ACQUIRE_TIME:
+            output_list.append(el[0])
+    return output_list
+
+def _qualified_uid(qualified_dark_dict):
+    for el in list(qualified_dark_dict.values()):
+        if isinstance(el[0], str):
+            dark_uid = el[0]
+    return dark_uid
 
 
 def _read_dark_yaml(expire_time):
@@ -198,14 +222,14 @@ def _read_dark_yaml(expire_time):
     
     dark_dir = [ el for el in glbl.allfolders if el.endswith('dark_base')][0]
     # maybe we want to make every elements in glbl.allfolders as an attribute in the future
-    dark_yaml = [ el for el in os.listdir(dark_dir) if os.path.getmtime(el) < time.time() - expiretime * 60.0]
+    dark_yaml = [ el for el in os.listdir(dark_dir) if os.path.getmtime(el) < time.time() - expire_time * 60.0]
     dark_pool = []
     if dark_yaml:
         for el in dark_yaml:
             f_path = os.path.join(dark_dir, el)
             with open (f_path, 'r') as f:
-                dummy_dark_tuple = yaml.dump(f)
-            dark_pool.append(dummy_dark_tuple)
+                dummy_dark_dict = yaml.dump(f)
+            dark_pool.append(dummy_dark_dict)
     return dark_pool # if an empty dark_pool return, it means collect a dark anyway
 
 def _update_md_dict(dark_tuple, sample, scan):
