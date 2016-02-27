@@ -5,7 +5,7 @@ from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_
 import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtime import XPD,Beamtime
 from xpdacq.glbl import glbl
-from xpdacq.beamtime import _clean_name,_clean_md_input,_update_objlist,_get_yaml_list
+from xpdacq.beamtime import _clean_name,_clean_md_input,_update_objlist,_get_yaml_list,_get_hidden_list
 from xpdacq.beamtime import *
 
 class NewExptTest(unittest.TestCase):
@@ -158,9 +158,23 @@ class NewExptTest(unittest.TestCase):
         self.assertEqual(newobjlist,['bt_bt.yml','ex_myexp.yml','sa_mysample.yml'])
         self.hidelist = self.bt.hide(1)
         self.assertEqual(self.hidelist,[1])
-        yaml_dir = glbl.yaml_dir
-        hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
-        with open(hname, 'r') as fout:
-            hidden_list = yaml.load(fout) 
+        hidden_list = _get_hidden_list() 
         self.assertEqual(self.hidelist,hidden_list)
   
+    def test_unhide(self):
+        name = 'my sample '
+        self.ex = Experiment('myexp',self.bt)
+        self.sa = Sample(name,self.ex)
+        newobjlist = _get_yaml_list()
+        self.assertEqual(newobjlist,['bt_bt.yml','ex_myexp.yml','sa_mysample.yml'])
+        self.hidelist = self.bt.hide(1)
+        self.assertEqual(self.hidelist,[1])
+        hidden_list1 = _get_hidden_list() 
+        self.assertEqual(self.hidelist,hidden_list1)
+        self.bt.unhide(0)
+        hidden_list2 = _get_hidden_list() 
+        self.assertEqual(hidden_list1,hidden_list2)
+        self.bt.unhide(1)
+        hidden_list3 = _get_hidden_list() 
+        self.assertEqual(hidden_list3,[])
+

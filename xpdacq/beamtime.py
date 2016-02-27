@@ -139,13 +139,24 @@ class XPD:
         print('Use bt.get(index) to get the one you want')
 
     def hide(cls,index):
-        yaml_dir = glbl.yaml_dir
-        hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
         hidden_list = _get_hidden_list()
         hidden_list.append(index)
+        yaml_dir = glbl.yaml_dir
+        hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
         fo = open(hname, 'w')
         yaml.dump(hidden_list, fo)
         return hidden_list
+
+    def unhide(cls,index):
+        hidden_list = _get_hidden_list()
+        while index in hidden_list: 
+            hidden_list.remove(index)
+        yaml_dir = glbl.yaml_dir
+        hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
+        fo = open(hname, 'w')
+        yaml.dump(hidden_list, fo)
+        return hidden_list
+
 
     @classmethod
     def get(cls, index):
