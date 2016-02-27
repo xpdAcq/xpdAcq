@@ -157,14 +157,15 @@ class Beamtime(XPD):
                     'bt_usermd':_clean_md_input(kwargs)}
         self.md.update({'bt_wavelength': _clean_md_input(wavelength)})
         self.md.update({'bt_experimenters': _clean_md_input(experimenters)})
-        yaml_dir = glbl.yaml_dir
-        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
 
         #initialize the objlist yaml file if it doesn't exist
+        yaml_dir = glbl.yaml_dir
+        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
         if not os.path.isfile(lname):
+            objlist = []
             fo = open(lname, 'w')
-            yaml.dump(XPD.objlist, fo)
-
+            yaml.dump(objlist, fo)
+        
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
         # get objlist from yaml file
@@ -177,13 +178,21 @@ class Beamtime(XPD):
 
 class Experiment(XPD):
     def __init__(self, expname, beamtime, **kwargs):
+        self.bt = beamtime
         self.name = _clean_md_input(expname)
         self.type = 'ex'
-        self.bt = beamtime
         self.md = self.bt.md
         self.md.update({'ex_name': self.name})
-        self.md.update({'ex_uid': self._getuid()})
+#        self.md.update({'ex_uid': self._getuid()})
         self.md.update({'ex_usermd':_clean_md_input(kwargs)})
+        fname = self._name_for_obj_yaml_file(self.name,self.type)
+        objlist = _get_yaml_list()
+        # get objlist from yaml file
+        if fname in objlist:
+            olduid = self._get_obj_uid(self.name,self.type)
+            self.md.update({'ex_uid': olduid})
+        else:
+            self.md.update({'ex_uid': self._getuid()})
         self._yamify()
 
 class Sample(XPD):

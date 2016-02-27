@@ -17,8 +17,8 @@ class NewExptTest(unittest.TestCase):
         self.saf_num = 123
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
-        _make_clean_env()
-#        self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
+        #_make_clean_env()
+        self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -76,20 +76,20 @@ class NewExptTest(unittest.TestCase):
         testfname = os.path.join(yaml_dir,'bt_test.yml')
         probe = xpdobj._yamify()
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,['bt_test.yml'])
+        self.assertEqual(newobjlist,['bt_bt.yml','bt_test.yml'])
         xpdobj2 = XPD()
         xpdobj2.name = ' test2'
         xpdobj2.type = 'b t'
         testfname2 = os.path.join(yaml_dir,'bt_test2.yml')
         probe2 = xpdobj2._yamify()
         newobjlist2 = _get_yaml_list()
-        self.assertEqual(newobjlist2,['bt_test.yml','bt_test2.yml'])
+        self.assertEqual(newobjlist2,['bt_bt.yml','bt_test.yml','bt_test2.yml'])
         self.assertEqual(probe,testfname)
         self.assertTrue(os.path.isfile(probe))
         # try adding another item that is already there
         probe3 = xpdobj2._yamify()
         newobjlist3 = _get_yaml_list()
-        self.assertEqual(newobjlist3,['bt_test.yml','bt_test2.yml'])
+        self.assertEqual(newobjlist3,['bt_bt.yml','bt_test.yml','bt_test2.yml'])
 
 #        olist = xpdobj.loadyamls()
 #        self.assertEqual(olist[0].name,'bt')
@@ -113,3 +113,16 @@ class NewExptTest(unittest.TestCase):
         bt = Beamtime('you',123,321,[])
         uid2 = bt._get_obj_uid('bt','bt')
         self.assertEqual(uid1,uid2)
+
+    def test_make_experiment(self):
+        name = 'myexp '
+        bt = Beamtime('me',123,321,[])
+        self.ex = Experiment(name,bt)
+        self.ex = Experiment(name,self.bt)
+        self.assertIsInstance(self.ex,Experiment)
+        self.assertEqual(self.ex.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
+        self.assertEqual(self.ex.md['bt_piLast'],'Billinge')
+        self.assertEqual(self.ex.md['bt_safN'],123)
+        self.assertEqual(self.ex.md['bt_wavelength'],0.1812)
+        self.assertEqual(self.ex.md['ex_name'],'myexp')
+

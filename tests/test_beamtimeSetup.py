@@ -100,7 +100,6 @@ class NewBeamtimeTest(unittest.TestCase):
         self.bt = Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=self.base_dir)
         self.assertIsInstance(self.bt,Beamtime)
         self.assertEqual(self.bt.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
-        #self.assertEqual(self.bt.md['bt_experimenters'],[('me','you')])
         self.assertEqual(self.bt.md['bt_piLast'],'Billinge')
         self.assertEqual(self.bt.md['bt_safN'],123)
         self.assertEqual(self.bt.md['bt_wavelength'],0.1812)
