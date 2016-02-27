@@ -43,24 +43,8 @@ class NewExptTest(unittest.TestCase):
     	self.fail('need a test for _yaml_path')
 
     @unittest.expectedFailure
-    def test_list(self):
-        self.fail('need a test for list')
-    
-#    @unittest.skip('skipping yaml list')
-#    def test_get_yaml_list(self):
-#    	xpdobj = XPD()
-#    	yaml_dir = glbl.yaml_dir
-#        # create a yaml list yml file
-#    	lname = os.path.join(yaml_dir,'_acqobj_list.yml')
-#        open(lname, 'w').close()
-#        # now get the list of yamls.
-#    	olist = xpdobj._get_yaml_list()
-#        assertEqual(olist,[os.path.join(yaml_dir,'bt_b.yml')])
-#        #self.fail('need a test for list')
-
-    @unittest.expectedFailure
     def test_loadyamls(self):
-        self.fail('need a test for list')
+        self.fail('need a test for loadyamls')
 
     def test_yamify(self):
         xpdobj = XPD()
@@ -165,7 +149,4 @@ class NewExptTest(unittest.TestCase):
         self.assertEqual(uid2,uid3)
         newobjlist = _get_yaml_list()
         self.assertEqual(newobjlist,['bt_bt.yml','ex_myexp.yml','sa_mysample.yml','sa_yoursample.yml'])
-
-
-        #self.ex = Experiment(name,bt)
 

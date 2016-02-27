@@ -113,12 +113,13 @@ class XPD:
 
     @classmethod
     def list(cls, type=None):
-        list = cls.loadyamls()
+        list = cls.loadyamls(cls)
         if type is None:
             iter = 0
             for i in list:
                 iter += 1
-                print(i.type+' object '+str(i.name)+' has list index ', iter-1)
+                myuid = i._get_obj_uid(i.name,i.type)
+                print(i.type+' object '+str(i.name)+' has list index ', iter-1,'and uid',myuid[:6])
         else:
             iter = 0
             for i in list:
