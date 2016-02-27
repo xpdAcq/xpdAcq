@@ -35,6 +35,13 @@ def _get_yaml_list():
         yaml_list = yaml.load(fout) 
     return list(yaml_list)
 
+def _get_hidden_list():
+    yaml_dir = glbl.yaml_dir
+    lname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
+    with open(lname, 'r') as fout:
+        hidden_list = yaml.load(fout) 
+    return list(hidden_list)
+
 def _update_objlist(objlist,name):
     # check whether this obj exists already if yes, don't add it again.
     if name not in objlist:
@@ -113,20 +120,32 @@ class XPD:
 
     @classmethod
     def list(cls, type=None):
-        list = cls.loadyamls(cls)
+        olist = cls.loadyamls(cls)
+        hlist = cls._get_hidden_list(cls)
         if type is None:
             iter = 0
-            for i in list:
+            for i in olist:
                 iter += 1
                 myuid = i._get_obj_uid(i.name,i.type)
-                print(i.type+' object '+str(i.name)+' has list index ', iter-1,'and uid',myuid[:6])
+                if iter-1 not in hlist:
+                    print(i.type+' object '+str(i.name)+' has list index ', iter-1,'and uid',myuid[:6])
         else:
             iter = 0
-            for i in list:
+            for i in olist:
                 iter += 1
                 if i.type == type:
-                    print(i.type+' object '+str(i.name)+' has list index ', iter-1)
+                    if iter-1 not in hlist:
+                        print(i.type+' object '+str(i.name)+' has list index ', iter-1)
         print('Use bt.get(index) to get the one you want')
+
+    def hide(cls,index):
+        yaml_dir = glbl.yaml_dir
+        hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
+        hidden_list = _get_hidden_list()
+        hidden_list.append(index)
+        fo = open(hname, 'w')
+        yaml.dump(hidden_list, fo)
+        return hidden_list
 
     @classmethod
     def get(cls, index):
@@ -162,10 +181,16 @@ class Beamtime(XPD):
         #initialize the objlist yaml file if it doesn't exist
         yaml_dir = glbl.yaml_dir
         lname = os.path.join(yaml_dir,'_acqobj_list.yml')
+        hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
         if not os.path.isfile(lname):
             objlist = []
             fo = open(lname, 'w')
             yaml.dump(objlist, fo)
+        if not os.path.isfile(hname):
+            hidlist = []
+            fo = open(hname, 'w')
+            yaml.dump(hidlist, fo)
+
         
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()

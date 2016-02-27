@@ -150,3 +150,17 @@ class NewExptTest(unittest.TestCase):
         newobjlist = _get_yaml_list()
         self.assertEqual(newobjlist,['bt_bt.yml','ex_myexp.yml','sa_mysample.yml','sa_yoursample.yml'])
 
+    def test_hide(self):
+        name = 'my sample '
+        self.ex = Experiment('myexp',self.bt)
+        self.sa = Sample(name,self.ex)
+        newobjlist = _get_yaml_list()
+        self.assertEqual(newobjlist,['bt_bt.yml','ex_myexp.yml','sa_mysample.yml'])
+        self.hidelist = self.bt.hide(1)
+        self.assertEqual(self.hidelist,[1])
+        yaml_dir = glbl.yaml_dir
+        hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
+        with open(hname, 'r') as fout:
+            hidden_list = yaml.load(fout) 
+        self.assertEqual(self.hidelist,hidden_list)
+  
