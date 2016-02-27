@@ -202,8 +202,16 @@ class Sample(XPD):
         self.ex = experiment
         self.md = self.ex.md
         self.md.update({'sa_name': self.name})
-        self.md.update({'sa_uid': self._getuid()})
+#        self.md.update({'sa_uid': self._getuid()})
         self.md.update({'sa_usermd': _clean_md_input(kwargs)})
+        fname = self._name_for_obj_yaml_file(self.name,self.type)
+        objlist = _get_yaml_list()
+        # get objlist from yaml file
+        if fname in objlist:
+            olduid = self._get_obj_uid(self.name,self.type)
+            self.md.update({'sa_uid': olduid})
+        else:
+            self.md.update({'sa_uid': self._getuid()})
         self._yamify()
 
 class ScanPlan(XPD):
