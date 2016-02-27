@@ -16,6 +16,9 @@
 ##############################################################################
 import numpy as np
 #from xpdacq.beamtime import Union, Xposure
+import os
+import yaml
+
 from bluesky.plans import Count
 from bluesky import Msg
 from bluesky.plans import AbsScanPlan
@@ -127,68 +130,26 @@ def _unpack_and_run(sample,scan,**kwargs):
 
 #### dark subtration code block ####
 
+'''
 def _pull_dark_pool():
-    '''read dark dictionarty inside dark_base'''
-    D_DIR = [ el for el in glbl.allfolders if el.endswith('dark_base')]
+    # read dark dictionarty inside dark_base
+    D_DIR = [ el for el in glbl.allfolders if el.endswith('dark_base')][0]
     dark_f_list = [f for f in os.listdir(D_DIR) if f.endswith('.yml')]
-    if not dark_f_list:
+    dark_f_path = list()
+    for i in range(len(dark_f_list)):
+        dark_f_path.append(os.path.join(D_DIR, dark_f_list[i]))
+    if not dark_f_path:
         return # return None when dark yaml file name doesn't exist 
     else:
-        sorted(dark_f_list, key = os.path.getmtime) # get the most recent one, but there should be only one
-        dark_f_name = dark_f_list[-1]
+        sorted(dark_f_path, key = os.path.getmtime) # get the most recent one, but there should be only one
+        dark_f_name = dark_f_path[-1]
         return dark_f_name
 
-def _find_right_dark(dark_yaml_name, light_cnt_time, expire_time):
-    ''' find the uid of appropriate dark inside dark_base
-    
-        Parameters
-        ----------
-            dark_yaml_name - str
-                name of yaml file that contains dark dictionary
-            
-            light_cnt_time - flot
-                exposure time of light image
-    
-            expire_time - flot
-                user-defined expiration time, in terms of minute.
-                expire_time = 5.5 will gives 5 minutes and 30 seconds
-
-        Returns
-        -------
-            dark_uid - str
-                uid to qualified dark frame
-    '''
-    if dark_yaml_name:
-        with open(dark_yaml_name) as f:
-            dark_dict = yaml.load(f)
-        try:
-            dark_dict[light_cnt_time]
-            # if can't find uid, collect new one
-            # if can't find timestamp, collect new one
-            dark_uid = dark_dict[light_cnt_time][0]
-            dark_timestamp = dark_dict[light_cnt_time][1]
-            if _is_N_minutes_ago(expire_time) == 'Y': pass
-            dark_tuple = (light_cnt_time, dark_uid, dark_timestamp)
-            return dark_tuple
-
-        except KeyError:
-            return # return nothing when dark_dict exists but qualified dark doesn't
-    else:
-        return # return nothing when dark_dict doesn't exist
-    
-def _is_N_minutes_ago(timestamp, N_minutes):
-    ''' small function to calculate N minutes ago in time stamp'''
-    now = time.time()
-    if timestamp - now < 60.0* N_minutes:
-        return 'Y'
-    else:
-        raise KeyError
 
 def _run_dark(dark_tuple, sample, scan):
-    ''' logic of collecting a dark 
+    # logic of collecting a dark 
         
-        So far still calls dark() directly, but it can be changed later
-    '''
+    # So far still calls dark() directly, but it can be changed later
     if dark_tuple:
         # if a qualified dark tuple is given, just return it
         return dark_tuple
@@ -201,6 +162,51 @@ def _run_dark(dark_tuple, sample, scan):
         light_cnt_time = h.start.sc_params['exposure']
         new_dark_tuple(light_cnt_time, new_dark_uid, new_dark_timestamp)
         return new_dark_tuple
+
+
+'''
+
+# simplified approach : yamify every dark scan, load them in a time and find the best one!
+
+
+def _find_right_dark(dark_pool, light_cnt_time):
+    ''' find the uid of appropriate dark inside dark_base
+    
+        Parameters
+        ----------
+            dark_yaml_pool - list
+                list of dark dictionary objects
+            
+            light_cnt_time - flot
+                exposure time of light image
+            
+        Returns
+        -------
+            dark_uid - str
+                uid to qualified dark frame
+    '''
+    if dark_pool:
+        # blah blah, still working
+        return dark_field_uid
+    else:
+        
+        return # an empty return means collect a dark anyway
+
+
+def _read_dark_yaml(expire_time):
+    # read every dark yaml in dark_base. Performance is not the point here
+    
+    dark_dir = [ el for el in glbl.allfolders if el.endswith('dark_base')][0]
+    # maybe we want to make every elements in glbl.allfolders as an attribute in the future
+    dark_yaml = [ el for el in os.listdir(dark_dir) if os.path.getmtime(el) < time.time() - expiretime * 60.0]
+    dark_pool = []
+    if dark_yaml:
+        for el in dark_yaml:
+            f_path = os.path.join(dark_dir, el)
+            with open (f_path, 'r') as f:
+                dummy_dark_tuple = yaml.dump(f)
+            dark_pool.append(dummy_dark_tuple)
+    return dark_pool # if an empty dark_pool return, it means collect a dark anyway
 
 def _update_md_dict(dark_tuple, sample, scan):
     ''' update md_dict, insert dark_uid to md '''
@@ -234,13 +240,15 @@ def _save_dark_dict(dark_dict):
     dark_f_name = _pull_dark_pool() # up to this step, there should have at least one dark yaml
     if not dark_f_name:
         raise RuntimeError('opps. this function seems to crash in the end')
-    with open(dark_f_name) as f:
+    with open(dark_f_name, w) as f:
         yaml.dump(dark_dict, f) # confirm it is in overwritten mode
     return
 
 def _execute_dark_recording(sample, scan, light_cnt_time, expire_time=15.0):
     dark_f_name = _pull_dark_pool()
+    print(dark_f_name)
     _dark_tuple = _find_right_dark(dark_f_name, light_cnt_time, expire_time) # internal one to capture situation when qualified dark is not found
+    print('dark_tuple = {}'.format(_dark_tuple))
     dark_tuple = _run_dark(_dark_tuple, sample, scan) 
     
     # update md
@@ -253,8 +261,8 @@ def _execute_dark_recording(sample, scan, light_cnt_time, expire_time=15.0):
     
     return update_md
 
-
 #### code block of dark subtraction ####
+
 def prun(sample,scan,**kwargs):
     '''on this 'sample' run this 'scan'
         
@@ -265,6 +273,7 @@ def prun(sample,scan,**kwargs):
     '''
     if scan.shutter: _open_shutter()
     scan.md.update({'xp_isprun':True})
+    # dark_filed_uid = _find_right_dark()
     _unpack_and_run(sample,scan,**kwargs)
     #parms = scan.sc_params
     if scan.shutter: _close_shutter()
@@ -277,11 +286,18 @@ def dark(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
+    dark_time = time.time()
+    dark_uid = str(uuid.uuid1())
+    dark_exp_t = scan.md['sc_params']
+    dark_def = { str(dark_exp_t), dark_uid, dark_time])
+    # bt.update_dark_list()  haven't wirtten yet
+    # bt._yamify_dark_list()
     _close_shutter()
     scan.md.update({'xp_isdark':True})
     _unpack_and_run(sample,scan,**kwargs)
     _close_shutter()
-   
+
+
 def setupscan(sample,scan,**kwargs):
     '''used for setup scans NOT production scans
      
