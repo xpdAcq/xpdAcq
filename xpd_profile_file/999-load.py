@@ -71,7 +71,8 @@ else:
 #if len(XPD.loadyamls()) > 0:  --> this will create extra directory 
 if os.path.isdir(YAML_DIR):
     print("loading bt_bt.yml")
-    bt = XPD.loadyamls()[0]
+    tmp = XPD()
+    bt = tmp.loadyamls()[0]
 
 print('OK, ready to go.  To continue, follow the steps in the xpdAcq')
 print('documentation at http://xpdacq.github.io/xpdacq')
