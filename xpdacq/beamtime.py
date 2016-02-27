@@ -28,6 +28,19 @@ from xpdacq.utils import _graceful_exit
 home_dir = glbl.home
 yaml_dir = glbl.yaml_dir
 
+def _get_yaml_list():
+    yaml_dir = glbl.yaml_dir
+    lname = os.path.join(yaml_dir,'_acqobj_list.yml')
+    with open(lname, 'r') as fout:
+        yaml_list = yaml.load(fout) 
+    return list(yaml_list)
+
+def _update_objlist(objlist,name):
+    # check whether this obj exists already if yes, don't add it again.
+    if name not in objlist:
+        objlist.append(name)
+    return objlist
+
 class XPD:
     objlist = []
     def _getuid(self):
@@ -35,13 +48,6 @@ class XPD:
 
     def export(self):
         return self.md
-
-    @classmethod
-    def _update_objlist(cls,name):
-        # check whether this obj exists already if yes, don't add it again.
-        if name not in cls.objlist:
-            cls.objlist.append(name)
-        return cls.objlist
 
     def _get_obj_uid(self,name,otype):
         yamls = self.loadyamls()
@@ -70,16 +76,16 @@ class XPD:
 
     def _yamify(self):
         '''write a yaml file for this object and place it in config_base/yml'''
+        yaml_dir = glbl.yaml_dir
+        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
         oname = self.name
         ftype = self.type
-        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
-        if not os.path.isfile(lname):
-            open(lname, 'w').close()
         fname = self._name_for_obj_yaml_file(oname,ftype)
         fpath = os.path.join(self._yaml_path(), fname)
-        XPD._update_objlist(fname)
+        objlist = _get_yaml_list()
+        objlist = _update_objlist(objlist, fname)
         with open(lname, 'w') as fout:
-            yaml.dump(XPD.objlist, fout)
+            yaml.dump(objlist, fout)
 
 #        if os.path.isfile(lname):
 #            with open(lname, 'a') as fout:
@@ -95,16 +101,9 @@ class XPD:
             yaml.dump(self, fpath)
         return fpath
 
-    def _get_yaml_list(self):
-        yaml_dir = glbl.yaml_dir
-        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
-        with open(lname, 'r') as fout:
-            yaml_list = yaml.load(fout) 
-        return yaml_list
-
     def loadyamls(self):
         yaml_dir = glbl.yaml_dir
-        yaml_list = self._get_yaml_list()
+        yaml_list = _get_yaml_list()
         olist = []
         for f in yaml_list:
             fname = os.path.join(yaml_dir,f)
@@ -158,10 +157,18 @@ class Beamtime(XPD):
                     'bt_usermd':_clean_md_input(kwargs)}
         self.md.update({'bt_wavelength': _clean_md_input(wavelength)})
         self.md.update({'bt_experimenters': _clean_md_input(experimenters)})
-        # keep the same uid if the object already exists.
-        # FIXME find the item that is the same and retrieve its uid.
+        yaml_dir = glbl.yaml_dir
+        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
+
+        #initialize the objlist yaml file if it doesn't exist
+        if not os.path.isfile(lname):
+            fo = open(lname, 'w')
+            yaml.dump(XPD.objlist, fo)
+
         fname = self._name_for_obj_yaml_file(self.name,self.type)
-        if fname in XPD.objlist:
+        objlist = _get_yaml_list()
+        # get objlist from yaml file
+        if fname in objlist:
             olduid = self._get_obj_uid(self.name,self.type)
             self.md.update({'bt_uid': olduid})
         else:

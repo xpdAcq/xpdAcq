@@ -5,7 +5,8 @@ from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_
 import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtime import XPD,Beamtime
 from xpdacq.glbl import glbl
-from xpdacq.beamtime import _clean_name
+from xpdacq.beamtime import _clean_name,_clean_md_input,_update_objlist,_get_yaml_list
+from xpdacq.beamtime import *
 
 class NewExptTest(unittest.TestCase):
 
@@ -65,36 +66,43 @@ class NewExptTest(unittest.TestCase):
         xpdobj = XPD()
         xpdobj.name = ' test'
         xpdobj.type = 'b t'
-        yaml_dir = xpdobj._yaml_path()
+        yaml_dir = glbl.yaml_dir
+        objlist = []
+        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
+        #initialize the objlist yaml file if it doesn't exist
+        if not os.path.isfile(lname):
+            fo = open(lname, 'w')
+            yaml.dump(objlist, fo)
         testfname = os.path.join(yaml_dir,'bt_test.yml')
-        XPD.objlist = []
         probe = xpdobj._yamify()
-        self.assertEqual(XPD.objlist,['bt_test.yml'])
+        newobjlist = _get_yaml_list()
+        self.assertEqual(newobjlist,['bt_test.yml'])
         xpdobj2 = XPD()
         xpdobj2.name = ' test2'
         xpdobj2.type = 'b t'
-        yaml_dir = xpdobj2._yaml_path()
         testfname2 = os.path.join(yaml_dir,'bt_test2.yml')
         probe2 = xpdobj2._yamify()
-        self.assertEqual(XPD.objlist,['bt_test.yml','bt_test2.yml'])
+        newobjlist2 = _get_yaml_list()
+        self.assertEqual(newobjlist2,['bt_test.yml','bt_test2.yml'])
         self.assertEqual(probe,testfname)
         self.assertTrue(os.path.isfile(probe))
         # try adding another item that is already there
         probe3 = xpdobj2._yamify()
-        self.assertEqual(XPD.objlist,['bt_test.yml','bt_test2.yml'])
+        newobjlist3 = _get_yaml_list()
+        self.assertEqual(newobjlist3,['bt_test.yml','bt_test2.yml'])
+
 #        olist = xpdobj.loadyamls()
 #        self.assertEqual(olist[0].name,'bt')
 #        self.assertEqual(olist[0].type,'bt')
 
     def test_update_objlist(self):
-        xpdobj = XPD()
-        XPD.objlist = []
-        xpdobj._update_objlist('testme')
-        self.assertEqual(xpdobj.objlist,['testme'])
-        xpdobj._update_objlist('testme2')
-        self.assertEqual(xpdobj.objlist,['testme','testme2'])
-        xpdobj._update_objlist('testme2')
-        self.assertEqual(xpdobj.objlist,['testme','testme2'])
+        objlist = []
+        newobjlist = _update_objlist(objlist,'testme')
+        self.assertEqual(newobjlist,['testme'])
+        newobjlist2 = _update_objlist(newobjlist,'testme2')
+        self.assertEqual(newobjlist2,['testme','testme2'])
+        newobjlist3 = _update_objlist(newobjlist2,'testme2')
+        self.assertEqual(newobjlist3,['testme','testme2'])
 
     def test_get_obj_uid(self):
         name = 'bt'
@@ -105,4 +113,3 @@ class NewExptTest(unittest.TestCase):
         bt = Beamtime('you',123,321,[])
         uid2 = bt._get_obj_uid('bt','bt')
         self.assertEqual(uid1,uid2)
-

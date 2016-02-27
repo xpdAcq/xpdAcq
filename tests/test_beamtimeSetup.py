@@ -13,6 +13,7 @@ from xpdacq.glbl import glbl
 
 import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment
+from xpdacq.beamtime import Beamtime
 
 
 class NewBeamtimeTest(unittest.TestCase): 
@@ -24,7 +25,8 @@ class NewBeamtimeTest(unittest.TestCase):
         self.saf_num = 123
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
-        self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
+        #_make_clean_env()
+#        self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -94,8 +96,9 @@ class NewBeamtimeTest(unittest.TestCase):
             usrconfig_dir,userscripts_dir,export_dir,import_dir,userysis_dir])
 
     def test_mybt_creation(self):
-        self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=self.base_dir)
-        self.assertIsInstance(self.bt,bts.Beamtime)
+        _make_clean_env()
+        self.bt = Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=self.base_dir)
+        self.assertIsInstance(self.bt,Beamtime)
         self.assertEqual(self.bt.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
         #self.assertEqual(self.bt.md['bt_experimenters'],[('me','you')])
         self.assertEqual(self.bt.md['bt_piLast'],'Billinge')
@@ -103,12 +106,12 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(self.bt.md['bt_wavelength'],0.1812)
         # test empty experimenter
         self.experimenters = []
-        bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
-        self.assertIsInstance(bt,bts.Beamtime)
+        bt = Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
+        self.assertIsInstance(bt,Beamtime)
         # test empty PI
         self.PI_name = None
-        bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
-        self.assertIsInstance(bt,bts.Beamtime)
+        bt = Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
+        self.assertIsInstance(bt,Beamtime)
         #maybe some more edge cases tested here?
     
     def test_start_beamtime(self):
