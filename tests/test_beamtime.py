@@ -3,7 +3,7 @@ import os
 import shutil
 from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment
 import xpdacq.beamtimeSetup as bts
-from xpdacq.beamtime import XPD
+from xpdacq.beamtime import XPD,Beamtime
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import _clean_name
 
@@ -16,7 +16,8 @@ class NewExptTest(unittest.TestCase):
         self.saf_num = 123
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
-        self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
+        _make_clean_env()
+#        self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -90,4 +91,18 @@ class NewExptTest(unittest.TestCase):
         XPD.objlist = []
         xpdobj._update_objlist('testme')
         self.assertEqual(xpdobj.objlist,['testme'])
+        xpdobj._update_objlist('testme2')
+        self.assertEqual(xpdobj.objlist,['testme','testme2'])
+        xpdobj._update_objlist('testme2')
+        self.assertEqual(xpdobj.objlist,['testme','testme2'])
+
+    def test_get_obj_uid(self):
+        name = 'bt'
+        otype = 'bt'
+        bt = Beamtime('me',123,321,[])
+        uid1 = bt._get_obj_uid('bt','bt')
+        self.assertNotEqual(uid1,'')
+        bt = Beamtime('you',123,321,[])
+        uid2 = bt._get_obj_uid('bt','bt')
+        self.assertEqual(uid1,uid2)
 

@@ -24,7 +24,7 @@ class NewBeamtimeTest(unittest.TestCase):
         self.saf_num = 123
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
-        #self.experimenters = [('me ',' you')]
+        self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -93,7 +93,7 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(dirs,[home_dir,conf_dir,tiff_dir,dark_dir,yml_dir,
             usrconfig_dir,userscripts_dir,export_dir,import_dir,userysis_dir])
 
-    def test_bt_creation(self):
+    def test_mybt_creation(self):
         self.bt = bts.Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=self.base_dir)
         self.assertIsInstance(self.bt,bts.Beamtime)
         self.assertEqual(self.bt.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])

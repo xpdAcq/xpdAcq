@@ -38,14 +38,29 @@ class XPD:
 
     @classmethod
     def _update_objlist(cls,name):
-        # check whether this obj exists already
+        # check whether this obj exists already if yes, don't add it again.
         if name not in cls.objlist:
             cls.objlist.append(name)
         return cls.objlist
 
+    def _get_obj_uid(self,name,otype):
+        yamls = self.loadyamls()
+        uidid = "_".join([otype,'uid'])
+        for i in yamls:
+            if i.name == name:
+                if i.type == otype:
+                    ouid = i.md[str(uidid)]
+        return ouid
+
     def _yaml_path(self):
         os.makedirs(yaml_dir, exist_ok = True)
         return yaml_dir
+
+    def _name_for_obj_yaml_file(self,oname,ftype):
+        cleaned_oname = _clean_name(oname)
+        cleaned_ftype = _clean_name(ftype)
+        fname = str(cleaned_ftype) +'_'+ str(cleaned_oname) +'.yml'
+        return fname
 
     def _yaml_garage_path(self):
         yaml_garage_dir_path = os.path.join(self._home_path, 'config_base', 'yml_garage')
@@ -57,13 +72,12 @@ class XPD:
         '''write a yaml file for this object and place it in config_base/yml'''
         oname = self.name
         ftype = self.type
-        cleaned_oname = _clean_name(oname)
-        cleaned_ftype = _clean_name(ftype)
-        fname = str(cleaned_ftype) +'_'+ str(cleaned_oname) +'.yml'
-        XPD._update_objlist(fname)
-        fpath = os.path.join(self._yaml_path(), fname)
         lname = os.path.join(yaml_dir,'_acqobj_list.yml')
-        #FIXME, don't add to the list if it already exists
+        if not os.path.isfile(lname):
+            open(lname, 'w').close()
+        fname = self._name_for_obj_yaml_file(oname,ftype)
+        fpath = os.path.join(self._yaml_path(), fname)
+        XPD._update_objlist(fname)
         with open(lname, 'w') as fout:
             yaml.dump(XPD.objlist, fout)
 
@@ -81,19 +95,19 @@ class XPD:
             yaml.dump(self, fpath)
         return fpath
 
-    @classmethod
-    def _get_yaml_list(cls):
-        fpath = cls._yaml_path
-        yamls = os.listdir(fpath)
-        return yamls
+    def _get_yaml_list(self):
+        yaml_dir = glbl.yaml_dir
+        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
+        with open(lname, 'r') as fout:
+            yaml_list = yaml.load(fout) 
+        return yaml_list
 
-    @classmethod
-    def loadyamls(cls):
-        fpath = cls._yaml_path(cls)
-        yamls = os.listdir(fpath)
+    def loadyamls(self):
+        yaml_dir = glbl.yaml_dir
+        yaml_list = self._get_yaml_list()
         olist = []
-        for f in yamls:
-            fname = os.path.join(fpath,f)
+        for f in yaml_list:
+            fname = os.path.join(yaml_dir,f)
             with open(fname, 'r') as fout:
                 olist.append(yaml.load(fout))
         return olist
@@ -144,7 +158,14 @@ class Beamtime(XPD):
                     'bt_usermd':_clean_md_input(kwargs)}
         self.md.update({'bt_wavelength': _clean_md_input(wavelength)})
         self.md.update({'bt_experimenters': _clean_md_input(experimenters)})
-        self.md.update({'bt_uid': self._getuid()})
+        # keep the same uid if the object already exists.
+        # FIXME find the item that is the same and retrieve its uid.
+        fname = self._name_for_obj_yaml_file(self.name,self.type)
+        if fname in XPD.objlist:
+            olduid = self._get_obj_uid(self.name,self.type)
+            self.md.update({'bt_uid': olduid})
+        else:
+            self.md.update({'bt_uid': self._getuid()})
         self._yamify()
 
 class Experiment(XPD):
