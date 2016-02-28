@@ -24,6 +24,7 @@ from bluesky import Msg
 from bluesky.plans import AbsScanPlan
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
+from xpdacq.glbl import dark_
 #from xpdacq.beamtime import Union, Xposure
 
 #from xpdacq.control import _close_shutter, _open_shutter
@@ -134,54 +135,33 @@ def _unpack_and_run(sample,scan,**kwargs):
         return
 
 #### dark subtration code block ####
+def _read_dark_yaml():
+    dark_yaml_name = glbl.dk_yaml
+    with open(dark_yaml_name, 'r') as f:
+        dark_scan_list = yaml.load(f)
+    return dark_scan_list # if dark pool is an empty list, it means collect a dark anyway
 
-# simplified approach : yamify every dark scan, load them in a time and find the best one!
-
-def _read_dark_yaml(expire_time):
-    # read every dark yaml in dark_base. Performance is not the point here
-    
-    dark_dir = [ el for el in glbl.allfolders if el.endswith('dark_base')][0]
-    # maybe we want to make every elements in glbl.allfolders as an attribute in the future
-    #print('=== Pull out dark yamls within {} seconds'.format(expire_time * 60.0))
-    
-    dark_yaml = [ el for el in os.listdir(dark_dir) if os.path.getmtime(os.path.join(dark_dir,el)) < time.time() - expire_time * 60.0]
-    #print('qualfied_dark_yaml_list = {}'.format(dark_yaml))
-    dark_pool = []
-    if dark_yaml:
-        for el in dark_yaml:
-            f_path = os.path.join(dark_dir, el)
-            with open (f_path, 'r') as f:
-                dummy_dark_dict = yaml.load(f)
-            dark_pool.append(dummy_dark_dict)
-    print('read out dark_pool = {}'.format(dark_pool))
-    return dark_pool # if an empty dark_pool is returned, it means collect a dark anyway
-
-def _find_right_dark(dark_pool, light_cnt_time):
+def validate_dark(light_cnt_time, expire_time):
     ''' find the uid of appropriate dark inside dark_base
     
         Parameters
         ----------
-            dark_pool - list
-                list of dark dictionary objects
+        dark_pool : list
+            list of dark dictionary objects
             
-            light_cnt_time - flot
-                exposure time of light image
-            
+        light_cnt_time : flot
+            exposure time of light image
         Returns
         -------
-            dark_field_uid - str
-                uid to qualified dark frame
+        dark_field_uid : str
+            uid to qualified dark frame
     '''
-    if dark_pool:
-        dark_index_list = []
-        for ind, el in enumerate(dark_pool):
-            cnt_time_tuple = (ind, el)
-            dark_index_list.append(cnt_time_tuple)
-        
-        qualified_index_list = _qualified_dark(dark_index_list, light_cnt_time)
+    dark_scan_list= _read_dark_yaml()
+    if dark_scan_list:
+        qualified_index_list = _qualified_dark(dark_index_list, light_cnt_time, expire_time)
         if qualified_index_list:
-            qualified_dark_index = _qualified_dark(dark_index_list, light_cnt_time)[-1] # get the last index of qualified dark in dark_pool
-            qualified_dark_dict = dark_pool[qualified_dark_index]
+            qualified_dark_index = _qualified_dark(dark_index_list, light_cnt_time)[-1] # pick the last one
+            qualified_dark_dict = dark_scan_list[qualified_dark_index]
             dark_field_uid = _qualified_uid(qualified_dark_dict)
             return dark_field_uid
         else:
@@ -189,14 +169,17 @@ def _find_right_dark(dark_pool, light_cnt_time):
     else:
         return # an empty dark_pool means no dark yaml at all. collect a dark anyway
 
-def _qualified_dark(dark_index_list, light_cnt_time):
+def _qualified_dark(dark_scan_list, light_cnt_time, expire_time):
     ''' return index of dictionary that contains qualified dark '''
     qualified_index_list = []
-    for el in dark_index_list:
-        dark_cnt_time = list(el[1].keys())[0]
+    for el in dark_scan_list:
+        dark_info_tuple = list(el[1].keys())
+        dark_cnt_time = dark_info_tuple[0]
+        dark_timestamp = dark_info_tuple[1]
+        is_right_cnt = abs(float(dark_cnt_time) - light_cnt_time) < 0.9*FRAME_ACQUIRE_TIME
+        is_valid = (time.time() - dark_timestamp) < expire_time * 60.0
         # index is related to data strucutre we are using: {dark_cnt_time : (uid, time)}
-        if abs(float(dark_cnt_time) - light_cnt_time) < 0.9*FRAME_ACQUIRE_TIME: 
-                                                        # in order to solve ambiguity of 0.2s and 0.1s
+        if is_right_cnt and is_valid:
             qualified_index_list.append(el[0])
     return qualified_index_list
 
@@ -206,14 +189,7 @@ def _qualified_uid(qualified_dark_dict):
             if isinstance(sub_el, str):
                 dark_uid = sub_el
     return dark_uid
-
-
-def _execute_find_right_dark(light_cnt_time, expire_time):
-    dark_pool = _read_dark_yaml(expire_time)
-    dark_field_uid = _find_right_dark(dark_pool, light_cnt_time)
-    return dark_field_uid # if it is empty, means collect a dark
-
-#### code block of dark subtraction ####
+ #### code block of dark subtraction ####
 
 def prun(sample,scan,**kwargs):
     '''on this 'sample' run this 'scan'
@@ -226,14 +202,15 @@ def prun(sample,scan,**kwargs):
     if scan.shutter: _open_shutter()
     scan.md.update({'xp_isprun':True})
     light_cnt_time = scan.md['sc_params']['exposure']
-    # expire_time = scan.md['sc_params']['expire_time']  FIXME : not ready yet
-    dark_filed_uid = _execute_find_right_dark(light_cnt_time, expire_time)
+    expire_time = glbl.dark_window
+    dark_filed_uid = validate_dark(light_cnt_time, expire_time)
     if dark_filed_uid:
         pass # found a qaulified dark
     else:
         # can't find a qualified dark. Then run a dark and obtain dark_field_uid
         dark_field_uid = dark(sample, scan, **kwargs)
     scan.md.update({'dark_field_uid': dark_field_uid})
+    scan.md['scan_params'].update({'dark_window':expire_time})
     _unpack_and_run(sample,scan,**kwargs)
     if scan.shutter: _close_shutter()
 
@@ -245,28 +222,25 @@ def dark(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    dark_time = time.time() # timestamp might not be necessary as we are using modified time to select dark yaml
     dark_uid = str(uuid.uuid1())
     dark_exp_t = scan.md['sc_params']['exposure']
-    #dark_def = { str(dark_exp_t) : (dark_uid, dark_time) }
-    dark_def = { str(dark_exp_t) : dark_uid} # simplified version. timestamp is replaced with file modified time
-    _yamify_dark(dark_def)
 
     _close_shutter()
     scan.md.update({'xp_isdark':True})
-    scan.md.update({'xp_dark_def': dark_def})
     _unpack_and_run(sample,scan,**kwargs)
+    dark_time = time.time() # get timestamp by the end of dark_scan 
+    dark_def = { str(dark_exp_t) : (dark_uid, dark_time) }
+    _yamify_dark(dark_def) 
     _close_shutter()
-    
     return dark_uid
     
 def _yamify_dark(dark_def):
-    dark_dir = [ el for el in glbl.allfolders if el.endswith('dark_base')][0]
-    f_name = 'dark_{}'.format(time.strftime('%Y-%m-%d-%H%M'))+'.yml'
-    w_name = os.path.join(dark_dir, f_name)
-    with open(w_name, 'w') as f:
-        yaml.dump(dark_def, f)
-    return f_name
+    dark_yaml_name = glbl.dk_yaml
+    with open(dark_yaml_name, 'r') as f:
+        dark_list = yaml.load(dark_yaml_name)
+    dark_list.append(dark_def)
+    with open(dark_yaml_name, 'w') as f:
+        yaml.dump(dark_list, f)
 
 def setupscan(sample,scan,**kwargs):
     '''used for setup scans NOT production scans
@@ -754,5 +728,24 @@ def QXRD_plan():
     # hook to visualize data
     # FIXME - make sure to plot dark corrected image
     plot_scan(db[-1])
+
+def _read_dark_yaml(expire_time):
+    # read every dark yaml in dark_base. Performance is not the point here
+    
+    dark_dir = [ el for el in glbl.allfolders if el.endswith('dark_base')][0]
+    # maybe we want to make every elements in glbl.allfolders as an attribute in the future
+    #print('=== Pull out dark yamls within {} seconds'.format(expire_time * 60.0))
+    
+    dark_yaml = [ el for el in os.listdir(dark_dir) if os.path.getmtime(os.path.join(dark_dir,el)) < time.time() - expire_time * 60.0]
+    #print('qualfied_dark_yaml_list = {}'.format(dark_yaml))
+    dark_pool = []
+    if dark_yaml:
+        for el in dark_yaml:
+            f_path = os.path.join(dark_dir, el)
+            with open (f_path, 'r') as f:
+                dummy_dark_dict = yaml.load(f)
+            dark_pool.append(dummy_dark_dict)
+    print('read out dark_pool = {}'.format(dark_pool))
+    return dark_pool # if an empty dark_pool is returned, it means collect a dark anyway
 
 '''
