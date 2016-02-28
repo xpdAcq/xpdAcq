@@ -14,16 +14,19 @@
 #
 #
 ##############################################################################
-import numpy as np
-#from xpdacq.beamtime import Union, Xposure
 import os
 import yaml
+import time
+import numpy as np
 
 from bluesky.plans import Count
 from bluesky import Msg
 from bluesky.plans import AbsScanPlan
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
+#from xpdacq.beamtime import Union, Xposure
+
+#from xpdacq.control import _close_shutter, _open_shutter
 
 ''' things that should be created and imported during start_up
 #xpdRE = _get_obj('xpdRE')
@@ -139,14 +142,18 @@ def _read_dark_yaml(expire_time):
     
     dark_dir = [ el for el in glbl.allfolders if el.endswith('dark_base')][0]
     # maybe we want to make every elements in glbl.allfolders as an attribute in the future
-    dark_yaml = [ el for el in os.listdir(dark_dir) if os.path.getmtime(el) < time.time() - expire_time * 60.0]
+    #print('=== Pull out dark yamls within {} seconds'.format(expire_time * 60.0))
+    
+    dark_yaml = [ el for el in os.listdir(dark_dir) if os.path.getmtime(os.path.join(dark_dir,el)) < time.time() - expire_time * 60.0]
+    #print('qualfied_dark_yaml_list = {}'.format(dark_yaml))
     dark_pool = []
     if dark_yaml:
         for el in dark_yaml:
             f_path = os.path.join(dark_dir, el)
             with open (f_path, 'r') as f:
-                dummy_dark_dict = yaml.dump(f)
+                dummy_dark_dict = yaml.load(f)
             dark_pool.append(dummy_dark_dict)
+    print('read out dark_pool = {}'.format(dark_pool))
     return dark_pool # if an empty dark_pool is returned, it means collect a dark anyway
 
 def _find_right_dark(dark_pool, light_cnt_time):
@@ -166,34 +173,36 @@ def _find_right_dark(dark_pool, light_cnt_time):
                 uid to qualified dark frame
     '''
     if dark_pool:
-        #### this block of code is to extract dark cnt time. It can be improved later ####
         dark_index_list = []
         for ind, el in enumerate(dark_pool):
             cnt_time_tuple = (ind, el)
             dark_index_list.append(cnt_time_tuple)
-        ##########
         
-        qualified_dark_index = _qualified_dark(dark_index_list, light_cnt_time)[-1] # get the last index of qualified dark in dark_pool
-        qualified_dark_dict = dark_pool[qualified_dark_index]
-        dark_field_uid = _qualified_uid(qualified_dark_dict)
-        return dark_field_uid
+        qualified_index_list = _qualified_dark(dark_index_list, light_cnt_time)
+        if qualified_index_list:
+            qualified_dark_index = _qualified_dark(dark_index_list, light_cnt_time)[-1] # get the last index of qualified dark in dark_pool
+            qualified_dark_dict = dark_pool[qualified_dark_index]
+            dark_field_uid = _qualified_uid(qualified_dark_dict)
+            return dark_field_uid
+        else:
+            return # if can't find any qualifed index. collect a dark anyway
     else:
-        # an empty return means collect a dark anyway
-        return
+        return # an empty dark_pool means no dark yaml at all. collect a dark anyway
 
 def _qualified_dark(dark_index_list, light_cnt_time):
     ''' return index of dictionary that contains qualified dark '''
-    qaulified_index_list = []
+    qualified_index_list = []
     for el in dark_index_list:
         dark_cnt_time = list(el[1].keys())[0]
         # index is related to data strucutre we are using: {dark_cnt_time : (uid, time)}
-        if abs(float(dark_cnt_time) - light_cnt_time) < FRAME_ACQUIRE_TIME:
+        if abs(float(dark_cnt_time) - light_cnt_time) < 0.9*FRAME_ACQUIRE_TIME: 
+                                                        # in order to solve ambiguity of 0.2s and 0.1s
             qualified_index_list.append(el[0])
     return qualified_index_list
 
 def _qualified_uid(qualified_dark_dict):
     for el in list(qualified_dark_dict.values()):
-        for sub_el in el
+        for sub_el in el:
             if isinstance(sub_el, str):
                 dark_uid = sub_el
     return dark_uid
@@ -201,8 +210,8 @@ def _qualified_uid(qualified_dark_dict):
 
 def _execute_find_right_dark(light_cnt_time, expire_time):
     dark_pool = _read_dark_yaml(expire_time)
-    dark_uid = _find_right_dark(dark_pool, light_cnt_time)
-    return dark_uid # if it is empty, means collect a dark
+    dark_field_uid = _find_right_dark(dark_pool, light_cnt_time)
+    return dark_field_uid # if it is empty, means collect a dark
 
 #### code block of dark subtraction ####
 
@@ -240,7 +249,7 @@ def dark(sample,scan,**kwargs):
     dark_uid = str(uuid.uuid1())
     dark_exp_t = scan.md['sc_params']['exposure']
     #dark_def = { str(dark_exp_t) : (dark_uid, dark_time) }
-    dark_def = { str(dark_exp_t) : dark_uid} # simplified version. timestamp is replaced with modified time
+    dark_def = { str(dark_exp_t) : dark_uid} # simplified version. timestamp is replaced with file modified time
     _yamify_dark(dark_def)
 
     _close_shutter()
@@ -253,10 +262,11 @@ def dark(sample,scan,**kwargs):
     
 def _yamify_dark(dark_def):
     dark_dir = [ el for el in glbl.allfolders if el.endswith('dark_base')][0]
-    f_name = 'dark_{}'.format(strftime('%Y-%m-%d-%H%M'))+'.yml'
+    f_name = 'dark_{}'.format(time.strftime('%Y-%m-%d-%H%M'))+'.yml'
     w_name = os.path.join(dark_dir, f_name)
-    with open(w_name, 'r') as f:
+    with open(w_name, 'w') as f:
         yaml.dump(dark_def, f)
+    return f_name
 
 def setupscan(sample,scan,**kwargs):
     '''used for setup scans NOT production scans
