@@ -126,7 +126,8 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(bt.md['bt_wavelength'],0.1812)
         os.chdir(self.base_dir)
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,['bt_bt.yml','ex_l-user.yml','sa_l-user.yml'])
+        strtScnLst = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sc_ct.1s.yml','sc_ct.5s.yml','sc_ct1s.yml','sc_ct5s.yml','sc_ct10s.yml','sc_ct30s.yml']
+        self.assertEqual(newobjlist,strtScnLst)
     
     @unittest.expectedFailure
     def test_execute_end_beamtime(self):

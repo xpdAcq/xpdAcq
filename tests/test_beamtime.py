@@ -19,7 +19,7 @@ class NewExptTest(unittest.TestCase):
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
         #_make_clean_env()
         self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)     
-        self.stbt_list = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml']
+        self.stbt_list = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sc_ct.1s.yml','sc_ct.5s.yml','sc_ct1s.yml','sc_ct5s.yml','sc_ct10s.yml','sc_ct30s.yml']
 
     def tearDown(self):
         os.chdir(self.base_dir)

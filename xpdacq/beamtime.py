@@ -121,7 +121,7 @@ class XPD:
     @classmethod
     def list(cls, type=None):
         olist = cls.loadyamls(cls)
-        hlist = cls._get_hidden_list(cls)
+        hlist = _get_hidden_list()
         if type is None:
             iter = 0
             for i in olist:
@@ -160,7 +160,7 @@ class XPD:
 
     @classmethod
     def get(cls, index):
-        list = cls.loadyamls()
+        list = cls.loadyamls(cls)
         return list[index]
 
 #    @classmethod
