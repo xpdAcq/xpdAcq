@@ -18,7 +18,8 @@ class NewExptTest(unittest.TestCase):
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
         #_make_clean_env()
-        self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
+        self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)     
+        self.stbt_list = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml']
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -60,20 +61,20 @@ class NewExptTest(unittest.TestCase):
         testfname = os.path.join(yaml_dir,'bt_test.yml')
         probe = xpdobj._yamify()
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,['bt_bt.yml','bt_test.yml'])
+        self.assertEqual(newobjlist,self.stbt_list+['bt_test.yml'])
         xpdobj2 = XPD()
         xpdobj2.name = ' test2'
         xpdobj2.type = 'b t'
         testfname2 = os.path.join(yaml_dir,'bt_test2.yml')
         probe2 = xpdobj2._yamify()
         newobjlist2 = _get_yaml_list()
-        self.assertEqual(newobjlist2,['bt_bt.yml','bt_test.yml','bt_test2.yml'])
+        self.assertEqual(newobjlist2,self.stbt_list+['bt_test.yml','bt_test2.yml'])
         self.assertEqual(probe,testfname)
         self.assertTrue(os.path.isfile(probe))
         # try adding another item that is already there
         probe3 = xpdobj2._yamify()
         newobjlist3 = _get_yaml_list()
-        self.assertEqual(newobjlist3,['bt_bt.yml','bt_test.yml','bt_test2.yml'])
+        self.assertEqual(newobjlist3,self.stbt_list+['bt_test.yml','bt_test2.yml'])
 
 #        olist = xpdobj.loadyamls()
 #        self.assertEqual(olist[0].name,'bt')
@@ -109,19 +110,19 @@ class NewExptTest(unittest.TestCase):
         self.assertEqual(self.ex.md['ex_name'],'myexp')
         uid1 = self.ex.md['ex_uid']
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,['bt_bt.yml','ex_myexp.yml'])
+        self.assertEqual(newobjlist,self.stbt_list+['ex_myexp.yml'])
         self.ex2 = Experiment(' your exp',self.bt)
         self.assertEqual(self.ex2.md['ex_name'],'your exp')
         uid2 = self.ex2.md['ex_uid']
         self.assertNotEqual(uid1,uid2)
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,['bt_bt.yml','ex_myexp.yml','ex_yourexp.yml'])
+        self.assertEqual(newobjlist,self.stbt_list+['ex_myexp.yml','ex_yourexp.yml'])
         self.ex3 = Experiment(' your exp',self.bt)
         self.assertEqual(self.ex3.md['ex_name'],'your exp')
         uid3 = self.ex3.md['ex_uid']
         self.assertEqual(uid2,uid3)
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,['bt_bt.yml','ex_myexp.yml','ex_yourexp.yml'])
+        self.assertEqual(newobjlist,self.stbt_list+['ex_myexp.yml','ex_yourexp.yml'])
 
     def test_make_sample(self):
         name = 'my sample '
@@ -136,26 +137,26 @@ class NewExptTest(unittest.TestCase):
         self.assertEqual(self.sa.md['sa_name'],'my sample')
         uid1 = self.sa.md['sa_uid']
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,['bt_bt.yml','ex_myexp.yml','sa_mysample.yml'])
+        self.assertEqual(newobjlist,self.stbt_list+['ex_myexp.yml','sa_mysample.yml'])
         self.sa2 = Sample(' your sample',self.ex)
         self.assertEqual(self.sa2.md['sa_name'],'your sample')
         uid2 = self.sa2.md['sa_uid']
         self.assertNotEqual(uid1,uid2)
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,['bt_bt.yml','ex_myexp.yml','sa_mysample.yml','sa_yoursample.yml'])
+        self.assertEqual(newobjlist,self.stbt_list+['ex_myexp.yml','sa_mysample.yml','sa_yoursample.yml'])
         self.sa3 = Sample(' your sample',self.ex)
         self.assertEqual(self.sa3.md['sa_name'],'your sample')
         uid3 = self.sa3.md['sa_uid']
         self.assertEqual(uid2,uid3)
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,['bt_bt.yml','ex_myexp.yml','sa_mysample.yml','sa_yoursample.yml'])
+        self.assertEqual(newobjlist,self.stbt_list+['ex_myexp.yml','sa_mysample.yml','sa_yoursample.yml'])
 
     def test_hide(self):
         name = 'my sample '
         self.ex = Experiment('myexp',self.bt)
         self.sa = Sample(name,self.ex)
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,['bt_bt.yml','ex_myexp.yml','sa_mysample.yml'])
+        self.assertEqual(newobjlist,self.stbt_list+['ex_myexp.yml','sa_mysample.yml'])
         self.hidelist = self.bt.hide(1)
         self.assertEqual(self.hidelist,[1])
         hidden_list = _get_hidden_list() 
@@ -166,7 +167,7 @@ class NewExptTest(unittest.TestCase):
         self.ex = Experiment('myexp',self.bt)
         self.sa = Sample(name,self.ex)
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,['bt_bt.yml','ex_myexp.yml','sa_mysample.yml'])
+        self.assertEqual(newobjlist,self.stbt_list+['ex_myexp.yml','sa_mysample.yml'])
         self.hidelist = self.bt.hide(1)
         self.assertEqual(self.hidelist,[1])
         hidden_list1 = _get_hidden_list() 

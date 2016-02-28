@@ -19,7 +19,7 @@ import datetime
 import shutil
 from time import strftime
 from xpdacq.utils import _graceful_exit
-from xpdacq.beamtime import Beamtime, XPD
+from xpdacq.beamtime import Beamtime, XPD, Experiment, Sample
 from xpdacq.beamtime import export_data
 from xpdacq.glbl import glbl
 
@@ -185,6 +185,10 @@ def _execute_start_beamtime(piname,safn,wavelength,explist,home_dir=None):
     _make_clean_env()
     os.chdir(home_dir)
     bt = Beamtime(PI_name,saf_num,wavelength,experimenters)
+
+    # now populate the database with some dummy objects
+    ex = Experiment('l-user',bt)
+    sa = Sample('l-user',ex)
     return bt
 
 if __name__ == '__main__':

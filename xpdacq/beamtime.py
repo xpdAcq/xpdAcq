@@ -138,7 +138,7 @@ class XPD:
                         print(i.type+' object '+str(i.name)+' has list index ', iter-1)
         print('Use bt.get(index) to get the one you want')
 
-    def hide(cls,index):
+    def hide(self,index):
         hidden_list = _get_hidden_list()
         hidden_list.append(index)
         yaml_dir = glbl.yaml_dir
@@ -147,7 +147,7 @@ class XPD:
         yaml.dump(hidden_list, fo)
         return hidden_list
 
-    def unhide(cls,index):
+    def unhide(self,index):
         hidden_list = _get_hidden_list()
         while index in hidden_list: 
             hidden_list.remove(index)
@@ -287,7 +287,6 @@ class ScanPlan(XPD):
         self.md = {}
         self.md.update({'sc_name': _clean_md_input(self.name)})
         self.md.update({'sc_type': _clean_md_input(self.scan)})
-        self.md.update({'sc_uid': self._getuid()})
         self.md.update({'sc_usermd':_clean_md_input(kwargs)})
         if self.shutter: 
             self.md.update({'sc_shutter_control':'in-scan'})
@@ -299,6 +298,14 @@ class ScanPlan(XPD):
         if verify_write: subs.append('verify_write')
         if len(subs) > 0: scan_params.update({'subs':_clean_md_input(subs)}) 
         self.md.update({'sc_params': _clean_md_input(scan_params)})
+        fname = self._name_for_obj_yaml_file(self.name,self.type)
+        objlist = _get_yaml_list()
+        # get objlist from yaml file
+        if fname in objlist:
+            olduid = self._get_obj_uid(self.name,self.type)
+            self.md.update({'sc_uid': olduid})
+        else:
+            self.md.update({'sc_uid': self._getuid()})
         
         self._yamify()
 
