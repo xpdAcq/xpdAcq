@@ -19,8 +19,8 @@ import datetime
 import shutil
 from time import strftime
 from xpdacq.utils import _graceful_exit
-from xpdacq.beamtime import Beamtime, XPD
-from xpdacq.beamtime import export_data, _clean_md_input
+from xpdacq.beamtime import Beamtime, XPD, Experiment, Sample, ScanPlan
+from xpdacq.beamtime import export_data,_clean_md_input,_get_hidden_list
 from xpdacq.glbl import glbl
 
 #datapath = glbl.dp()
@@ -171,11 +171,11 @@ def _start_beamtime(home_dir=None):
     safn = input('Please enter the SAF number for this beamtime: ')
     wavelength = input('Please enter the x-ray wavelength: ')
     print('Please enter a list of experimenters with syntax [("lastName","firstName",userID)]')
-    explist = input('default = []  ')
-    _explist = _clean_md_input(eval(explist))
-    
+    explist = input('default = []  ')   
     if explist == '':
         explist = []
+    _explist = _clean_md_input(explist)
+
     bt = _execute_start_beamtime(piname, safn, wavelength, _explist, home_dir)
     return bt
 
@@ -187,6 +187,16 @@ def _execute_start_beamtime(piname,safn,wavelength,explist,home_dir=None):
     _make_clean_env()
     os.chdir(home_dir)
     bt = Beamtime(PI_name,saf_num,wavelength,experimenters)
+
+    # now populate the database with some dummy objects
+    ex = Experiment('l-user',bt)
+    sa = Sample('l-user',ex)
+    sc01 = ScanPlan('ct.1s','ct',{'exposure':0.1})
+    sc05 = ScanPlan('ct.5s','ct',{'exposure':0.5})
+    sc1 = ScanPlan('ct1s','ct',{'exposure':1.0})
+    sc5 = ScanPlan('ct5s','ct',{'exposure':5.0})
+    sc10 = ScanPlan('ct10s','ct',{'exposure':10.0})
+    sc30 = ScanPlan('ct30s','ct',{'exposure':30.0})
     return bt
 
 if __name__ == '__main__':
