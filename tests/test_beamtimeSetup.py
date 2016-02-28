@@ -13,7 +13,7 @@ from xpdacq.glbl import glbl
 
 import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment
-from xpdacq.beamtime import Beamtime
+from xpdacq.beamtime import Beamtime,_get_yaml_list
 
 
 class NewBeamtimeTest(unittest.TestCase): 
@@ -95,7 +95,7 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(dirs,[home_dir,conf_dir,tiff_dir,dark_dir,yml_dir,
             usrconfig_dir,userscripts_dir,export_dir,import_dir,userysis_dir])
 
-    def test_mybt_creation(self):
+    def test_bt_creation(self):
         _make_clean_env()
         self.bt = Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=self.base_dir)
         self.assertIsInstance(self.bt,Beamtime)
@@ -125,6 +125,8 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(bt.md['bt_safN'],123)
         self.assertEqual(bt.md['bt_wavelength'],0.1812)
         os.chdir(self.base_dir)
+        newobjlist = _get_yaml_list()
+        self.assertEqual(newobjlist,['bt_bt.yml','ex_l-user.yml','sa_l-user.yml'])
     
     @unittest.expectedFailure
     def test_execute_end_beamtime(self):
