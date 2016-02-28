@@ -134,52 +134,6 @@ def _unpack_and_run(sample,scan,**kwargs):
 
 # simplified approach : yamify every dark scan, load them in a time and find the best one!
 
-
-def _find_right_dark(dark_pool, light_cnt_time):
-    ''' find the uid of appropriate dark inside dark_base
-    
-        Parameters
-        ----------
-            dark_yaml_pool - list
-                list of dark dictionary objects
-            
-            light_cnt_time - flot
-                exposure time of light image
-            
-        Returns
-        -------
-            dark_field_uid - str
-                uid to qualified dark frame
-    '''
-    if dark_pool:
-        #### this block of code is to extract dark cnt time. It can be improved later ####
-        dark_cnt_time_list = []
-        for ind, el in enumerate(dark_pool):
-            cnt_time_tuple = (ind, el)
-            dark_cnt_time_list.append(cnt_time_tuple)
-        ##########
-        
-        qualified_dark_index = _qualified_dark(dark_cnt_time_list, light_cnt_time)[-1] # get the last one
-        qualified_dark_dict = dark_pool[qualified_dark_index]
-        dark_field_uid = _qualified_uid(qualified_dark_dict)
-        return dark_field_uid
-    else:
-        return # an empty return means collect a dark anyway
-
-def _qualified_dark(dark_cnt_time_list, light_cnt_time):
-    output_list = []
-    for el in dark_cnt_time_list:
-        if abs(float(el[1]) - light_cnt_time) < FRAME_ACQUIRE_TIME:
-            output_list.append(el[0])
-    return output_list
-
-def _qualified_uid(qualified_dark_dict):
-    for el in list(qualified_dark_dict.values()):
-        if isinstance(el[0], str):
-            dark_uid = el[0]
-    return dark_uid
-
-
 def _read_dark_yaml(expire_time):
     # read every dark yaml in dark_base. Performance is not the point here
     
@@ -193,7 +147,57 @@ def _read_dark_yaml(expire_time):
             with open (f_path, 'r') as f:
                 dummy_dark_dict = yaml.dump(f)
             dark_pool.append(dummy_dark_dict)
-    return dark_pool # if an empty dark_pool return, it means collect a dark anyway
+    return dark_pool # if an empty dark_pool is returned, it means collect a dark anyway
+
+def _find_right_dark(dark_pool, light_cnt_time):
+    ''' find the uid of appropriate dark inside dark_base
+    
+        Parameters
+        ----------
+            dark_pool - list
+                list of dark dictionary objects
+            
+            light_cnt_time - flot
+                exposure time of light image
+            
+        Returns
+        -------
+            dark_field_uid - str
+                uid to qualified dark frame
+    '''
+    if dark_pool:
+        #### this block of code is to extract dark cnt time. It can be improved later ####
+        dark_index_list = []
+        for ind, el in enumerate(dark_pool):
+            cnt_time_tuple = (ind, el)
+            dark_index_list.append(cnt_time_tuple)
+        ##########
+        
+        qualified_dark_index = _qualified_dark(dark_index_list, light_cnt_time)[-1] # get the last index of qualified dark in dark_pool
+        qualified_dark_dict = dark_pool[qualified_dark_index]
+        dark_field_uid = _qualified_uid(qualified_dark_dict)
+        return dark_field_uid
+    else:
+        # an empty return means collect a dark anyway
+        return
+
+def _qualified_dark(dark_index_list, light_cnt_time):
+    ''' return index of dictionary that contains qualified dark '''
+    qaulified_index_list = []
+    for el in dark_index_list:
+        dark_cnt_time = list(el[1].keys())[0]
+        # index is related to data strucutre we are using: {dark_cnt_time : (uid, time)}
+        if abs(float(dark_cnt_time) - light_cnt_time) < FRAME_ACQUIRE_TIME:
+            qualified_index_list.append(el[0])
+    return qualified_index_list
+
+def _qualified_uid(qualified_dark_dict):
+    for el in list(qualified_dark_dict.values()):
+        for sub_el in el
+            if isinstance(sub_el, str):
+                dark_uid = sub_el
+    return dark_uid
+
 
 def _execute_find_right_dark(light_cnt_time, expire_time):
     dark_pool = _read_dark_yaml(expire_time)
@@ -216,13 +220,12 @@ def prun(sample,scan,**kwargs):
     # expire_time = scan.md['sc_params']['expire_time']  FIXME : not ready yet
     dark_filed_uid = _execute_find_right_dark(light_cnt_time, expire_time)
     if dark_filed_uid:
-        scan.md.update({'dark_field_uid': dark_field_uid})
+        pass # found a qaulified dark
     else:
-        dark(sampl, scan, **kwargs)
-
+        # can't find a qualified dark. Then run a dark and obtain dark_field_uid
+        dark_field_uid = dark(sample, scan, **kwargs)
+    scan.md.update({'dark_field_uid': dark_field_uid})
     _unpack_and_run(sample,scan,**kwargs)
-    # update_md_after_dark() FIXME
-    #parms = scan.sc_params
     if scan.shutter: _close_shutter()
 
 def dark(sample,scan,**kwargs):
@@ -233,25 +236,27 @@ def dark(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    dark_time = time.time()
+    dark_time = time.time() # timestamp might not be necessary as we are using modified time to select dark yaml
     dark_uid = str(uuid.uuid1())
     dark_exp_t = scan.md['sc_params']['exposure']
-    dark_def = { str(dark_exp_t) : (dark_uid, dark_time) }
+    #dark_def = { str(dark_exp_t) : (dark_uid, dark_time) }
+    dark_def = { str(dark_exp_t) : dark_uid} # simplified version. timestamp is replaced with modified time
     _yamify_dark(dark_def)
 
     _close_shutter()
     scan.md.update({'xp_isdark':True})
-    scan.md.update({'xp_dark_def': dark_def}) # maybe not needed ?
+    scan.md.update({'xp_dark_def': dark_def})
     _unpack_and_run(sample,scan,**kwargs)
     _close_shutter()
-
+    
+    return dark_uid
+    
 def _yamify_dark(dark_def):
     dark_dir = [ el for el in glbl.allfolders if el.endswith('dark_base')][0]
     f_name = 'dark_{}'.format(strftime('%Y-%m-%d-%H%M'))+'.yml'
     w_name = os.path.join(dark_dir, f_name)
     with open(w_name, 'r') as f:
         yaml.dump(dark_def, f)
-    return
 
 def setupscan(sample,scan,**kwargs):
     '''used for setup scans NOT production scans
