@@ -1,3 +1,14 @@
+
+import sys
+
+def _graceful_exit(error_message):
+    try:
+        raise RuntimeError(error_message)
+        return 0
+    except Exception as err:
+        sys.stderr.write('WHOOPS: {}'.format(str(err)))
+        return 1
+
 def composition_analysis(compstring):
     """Pulls out elements and their ratios from the config file.
 

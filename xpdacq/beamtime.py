@@ -22,95 +22,163 @@ from time import strftime
 import sys
 import socket
 from xpdacq.glbl import glbl
+from xpdacq.utils import _graceful_exit
 
 #datapath = glbl.dp()
 home_dir = glbl.home
 yaml_dir = glbl.yaml_dir
 
-class XPD:
+def _get_yaml_list():
+    yaml_dir = glbl.yaml_dir
+    lname = os.path.join(yaml_dir,'_acqobj_list.yml')
+    with open(lname, 'r') as fout:
+        yaml_list = yaml.load(fout) 
+    return list(yaml_list)
 
+def _get_hidden_list():
+    yaml_dir = glbl.yaml_dir
+    lname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
+    with open(lname, 'r') as fout:
+        hidden_list = yaml.load(fout) 
+    return list(hidden_list)
+
+def _update_objlist(objlist,name):
+    # check whether this obj exists already if yes, don't add it again.
+    if name not in objlist:
+        objlist.append(name)
+    return objlist
+
+class XPD:
+    objlist = []
     def _getuid(self):
         return str(uuid.uuid1())
 
     def export(self):
         return self.md
 
-    def _yaml_path(self):
-        yaml_dir_path = yaml_dir
-        os.makedirs(yaml_dir_path, exist_ok = True)
-        return yaml_dir_path
+    def _get_obj_uid(self,name,otype):
+        yamls = self.loadyamls()
+        uidid = "_".join([otype,'uid'])
+        for i in yamls:
+            if i.name == name:
+                if i.type == otype:
+                    ouid = i.md[str(uidid)]
+        return ouid
 
-    def _yaml_garage_path(self):
-        yaml_garage_dir_path = os.path.join(self._home_path, 'config_base', 'yml_garage')
-        # backup directory when user wants to move out objects from default reading list
-        os.makedirs(yaml_garage_dir_path, exist_ok = True)
-        return yaml_garage_dir_path
+    def _yaml_path(self):
+        os.makedirs(yaml_dir, exist_ok = True)
+        return yaml_dir
+
+    def _name_for_obj_yaml_file(self,oname,ftype):
+        cleaned_oname = _clean_name(oname)
+        cleaned_ftype = _clean_name(ftype)
+        fname = str(cleaned_ftype) +'_'+ str(cleaned_oname) +'.yml'
+        return fname
+
+#    def _yaml_garage_path(self):
+#        yaml_garage_dir_path = os.path.join(self._home_path, 'config_base', 'yml_garage')
+#        # backup directory when user wants to move out objects from default reading list
+#        os.makedirs(yaml_garage_dir_path, exist_ok = True)
+#        return yaml_garage_dir_path
 
     def _yamify(self):
         '''write a yaml file for this object and place it in config_base/yml'''
-        fname = self.name
+        yaml_dir = glbl.yaml_dir
+        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
+        oname = self.name
         ftype = self.type
-        fpath = os.path.join(self._yaml_path(), str(ftype) +'_'+ str(fname) +'.yml')
+        fname = self._name_for_obj_yaml_file(oname,ftype)
+        fpath = os.path.join(self._yaml_path(), fname)
+        objlist = _get_yaml_list()
+        objlist = _update_objlist(objlist, fname)
+        with open(lname, 'w') as fout:
+            yaml.dump(objlist, fout)
+
+#        if os.path.isfile(lname):
+#            with open(lname, 'a') as fout:
+#                yaml.dump(, fout)
+#        else:
+#            obj_list = [XPD.obj_list]
+#            with open(lname, 'w') as fout:
+#                yaml.dump(obj_list, fout)
         if isinstance(fpath, str):
             with open(fpath, 'w') as fout:
                 yaml.dump(self, fout)
         else:
             yaml.dump(self, fpath)
+        return fpath
 
-    @classmethod
-    def _get_ymls(cls):
-        fpath = cls._yaml_path
-        yamls = os.listdir(fpath)
-        return yamls
-
-    @classmethod
-    def loadyamls(cls):
-        fpath = cls._yaml_path(cls)
-        yamls = os.listdir(fpath)
+    def loadyamls(self):
+        yaml_dir = glbl.yaml_dir
+        yaml_list = _get_yaml_list()
         olist = []
-        for f in yamls:
-            fname = os.path.join(fpath,f)
+        for f in yaml_list:
+            fname = os.path.join(yaml_dir,f)
             with open(fname, 'r') as fout:
                 olist.append(yaml.load(fout))
         return olist
 
     @classmethod
     def list(cls, type=None):
-        list = cls.loadyamls()
+        olist = cls.loadyamls(cls)
+        hlist = cls._get_hidden_list(cls)
         if type is None:
             iter = 0
-            for i in list:
+            for i in olist:
                 iter += 1
-                print(i.type+' object '+str(i.name)+' has list index ', iter-1)
+                myuid = i._get_obj_uid(i.name,i.type)
+                if iter-1 not in hlist:
+                    print(i.type+' object '+str(i.name)+' has list index ', iter-1,'and uid',myuid[:6])
         else:
             iter = 0
-            for i in list:
+            for i in olist:
                 iter += 1
                 if i.type == type:
-                    print(i.type+' object '+str(i.name)+' has list index ', iter-1)
+                    if iter-1 not in hlist:
+                        print(i.type+' object '+str(i.name)+' has list index ', iter-1)
         print('Use bt.get(index) to get the one you want')
+
+    def hide(cls,index):
+        hidden_list = _get_hidden_list()
+        hidden_list.append(index)
+        yaml_dir = glbl.yaml_dir
+        hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
+        fo = open(hname, 'w')
+        yaml.dump(hidden_list, fo)
+        return hidden_list
+
+    def unhide(cls,index):
+        hidden_list = _get_hidden_list()
+        while index in hidden_list: 
+            hidden_list.remove(index)
+        yaml_dir = glbl.yaml_dir
+        hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
+        fo = open(hname, 'w')
+        yaml.dump(hidden_list, fo)
+        return hidden_list
+
 
     @classmethod
     def get(cls, index):
         list = cls.loadyamls()
         return list[index]
 
-    @classmethod
-    def remove(cls, index):
-        garage_path = cls._yaml_garage_path(cls)
-        read_path = cls._yaml_path(cls)
-
-        list = cls.loadyamls()
-        obj_name = list[index].name
-        obj_type = list[index].type
-        f_name = os.path.join(read_path, obj_type+'_'+obj_name+'.yml')
-
-        print("You are about to remove %s object with name %s from current object list" % (obj_type, obj_name))
-        user_confirm = input("Do you want to continue y/[n]: ")
-        if user_confirm in ('y','Y'):
-            shutil.move(f_name, garage_path)
-        else:
-            return
+#    @classmethod
+#    def remove(cls, index):
+#        garage_path = cls._yaml_garage_path(cls)
+#        read_path = cls._yaml_path(cls)#
+#
+#        list = cls.loadyamls()
+#        obj_name = list[index].name
+#        obj_type = list[index].type
+#        f_name = os.path.join(read_path, obj_type+'_'+obj_name+'.yml')#
+#
+#        print("You are about to remove %s object with name %s from current object list" % (obj_type, obj_name))
+#        user_confirm = input("Do you want to continue y/[n]: ")
+#        if user_confirm in ('y','Y'):
+#            shutil.move(f_name, garage_path)
+#        else:
+#            return
     
 class Beamtime(XPD):
     def __init__(self, pi_last, safn, wavelength, experimenters = [], **kwargs):
@@ -120,18 +188,48 @@ class Beamtime(XPD):
                     'bt_usermd':_clean_md_input(kwargs)}
         self.md.update({'bt_wavelength': _clean_md_input(wavelength)})
         self.md.update({'bt_experimenters': _clean_md_input(experimenters)})
-        self.md.update({'bt_uid': self._getuid()})
+
+        #initialize the objlist yaml file if it doesn't exist
+        yaml_dir = glbl.yaml_dir
+        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
+        hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
+        if not os.path.isfile(lname):
+            objlist = []
+            fo = open(lname, 'w')
+            yaml.dump(objlist, fo)
+        if not os.path.isfile(hname):
+            hidlist = []
+            fo = open(hname, 'w')
+            yaml.dump(hidlist, fo)
+
+        
+        fname = self._name_for_obj_yaml_file(self.name,self.type)
+        objlist = _get_yaml_list()
+        # get objlist from yaml file
+        if fname in objlist:
+            olduid = self._get_obj_uid(self.name,self.type)
+            self.md.update({'bt_uid': olduid})
+        else:
+            self.md.update({'bt_uid': self._getuid()})
         self._yamify()
 
 class Experiment(XPD):
     def __init__(self, expname, beamtime, **kwargs):
+        self.bt = beamtime
         self.name = _clean_md_input(expname)
         self.type = 'ex'
-        self.bt = beamtime
         self.md = self.bt.md
         self.md.update({'ex_name': self.name})
-        self.md.update({'ex_uid': self._getuid()})
+#        self.md.update({'ex_uid': self._getuid()})
         self.md.update({'ex_usermd':_clean_md_input(kwargs)})
+        fname = self._name_for_obj_yaml_file(self.name,self.type)
+        objlist = _get_yaml_list()
+        # get objlist from yaml file
+        if fname in objlist:
+            olduid = self._get_obj_uid(self.name,self.type)
+            self.md.update({'ex_uid': olduid})
+        else:
+            self.md.update({'ex_uid': self._getuid()})
         self._yamify()
 
 class Sample(XPD):
@@ -141,8 +239,16 @@ class Sample(XPD):
         self.ex = experiment
         self.md = self.ex.md
         self.md.update({'sa_name': self.name})
-        self.md.update({'sa_uid': self._getuid()})
+#        self.md.update({'sa_uid': self._getuid()})
         self.md.update({'sa_usermd': _clean_md_input(kwargs)})
+        fname = self._name_for_obj_yaml_file(self.name,self.type)
+        objlist = _get_yaml_list()
+        # get objlist from yaml file
+        if fname in objlist:
+            olduid = self._get_obj_uid(self.name,self.type)
+            self.md.update({'sa_uid': olduid})
+        else:
+            self.md.update({'sa_uid': self._getuid()})
         self._yamify()
 
 class ScanPlan(XPD):
@@ -301,6 +407,16 @@ def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
         print('New archive file with name '+out_file+' written.')
         print('Please copy this to your local computer or external hard-drive')
     return out_file
+    
+def _clean_name(name,max_length=25):
+    '''strips a string, but also removes internal whitespace
+    '''
+    if not isinstance(name,str):
+        sys.exit(_graceful_exit('Your input, {}, appears not to be a string. Please try again'.format(str(name))))
+    cleaned = "".join(name.split())
+    if len(cleaned) > max_length:
+        sys.exit(_graceful_exit('Please try a name for your object that is < {} characters long'.format(str(max_length))))
+    return cleaned
 
 def _clean_md_input(obj):
     ''' strip white space '''
@@ -329,6 +445,3 @@ def _clean_md_input(obj):
 
     else:
         return obj
-
-
-    
