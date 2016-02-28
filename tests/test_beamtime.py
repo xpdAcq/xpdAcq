@@ -151,6 +151,11 @@ class NewExptTest(unittest.TestCase):
         newobjlist = _get_yaml_list()
         self.assertEqual(newobjlist,self.stbt_list+['ex_myexp.yml','sa_mysample.yml','sa_yoursample.yml'])
 
+    def test_make_scanPlan(self):
+    	self.sc = ScanPlan('myScan','ct',{'exposure':1.0})
+    	self.assertIsInstance(self.sc,ScanPlan)
+    	self.assertEqual(self.sc.md['sc_params'],{'exposure':1.0,'subs':['livetable']})
+
     def test_hide(self):
         name = 'my sample '
         self.ex = Experiment('myexp',self.bt)

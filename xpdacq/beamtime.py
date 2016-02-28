@@ -306,7 +306,6 @@ class ScanPlan(XPD):
             self.md.update({'sc_uid': olduid})
         else:
             self.md.update({'sc_uid': self._getuid()})
-        
         self._yamify()
 
     #FIXME - make validator clean later
