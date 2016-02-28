@@ -152,9 +152,25 @@ class NewExptTest(unittest.TestCase):
         self.assertEqual(newobjlist,self.stbt_list+['ex_myexp.yml','sa_mysample.yml','sa_yoursample.yml'])
 
     def test_make_scanPlan(self):
-    	self.sc = ScanPlan('myScan','ct',{'exposure':1.0})
-    	self.assertIsInstance(self.sc,ScanPlan)
-    	self.assertEqual(self.sc.md['sc_params'],{'exposure':1.0,'subs':['livetable']})
+        self.sc = ScanPlan('myScan','ct',{'exposure':1.0})
+        self.assertIsInstance(self.sc,ScanPlan)
+        self.assertEqual(self.sc.md['sc_params'],{'exposure':1.0,'subs':['livetable']})
+        uid1 = self.sc.md['sc_uid']
+        newobjlist = _get_yaml_list()
+        self.assertEqual(newobjlist,self.stbt_list+['sc_myScan.yml'])
+        self.sc2 = ScanPlan(' your scan','ct',{'exposure':1.0})
+        self.assertEqual(self.sc2.md['sc_name'],'your scan')
+        uid2 = self.sc2.md['sc_uid']
+        self.assertNotEqual(uid1,uid2)
+        newobjlist = _get_yaml_list()
+        self.assertEqual(newobjlist,self.stbt_list+['sc_myScan.yml','sc_yourscan.yml'])
+        self.sc3 = ScanPlan(' your scan','ct',{'exposure':1.0})
+        self.assertEqual(self.sc3.md['sc_name'],'your scan')
+        uid3 = self.sc3.md['sc_uid']
+        self.assertEqual(uid2,uid3)
+        # and one that fails the validator
+        self.assertRaises(SystemExit,lambda: ScanPlan(' your scan','ct',{'exposur':1.0}))
+
 
     def test_hide(self):
         name = 'my sample '
