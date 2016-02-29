@@ -10,7 +10,8 @@ BEAMLINE_HOST_NAME = 'xf28id1-ws2'
 BASE_DIR = os.path.expanduser('~/pe2_data')
 ARCHIVE_BASE_DIR = os.path.expanduser('~/pe2_data/.userBeamtimeArchive')
 USER_BACKUP_DIR_NAME = strftime('%Y')
-DARK_WINDOW = 15 # in terms of minute
+DARK_WINDOW = 15 # default value, in terms of minute
+FRAME_ACQUIRE_TIME = 0.1 # pe1 frame acq time
 
 hostname = socket.gethostname()
 if hostname == BEAMLINE_HOST_NAME:
@@ -62,6 +63,7 @@ class glbl():
     beamhost = BEAMLINE_HOST_NAME
     dk_yaml = DARK_YAML_NAME
     dk_window = DARK_WINDOW
+    frame_acq_time = FRAME_ACQUIRE_TIME
 
 if __name__ == '__main__':
     print(glbl.dp().home)

@@ -17,6 +17,7 @@
 import os
 import yaml
 import time
+import datetime
 import numpy as np
 
 from bluesky.plans import Count
@@ -24,7 +25,6 @@ from bluesky import Msg
 from bluesky.plans import AbsScanPlan
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
-from xpdacq.glbl import dark_
 #from xpdacq.beamtime import Union, Xposure
 
 #from xpdacq.control import _close_shutter, _open_shutter
@@ -40,9 +40,6 @@ from xpdacq.glbl import dark_
 #temp_controller = _get_obj(TEMP_CONTROLLER_NAME)
 
 '''
-
-FRAME_ACQUIRE_TIME = 0.1 # temeporarly place. It should be put into config.py or glbl.py
-
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 #expo_threshold = 60 # in seconds Deprecated!
 
@@ -141,55 +138,56 @@ def _read_dark_yaml():
         dark_scan_list = yaml.load(f)
     return dark_scan_list # if dark pool is an empty list, it means collect a dark anyway
 
-def validate_dark(light_cnt_time, expire_time):
+def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
     ''' find the uid of appropriate dark inside dark_base
     
         Parameters
         ----------
-        dark_pool : list
-            list of dark dictionary objects
-            
-        light_cnt_time : flot
-            exposure time of light image
+        light_cnt_time : float
+            exposure time of light image, expressed in seconds
+        expire_time : float
+            expire time of dark images, expressed in minute
+        dark_scan_list : list, optional
+            a list of dark dictionaries
         Returns
         -------
         dark_field_uid : str
             uid to qualified dark frame
     '''
-    dark_scan_list= _read_dark_yaml()
-    if dark_scan_list:
-        qualified_index_list = _qualified_dark(dark_index_list, light_cnt_time, expire_time)
+    if not dark_scan_list: dark_scan_list= _read_dark_yaml() # makes unittest easier. this logic is not used
+    if len(dark_scan_list) > 0:
+        qualified_index_list = _qualified_dark(dark_scan_list, light_cnt_time, expire_time)
         if qualified_index_list:
-            qualified_dark_index = _qualified_dark(dark_index_list, light_cnt_time)[-1] # pick the last one
+            qualified_dark_index = qualified_index_list[-1] # pick the last one
             qualified_dark_dict = dark_scan_list[qualified_dark_index]
             dark_field_uid = _qualified_uid(qualified_dark_dict)
             return dark_field_uid
         else:
-            return # if can't find any qualifed index. collect a dark anyway
+            return # no quaified dark in dark_scan_list. collect a dark
     else:
-        return # an empty dark_pool means no dark yaml at all. collect a dark anyway
-
+        return # nothing in dark_scan_list. collect a dark
+    
 def _qualified_dark(dark_scan_list, light_cnt_time, expire_time):
     ''' return index of dictionary that contains qualified dark '''
     qualified_index_list = []
-    for el in dark_scan_list:
-        dark_info_tuple = list(el[1].keys())
-        dark_cnt_time = dark_info_tuple[0]
-        dark_timestamp = dark_info_tuple[1]
-        is_right_cnt = abs(float(dark_cnt_time) - light_cnt_time) < 0.9*FRAME_ACQUIRE_TIME
-        is_valid = (time.time() - dark_timestamp) < expire_time * 60.0
-        # index is related to data strucutre we are using: {dark_cnt_time : (uid, time)}
-        if is_right_cnt and is_valid:
-            qualified_index_list.append(el[0])
+    for ind, el in enumerate(dark_scan_list):
+        dark_cnt_time = list(el.keys())[0] # type = str
+        dark_timestamp = list(el.values())[0][1] # comes from python3 convention and data structure
+        is_right_cnt = abs(float(dark_cnt_time) - light_cnt_time) < 0.9 * glbl.frame_acq_time
+        #if is_right_cnt: print('find right cnt = {} with index = {}'.format(dark_cnt_time, ind))
+        is_valid = (time.time() - dark_timestamp) < expire_time * 60.
+        #if is_valid: print('find right time = {} with index = {}'.format(datetime.datetime.fromtimestamp(time.time() - expire_time *60), ind))
+        if (is_right_cnt) and (is_valid): qualified_index_list.append(ind)
     return qualified_index_list
 
 def _qualified_uid(qualified_dark_dict):
+    ''' helper function to unpack dark_uid inside dark_information '''
     for el in list(qualified_dark_dict.values()):
         for sub_el in el:
             if isinstance(sub_el, str):
                 dark_uid = sub_el
     return dark_uid
- #### code block of dark subtraction ####
+#### code block of dark subtraction ####
 
 def prun(sample,scan,**kwargs):
     '''on this 'sample' run this 'scan'
@@ -202,15 +200,11 @@ def prun(sample,scan,**kwargs):
     if scan.shutter: _open_shutter()
     scan.md.update({'xp_isprun':True})
     light_cnt_time = scan.md['sc_params']['exposure']
-    expire_time = glbl.dark_window
+    expire_time = glbl.dk_window
     dark_filed_uid = validate_dark(light_cnt_time, expire_time)
-    if dark_filed_uid:
-        pass # found a qaulified dark
-    else:
-        # can't find a qualified dark. Then run a dark and obtain dark_field_uid
-        dark_field_uid = dark(sample, scan, **kwargs)
-    scan.md.update({'dark_field_uid': dark_field_uid})
-    scan.md['scan_params'].update({'dark_window':expire_time})
+    if not dark_filed_uid: dark_field_uid = dark(sample, scan, **kwargs)
+    scan.md.update({'sc_dk_field_uid': dark_field_uid})
+    scan.md['scan_params'].update({'sc_dk_window':expire_time})
     _unpack_and_run(sample,scan,**kwargs)
     if scan.shutter: _close_shutter()
 
