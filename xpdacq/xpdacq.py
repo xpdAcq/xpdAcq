@@ -208,6 +208,25 @@ def prun(sample,scan,**kwargs):
     _unpack_and_run(sample,scan,**kwargs)
     if scan.shutter: _close_shutter()
 
+def _unittest_prun(sample,scan,**kwargs):
+    '''on this 'sample' run this 'scan'
+    
+    this function doesn't control shutter nor trigger run engine. It is designed to test functionality
+
+    Arguments:
+    sample - sample metadata object
+    scan - scan metadata object
+    **kwargs - dictionary that will be passed through to the run-engine metadata
+    '''
+    scan.md.update({'xp_isprun':True})
+    light_cnt_time = scan.md['sc_params']['exposure']
+    expire_time = glbl.dk_window
+    dark_field_uid = validate_dark(light_cnt_time, expire_time)
+    if not dark_field_uid: dark_field_uid = 'can not find a qualified dark uid'
+    scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
+    scan.md['sc_params'].update({'dk_window':expire_time})
+    return scan.md
+
 def dark(sample,scan,**kwargs):
     '''on this 'scan' get dark images
     
@@ -218,7 +237,6 @@ def dark(sample,scan,**kwargs):
     '''
     dark_uid = str(uuid.uuid1())
     dark_exp_t = scan.md['sc_params']['exposure']
-
     _close_shutter()
     scan.md.update({'xp_isdark':True})
     _unpack_and_run(sample,scan,**kwargs)
@@ -231,7 +249,7 @@ def dark(sample,scan,**kwargs):
 def _yamify_dark(dark_def):
     dark_yaml_name = glbl.dk_yaml
     with open(dark_yaml_name, 'r') as f:
-        dark_list = yaml.load(dark_yaml_name)
+        dark_list = yaml.load(f)
     dark_list.append(dark_def)
     with open(dark_yaml_name, 'w') as f:
         yaml.dump(dark_list, f)
