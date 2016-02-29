@@ -13,12 +13,18 @@ class NewExptTest(unittest.TestCase):
     def setUp(self):
         self.base_dir = glbl.base
         self.home_dir = glbl.home
+        self.config_dir = glbl.xpdconfig
+        os.makedirs(self.config_dir, exist_ok=True)
         self.PI_name = 'Billinge '
-        self.saf_num = 123
+        self.saf_num = 234
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
+        self.saffile = os.path.join(self.config_dir,'saf{}.yml'.format(self.saf_num))
         #_make_clean_env()
-        self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)     
+        loadinfo = {'saf number':self.saf_num,'PI last name':self.PI_name,'experimenter list':self.experimenters}
+        with open(self.saffile, 'w') as fo:
+            yaml.dump(loadinfo,fo)
+        self.bt = _start_beamtime(self.saf_num,home_dir=self.home_dir)     
         self.stbt_list = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sc_ct.1s.yml','sc_ct.5s.yml','sc_ct1s.yml','sc_ct5s.yml','sc_ct10s.yml','sc_ct30s.yml']
 
     def tearDown(self):
@@ -105,7 +111,7 @@ class NewExptTest(unittest.TestCase):
         self.assertIsInstance(self.ex,Experiment)
         self.assertEqual(self.ex.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
         self.assertEqual(self.ex.md['bt_piLast'],'Billinge')
-        self.assertEqual(self.ex.md['bt_safN'],123)
+        self.assertEqual(self.ex.md['bt_safN'],234)
         self.assertEqual(self.ex.md['bt_wavelength'],0.1812)
         self.assertEqual(self.ex.md['ex_name'],'myexp')
         uid1 = self.ex.md['ex_uid']
@@ -131,7 +137,7 @@ class NewExptTest(unittest.TestCase):
         self.assertIsInstance(self.sa,Sample)
         self.assertEqual(self.sa.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
         self.assertEqual(self.sa.md['bt_piLast'],'Billinge')
-        self.assertEqual(self.sa.md['bt_safN'],123)
+        self.assertEqual(self.sa.md['bt_safN'],234)
         self.assertEqual(self.sa.md['bt_wavelength'],0.1812)
         self.assertEqual(self.sa.md['ex_name'],'myexp')
         self.assertEqual(self.sa.md['sa_name'],'my sample')
