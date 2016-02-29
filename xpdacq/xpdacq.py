@@ -174,9 +174,9 @@ def _qualified_dark(dark_scan_list, light_cnt_time, expire_time):
         dark_cnt_time = list(el.keys())[0] # type = str
         dark_timestamp = list(el.values())[0][1] # comes from python3 convention and data structure
         is_right_cnt = abs(float(dark_cnt_time) - light_cnt_time) < 0.9 * glbl.frame_acq_time
-        #if is_right_cnt: print('find right cnt = {} with index = {}'.format(dark_cnt_time, ind))
+        if is_right_cnt: print('find right cnt = {} with index = {}'.format(dark_cnt_time, ind))
         is_valid = (time.time() - dark_timestamp) < expire_time * 60.
-        #if is_valid: print('find right time = {} with index = {}'.format(datetime.datetime.fromtimestamp(time.time() - expire_time *60), ind))
+        if is_valid: print('find right time = {} with index = {}'.format(datetime.datetime.fromtimestamp(time.time() - expire_time *60), ind))
         if (is_right_cnt) and (is_valid): qualified_index_list.append(ind)
     return qualified_index_list
 
@@ -201,10 +201,10 @@ def prun(sample,scan,**kwargs):
     scan.md.update({'xp_isprun':True})
     light_cnt_time = scan.md['sc_params']['exposure']
     expire_time = glbl.dk_window
-    dark_filed_uid = validate_dark(light_cnt_time, expire_time)
-    if not dark_filed_uid: dark_field_uid = dark(sample, scan, **kwargs)
-    scan.md.update({'sc_dk_field_uid': dark_field_uid})
-    scan.md['scan_params'].update({'sc_dk_window':expire_time})
+    dark_field_uid = validate_dark(light_cnt_time, expire_time)
+    if not dark_field_uid: dark_field_uid = dark(sample, scan, **kwargs)
+    scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
+    scan.md['sc_params'].update({'dk_window':expire_time})
     _unpack_and_run(sample,scan,**kwargs)
     if scan.shutter: _close_shutter()
 
@@ -722,24 +722,5 @@ def QXRD_plan():
     # hook to visualize data
     # FIXME - make sure to plot dark corrected image
     plot_scan(db[-1])
-
-def _read_dark_yaml(expire_time):
-    # read every dark yaml in dark_base. Performance is not the point here
-    
-    dark_dir = [ el for el in glbl.allfolders if el.endswith('dark_base')][0]
-    # maybe we want to make every elements in glbl.allfolders as an attribute in the future
-    #print('=== Pull out dark yamls within {} seconds'.format(expire_time * 60.0))
-    
-    dark_yaml = [ el for el in os.listdir(dark_dir) if os.path.getmtime(os.path.join(dark_dir,el)) < time.time() - expire_time * 60.0]
-    #print('qualfied_dark_yaml_list = {}'.format(dark_yaml))
-    dark_pool = []
-    if dark_yaml:
-        for el in dark_yaml:
-            f_path = os.path.join(dark_dir, el)
-            with open (f_path, 'r') as f:
-                dummy_dark_dict = yaml.load(f)
-            dark_pool.append(dummy_dark_dict)
-    print('read out dark_pool = {}'.format(dark_pool))
-    return dark_pool # if an empty dark_pool is returned, it means collect a dark anyway
 
 '''

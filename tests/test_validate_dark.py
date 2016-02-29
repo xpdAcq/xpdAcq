@@ -14,6 +14,7 @@ import numpy as np
 #from xpdacq.xpdacq import _hostname
 from xpdacq.glbl import glbl
 from xpdacq.xpdacq import validate_dark, _qualified_dark
+from xpdacq.beamtime import ScanPlan
 
 class findRightDarkTest(unittest.TestCase): 
 
@@ -119,4 +120,63 @@ class findRightDarkTest(unittest.TestCase):
             for el in info_tuple:
                 for sub_el in el:
                     if isinstance(sub_el, str): dark_uid = sub_el
-            self.assertEqual(validate_dark(i*0.1, expire_time, dark_scan_list), dark_uid)    
+            self.assertEqual(validate_dark(i*0.1, expire_time, dark_scan_list), dark_uid)
+    
+    def test_update_md_v1(self):
+        # case 1: find a qualified dark and test if md got updated
+        self.assertTrue(os.path.isfile(glbl.dk_yaml))
+        with open(glbl.dk_yaml, 'r') as f:
+            dark_scan_list = yaml.load(f)
+        for i in range(1,3):
+            # initiate scan object and dark_scan_list
+            dark_def = {str(i*0.1): (str(uuid.uuid1()), time.time())}
+            dark_scan_list.append(dark_def)
+            time.sleep(5)
+             
+        for i in range(1,3):
+            scan = ScanPlan('ctTest', 'ct', {'exposure':0.1*i})
+            # exactly the same code used in prun
+            scan.md.update({'xp_isprun':True})
+            light_cnt_time = scan.md['sc_params']['exposure']
+            #expire_time = glbl.dk_window
+            expire_time = i*0.2
+            dark_field_uid = validate_dark(light_cnt_time, expire_time, dark_scan_list) # in unittest, specify dark_scan_list
+            #if not dark_field_uid: dark_field_uid = dark(sample, scan, **kwargs)
+            if not dark_field_uid: dark_field_uid = 'you catch me. Unittest'
+            scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
+            scan.md['sc_params'].update({'dk_window':expire_time})
+            info_tuple = list(dark_scan_list[i-1].values())
+            for el in info_tuple:
+                for sub_el in el:
+                    if isinstance(sub_el, str): dark_uid = sub_el
+            self.assertEqual(scan.md['sc_params']['dk_field_uid'], dark_uid)
+
+    def test_update_md_v2(self):
+        # case 1: find a qualified dark and test if md got updated
+        self.assertTrue(os.path.isfile(glbl.dk_yaml))
+        with open(glbl.dk_yaml, 'r') as f:
+            dark_scan_list = yaml.load(f)
+        for i in range(1,3):
+            # initiate scan object and dark_scan_list
+            dark_def = {str(i*0.1): (str(uuid.uuid1()), time.time())}
+            dark_scan_list.append(dark_def)
+            time.sleep(5)
+             
+        for i in range(1,3):
+            scan = ScanPlan('ctTest', 'ct', {'exposure':0.1*i + (np.random.randn()+2)})
+            # exactly the same code used in prun
+            scan.md.update({'xp_isprun':True})
+            light_cnt_time = scan.md['sc_params']['exposure']
+            #expire_time = glbl.dk_window
+            expire_time = i*0.2
+            dark_field_uid = validate_dark(light_cnt_time, expire_time, dark_scan_list)
+            #if not dark_field_uid: dark_field_uid = dark(sample, scan, **kwargs)
+            if not dark_field_uid: dark_field_uid = 'you catch me. Unittest'
+            scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
+            scan.md['sc_params'].update({'dk_window':expire_time})
+            info_tuple = list(dark_scan_list[i-1].values())
+            for el in info_tuple:
+                for sub_el in el:
+                    if isinstance(sub_el, str): dark_uid = sub_el
+            self.assertEqual(scan.md['sc_params']['dk_field_uid'],'you catch me. Unittest')
+
