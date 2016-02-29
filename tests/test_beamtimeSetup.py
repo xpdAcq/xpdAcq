@@ -100,7 +100,7 @@ class NewBeamtimeTest(unittest.TestCase):
 
     def test_bt_creation(self):
         _make_clean_env()
-        self.bt = Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=self.base_dir)
+        self.bt = Beamtime(self.PI_name,self.saf_num,wavelength=self.wavelength,experimenters=self.experimenters,base_dir=self.base_dir)
         self.assertIsInstance(self.bt,Beamtime)
         self.assertEqual(self.bt.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
         self.assertEqual(self.bt.md['bt_piLast'],'Billinge')

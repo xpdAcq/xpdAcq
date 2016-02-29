@@ -24,6 +24,8 @@ from bluesky import Msg
 #from xpdacq.analysis import *
 from bluesky.plans import AbsScanPlan
 
+from xpdacq.utils import _graceful_exit
+
 ''' things that should be created and imported during start_up
 #xpdRE = _get_obj('xpdRE')
 #LiveTable = _get_obj('LiveTable')
@@ -103,6 +105,9 @@ def dryrun(sample,scan,**kwargs):
        return
     
 def _unpack_and_run(sample,scan,**kwargs):
+    # check to see if wavelength has been set
+    if not sample.md['bt_wavelength']:
+        sys.exit(_graceful_exit('Please have the instrument scientist set the wavelength value before proceeding.'))
     cmdo = Union(sample,scan)
     area_det = _get_obj('pe1c')
     parms = scan.md['sc_params']
@@ -115,14 +120,14 @@ def _unpack_and_run(sample,scan,**kwargs):
             subs.update({'stop':verify_files_saved})
 
     if scan.scan == 'ct':
-       get_light_images(cmdo,parms['exposure'],'pe1c',subs,**kwargs)
+        get_light_images(cmdo,parms['exposure'],'pe1c',subs,**kwargs)
     elif scan.scan == 'tseries':
-       collect_time_series(cmdo,parms['exposure'], parms['delay'], parms['num'],'pe1c', subs, **kwargs)
+        collect_time_series(cmdo,parms['exposure'], parms['delay'], parms['num'],'pe1c', subs, **kwargs)
     elif scan.scan == 'Tramp':
         collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
     else:
-       print('unrecognized scan type.  Please rerun with a different scan object')
-       return
+        print('unrecognized scan type.  Please rerun with a different scan object')
+        return
 
 def prun(sample,scan,**kwargs):
     '''on this 'sample' run this 'scan'

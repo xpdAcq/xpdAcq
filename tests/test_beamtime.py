@@ -112,7 +112,7 @@ class NewExptTest(unittest.TestCase):
         self.assertEqual(self.ex.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
         self.assertEqual(self.ex.md['bt_piLast'],'Billinge')
         self.assertEqual(self.ex.md['bt_safN'],234)
-        self.assertEqual(self.ex.md['bt_wavelength'],0.1812)
+        self.assertEqual(self.ex.md['bt_wavelength'],None)
         self.assertEqual(self.ex.md['ex_name'],'myexp')
         uid1 = self.ex.md['ex_uid']
         newobjlist = _get_yaml_list()
@@ -138,7 +138,7 @@ class NewExptTest(unittest.TestCase):
         self.assertEqual(self.sa.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
         self.assertEqual(self.sa.md['bt_piLast'],'Billinge')
         self.assertEqual(self.sa.md['bt_safN'],234)
-        self.assertEqual(self.sa.md['bt_wavelength'],0.1812)
+        self.assertEqual(self.sa.md['bt_wavelength'],None)
         self.assertEqual(self.sa.md['ex_name'],'myexp')
         self.assertEqual(self.sa.md['sa_name'],'my sample')
         uid1 = self.sa.md['sa_uid']
