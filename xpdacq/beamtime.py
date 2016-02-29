@@ -181,7 +181,7 @@ class XPD:
 #            return
     
 class Beamtime(XPD):
-    def __init__(self, pi_last, safn, wavelength, experimenters = [], **kwargs):
+    def __init__(self, pi_last, safn, wavelength=None, experimenters = [], **kwargs):
         self.name = 'bt'
         self.type = 'bt'
         self.md = {'bt_piLast': _clean_md_input(pi_last), 'bt_safN': _clean_md_input(safn), 

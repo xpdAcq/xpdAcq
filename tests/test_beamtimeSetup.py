@@ -1,6 +1,7 @@
 import unittest
 import os
 import shutil
+import yaml
 from time import strftime
 from xpdacq.xpdacq import _areaDET
 from xpdacq.xpdacq import _tempController
@@ -21,10 +22,12 @@ class NewBeamtimeTest(unittest.TestCase):
     def setUp(self):
         self.base_dir = glbl.base
         self.home_dir = os.path.join(self.base_dir,'xpdUser')
+        self.config_dir = os.path.join(self.base_dir,'xpdConfig')
         self.PI_name = 'Billinge '
-        self.saf_num = 123
+        self.saf_num = 123   # must be 123 for proper load of config yaml => don't change
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
+        self.saffile = os.path.join(self.config_dir,'saf123.yml')
         #_make_clean_env()
 #        self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
 
@@ -97,7 +100,7 @@ class NewBeamtimeTest(unittest.TestCase):
 
     def test_bt_creation(self):
         _make_clean_env()
-        self.bt = Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,base_dir=self.base_dir)
+        self.bt = Beamtime(self.PI_name,self.saf_num,wavelength=self.wavelength,experimenters=self.experimenters,base_dir=self.base_dir)
         self.assertIsInstance(self.bt,Beamtime)
         self.assertEqual(self.bt.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
         self.assertEqual(self.bt.md['bt_piLast'],'Billinge')
@@ -112,18 +115,23 @@ class NewBeamtimeTest(unittest.TestCase):
         bt = Beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters)
         self.assertIsInstance(bt,Beamtime)
         #maybe some more edge cases tested here?
-    
+
     def test_start_beamtime(self):
         os.chdir(self.base_dir)
-        # clean encironment checked above, so only check a case that works
+        # clean environment checked above, so only check a case that works
         os.mkdir(self.home_dir)
-        bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
+        os.mkdir(self.config_dir)
+        loadinfo = {'saf number':self.saf_num,'PI last name':self.PI_name,'experimenter list':self.experimenters}
+        with open(self.saffile, 'w') as fo:
+            yaml.dump(loadinfo,fo)
+        self.assertTrue(os.path.isfile(self.saffile))
+        bt = _start_beamtime(self.saf_num,home_dir=self.home_dir)
         self.assertEqual(os.getcwd(),self.home_dir) # we should be in home, are we?
         self.assertIsInstance(bt,bts.Beamtime) # there should be a bt object, is there?
         self.assertEqual(bt.md['bt_experimenters'],[('van der Banerjee','S0ham',1),('Terban','Max',2)])
         self.assertEqual(bt.md['bt_piLast'],'Billinge')
         self.assertEqual(bt.md['bt_safN'],123)
-        self.assertEqual(bt.md['bt_wavelength'],0.1812)
+        self.assertEqual(bt.md['bt_wavelength'],None)
         os.chdir(self.base_dir)
         newobjlist = _get_yaml_list()
         strtScnLst = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sc_ct.1s.yml','sc_ct.5s.yml','sc_ct1s.yml','sc_ct5s.yml','sc_ct10s.yml','sc_ct30s.yml']

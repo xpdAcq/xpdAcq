@@ -17,6 +17,7 @@ import sys
 import os
 import datetime
 import shutil
+import yaml
 from time import strftime
 from xpdacq.utils import _graceful_exit
 from xpdacq.beamtime import Beamtime, XPD, Experiment, Sample, ScanPlan
@@ -161,34 +162,35 @@ def _check_empty_environment(base_dir=None):
         sys.exit(_graceful_exit("The xpdUser directory appears not to exist "
                                "Please Talk to beamline staff"))
 
-def _start_beamtime(home_dir=None):
+def _start_beamtime(safn,home_dir=None):
     if home_dir is None:
         home_dir = glbl.home
     if not os.path.exists(home_dir):
         os.makedirs(home_dir)
     _check_empty_environment()
-    piname = input('Please enter the PI last name to this beamtime: ')
-    safn = input('Please enter the SAF number for this beamtime: ')
-    wavelength = input('Please enter the x-ray wavelength: ')
-    print('Please enter a list of experimenters with syntax [("lastName","firstName",userID)]')
-    explist = input('default = []  ')   
-    if explist == '':
-        explist = []
-    _explist = _clean_md_input(explist)
-
-    bt = _execute_start_beamtime(piname, safn, wavelength, _explist, home_dir)
+    configfile = os.path.join(glbl.xpdconfig,'saf{}.yml'.format(str(safn)))
+    if os.path.isfile(configfile):
+        with open(configfile, 'r') as fin:
+            setup_dict = yaml.load(fin)
+    else:
+        sys.exit(_graceful_exit('the saf config file {} appears to be missing'.format(configfile)))
+    try:
+        piname = setup_dict['PI last name']
+        safn = setup_dict['saf number']
+        explist = setup_dict['experimenter list']
+    except KeyError:
+        sys.exit(_graceful_exit('Cannot load input info. File syntax in {} maybe corrupted.'.format(configfile)))
+    bt = _execute_start_beamtime(piname, safn, explist, home_dir=home_dir)
     return bt
 
-def _execute_start_beamtime(piname,safn,wavelength,explist,home_dir=None):
+def _execute_start_beamtime(piname,safn,explist,wavelength=None,home_dir=None):
     PI_name = piname
     saf_num = safn
-    wavelength = wavelength
-    experimenters = explist
     _make_clean_env()
     os.chdir(home_dir)
-    bt = Beamtime(PI_name,saf_num,wavelength,experimenters)
+    bt = Beamtime(PI_name,saf_num,experimenters=explist)
 
-    # now populate the database with some dummy objects
+    # now populate the database with some lazy-user objects
     ex = Experiment('l-user',bt)
     sa = Sample('l-user',ex)
     sc01 = ScanPlan('ct.1s','ct',{'exposure':0.1})
