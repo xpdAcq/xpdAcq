@@ -19,6 +19,7 @@ from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample
 class findRightDarkTest(unittest.TestCase): 
 
     def setUp(self):
+        os.makedirs(glbl.yaml_dir, exist_ok = True)
         self.PI_name = 'Billinge '
         self.saf_num = 123
         self.wavelength = 0.1812
@@ -26,7 +27,6 @@ class findRightDarkTest(unittest.TestCase):
         self.bt = Beamtime(self.PI_name, self.saf_num, self.wavelength, self.experimenters)
         self.ex = Experiment('unittestExperiment', self.bt)
         self.sa = Sample('unittestSample', self.ex)
-        os.makedirs(glbl.yaml_dir, exist_ok = True)
         # initiate dark_scan_list
         self.dark_scan_list = []
         with open (glbl.dk_yaml, 'w') as f:
