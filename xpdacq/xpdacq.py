@@ -22,30 +22,29 @@ import numpy as np
 
 from bluesky.plans import Count
 from bluesky import Msg
+
 from bluesky.plans import AbsScanPlan
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
 from xpdacq.glbl import AREA_DET as area_det
 from xpdacq.glbl import TEMP_CONTROLLER as temp_controller
+
+
+from bluesky.broker_callbacks import verify_files_saved
+from blueksy.broker_callbacks import LiveTable
+''' holding : load in this way if xpdSim is completely ready
+from xpdacq.glbl import VERIFY_WRITE as verify_files_saved
+from xpdacq.glbl import LIVETABLE as LiveTable
+'''
+from xpdacq.glbl import xpdRE
 from xpdacq.beamtime import Union, Xposure
 from xpdacq.control import _close_shutter, _open_shutter
-
-''' things that should be created and imported during start_up
-#xpdRE = _get_obj('xpdRE')
-#LiveTable = _get_obj('LiveTable')
-'''
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 
 area_det.cam.acquire_time.put(glbl.frame_acq_time)
 
 #expo_threshold = 60 # in seconds Deprecated!
-
-# analysis objects : not ready yet
-# db
-# LiveTable
-# get_events
-# get_images
 
 def dryrun(sample,scan,**kwargs):
     '''same as run but scans are not executed.
