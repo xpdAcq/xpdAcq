@@ -62,7 +62,6 @@ if not os.path.isfile(tmp_safname):
     with open(tmp_safname, 'w') as fo:
         yaml.dump(dummy_config,fo)
 
-
 class glbl():
     #this behavior can be changed to include Tim's logic
     base = BASE_DIR
