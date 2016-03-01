@@ -17,8 +17,10 @@
 import os
 import yaml
 import time
+from time import strftime
 import datetime
 import numpy as np
+from configparser import ConfigParser
 
 from bluesky.plans import Count
 from bluesky import Msg
@@ -30,8 +32,8 @@ from xpdacq.glbl import AREA_DET as area_det
 from xpdacq.glbl import TEMP_CONTROLLER as temp_controller
 
 
-from bluesky.broker_callbacks import verify_files_saved
-from blueksy.broker_callbacks import LiveTable
+#from bluesky.broker_callbacks import verify_files_saved
+#from blueksy.broker_callbacks import LiveTable
 ''' holding : load in this way if xpdSim is completely ready
 from xpdacq.glbl import VERIFY_WRITE as verify_files_saved
 from xpdacq.glbl import LIVETABLE as LiveTable
@@ -172,10 +174,78 @@ def prun(sample,scan,**kwargs):
     expire_time = glbl.dk_window
     dark_field_uid = validate_dark(light_cnt_time, expire_time)
     if not dark_field_uid: dark_field_uid = dark(sample, scan, **kwargs)
+    (config_dict, config_name) = _load_calibration()
+    if not config_dict: print('No calibration config file found in config_base. Scan will still go on')
     scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
     scan.md['sc_params'].update({'dk_window':expire_time})
+    scan.md.update({'xp_config_dict':config_dict})
+    scan.md.update({'xp_config_name':config_name})
     _unpack_and_run(sample,scan,**kwargs)
     if scan.shutter: _close_shutter()
+
+def calibration(sample,scan,**kwargs):
+    '''on this 'sample' run this 'scan'
+        
+    Arguments:
+    sample - sample metadata object
+    scan - scan metadata object
+    **kwargs - dictionary that will be passed through to the run-engine metadata
+    '''
+    if scan.shutter: _open_shutter()
+    scan.md.update({'xp_iscalibration':True})
+    light_cnt_time = scan.md['sc_params']['exposure']
+    expire_time = glbl.dk_window
+    dark_field_uid = validate_dark(light_cnt_time, expire_time)
+    if not dark_field_uid: dark_field_uid = dark(sample, scan, **kwargs)
+    scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
+    scan.md['sc_params'].update({'dk_window':expire_time})
+    # FIXME - if we can seperate processes before _unpack_and_run() into a function, we can reuse it
+    _unpack_and_run(sample,scan,**kwargs)
+    if scan.shutter: _close_shutter()
+
+def _load_calibration(calibration_file_name = None):
+    ''' function to load calibration file in config_base directory
+
+    Parameters
+    ----------
+    calibration_file_name : str
+    name of calibration file that are going to be used. if it is not specified, load the most recent one
+
+    Returns
+    -------
+    config_dict : dict
+    a dictionary containing calibration parameters calculated from SrXplanar
+    '''
+    config_dir = os.path.join(glbl.home, 'config_base') # FIXME - remove it after make config_dir an attribute
+    f_list = [ f for f in os.listdir(config_dir) if f.endswith('cfg')]
+    if not f_list:
+        return # no config at all
+    if calibration_file_name:
+        config_in_use = calibration_file_name
+    config_in_use = sorted(f_list, key=os.path.getmtime)[-1]
+    config_timestamp = os.path.getmtime(config_in_use)
+    config_time = datetime.datetime.fromtimestamp(config_timestamp).strftime('%Y%m%d-%H%M')
+    config_dict = _load_config(os.path.join(config_dir,config_in_use))
+    return (config_dict, config_in_use)
+
+def _load_config(config_file_name):
+    ''' help function to load config file '''
+    config = ConfigParser()
+    config.read(config_file_name)
+    sections = config.sections()
+    config_dict = {}
+    for section in sections:
+        config_dict[section] = {} # write down header
+        options = config.options(section)
+        for option in options:
+            try:
+                config_dict[section][option] = config.get(section, option)
+                #if config_dict[option] == -1:
+                #    DebugPrint("skip: %s" % option)
+            except:
+                print("exception on %s!" % option)
+                config_dict[option] = None
+    return config_dict
 
 def dark(sample,scan,**kwargs):
     '''on this 'scan' get dark images
