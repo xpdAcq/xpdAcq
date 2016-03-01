@@ -24,6 +24,8 @@ from xpdacq.glbl import _tempController
 from xpdacq.glbl import _shutter
 
 _areaDET(pe1c)
+_tempController(cs700)
+_shutter(shctl1)
 ''' not ready yet
 from xpdacq.xpdacq import _db
 from xpdacq.xpdacq import _getEvents
