@@ -13,6 +13,18 @@ USER_BACKUP_DIR_NAME = strftime('%Y')
 DARK_WINDOW = 15 # default value, in terms of minute
 FRAME_ACQUIRE_TIME = 0.1 # pe1 frame acq time
 
+def _areaDET(area_det_name):
+    global AREA_DET
+    AREA_DET = area_det_name
+
+def _tempController(temp_controller_name):
+    global TEMP_CONTROLLER
+    TEMP_CONTROLLER = temp_controller_name
+
+def _shutter(shutter_name):
+    global SHUTTER
+    SHUTTER = shutter_name
+
 hostname = socket.gethostname()
 if hostname == BEAMLINE_HOST_NAME:
     # real experiment
