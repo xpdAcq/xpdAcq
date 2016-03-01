@@ -19,13 +19,11 @@
 import os
 import socket
 from xpdacq.glbl import glbl
-from xpdacq.xpdacq import _areaDET
-from xpdacq.xpdacq import _tempController
-from xpdacq.xpdacq import _shutter
-from xpdacq.xpdacq import _bdir
-from xpdacq.xpdacq import _hdir
-from xpdacq.xpdacq import _cdir
-from xpdacq.xpdacq import _hostname
+from xpdacq.glbl import _areaDET
+from xpdacq.glbl import _tempController
+from xpdacq.glbl import _shutter
+
+_areaDET(pe1c)
 ''' not ready yet
 from xpdacq.xpdacq import _db
 from xpdacq.xpdacq import _getEvents
@@ -51,11 +49,6 @@ hostname = socket.gethostname()
 if hostname == BEAMLINE_HOST_NAME:
     bluesky.register_mds.register_mds(xpdRE)
 
-
-#HOME_DIR = 'xpdUser'
-
-
-# can't top import as objects are just created above
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
 from xpdacq.beamtime import XPD
 # FIXME - extra directories are created when importing certain function, which leads logic loop hole in start_beamtime
@@ -69,10 +62,10 @@ else:
 
 #if there is a yml file in the normal place, then this was an existing experiment that was interrupted.
 #if len(XPD.loadyamls()) > 0:  --> this will create extra directory 
-if os.path.isdir(YAML_DIR):
-    print("loading bt_bt.yml")
-    tmp = XPD()
-    bt = tmp.loadyamls()[0]
+#if os.path.isdir(YAML_DIR):
+    #print("loading bt_bt.yml")
+    #tmp = XPD()
+    #bt = tmp.loadyamls()[0]
 
 print('OK, ready to go.  To continue, follow the steps in the xpdAcq')
 print('documentation at http://xpdacq.github.io/xpdacq')

@@ -25,9 +25,12 @@ from bluesky import Msg
 from bluesky.plans import AbsScanPlan
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
+import xpdacq.glbl as main
 #from xpdacq.beamtime import Union, Xposure
 
 #from xpdacq.control import _close_shutter, _open_shutter
+
+area_det = main.AREA_DET
 
 ''' things that should be created and imported during start_up
 #xpdRE = _get_obj('xpdRE')
@@ -43,33 +46,6 @@ from xpdacq.glbl import glbl
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 #expo_threshold = 60 # in seconds Deprecated!
 
-def _areaDET(area_det_name):
-    global AREA_DET
-    AREA_DET = area_det_name
-
-def _tempController(temp_controller_name):
-    global TEMP_CONTROLLER
-    TEMP_CONTROLLER = temp_controller_name
-
-def _shutter(shutter_name):
-    global SHUTTER
-    SHUTTER = shutter_name
-
-def _bdir(b_dir_name):
-    global B_DIR
-    B_DIR = b_dir_name
-
-def _hdir(h_dir_name):
-    global HOME_DIR
-    HOME_DIR = h_dir_name
-
-def _cdir(c_dir_name):
-    global CONFIG_DIR
-    CONFIG_DIR = c_dir_name
-
-def _hostname(host_name):
-    global HOST_NAME
-    HOST_NAME = host_name
 # analysis objects : not ready yet
 # db
 # LiveTable
