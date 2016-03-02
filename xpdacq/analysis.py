@@ -78,7 +78,7 @@ def _timestampstr(timestamp, hour=False):
     return timestring
 
 def save_last_tiff(dark_subtraction=True):
-    save_tiff(db[-1), dark_subtraction)
+    save_tiff(db[-1], dark_subtraction)
 
 def save_tiff(headers, dark_subtraction = True):
     ''' save images obtained from dataBroker as tiff format files. It returns nothing.
