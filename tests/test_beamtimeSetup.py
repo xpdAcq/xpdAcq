@@ -3,13 +3,14 @@ import os
 import shutil
 import yaml
 from time import strftime
-from xpdacq.xpdacq import _areaDET
-from xpdacq.xpdacq import _tempController
-from xpdacq.xpdacq import _shutter
-from xpdacq.xpdacq import _bdir
-from xpdacq.xpdacq import _cdir
-from xpdacq.xpdacq import _hdir
-from xpdacq.xpdacq import _hostname
+from xpdacq.glbl import _areaDET
+from xpdacq.glbl import _tempController
+from xpdacq.glbl import _shutter
+# these are now included in glbl class
+#from xpdacq.xpdacq import _bdir
+#from xpdacq.xpdacq import _cdir
+#from xpdacq.xpdacq import _hdir
+#from xpdacq.xpdacq import _hostname
 from xpdacq.glbl import glbl
 
 import xpdacq.beamtimeSetup as bts
