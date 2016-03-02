@@ -116,8 +116,10 @@ def save_tiff(headers, dark_subtraction = True):
         for i in range(light_imgs.shape[0]):
             if np.shape(dark_imgs) == np.shape(light_imgs):
                 dummy = light_imgs[i] - dark_imgs[i]
-            print(e)
-            dummy =light_imgs[i]
+            
+            else:
+                print(e)
+                dummy =light_imgs[i]
             img_list.append(dummy)
         
         for i in range(len(img_list)):
