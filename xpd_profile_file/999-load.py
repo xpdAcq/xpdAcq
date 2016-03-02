@@ -39,6 +39,10 @@ _dataBroker(db)
 _getEvents(get_events)
 _getImages(get_images)
 
+
+from xpdacq.xpdacq import *
+from xpdacq.analysis import *
+
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
 YAML_DIR = glbl.yaml_dir
