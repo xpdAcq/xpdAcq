@@ -3,13 +3,15 @@ import os
 import shutil
 import yaml
 from time import strftime
-from xpdacq.xpdacq import _areaDET
-from xpdacq.xpdacq import _tempController
-from xpdacq.xpdacq import _shutter
-from xpdacq.xpdacq import _bdir
-from xpdacq.xpdacq import _cdir
-from xpdacq.xpdacq import _hdir
-from xpdacq.xpdacq import _hostname
+from xpdacq.glbl import _areaDET, _tempController
+from xpdacq.glbl import _shutter, _verify_write
+from xpdacq.glbl import _LiveTable
+
+# these are now included in glbl class
+#from xpdacq.xpdacq import _bdir
+#from xpdacq.xpdacq import _cdir
+#from xpdacq.xpdacq import _hdir
+#from xpdacq.xpdacq import _hostname
 from xpdacq.glbl import glbl
 
 import xpdacq.beamtimeSetup as bts
@@ -30,6 +32,11 @@ class NewBeamtimeTest(unittest.TestCase):
         self.saffile = os.path.join(self.config_dir,'saf123.yml')
         #_make_clean_env()
 #        self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
+        _areaDET()
+        _tempController()
+        _shutter()
+        _verify_write()
+        _LiveTable()
 
     def tearDown(self):
         os.chdir(self.base_dir)

@@ -12,14 +12,10 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-def _get_obj(name):
-    ip = get_ipython() # build-in function
-    return ip.user_ns[name]
-
-shctl1 = _get_obj('shctl1')
+from xpdacq.glbl import SHUTTER as shutter
 
 def _open_shutter():
-    shctl1.put(1)
+    shutter.put(1)
     while True:
         if shctl1.get():
             break
@@ -27,7 +23,7 @@ def _open_shutter():
     return 
            
 def _close_shutter():
-    shctl1.put(0)
+    shutter.put(0)
     while True:
         if not shctl1.get():
             break
