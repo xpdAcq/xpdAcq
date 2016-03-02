@@ -14,17 +14,20 @@
 #
 #
 ##############################################################################
+import os
+import yaml
+import time
+import datetime
 import numpy as np
-#from xpdacq.beamtime import Union, Xposure
+
 from bluesky.plans import Count
 from bluesky import Msg
-#from xpdacq.control import _get_obj   
-#from xpdacq.control import _open_shutter
-#from xpdacq.control import _close_shutter
-#from xpdacq.analysis import *
 from bluesky.plans import AbsScanPlan
-
 from xpdacq.utils import _graceful_exit
+from xpdacq.glbl import glbl
+#from xpdacq.beamtime import Union, Xposure
+
+#from xpdacq.control import _close_shutter, _open_shutter
 
 ''' things that should be created and imported during start_up
 #xpdRE = _get_obj('xpdRE')
@@ -37,7 +40,6 @@ from xpdacq.utils import _graceful_exit
 #temp_controller = _get_obj(TEMP_CONTROLLER_NAME)
 
 '''
-
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 #expo_threshold = 60 # in seconds Deprecated!
 
@@ -129,6 +131,64 @@ def _unpack_and_run(sample,scan,**kwargs):
         print('unrecognized scan type.  Please rerun with a different scan object')
         return
 
+#### dark subtration code block ####
+def _read_dark_yaml():
+    dark_yaml_name = glbl.dk_yaml
+    with open(dark_yaml_name, 'r') as f:
+        dark_scan_list = yaml.load(f)
+    return dark_scan_list # if dark pool is an empty list, it means collect a dark anyway
+
+def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
+    ''' find the uid of appropriate dark inside dark_base
+    
+        Parameters
+        ----------
+        light_cnt_time : float
+            exposure time of light image, expressed in seconds
+        expire_time : float
+            expire time of dark images, expressed in minute
+        dark_scan_list : list, optional
+            a list of dark dictionaries
+        Returns
+        -------
+        dark_field_uid : str
+            uid to qualified dark frame
+    '''
+    if not dark_scan_list: dark_scan_list= _read_dark_yaml() # makes unittest easier. this logic is not used
+    if len(dark_scan_list) > 0:
+        qualified_index_list = _qualified_dark(dark_scan_list, light_cnt_time, expire_time)
+        if qualified_index_list:
+            qualified_dark_index = qualified_index_list[-1] # pick the last one
+            qualified_dark_dict = dark_scan_list[qualified_dark_index]
+            dark_field_uid = _qualified_uid(qualified_dark_dict)
+            return dark_field_uid
+        else:
+            return # no quaified dark in dark_scan_list. collect a dark
+    else:
+        return # nothing in dark_scan_list. collect a dark
+    
+def _qualified_dark(dark_scan_list, light_cnt_time, expire_time):
+    ''' return index of dictionary that contains qualified dark '''
+    qualified_index_list = []
+    for ind, el in enumerate(dark_scan_list):
+        dark_cnt_time = list(el.keys())[0] # type = str
+        dark_timestamp = list(el.values())[0][1] # comes from python3 convention and data structure
+        is_right_cnt = abs(float(dark_cnt_time) - light_cnt_time) < 0.9 * glbl.frame_acq_time
+        if is_right_cnt: print('find right cnt = {} with index = {}'.format(dark_cnt_time, ind))
+        is_valid = (time.time() - dark_timestamp) < expire_time * 60.
+        if is_valid: print('find right time = {} with index = {}'.format(datetime.datetime.fromtimestamp(time.time() - expire_time *60), ind))
+        if (is_right_cnt) and (is_valid): qualified_index_list.append(ind)
+    return qualified_index_list
+
+def _qualified_uid(qualified_dark_dict):
+    ''' helper function to unpack dark_uid inside dark_information '''
+    for el in list(qualified_dark_dict.values()):
+        for sub_el in el:
+            if isinstance(sub_el, str):
+                dark_uid = sub_el
+    return dark_uid
+#### code block of dark subtraction ####
+
 def prun(sample,scan,**kwargs):
     '''on this 'sample' run this 'scan'
         
@@ -139,9 +199,33 @@ def prun(sample,scan,**kwargs):
     '''
     if scan.shutter: _open_shutter()
     scan.md.update({'xp_isprun':True})
+    light_cnt_time = scan.md['sc_params']['exposure']
+    expire_time = glbl.dk_window
+    dark_field_uid = validate_dark(light_cnt_time, expire_time)
+    if not dark_field_uid: dark_field_uid = dark(sample, scan, **kwargs)
+    scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
+    scan.md['sc_params'].update({'dk_window':expire_time})
     _unpack_and_run(sample,scan,**kwargs)
-    #parms = scan.sc_params
     if scan.shutter: _close_shutter()
+
+def _unittest_prun(sample,scan,**kwargs):
+    '''on this 'sample' run this 'scan'
+    
+    this function doesn't control shutter nor trigger run engine. It is designed to test functionality
+
+    Arguments:
+    sample - sample metadata object
+    scan - scan metadata object
+    **kwargs - dictionary that will be passed through to the run-engine metadata
+    '''
+    scan.md.update({'xp_isprun':True})
+    light_cnt_time = scan.md['sc_params']['exposure']
+    expire_time = glbl.dk_window
+    dark_field_uid = validate_dark(light_cnt_time, expire_time)
+    if not dark_field_uid: dark_field_uid = 'can not find a qualified dark uid'
+    scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
+    scan.md['sc_params'].update({'dk_window':expire_time})
+    return scan.md
 
 def dark(sample,scan,**kwargs):
     '''on this 'scan' get dark images
@@ -151,11 +235,25 @@ def dark(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
+    dark_uid = str(uuid.uuid1())
+    dark_exp_t = scan.md['sc_params']['exposure']
     _close_shutter()
     scan.md.update({'xp_isdark':True})
     _unpack_and_run(sample,scan,**kwargs)
+    dark_time = time.time() # get timestamp by the end of dark_scan 
+    dark_def = { str(dark_exp_t) : (dark_uid, dark_time) }
+    _yamify_dark(dark_def) 
     _close_shutter()
-   
+    return dark_uid
+    
+def _yamify_dark(dark_def):
+    dark_yaml_name = glbl.dk_yaml
+    with open(dark_yaml_name, 'r') as f:
+        dark_list = yaml.load(f)
+    dark_list.append(dark_def)
+    with open(dark_yaml_name, 'w') as f:
+        yaml.dump(dark_list, f)
+
 def setupscan(sample,scan,**kwargs):
     '''used for setup scans NOT production scans
      

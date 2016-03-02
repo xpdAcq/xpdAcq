@@ -7,9 +7,11 @@ from time import strftime
 HOME_DIR_NAME = 'xpdUser'
 BLCONFIG_DIR_NAME = 'xpdConfig'
 BEAMLINE_HOST_NAME = 'xf28id1-ws2'
-BASE_DIR = os.path.expanduser('~/')
+BASE_DIR = os.path.expanduser('~/pe2_data')
 ARCHIVE_BASE_DIR = os.path.expanduser('~/pe2_data/.userBeamtimeArchive')
 USER_BACKUP_DIR_NAME = strftime('%Y')
+DARK_WINDOW = 15 # default value, in terms of minute
+FRAME_ACQUIRE_TIME = 0.1 # pe1 frame acq time
 
 hostname = socket.gethostname()
 if hostname == BEAMLINE_HOST_NAME:
@@ -24,6 +26,8 @@ HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
 BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
 EXPORT_DIR = os.path.join(HOME_DIR, 'Export')
 YAML_DIR = os.path.join(HOME_DIR, 'config_base', 'yml')
+DARK_YAML_NAME = os.path.join(YAML_DIR, '_dark_scan_list.yaml')
+
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 ALL_FOLDERS = [
         HOME_DIR,
@@ -48,7 +52,7 @@ if not os.path.isfile(tmp_safname):
 
 
 class glbl():
-	#this behavior can be changed to include Tim's logic
+    #this behavior can be changed to include Tim's logic
     base = BASE_DIR
     home = HOME_DIR
     xpdconfig = BLCONFIG_DIR
@@ -57,6 +61,9 @@ class glbl():
     allfolders = ALL_FOLDERS
     archive_dir = USER_BACKUP_DIR
     beamhost = BEAMLINE_HOST_NAME
+    dk_yaml = DARK_YAML_NAME
+    dk_window = DARK_WINDOW
+    frame_acq_time = FRAME_ACQUIRE_TIME
 
 if __name__ == '__main__':
     print(glbl.dp().home)
