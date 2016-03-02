@@ -28,21 +28,14 @@ from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
 from xpdacq.glbl import AREA_DET as area_det
 from xpdacq.glbl import TEMP_CONTROLLER as temp_controller
-
-
-from bluesky.broker_callbacks import verify_files_saved
-from blueksy.broker_callbacks import LiveTable
-''' holding : load in this way if xpdSim is completely ready
 from xpdacq.glbl import VERIFY_WRITE as verify_files_saved
 from xpdacq.glbl import LIVETABLE as LiveTable
-'''
 from xpdacq.glbl import xpdRE
 from xpdacq.beamtime import Union, Xposure
 from xpdacq.control import _close_shutter, _open_shutter
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 
-area_det.cam.acquire_time.put(glbl.frame_acq_time)
 
 #expo_threshold = 60 # in seconds Deprecated!
 
@@ -259,6 +252,7 @@ def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
     # setting up detector
     #area_det = _get_obj(det)
     area_det.number_of_sets.put(1)
+    area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 
     exp = Xposure(mdo)
@@ -300,6 +294,7 @@ def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det
     # setting up detector
     #area_det = _get_obj(det)
     area_det.number_of_sets.put(1)
+    area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 
     exp = Xposure(mdo)
@@ -367,7 +362,7 @@ def collect_time_series(mdo, exposure=1.0, delay=0., num=1, det= area_det, subs_
 
     # grab the area detector
     #area_det = _get_obj(det)
-
+    area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 
     # compute how many frames to collect
