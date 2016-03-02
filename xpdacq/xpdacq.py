@@ -21,6 +21,7 @@ from time import strftime
 import datetime
 import numpy as np
 from configparser import ConfigParser
+import copy
 
 from bluesky.plans import Count
 from bluesky import Msg
@@ -30,21 +31,13 @@ from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
 from xpdacq.glbl import AREA_DET as area_det
 from xpdacq.glbl import TEMP_CONTROLLER as temp_controller
-
-
-#from bluesky.broker_callbacks import verify_files_saved
-#from blueksy.broker_callbacks import LiveTable
-''' holding : load in this way if xpdSim is completely ready
 from xpdacq.glbl import VERIFY_WRITE as verify_files_saved
 from xpdacq.glbl import LIVETABLE as LiveTable
-'''
 from xpdacq.glbl import xpdRE
 from xpdacq.beamtime import Union, Xposure
 from xpdacq.control import _close_shutter, _open_shutter
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
-
-area_det.cam.acquire_time.put(glbl.frame_acq_time)
 
 #expo_threshold = 60 # in seconds Deprecated!
 
@@ -128,37 +121,15 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
     '''
     #if not dark_scan_list: dark_scan_list= _read_dark_yaml()
     if len(dark_scan_list) > 0:
-        while time.time() - dark_scan_list[-1][2] < expire_time*60.:
-            test = dark_scan_list.pop()
-            if abs(test[1]-light_cnt_time) < 0.05:
-            #0.9*glbl.frame_acq_time: 
+        test_list = copy.copy(dark_scan_list)
+        while time.time() - test_list[-1][2] < expire_time*60.:
+            test = test_list.pop()
+            if abs(test[1]-light_cnt_time) < 0.9*glbl.frame_acq_time: 
                 return test[0] 
-        else:
-            return # no quaified dark in dark_scan_list. collect a dark
+            elif len(test_list) == 0:
+                return  None # scan list there but no good dark found
     else:
-        return # nothing in dark_scan_list. collect a dark
-    
-#def _qualified_dark(dark_scan_list, light_cnt_time, expire_time):
-##    ''' return index of dictionary that contains qualified dark '''
- #   qualified_index_list = []
- #   for ind, el in enumerate(dark_scan_list):
- #       dark_cnt_time = list(el.keys())[0] # type = str
- #       dark_timestamp = list(el.values())[0][1] # comes from python3 convention and data structure
- #       is_right_cnt = abs(float(dark_cnt_time) - light_cnt_time) < 0.9 * glbl.frame_acq_time
- #       if is_right_cnt: print('find right cnt = {} with index = {}'.format(dark_cnt_time, ind))
- #       is_valid = (time.time() - dark_timestamp) < expire_time * 60.
- #       if is_valid: print('find right time = {} with index = {}'.format(datetime.datetime.fromtimestamp(time.time() - expire_time *60), ind))
- #       if (is_right_cnt) and (is_valid): qualified_index_list.append(ind)
- #   return qualified_index_list
-
-#def _qualified_uid(qualified_dark_dict):
-#    ''' helper function to unpack dark_uid inside dark_information '''
-#    for el in list(qualified_dark_dict.values()):
-#        for sub_el in el:
-#            if isinstance(sub_el, str):
-#                dark_uid = sub_el
-#    return dark_uid
-#### code block of dark subtraction ####
+        return None # nothing in dark_scan_list. collect a dark
 
 def prun(sample,scan,**kwargs):
     '''on this 'sample' run this 'scan'
@@ -309,6 +280,7 @@ def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
     # setting up detector
     #area_det = _get_obj(det)
     area_det.number_of_sets.put(1)
+    area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 
     exp = Xposure(mdo)
@@ -350,6 +322,7 @@ def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det
     # setting up detector
     #area_det = _get_obj(det)
     area_det.number_of_sets.put(1)
+    area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 
     exp = Xposure(mdo)
@@ -418,6 +391,7 @@ def collect_time_series(mdo, exposure=1.0, delay=0., num=1, det= area_det, subs_
     # grab the area detector
     #area_det = _get_obj(det)
 
+    area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 
     # compute how many frames to collect
