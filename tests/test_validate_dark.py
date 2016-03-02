@@ -13,7 +13,7 @@ import numpy as np
 #from xpdacq.xpdacq import _hdir
 #from xpdacq.xpdacq import _hostname
 from xpdacq.glbl import glbl
-from xpdacq.xpdacq import validate_dark, _qualified_dark, _yamify_dark 
+from xpdacq.xpdacq import validate_dark,  _yamify_dark 
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample
 
 # this is here temporarily.  Simon wanted it out of the production code.  Needs to be refactored.
@@ -60,31 +60,31 @@ class findRightDarkTest(unittest.TestCase):
             shutil.rmtree(glbl.home)
         if os.path.isdir(os.path.join(glbl.base,'xpdConfig')):
             shutil.rmtree(os.path.join(glbl.base,'xpdConfig'))
-     
+
+    @unittest.skip('')
     def test_qualified_dark_with_varying_exposure_time(self):
         # case 1: all dark are not expired. Iterate over differnt exposure time
-        self.assertTrue(os.path.isfile(glbl.dk_yaml))
+        time_now = time.time()
+        dark_scan_list = []
         for i in range(1,5):
-            dark_def = {str(i*0.1): (str(uuid.uuid1()), time.time())}
-            _yamify_dark(dark_def)
-        with open(glbl.dk_yaml, 'r') as f:
-            dark_scan_list = yaml.load(f)
+            dark_def = (str(uuid.uuid1()), i*0.1, time_now)
+            dark_scan_list.append(dark_def)
+
         expire_time = 1. # interms of minute
         for i in range(1,5):
-            info_tuple = list(dark_scan_list[i-1].values())
-            for el in info_tuple:
-                for sub_el in el:
-                    if isinstance(sub_el, str): dark_uid = sub_el
+#            expire_time = i*11. # in terms of minute
+            light_cnt_time = i*0.1
             expect_list = []
             expect_list.append(i-1)
             self.assertEqual(expect_list, _qualified_dark(dark_scan_list, i*0.1, expire_time))
     
+    @unittest.skip('')
     def test_qualified_dark_varying_expire_time(self):
         # case 2: all dark have the same exposure time but differnt timestamp. Iterate over differnt expire time
         time_now = time.time()
         dark_scan_list = []
         for i in range(1,3):
-            dark_def = {str(0.2): (str(uuid.uuid1()), time_now-600*(i))}
+            dark_def = (str(uuid.uuid1()), 0.2, time_now-600*(i))
             dark_scan_list.append(dark_def)
         expire_time = 9.
         expect_length = 0
@@ -97,12 +97,13 @@ class findRightDarkTest(unittest.TestCase):
         self.assertEqual(expect_length, len(_qualified_dark(dark_scan_list, 0.2, expire_time)))
             # length of qualified dark index should grow
 
+    @unittest.skip('')
     def test_qualified_dark_varying_expire_and_exposure_time(self):
         # case 3: Iterate over differnt exposure_time and different expire_time
         time_now = time.time()
         dark_scan_list = []
         for i in range(1,3):
-            dark_def = {str(0.1*i): (str(uuid.uuid1()), time_now-600*(i))}
+            dark_def = (str(uuid.uuid1()), 0.1*i, time_now-600*(i))
             dark_scan_list.append(dark_def)
 
         for i in range(1,3):
@@ -112,12 +113,13 @@ class findRightDarkTest(unittest.TestCase):
             expect_list.append(i-1)
             self.assertEqual(expect_list, _qualified_dark(dark_scan_list, light_cnt_time, expire_time))
     
+    @unittest.skip('')
     def test_qualified_dark_with_no_matched_dark(self):
         # case 4: can't find any qualified dark
         time_now = time.time()
         dark_scan_list = []
         for i in range(1,3):
-            dark_def = {str(0.1*i): (str(uuid.uuid1()), time_now-600*(i))}
+            dark_def = (str(uuid.uuid1()), 0.1*i, time_now-600*(i))
             dark_scan_list.append(dark_def)
 
         for i in range(1,3):
@@ -129,18 +131,21 @@ class findRightDarkTest(unittest.TestCase):
 
     def test_validate_dark_varying_exposure_and_expire_time(self):
         # extend case of test_qualified_dark. Iterate over different exposure_time and expire_time directly
+        dark_scan_list, expire_time = [], 11.
+        self.assertEqual(validate_dark(0.1, expire_time,dark_scan_list), None)
         time_now = time.time()
         dark_scan_list = []
         for i in range(1,3):
-            dark_def = {str(0.1*i): (str(uuid.uuid1()), time_now-600*(i))}
+            dark_def = (str(uuid.uuid1()), 0.1, time_now-1200+600*(i-1))
             dark_scan_list.append(dark_def)
+        # should return None if no valid items are found
+        expire_time = 0.
+        light_cnt_time = 0.1
+        self.assertEqual(validate_dark(light_cnt_time, expire_time,dark_scan_list), None)
+        dark_uid = dark_def[0]
+        expire_time = 11.
+        self.assertEqual(validate_dark(light_cnt_time, expire_time,dark_scan_list), dark_uid)
 
-        for i in range(1,3):
-            expire_time = i*11.
-            dark_scan_info = dark_scan_list[i-1]
-            dark_uid = list(dark_scan_info.values())[0][0]
-            self.assertEqual(validate_dark(i*0.1, expire_time,dark_scan_list), dark_uid)
-    
 
     @unittest.skip('skipping test with prun.  Need to refactor prun to take a dk_expiration_time optional variable?')
     def test_prun_varying_exposure_and_expire_time(self):
@@ -148,7 +153,7 @@ class findRightDarkTest(unittest.TestCase):
         time_now = time.time()
         dark_scan_list = []
         for i in range(1,3):
-            dark_def = {str(0.1*i): (str(uuid.uuid1()), time_now-600*(i))}
+            dark_def = (str(uuid.uuid1()), 0.1*i, time_now-600*(i))
             dark_scan_list.append(dark_def)
 
         for i in range(1,3):
@@ -164,7 +169,7 @@ class findRightDarkTest(unittest.TestCase):
         time_now = time.time()
         dark_scan_list = []
         for i in range(1,3):
-            dark_def = {str(0.1*i): (str(uuid.uuid1()), time_now-600*(i))}
+            dark_def = (str(uuid.uuid1()), 0.1*i, time_now-600*(i))
             dark_scan_list.append(dark_def)
 
         for i in range(1,3):
