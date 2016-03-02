@@ -19,6 +19,7 @@
 
 import os
 import datetime
+from time import strftime
 import numpy as np
 import tifffile as tif
 import matplotlib as plt

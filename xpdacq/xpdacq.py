@@ -20,11 +20,12 @@ import time
 import datetime
 import numpy as np
 import copy
+import sys
 
 from bluesky.plans import Count
 from bluesky import Msg
-
 from bluesky.plans import AbsScanPlan
+
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
 from xpdacq.glbl import AREA_DET as area_det
@@ -138,12 +139,12 @@ def prun(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    if scan.shutter: _open_shutter()
     scan.md.update({'xp_isprun':True})
     light_cnt_time = scan.md['sc_params']['exposure']
     expire_time = glbl.dk_window
     dark_field_uid = validate_dark(light_cnt_time, expire_time)
     if not dark_field_uid: dark_field_uid = dark(sample, scan, **kwargs)
+    if scan.shutter: _open_shutter()
     scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
     scan.md['sc_params'].update({'dk_window':expire_time})
     _unpack_and_run(sample,scan,**kwargs)
