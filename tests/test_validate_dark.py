@@ -13,11 +13,30 @@ import numpy as np
 #from xpdacq.xpdacq import _hdir
 #from xpdacq.xpdacq import _hostname
 from xpdacq.glbl import glbl
-from xpdacq.xpdacq import validate_dark, _qualified_dark, _yamify_dark, _unittest_prun
+from xpdacq.xpdacq import validate_dark, _qualified_dark, _yamify_dark 
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample
 
-class findRightDarkTest(unittest.TestCase): 
+def _unittest_prun(sample,scan,**kwargs):
+    '''on this 'sample' run this 'scan'
+    
+    this function doesn't control shutter nor trigger run engine. It is designed to test functionality
 
+    Arguments:
+    sample - sample metadata object
+    scan - scan metadata object
+    **kwargs - dictionary that will be passed through to the run-engine metadata
+    '''
+    scan.md.update({'xp_isprun':True})
+    light_cnt_time = scan.md['sc_params']['exposure']
+    expire_time = glbl.dk_window
+    dark_field_uid = validate_dark(light_cnt_time, expire_time)
+    if not dark_field_uid: dark_field_uid = 'can not find a qualified dark uid'
+    scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
+    scan.md['sc_params'].update({'dk_window':expire_time})
+    return scan.md
+
+
+class findRightDarkTest(unittest.TestCase): 
     def setUp(self):
         os.makedirs(glbl.yaml_dir, exist_ok = True)
         self.PI_name = 'Billinge '
@@ -39,7 +58,7 @@ class findRightDarkTest(unittest.TestCase):
         if os.path.isdir(os.path.join(glbl.base,'xpdConfig')):
             shutil.rmtree(os.path.join(glbl.base,'xpdConfig'))
      
-    def test_qualified_dark_v1(self):
+    def test_qualified_dark_with_varying_exposure_time(self):
         # case 1: all dark are not expired. Iterate over differnt exposure time
         self.assertTrue(os.path.isfile(glbl.dk_yaml))
         for i in range(1,5):
@@ -57,7 +76,7 @@ class findRightDarkTest(unittest.TestCase):
             expect_list.append(i-1)
             self.assertEqual(expect_list, _qualified_dark(dark_scan_list, i*0.1, expire_time))
     
-    def test_qualified_dark_v2(self):
+    def test_qualified_dark_varying_expire_time(self):
         # case 2: all dark have the same exposure time but differnt timestamp. Iterate over differnt expire time
         self.assertTrue(os.path.isfile(glbl.dk_yaml))
         for i in range(1,3):
@@ -72,7 +91,7 @@ class findRightDarkTest(unittest.TestCase):
             self.assertEqual(expect_length, len(_qualified_dark(dark_scan_list, 0.2, expire_time)))
             # length of qualified dark index should grow
  
-    def test_qualified_dark_v3(self):
+    def test_qualified_dark_varying_expire_and_exposure_time(self):
         # case 3: Iterate over differnt exposure_time and different expire_time
         self.assertTrue(os.path.isfile(glbl.dk_yaml))
         for i in range(1,3):
@@ -89,7 +108,7 @@ class findRightDarkTest(unittest.TestCase):
             expect_list.append(i-1)
             self.assertEqual(expect_list, _qualified_dark(dark_scan_list, light_cnt_time, expire_time))
     
-    def test_qualified_dark_v4(self):
+    def test_qualified_dark_with_no_matched_dark(self):
         # case 4: can't find any qualified dark
         self.assertTrue(os.path.isfile(glbl.dk_yaml))
         for i in range(1,3):
@@ -106,7 +125,7 @@ class findRightDarkTest(unittest.TestCase):
             #expect_list.append(i-1)
             self.assertEqual(expect_list, _qualified_dark(dark_scan_list, light_cnt_time, expire_time))
 
-    def test_validate_dark(self):
+    def test_validate_dark_varying_exposure_and_expire_time(self):
         # extend case of test_qualified_dark. Iterate over different exposure_time and expire_time directly
         self.assertTrue(os.path.isfile(glbl.dk_yaml))
         for i in range(1,3):
@@ -124,7 +143,7 @@ class findRightDarkTest(unittest.TestCase):
                     if isinstance(sub_el, str): dark_uid = sub_el
             self.assertEqual(validate_dark(i*0.1, expire_time), dark_uid)
     
-    def test_update_md_v1(self):
+    def test_prun_varying_exposure_and_expire_time(self):
         # case 1: find a qualified dark and test if md got updated
         self.assertTrue(os.path.isfile(glbl.dk_yaml))
         for i in range(1,3):
@@ -142,7 +161,7 @@ class findRightDarkTest(unittest.TestCase):
                     if isinstance(sub_el, str): dark_uid = sub_el
             self.assertEqual(_unittest_prun(self.sa, scan)['sc_params']['dk_field_uid'], dark_uid)
 
-    def test_update_md_v2(self):
+    def test_prun_with_no_matched_dark(self):
         # case 2: can't find a qualified dark
         self.assertTrue(os.path.isfile(glbl.dk_yaml))
         for i in range(1,3):
