@@ -22,25 +22,15 @@ import datetime
 import numpy as np
 import tifffile as tif
 import matplotlib as plt
-
-from xpdacq.control import _get_obj
-from xpdacq.config import DataPath
+from xpdacq.glbl import _dataBroker as db
+from xpdacq.glbl import _getEvents as get_events
+from xpdacq.glbl import _getImages as get_images
 
 _fname_field = ['sc_name','sa_name'] 
 # before complete entire file saving mechanism, still leave sample name here
-
 bt = _get_obj('bt')
-db = _get_obj('db')
-get_events = _get_obj('get_events')
-get_images = _get_obj('get_images')
-
-# specifically at XPD, this logic will be fixed shortly
-B_DIR = os.path.expanduser('~')
-
-datapath = DataPath(B_DIR)
-W_DIR = datapath.tif_dir
-
-w_dir = W_DIR # ensure program doesn't get confused
+w_dir = os.path.join(glbl.home, 'tiff_base')
+W_DIR = w_dir # in case crashes in old codes
 
 def bt_uid():
     return bt.get(0).md['bt_uid']
