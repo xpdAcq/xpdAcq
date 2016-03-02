@@ -2,6 +2,7 @@ import os
 import socket
 import yaml
 from time import strftime
+from bluesky.run_engine import RunEngine
 
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
@@ -13,11 +14,50 @@ USER_BACKUP_DIR_NAME = strftime('%Y')
 DARK_WINDOW = 15 # default value, in terms of minute
 FRAME_ACQUIRE_TIME = 0.1 # pe1 frame acq time
 
+def _areaDET(area_det_obj=None):
+    global AREA_DET
+    AREA_DET = area_det_obj
+
+def _tempController(temp_controller_obj=None):
+    global TEMP_CONTROLLER
+    TEMP_CONTROLLER = temp_controller_obj
+
+def _shutter(shutter_obj=None):
+    global SHUTTER
+    SHUTTER = shutter_obj
+
+def _verify_write(verify_files_saved_obj=None):
+    global VERIFY_WRITE
+    VERIFY_WRITE = verify_files_saved_obj
+
+def _LiveTable(livetable_obj=None):
+    global LIVETABLE
+    LIVETABLE = livetable_obj
+
+# analysis objects, maybe we should move them out in the future
+def _dataBroker(databroker_obj=None):
+    global DB
+    DB = databroker_obj
+
+def _getEvents(get_events_obj=None):
+    global GET_ENV
+    GET_ENV = get_events_obj
+
+def _getImages(get_images_obj=None):
+    global GET_IMG
+    GET_IMG = get_images_obj
+
+xpdRE = RunEngine()
+xpdRE.md['owner'] = 'xf28id1'
+xpdRE.md['beamline_id'] = 'xpd'
+xpdRE.md['group'] = 'XPD'
+
 hostname = socket.gethostname()
 if hostname == BEAMLINE_HOST_NAME:
     # real experiment
+    from bluesky.register_mds import register_mds
+    register_mds(xpdRE)
     pass
-    #bluesky.register_mds.register_mds(xpdRE)
 else:
     BASE_DIR = os.getcwd()
     ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')
@@ -49,7 +89,6 @@ if not os.path.isfile(tmp_safname):
                      ('Add more lines','as needed, one for each experimenter',98765)]}
     with open(tmp_safname, 'w') as fo:
         yaml.dump(dummy_config,fo)
-
 
 class glbl():
     #this behavior can be changed to include Tim's logic

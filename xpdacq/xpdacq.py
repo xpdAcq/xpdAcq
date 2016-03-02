@@ -19,62 +19,26 @@ import yaml
 import time
 import datetime
 import numpy as np
+import copy
 
 from bluesky.plans import Count
 from bluesky import Msg
+
 from bluesky.plans import AbsScanPlan
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
-#from xpdacq.beamtime import Union, Xposure
+from xpdacq.glbl import AREA_DET as area_det
+from xpdacq.glbl import TEMP_CONTROLLER as temp_controller
+from xpdacq.glbl import VERIFY_WRITE as verify_files_saved
+from xpdacq.glbl import LIVETABLE as LiveTable
+from xpdacq.glbl import xpdRE
+from xpdacq.beamtime import Union, Xposure
+from xpdacq.control import _close_shutter, _open_shutter
 
-#from xpdacq.control import _close_shutter, _open_shutter
-
-''' things that should be created and imported during start_up
-#xpdRE = _get_obj('xpdRE')
-#LiveTable = _get_obj('LiveTable')
-
-# set up the detector    
-# default settings for pe1c
-#area_det = _get_obj(AREA_DET_NAME)
-#area_det.cam.acquire_time.put(FRAME_ACQUIRE_TIME)
-#temp_controller = _get_obj(TEMP_CONTROLLER_NAME)
-
-'''
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
+
+
 #expo_threshold = 60 # in seconds Deprecated!
-
-def _areaDET(area_det_name):
-    global AREA_DET
-    AREA_DET = area_det_name
-
-def _tempController(temp_controller_name):
-    global TEMP_CONTROLLER
-    TEMP_CONTROLLER = temp_controller_name
-
-def _shutter(shutter_name):
-    global SHUTTER
-    SHUTTER = shutter_name
-
-def _bdir(b_dir_name):
-    global B_DIR
-    B_DIR = b_dir_name
-
-def _hdir(h_dir_name):
-    global HOME_DIR
-    HOME_DIR = h_dir_name
-
-def _cdir(c_dir_name):
-    global CONFIG_DIR
-    CONFIG_DIR = c_dir_name
-
-def _hostname(host_name):
-    global HOST_NAME
-    HOST_NAME = host_name
-# analysis objects : not ready yet
-# db
-# LiveTable
-# get_events
-# get_images
 
 def dryrun(sample,scan,**kwargs):
     '''same as run but scans are not executed.
@@ -86,7 +50,7 @@ def dryrun(sample,scan,**kwargs):
 
     '''
     cmdo = Union(sample,scan)
-    area_det = _get_obj('pe1c')
+    #area_det = _get_obj('pe1c')
     parms = scan.md['sc_params']
     subs={}
     if 'subs' in parms: subsc = parms['subs']
@@ -97,9 +61,9 @@ def dryrun(sample,scan,**kwargs):
             subs.update({'stop':verify_files_saved})
    
     if scan.scan == 'ct':
-       get_light_images_dryrun(cmdo,parms['exposure'],'pe1c',parms['subs'],**kwargs)
+       get_light_images_dryrun(cmdo,parms['exposure'],area_det, parms['subs'],**kwargs)
     elif scan.scan == 'tseries':
-       collect_time_series_dryrun(scan,parms[0],'pe1c',**kwargs)
+       collect_time_series_dryrun(scan,parms[0],area_det, **kwargs)
     elif scan.scan == 'Tramp':
         pass
     else:
@@ -111,7 +75,7 @@ def _unpack_and_run(sample,scan,**kwargs):
     if not sample.md['bt_wavelength']:
         sys.exit(_graceful_exit('Please have the instrument scientist set the wavelength value before proceeding.'))
     cmdo = Union(sample,scan)
-    area_det = _get_obj('pe1c')
+    #area_det = _get_obj('pe1c')
     parms = scan.md['sc_params']
     subs={}
     if 'subs' in parms: subsc = parms['subs']
@@ -122,11 +86,11 @@ def _unpack_and_run(sample,scan,**kwargs):
             subs.update({'stop':verify_files_saved})
 
     if scan.scan == 'ct':
-        get_light_images(cmdo,parms['exposure'],'pe1c',subs,**kwargs)
+        get_light_images(cmdo,parms['exposure'], area_det, subs,**kwargs)
     elif scan.scan == 'tseries':
-        collect_time_series(cmdo,parms['exposure'], parms['delay'], parms['num'],'pe1c', subs, **kwargs)
+        collect_time_series(cmdo,parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
     elif scan.scan == 'Tramp':
-        collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], 'pe1c', subs, **kwargs)
+        collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], area_det, subs, **kwargs)
     else:
         print('unrecognized scan type.  Please rerun with a different scan object')
         return
@@ -156,37 +120,15 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
     '''
     #if not dark_scan_list: dark_scan_list= _read_dark_yaml()
     if len(dark_scan_list) > 0:
-        while time.time() - dark_scan_list[-1][2] < expire_time*60.:
-            test = dark_scan_list.pop()
-            if abs(test[1]-light_cnt_time) < 0.05:
-            #0.9*glbl.frame_acq_time: 
+        test_list = copy.copy(dark_scan_list)
+        while time.time() - test_list[-1][2] < expire_time*60.:
+            test = test_list.pop()
+            if abs(test[1]-light_cnt_time) < 0.9*glbl.frame_acq_time: 
                 return test[0] 
-        else:
-            return # no quaified dark in dark_scan_list. collect a dark
+            elif len(test_list) == 0:
+                return  None # scan list there but no good dark found
     else:
-        return # nothing in dark_scan_list. collect a dark
-    
-#def _qualified_dark(dark_scan_list, light_cnt_time, expire_time):
-##    ''' return index of dictionary that contains qualified dark '''
- #   qualified_index_list = []
- #   for ind, el in enumerate(dark_scan_list):
- #       dark_cnt_time = list(el.keys())[0] # type = str
- #       dark_timestamp = list(el.values())[0][1] # comes from python3 convention and data structure
- #       is_right_cnt = abs(float(dark_cnt_time) - light_cnt_time) < 0.9 * glbl.frame_acq_time
- #       if is_right_cnt: print('find right cnt = {} with index = {}'.format(dark_cnt_time, ind))
- #       is_valid = (time.time() - dark_timestamp) < expire_time * 60.
- #       if is_valid: print('find right time = {} with index = {}'.format(datetime.datetime.fromtimestamp(time.time() - expire_time *60), ind))
- #       if (is_right_cnt) and (is_valid): qualified_index_list.append(ind)
- #   return qualified_index_list
-
-#def _qualified_uid(qualified_dark_dict):
-#    ''' helper function to unpack dark_uid inside dark_information '''
-#    for el in list(qualified_dark_dict.values()):
-#        for sub_el in el:
-#            if isinstance(sub_el, str):
-#                dark_uid = sub_el
-#    return dark_uid
-#### code block of dark subtraction ####
+        return None # nothing in dark_scan_list. collect a dark
 
 def prun(sample,scan,**kwargs):
     '''on this 'sample' run this 'scan'
@@ -253,7 +195,7 @@ def setupscan(sample,scan,**kwargs):
     #parms = scan.sc_params
     if scan.shutter: _close_shutter()
 
-def get_light_images(mdo, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
+def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
     '''the main xpdAcq function for getting an exposure
     
     Arguments:
@@ -267,8 +209,9 @@ def get_light_images(mdo, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
     '''   
     
     # setting up detector
-    area_det = _get_obj(det)
+    #area_det = _get_obj(det)
     area_det.number_of_sets.put(1)
+    area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 
     exp = Xposure(mdo)
@@ -291,7 +234,7 @@ def get_light_images(mdo, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
     print('End of get_light_image...')
 
 
-def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
+def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det, subs_dict={}, **kwargs):
     '''the main xpdAcq function for getting a temperature series
     
     Arguments:
@@ -305,11 +248,12 @@ def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det='pe1c', s
     Returns:
       nothing
     '''   
-    temp_controller = _get_obj('cs700')
+    #temp_controller = _get_obj('cs700')
     
     # setting up detector
-    area_det = _get_obj(det)
+    #area_det = _get_obj(det)
     area_det.number_of_sets.put(1)
+    area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 
     exp = Xposure(mdo)
@@ -347,7 +291,7 @@ def _nstep(start, stop, step_size):
     print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',abs(computed_step_size))
     return computed_nsteps
 
-def collect_time_series(mdo, exposure=1.0, delay=0., num=1, det='pe1c', subs_dict={}, **kwargs):
+def collect_time_series(mdo, exposure=1.0, delay=0., num=1, det= area_det, subs_dict={}, **kwargs):
     """Collect a time series
 
     Any extra keywords are passed through to RE() as metadata
@@ -376,8 +320,8 @@ def collect_time_series(mdo, exposure=1.0, delay=0., num=1, det='pe1c', subs_dic
     md = dict(exp.md)
 
     # grab the area detector
-    area_det = _get_obj(det)
-
+    #area_det = _get_obj(det)
+    area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 
     # compute how many frames to collect
@@ -422,7 +366,7 @@ def SPEC_Tseries_plan(detector, motor, start, stop, steps):
         yield Msg('save')
     yield Msg('close_run')
 
-def SPEC_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
+def SPEC_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det = area_det, subs_dict={}, **kwargs):
     '''the main xpdAcq function for getting an exposure
     
     Arguments:
@@ -436,7 +380,7 @@ def SPEC_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det='pe1c', subs
     Returns:
       nothing
     '''   
-    temp_controller = _get_obj('cs700')
+    #temp_controller = _get_obj('cs700')
     
     # setting up detector
     area_det = _get_obj(det)
@@ -470,7 +414,7 @@ def SPEC_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det='pe1c', subs
    
 ########################################################################################################
 
-def get_bluesky_run(mdo, plan, det='pe1c', subs_dict={}, **kwargs):
+def get_bluesky_run(mdo, plan, det = area_det, subs_dict={}, **kwargs):
     '''An xpdAcq function for executing a custom (user defined) bluesky plan
     
     Arguments:
@@ -509,7 +453,7 @@ def get_bluesky_run(mdo, plan, det='pe1c', subs_dict={}, **kwargs):
 ##########################################################
 #    Dry Run thingys
 ######################################################
-def get_light_images_dryrun(mdo, exposure = 1.0, det='pe1c', subs_dict={}, **kwargs):
+def get_light_images_dryrun(mdo, exposure = 1.0, det= area_det, subs_dict={}, **kwargs):
     '''the main xpdAcq function for getting an exposure
     
     Arguments:
