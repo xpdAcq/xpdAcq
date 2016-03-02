@@ -26,11 +26,9 @@ from xpdacq.glbl import _dataBroker as db
 from xpdacq.glbl import _getEvents as get_events
 from xpdacq.glbl import _getImages as get_images
 
-_fname_field = ['sc_name','sa_name'] 
-# before complete entire file saving mechanism, still leave sample name here
-bt = _get_obj('bt')
+_fname_field = ['sa_name','sc_name'] 
 w_dir = os.path.join(glbl.home, 'tiff_base')
-W_DIR = w_dir # in case crashes in old codes
+W_DIR = w_dir # in case of crashes in old codes
 
 def bt_uid():
     return bt.get(0).md['bt_uid']
@@ -56,30 +54,20 @@ def _feature_gen(header):
 
         try:
             el = field[key]
-            if isinstance(el, list):
-                try:
-                # grab the first two experimenters if exist
-                    feature_list.append(str(el[0]))
-                    feature_list.append(str(el[1]))
-                except IndexError:
-                    feature_list.append('defaultExperimenter')
+            # truncate string length
+            if len(el)>12:
+                value = el[:12]
             else:
-                # truncate string length
-                if len(el)>12:
-                    value = el[:12]
-                else:
-                    value = el
-                # clear space
-                feature = [ ch for ch in list(el) if ch!=' ']
-                feature_list.append(''.join(feature))
+                value = el
+            # clear space
+            feature = [ ch for ch in list(el) if ch!=' ']
+            feature_list.append(''.join(feature))
         except KeyError:
-            # exceptioin handle. If user forgot to define require fields
-            pass
-    
+            pass # protection to allow missing required fields. This should not happen
     # FIXME - find a way to include motor information
     f_name = "_".join(feature_list)
     exp_time = _timestampstr(header.start.time, hour=True)
-    return '_'.join([f_name, exp_time, uid])
+    return '_'.join([f_name, exp_time])
 
 def _timestampstr(timestamp, hour=False):
     ''' convert timestamp to strftime formate '''
@@ -89,91 +77,76 @@ def _timestampstr(timestamp, hour=False):
         timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y%m%d-%H%M')
     return timestring
 
-def save_last_tiff():
-    save_tiff(db[-1])
+def save_last_tiff(dark_subtraction=True):
+    save_tiff(db[-1], dark_subtraction)
 
-def save_tiff(headers):
+def save_tiff(headers, dark_subtraction = True):
     ''' save images obtained from dataBroker as tiff format files. It returns nothing.
 
     arguments:
         headers - list - a list of header objects obtained from a query to dataBroker
     '''
-
     F_EXTEN = '.tiff'
-
+    e = 'Can not find a proper dark image applied to this header.\nFiles will be saved but not no dark subtraction will be applied'
+ 
     # prepare header
     if type(list(headers)[1]) == str:
         header_list = list()
         header_list.append(headers)
     else:
         header_list = headers
-    
-    # iterate over header(s)
     for header in header_list:
         print('Saving your image(s) now....')
-        # get images and exposure time from headers level
-        
-        # prepare imgs and events
-        header_events = list(get_events(header))
-        
         img_field = _identify_image_field(header)
+        header_events = list(get_events(header))
         light_imgs = np.array(get_images(header, img_field))
-
-        try:
-            cnt_time = header.start['xp_computed_exposure']
-            print('cnt_time = %s' % cnt_time)
-        except KeyError:
-            print('Opps you forgot to enter exposure time')
-            pass
+        # dark subtration logic
+        if dark_subtraction:
+            dark_uid_appended = header.start['sc_params']['dk_field_uid']
+            try:
+                dark_header = db[dark_uid_appended]
+                dark_imgs = np.array(get_images(header, img_field))
+            except ValueError: 
+                print(e) # protection. Should not happen
+                dark_imgs = np.zeros_like(light_imgs) 
+        else:
+            dark_imgs = np.zeros_like(light_imgs) 
         
-        
-        # container for final image 
-        img_list = list() # dark correction functionality could be included in here later
+        img_list = list()
         for i in range(light_imgs.shape[0]):
-            dummy = light_imgs[i] 
+            if np.shape(dark_imgs) == np.shape(light_imgs):
+                dummy = light_imgs[i] - dark_imgs[i]
+            
+            else:
+                print(e)
+                dummy =light_imgs[i]
             img_list.append(dummy)
         
         for i in range(len(img_list)):
             img = img_list[i]
-            #w_dir = datapath.tif_dir
-            dummy_name = _feature_gen(header)
-            
-            # get temperature label
+            f_name = _feature_gen(header)
             if 'temperautre' in header_events[i]['data']:
-                # temperautre is a typo from Dan but it is there...
-                f_name = dummy_name + '_'+str(header_events[i]['data']['temperautre'])+'K'
-            else:
-                f_name = dummy_name
-
+                # temperautre is a typo from Dan but it roots in bluesky 
+                f_name = f_name + '_'+str(header_events[i]['data']['temperautre'])+'K'
             ind = str(i)
-            combind_f_name = '_'.join([f_name,ind]) + F_EXTEN # add ind value
-            
+            combind_f_name = '_'.join([f_name,ind]) + F_EXTEN # add index value
             w_name = os.path.join(W_DIR, combind_f_name)
             tif.imsave(w_name, img) 
-            
             if os.path.isfile(w_name):
                 print('image "%s" has been saved at "%s"' % (combind_f_name, W_DIR))
-                print('if you do not see as much metadata as you expected in file name, that means you forgot to enter it')
             else:
                 print('Sorry, something went wrong with your tif saving')
                 return
-
     print('||********Saving process SUCCEEDED********||')
-
-# make sure codes at XPD is still working after renaming
-#save_tif = save_tiff
-
 
 def plot_images(header):
     ''' function to plot images from header.
     
     It plots images, return nothing
-
     Parameters
     ----------
         header : databroker header object
             header pulled out from central file system
-
     '''
     # prepare header
     if type(list(headers)[1]) == str:
