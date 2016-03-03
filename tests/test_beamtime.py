@@ -206,3 +206,14 @@ class NewExptTest(unittest.TestCase):
         hidden_list3 = _get_hidden_list() 
         self.assertEqual(hidden_list3,[])
 
+    def test_set_wavelength(self):
+        wavelength = .18448
+        self.bt = Beamtime('test',123)
+        self.assertEqual(self.bt.md['bt_wavelength'],None)
+        self.bt.set_wavelength(wavelength)
+        self.assertEqual(self.bt.md['bt_wavelength'],wavelength)
+        self.assertEqual(self.bt.name,'bt')
+        self.assertEqual(self.bt.md['bt_piLast'],'test')
+        
+
+

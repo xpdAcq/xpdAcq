@@ -51,7 +51,7 @@ def _update_objlist(objlist,name):
 class XPD:
     objlist = []
     def _getuid(self):
-        return str(uuid.uuid1())
+        return str(uuid.uuid4())
 
     def export(self):
         return self.md
@@ -75,12 +75,6 @@ class XPD:
         fname = str(cleaned_ftype) +'_'+ str(cleaned_oname) +'.yml'
         return fname
 
-#    def _yaml_garage_path(self):
-#        yaml_garage_dir_path = os.path.join(self._home_path, 'config_base', 'yml_garage')
-#        # backup directory when user wants to move out objects from default reading list
-#        os.makedirs(yaml_garage_dir_path, exist_ok = True)
-#        return yaml_garage_dir_path
-
     def _yamify(self):
         '''write a yaml file for this object and place it in config_base/yml'''
         yaml_dir = glbl.yaml_dir
@@ -94,13 +88,6 @@ class XPD:
         with open(lname, 'w') as fout:
             yaml.dump(objlist, fout)
 
-#        if os.path.isfile(lname):
-#            with open(lname, 'a') as fout:
-#                yaml.dump(, fout)
-#        else:
-#            obj_list = [XPD.obj_list]
-#            with open(lname, 'w') as fout:
-#                yaml.dump(obj_list, fout)
         if isinstance(fpath, str):
             with open(fpath, 'w') as fout:
                 yaml.dump(self, fout)
@@ -157,31 +144,17 @@ class XPD:
         yaml.dump(hidden_list, fo)
         return hidden_list
 
-
     @classmethod
     def get(cls, index):
         list = cls.loadyamls(cls)
         return list[index]
-
-#    @classmethod
-#    def remove(cls, index):
-#        garage_path = cls._yaml_garage_path(cls)
-#        read_path = cls._yaml_path(cls)#
-#
-#        list = cls.loadyamls()
-#        obj_name = list[index].name
-#        obj_type = list[index].type
-#        f_name = os.path.join(read_path, obj_type+'_'+obj_name+'.yml')#
-#
-#        print("You are about to remove %s object with name %s from current object list" % (obj_type, obj_name))
-#        user_confirm = input("Do you want to continue y/[n]: ")
-#        if user_confirm in ('y','Y'):
-#            shutil.move(f_name, garage_path)
-#        else:
-#            return
     
+    def set_wavelength(self,wavelength):
+        self.md.update({'bt_wavelength': _clean_md_input(wavelength)})
+        self._yamify()
+
 class Beamtime(XPD):
-    def __init__(self, pi_last, safn, wavelength=None, experimenters = [], **kwargs):
+    def __init__(self, pi_last, safn, wavelength=None, experimenters=[], **kwargs):
         self.name = 'bt'
         self.type = 'bt'
         self.md = {'bt_piLast': _clean_md_input(pi_last), 'bt_safN': _clean_md_input(safn), 
@@ -193,6 +166,7 @@ class Beamtime(XPD):
         yaml_dir = glbl.yaml_dir
         lname = os.path.join(yaml_dir,'_acqobj_list.yml')
         hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
+        dname = os.path.join(yaml_dir,'_dk_objects_list.yml')
         if not os.path.isfile(lname):
             objlist = []
             fo = open(lname, 'w')
@@ -201,8 +175,11 @@ class Beamtime(XPD):
             hidlist = []
             fo = open(hname, 'w')
             yaml.dump(hidlist, fo)
-
-        
+        if not os.path.isfile(dname):
+            dklist = []
+            fo = open(dname, 'w')
+            yaml.dump(dklist, fo)
+   
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
         # get objlist from yaml file

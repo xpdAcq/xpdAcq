@@ -21,6 +21,7 @@ import datetime
 import numpy as np
 import copy
 import sys
+import uuid
 
 from bluesky.plans import Count
 from bluesky import Msg
@@ -31,13 +32,12 @@ from xpdacq.glbl import glbl
 from xpdacq.glbl import AREA_DET as area_det
 from xpdacq.glbl import TEMP_CONTROLLER as temp_controller
 from xpdacq.glbl import VERIFY_WRITE as verify_files_saved
-from xpdacq.glbl import LIVETABLE as LiveTable
+#from xpdacq.glbl import LIVETABLE as LiveTable
 from xpdacq.glbl import xpdRE
 from xpdacq.beamtime import Union, Xposure
 from xpdacq.control import _close_shutter, _open_shutter
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
-
 
 #expo_threshold = 60 # in seconds Deprecated!
 
@@ -82,7 +82,7 @@ def _unpack_and_run(sample,scan,**kwargs):
     if 'subs' in parms: subsc = parms['subs']
     for i in subsc:
         if i == 'livetable':
-            subs.update({'all':LiveTable([area_det, temp_controller])})
+            subs.update({'all':glbl.LiveTable([area_det, temp_controller])})
         elif i == 'verify_write':
             subs.update({'stop':verify_files_saved})
 
@@ -119,7 +119,7 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
         dark_field_uid : str
             uid to qualified dark frame
     '''
-    #if not dark_scan_list: dark_scan_list= _read_dark_yaml()
+    if not dark_scan_list: dark_scan_list= _read_dark_yaml()
     if len(dark_scan_list) > 0:
         test_list = copy.copy(dark_scan_list)
         while time.time() - test_list[-1][2] < expire_time*60.:
@@ -131,24 +131,25 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
     else:
         return None # nothing in dark_scan_list. collect a dark
 
-def prun(sample,scan,**kwargs):
-    '''on this 'sample' run this 'scan'
+def prun(sample,scanplan,**kwargs):
+    '''on this 'sample' run this 'scanplan'
         
     Arguments:
     sample - sample metadata object
-    scan - scan metadata object
+    scanplan - scanplan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    scan.md.update({'xp_isprun':True})
-    light_cnt_time = scan.md['sc_params']['exposure']
+    if scanplan.shutter: _open_shutter()
+    scanplan.md.update({'xp_isprun':True})
+    light_cnt_time = scanplan.md['sc_params']['exposure']
     expire_time = glbl.dk_window
     dark_field_uid = validate_dark(light_cnt_time, expire_time)
-    if not dark_field_uid: dark_field_uid = dark(sample, scan, **kwargs)
+    if not dark_field_uid: dark_field_uid = dark(sample, scanplan, **kwargs)
+    scanplan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
+    scanplan.md['sc_params'].update({'dk_window':expire_time})
     if scan.shutter: _open_shutter()
-    scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
-    scan.md['sc_params'].update({'dk_window':expire_time})
-    _unpack_and_run(sample,scan,**kwargs)
-    if scan.shutter: _close_shutter()
+    _unpack_and_run(sample,scanplan,**kwargs)
+    if scanplan.shutter: _close_shutter()
 
 def dark(sample,scan,**kwargs):
     '''on this 'scan' get dark images
@@ -158,7 +159,7 @@ def dark(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    dark_uid = str(uuid.uuid1())
+    dark_uid = str(uuid.uuid4())
     dark_exposure = scan.md['sc_params']['exposure']
     _close_shutter()
     scan.md.update({'xp_isdark':True})
@@ -211,7 +212,7 @@ def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
     
     # setting up detector
     #area_det = _get_obj(det)
-    area_det.number_of_sets.put(1)
+    glbl.area_det.number_of_sets.put(1)
     area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 

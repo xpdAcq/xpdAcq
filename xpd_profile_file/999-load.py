@@ -32,13 +32,20 @@ from xpdacq.beamtime import XPD
 
 _areaDET(pe1c)
 _tempController(cs700)
+
+#######
+# watch out, some testing here
+#######
+#_shutter(shctl1)
+glbl.SHUTTER = shctl1
+
+# revisit these and remove them
 _shutter(shctl1)
 _verify_write(verify_files_saved)
 _LiveTable(LiveTable)
 _dataBroker(db)
 _getEvents(get_events)
 _getImages(get_images)
-
 
 from xpdacq.xpdacq import *
 from xpdacq.analysis import *

@@ -24,7 +24,6 @@ from xpdacq.beamtime import Beamtime, XPD, Experiment, Sample, ScanPlan
 from xpdacq.beamtime import export_data,_clean_md_input,_get_hidden_list
 from xpdacq.glbl import glbl
 
-#datapath = glbl.dp()
 home_dir = glbl.home
 all_folders = glbl.allfolders
 
