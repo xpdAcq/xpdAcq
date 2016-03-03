@@ -20,11 +20,12 @@ import time
 import datetime
 import numpy as np
 import copy
+import sys
 
 from bluesky.plans import Count
 from bluesky import Msg
-
 from bluesky.plans import AbsScanPlan
+
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
 from xpdacq.glbl import AREA_DET as area_det
@@ -146,8 +147,10 @@ def prun(sample,scanplan,**kwargs):
     if not dark_field_uid: dark_field_uid = dark(sample, scanplan, **kwargs)
     scanplan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
     scanplan.md['sc_params'].update({'dk_window':expire_time})
+    if scan.shutter: _open_shutter()
     _unpack_and_run(sample,scanplan,**kwargs)
     if scanplan.shutter: _close_shutter()
+
 
 def dark(sample,scan,**kwargs):
     '''on this 'scan' get dark images

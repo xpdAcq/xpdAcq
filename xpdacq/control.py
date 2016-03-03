@@ -18,6 +18,7 @@ import time
 
 shutter = glbl.SHUTTER
 
+
 def _open_shutter():
     shutter.put(1)
     while True:
