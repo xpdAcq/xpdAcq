@@ -116,7 +116,7 @@ def save_tiff(headers, dark_subtraction = True):
                 dark_search = {'group':'XPD',
                         'scan_params':{'dk_field_uid':dark_uid_appended}} # this could be refine later
                 dark_header = db(**dark_search)
-                dark_imgs = np.array(get_images(header, img_field))
+                dark_imgs = np.array(get_images(dark_header, img_field))
             except ValueError: 
                 print(e) # protection. Should not happen
                 dark_imgs = np.zeros_like(light_imgs) 
@@ -127,9 +127,8 @@ def save_tiff(headers, dark_subtraction = True):
         for i in range(light_imgs.shape[0]):
             if np.shape(dark_imgs) == np.shape(light_imgs):
                 dummy = light_imgs[i] - dark_imgs[i]
-            
             else:
-                print(e)
+                print(e) # protection. In case tiff_squashing issue happen in the faster
                 dummy =light_imgs[i]
             img_list.append(dummy)
         
