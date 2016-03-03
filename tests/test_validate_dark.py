@@ -67,8 +67,6 @@ class findRightDarkTest(unittest.TestCase):
         self.ex = Experiment('validateDark_unittest', self.bt)
         self.sa = Sample('unitttestSample', self.ex)
 
-
-
         os.makedirs(glbl.yaml_dir, exist_ok = True)
         # initiate dark_scan_list
         self.dark_scan_list = []
@@ -133,6 +131,7 @@ class findRightDarkTest(unittest.TestCase):
         expire_time = 22.
         light_cnt_time = 0.2
         scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.2})
+        self.bt.set_wavelength(0.18448)
         self.assertEqual(prun(self.sa, scanplan)['sc_params']['dk_field_uid'], dark_uid)
 
     @unittest.skip('skipping test with prun.  Need to refactor prun to take a dk_expiration_time optional variable?')

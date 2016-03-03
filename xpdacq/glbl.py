@@ -4,7 +4,7 @@ import yaml
 import numpy as np
 from time import strftime, sleep
 from bluesky.run_engine import RunEngine
-from xpdacq.mock_objects import mock_shutter    
+from xpdacq.mock_objects import mock_shutter, mock_livetable, mock_areadetector 
 
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
@@ -95,7 +95,6 @@ if not os.path.isfile(tmp_safname):
         yaml.dump(dummy_config,fo)
 
 class glbl():
-    #this behavior can be changed to include Tim's logic
     base = BASE_DIR
     home = HOME_DIR
     xpdconfig = BLCONFIG_DIR
@@ -111,6 +110,8 @@ class glbl():
 
     if hostname != BEAMLINE_HOST_NAME:
         SHUTTER = mock_shutter()
+        LiveTable = mock_livetable
+        area_det = mock_areadetector
 
 
 if __name__ == '__main__':

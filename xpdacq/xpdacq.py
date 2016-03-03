@@ -32,13 +32,12 @@ from xpdacq.glbl import glbl
 from xpdacq.glbl import AREA_DET as area_det
 from xpdacq.glbl import TEMP_CONTROLLER as temp_controller
 from xpdacq.glbl import VERIFY_WRITE as verify_files_saved
-from xpdacq.glbl import LIVETABLE as LiveTable
+#from xpdacq.glbl import LIVETABLE as LiveTable
 from xpdacq.glbl import xpdRE
 from xpdacq.beamtime import Union, Xposure
 from xpdacq.control import _close_shutter, _open_shutter
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
-
 
 #expo_threshold = 60 # in seconds Deprecated!
 
@@ -83,7 +82,7 @@ def _unpack_and_run(sample,scan,**kwargs):
     if 'subs' in parms: subsc = parms['subs']
     for i in subsc:
         if i == 'livetable':
-            subs.update({'all':LiveTable([area_det, temp_controller])})
+            subs.update({'all':glbl.LiveTable([area_det, temp_controller])})
         elif i == 'verify_write':
             subs.update({'stop':verify_files_saved})
 
@@ -152,7 +151,6 @@ def prun(sample,scanplan,**kwargs):
     _unpack_and_run(sample,scanplan,**kwargs)
     if scanplan.shutter: _close_shutter()
 
-
 def dark(sample,scan,**kwargs):
     '''on this 'scan' get dark images
     
@@ -161,7 +159,7 @@ def dark(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    dark_uid = str(uuid.uuid1())
+    dark_uid = str(uuid.uuid4())
     dark_exposure = scan.md['sc_params']['exposure']
     _close_shutter()
     scan.md.update({'xp_isdark':True})
@@ -214,7 +212,7 @@ def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
     
     # setting up detector
     #area_det = _get_obj(det)
-    area_det.number_of_sets.put(1)
+    glbl.area_det.number_of_sets.put(1)
     area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 

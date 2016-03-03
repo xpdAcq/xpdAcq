@@ -11,3 +11,14 @@ class mock_shutter():
         sleep(0.1)
         return callback
 
+
+class mock_livetable():
+    def __init__(self,mylist):
+    	self.mylist = mylist
+
+class mock_areadetector():
+	@property
+	def number_of_sets(self):
+
+
+
