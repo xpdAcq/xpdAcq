@@ -16,9 +16,7 @@ class mock_livetable():
     def __init__(self,mylist):
     	self.mylist = mylist
 
-class mock_areadetector():
-	@property
-	def number_of_sets(self):
-
-
-
+# commented out as unfinished error
+#class mock_areadetector():
+	#@property
+	#def number_of_sets(self):
