@@ -4,12 +4,13 @@ import yaml
 import numpy as np
 from time import strftime, sleep
 from bluesky.run_engine import RunEngine
+from xpdacq.mock_objects import mock_shutter    
 
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
 BLCONFIG_DIR_NAME = 'xpdConfig'
 BEAMLINE_HOST_NAME = 'xf28id1-ws2'
-BASE_DIR = os.path.expanduser('~')
+BASE_DIR = os.path.expanduser('~/')
 ARCHIVE_BASE_DIR = os.path.expanduser('~/pe2_data/.userBeamtimeArchive')
 USER_BACKUP_DIR_NAME = strftime('%Y')
 DARK_WINDOW = 15 # default value, in terms of minute
@@ -92,14 +93,6 @@ if not os.path.isfile(tmp_safname):
                      ('Add more lines','as needed, one for each experimenter',98765)]}
     with open(tmp_safname, 'w') as fo:
         yaml.dump(dummy_config,fo)
-
-class mock_shutter():
-    def put(self,value):
-        pass
-    def get(self,status=1):
-        callback = round(np.random.rand())
-        sleep(0.1)
-        return callback
 
 class glbl():
     #this behavior can be changed to include Tim's logic

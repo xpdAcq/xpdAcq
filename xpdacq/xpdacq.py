@@ -21,6 +21,7 @@ import datetime
 import numpy as np
 import copy
 import sys
+import uuid
 
 from bluesky.plans import Count
 from bluesky import Msg
@@ -119,7 +120,7 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
         dark_field_uid : str
             uid to qualified dark frame
     '''
-    #if not dark_scan_list: dark_scan_list= _read_dark_yaml()
+    if not dark_scan_list: dark_scan_list= _read_dark_yaml()
     if len(dark_scan_list) > 0:
         test_list = copy.copy(dark_scan_list)
         while time.time() - test_list[-1][2] < expire_time*60.:

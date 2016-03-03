@@ -55,14 +55,14 @@ class findRightDarkTest(unittest.TestCase):
         os.makedirs(self.config_dir, exist_ok=True)
         #os.makedirs(glbl.yaml_dir, exist_ok = True)
         self.PI_name = 'Billinge '
-        self.saf_num = 234
+        self.saf_num = 123
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
         self.saffile = os.path.join(self.config_dir,'saf{}.yml'.format(self.saf_num))
         loadinfo = {'saf number':self.saf_num,'PI last name':self.PI_name,'experimenter list':self.experimenters}
         with open(self.saffile, 'w') as fo:
             yaml.dump(loadinfo,fo)
-        self.bt = _start_beamtime(self.saf_num,home_dir=self.home_dir)     
+        self.bt = _start_beamtime(self.saf_num,home_dir=self.home_dir)  
         self.stbt_list = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sc_ct.1s.yml','sc_ct.5s.yml','sc_ct1s.yml','sc_ct5s.yml','sc_ct10s.yml','sc_ct30s.yml']
         self.ex = Experiment('validateDark_unittest', self.bt)
         self.sa = Sample('unitttestSample', self.ex)

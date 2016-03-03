@@ -193,7 +193,7 @@ class Beamtime(XPD):
         yaml_dir = glbl.yaml_dir
         lname = os.path.join(yaml_dir,'_acqobj_list.yml')
         hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
-        hname = os.path.join(yaml_dir,'_dk_objects_list.yml')
+        dname = os.path.join(yaml_dir,'_dk_objects_list.yml')
         if not os.path.isfile(lname):
             objlist = []
             fo = open(lname, 'w')
