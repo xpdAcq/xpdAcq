@@ -35,7 +35,12 @@ from xpdacq.beamtime import XPD
 
 _areaDET(pe1c)
 _tempController(cs700)
-_shutter(shctl1)
+
+#######
+# watch out, some testing here
+#######
+#_shutter(shctl1)
+glbl.SHUTTER = shctl1
 
 # FIXME - collection objects related to filestore. change to this import if xpdSim is completely ready
 #_verify_write(verify_files_saved)

@@ -9,18 +9,20 @@ import copy
 from xpdacq.glbl import glbl
 #from xpdacq.xpdacq import validate_dark,  _yamify_dark 
 from xpdacq.glbl import _areaDET, _tempController
-from xpdacq.glbl import _shutter, _verify_write
+#from xpdacq.glbl import _shutter, _verify_write
+from xpdacq.glbl import _verify_write
 from xpdacq.glbl import _LiveTable
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
 _areaDET()
 _tempController()
-_shutter()
+#_shutter()
 _verify_write()
 _LiveTable()
-from xpdacq.xpdacq import validate_dark, _yamify_dark
+from xpdacq.xpdacq import validate_dark, _yamify_dark, prun
 
-
+shutter = glbl.SHUTTER
+shutter.put(1)
 
 # this is here temporarily.  Simon wanted it out of the production code.  Needs to be refactored.
 # the issue is to mock RE properly.  This is basically prun without the call to RE which
@@ -117,24 +119,21 @@ class findRightDarkTest(unittest.TestCase):
         light_cnt_time = 0.2
         self.assertEqual(validate_dark(light_cnt_time, expire_time,dark_scan_list), dark_uid)
 
-    @unittest.skip('skipping test with prun.  Need to refactor prun to take a dk_expiration_time optional variable?')
+#    @unittest.skip('skipping test with prun.  Need to refactor prun to take a dk_expiration_time optional variable?')
     def test_prun_varying_exposure_and_expire_time(self):
         # case 1: find a qualified dark and test if md got updated
         time_now = time.time()
         dark_scan_list = []
-        from xpdacq.xpdacq import validate_dark, _qualified_dark, _yamify_dark, _unittest_prun
-        self.assertTrue(os.path.isfile(glbl.dk_yaml))
 
-        for i in range(1,3):
-            dark_def = (str(uuid.uuid1()), 0.1*i, time_now-600*(i))
+        for i in range(3):
+            dark_def = (str(uuid.uuid1()), 0.1*(i+1), time_now-1200+600*i)
             dark_scan_list.append(dark_def)
-
-        for i in range(1,3):
-            expire_time = i*11.
-            dark_scan_info = dark_scan_list[i-1]
-            dark_uid = list(dark_scan_info.values())[0][0]
-            scan = ScanPlan('ctTest', 'ct', {'exposure':0.1*i})
-            self.assertEqual(_unittest_prun(self.sa, scan)['sc_params']['dk_field_uid'], dark_uid)
+        test_list = copy.copy(dark_scan_list)
+        dark_uid = dark_scan_list[-2][0]
+        expire_time = 22.
+        light_cnt_time = 0.2
+        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.2})
+        self.assertEqual(prun(self.sa, scanplan)['sc_params']['dk_field_uid'], dark_uid)
 
     @unittest.skip('skipping test with prun.  Need to refactor prun to take a dk_expiration_time optional variable?')
     def test_prun_with_no_matched_dark(self):

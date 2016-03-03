@@ -12,20 +12,24 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-from xpdacq.glbl import SHUTTER as shutter
+#from xpdacq.glbl import SHUTTER as shutter
+from xpdacq.glbl import glbl
+import time
+
+shutter = glbl.SHUTTER
 
 def _open_shutter():
     shutter.put(1)
     while True:
-        if shctl1.get():
+        if shutter.get():
             break
-            time.sleep(0.5)
+        time.sleep(0.5)
     return 
            
 def _close_shutter():
     shutter.put(0)
     while True:
-        if not shctl1.get():
+        if not shutter.get():
             break
-            time.sleep(0.5)
+        time.sleep(0.5)
     return        

@@ -1,14 +1,15 @@
 import os
 import socket
 import yaml
-from time import strftime
+import numpy as np
+from time import strftime, sleep
 from bluesky.run_engine import RunEngine
 
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
 BLCONFIG_DIR_NAME = 'xpdConfig'
 BEAMLINE_HOST_NAME = 'xf28id1-ws2'
-BASE_DIR = os.path.expanduser('~/pe2_data')
+BASE_DIR = os.path.expanduser('~')
 ARCHIVE_BASE_DIR = os.path.expanduser('~/pe2_data/.userBeamtimeArchive')
 USER_BACKUP_DIR_NAME = strftime('%Y')
 DARK_WINDOW = 15 # default value, in terms of minute
@@ -22,9 +23,9 @@ def _tempController(temp_controller_obj=None):
     global TEMP_CONTROLLER
     TEMP_CONTROLLER = temp_controller_obj
 
-def _shutter(shutter_obj=None):
-    global SHUTTER
-    SHUTTER = shutter_obj
+#def _shutter(shutter_obj=None):
+#    global SHUTTER
+#    SHUTTER = shutter_obj
 
 def _verify_write(verify_files_saved_obj=None):
     global VERIFY_WRITE
@@ -52,6 +53,7 @@ xpdRE.md['owner'] = 'xf28id1'
 xpdRE.md['beamline_id'] = 'xpd'
 xpdRE.md['group'] = 'XPD'
 
+
 hostname = socket.gethostname()
 if hostname == BEAMLINE_HOST_NAME:
     # real experiment
@@ -62,6 +64,7 @@ else:
     BASE_DIR = os.getcwd()
     ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')
     print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
+
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
 BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
 EXPORT_DIR = os.path.join(HOME_DIR, 'Export')
@@ -90,6 +93,14 @@ if not os.path.isfile(tmp_safname):
     with open(tmp_safname, 'w') as fo:
         yaml.dump(dummy_config,fo)
 
+class mock_shutter():
+    def put(self,value):
+        pass
+    def get(self,status=1):
+        callback = round(np.random.rand())
+        sleep(0.1)
+        return callback
+
 class glbl():
     #this behavior can be changed to include Tim's logic
     base = BASE_DIR
@@ -103,6 +114,11 @@ class glbl():
     dk_yaml = DARK_YAML_NAME
     dk_window = DARK_WINDOW
     frame_acq_time = FRAME_ACQUIRE_TIME
+
+
+    if hostname != BEAMLINE_HOST_NAME:
+        SHUTTER = mock_shutter()
+
 
 if __name__ == '__main__':
     print(glbl.dp().home)

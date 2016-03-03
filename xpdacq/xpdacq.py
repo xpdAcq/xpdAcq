@@ -130,24 +130,24 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
     else:
         return None # nothing in dark_scan_list. collect a dark
 
-def prun(sample,scan,**kwargs):
-    '''on this 'sample' run this 'scan'
+def prun(sample,scanplan,**kwargs):
+    '''on this 'sample' run this 'scanplan'
         
     Arguments:
     sample - sample metadata object
-    scan - scan metadata object
+    scanplan - scanplan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    if scan.shutter: _open_shutter()
-    scan.md.update({'xp_isprun':True})
-    light_cnt_time = scan.md['sc_params']['exposure']
+    if scanplan.shutter: _open_shutter()
+    scanplan.md.update({'xp_isprun':True})
+    light_cnt_time = scanplan.md['sc_params']['exposure']
     expire_time = glbl.dk_window
     dark_field_uid = validate_dark(light_cnt_time, expire_time)
-    if not dark_field_uid: dark_field_uid = dark(sample, scan, **kwargs)
-    scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
-    scan.md['sc_params'].update({'dk_window':expire_time})
-    _unpack_and_run(sample,scan,**kwargs)
-    if scan.shutter: _close_shutter()
+    if not dark_field_uid: dark_field_uid = dark(sample, scanplan, **kwargs)
+    scanplan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
+    scanplan.md['sc_params'].update({'dk_window':expire_time})
+    _unpack_and_run(sample,scanplan,**kwargs)
+    if scanplan.shutter: _close_shutter()
 
 def dark(sample,scan,**kwargs):
     '''on this 'scan' get dark images
