@@ -23,9 +23,15 @@ from time import strftime
 import numpy as np
 import tifffile as tif
 import matplotlib as plt
-from xpdacq.glbl import _dataBroker as db
-from xpdacq.glbl import _getEvents as get_events
-from xpdacq.glbl import _getImages as get_images
+from xpdacq.glbl import glbl
+#from xpdacq.glbl import _dataBroker as db
+#from xpdacq.glbl import _getEvents as get_events
+#from xpdacq.glbl import _getImages as get_images
+
+# top definition for minial impacts on the code. Can be changed later
+db = glbl.db
+get_events = glbl.get_events
+get_images = glbl.get_images
 
 _fname_field = ['sa_name','sc_name'] 
 w_dir = os.path.join(glbl.home, 'tiff_base')
@@ -105,7 +111,11 @@ def save_tiff(headers, dark_subtraction = True):
         if dark_subtraction:
             dark_uid_appended = header.start['sc_params']['dk_field_uid']
             try:
-                dark_header = db[dark_uid_appended]
+                # bluesky only looks for uid it defines
+                #dark_header = db[dark_uid_appended]
+                dark_search = {'group':'XPD',
+                        'scan_params':{'dk_field_uid':dark_uid_appended}} # this could be refine later
+                dark_header = db(**dark_search)
                 dark_imgs = np.array(get_images(header, img_field))
             except ValueError: 
                 print(e) # protection. Should not happen

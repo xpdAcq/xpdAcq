@@ -29,15 +29,21 @@ from bluesky.plans import AbsScanPlan
 
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
-from xpdacq.glbl import AREA_DET as area_det
-from xpdacq.glbl import TEMP_CONTROLLER as temp_controller
-from xpdacq.glbl import VERIFY_WRITE as verify_files_saved
+#from xpdacq.glbl import AREA_DET as area_det
+#from xpdacq.glbl import TEMP_CONTROLLER as temp_controller
+#from xpdacq.glbl import VERIFY_WRITE as verify_files_saved
 #from xpdacq.glbl import LIVETABLE as LiveTable
 from xpdacq.glbl import xpdRE
 from xpdacq.beamtime import Union, Xposure
 from xpdacq.control import _close_shutter, _open_shutter
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
+
+
+# top definition for minial impacts on the code. Can be changed later
+area_det = glbl.area_det
+LiveTable = glbl.LiveTable
+temp_controller = glbl.temp_controller
 
 #expo_threshold = 60 # in seconds Deprecated!
 
@@ -73,8 +79,9 @@ def dryrun(sample,scan,**kwargs):
     
 def _unpack_and_run(sample,scan,**kwargs):
     # check to see if wavelength has been set
-    if not sample.md['bt_wavelength']:
-        sys.exit(_graceful_exit('Please have the instrument scientist set the wavelength value before proceeding.'))
+    # bug
+    #if not sample.md['bt_wavelength']:
+        #sys.exit(_graceful_exit('Please have the instrument scientist set the wavelength value before proceeding.'))
     cmdo = Union(sample,scan)
     #area_det = _get_obj('pe1c')
     parms = scan.md['sc_params']
@@ -82,7 +89,7 @@ def _unpack_and_run(sample,scan,**kwargs):
     if 'subs' in parms: subsc = parms['subs']
     for i in subsc:
         if i == 'livetable':
-            subs.update({'all':glbl.LiveTable([area_det, temp_controller])})
+            subs.update({'all':LiveTable([area_det, temp_controller])})
         elif i == 'verify_write':
             subs.update({'stop':verify_files_saved})
 
@@ -97,6 +104,7 @@ def _unpack_and_run(sample,scan,**kwargs):
         return
 
 #### dark subtration code block ####
+
 def _read_dark_yaml():
     dark_yaml_name = glbl.dk_yaml
     with open(dark_yaml_name, 'r') as f:
@@ -131,6 +139,49 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
     else:
         return None # nothing in dark_scan_list. collect a dark
 
+def _load_calibration(calibration_file_name = None):
+    ''' function to load calibration file in config_base directory
+    Parameters
+    ----------
+    calibration_file_name : str
+    name of calibration file that are going to be used. if it is not specified, load the most recent one
+    Returns
+    -------
+    config_dict : dict
+    a dictionary containing calibration parameters calculated from SrXplanar
+    '''
+    config_dir = os.path.join(glbl.home, 'config_base') # FIXME - remove it after make config_dir an attribute
+    f_list = [ f for f in os.listdir(config_dir) if f.endswith('cfg')]
+    if not f_list:
+        return # no config at all
+    if calibration_file_name:
+        config_in_use = calibration_file_name
+    config_in_use = sorted(f_list, key=os.path.getmtime)[-1]
+    config_timestamp = os.path.getmtime(config_in_use)
+    config_time = datetime.datetime.fromtimestamp(config_timestamp).strftime('%Y%m%d-%H%M')
+    config_dict = _load_config(os.path.join(config_dir,config_in_use))
+    return (config_dict, config_in_use)
+
+def _load_config(config_file_name):
+    ''' help function to load config file '''
+    config = ConfigParser()
+    config.read(config_file_name)
+    sections = config.sections()
+    config_dict = {}
+    for section in sections:
+        config_dict[section] = {} # write down header
+        options = config.options(section)
+        for option in options:
+            try:
+                config_dict[section][option] = config.get(section, option)
+                #if config_dict[option] == -1:
+                # DebugPrint("skip: %s" % option)
+            except:
+                print("exception on %s!" % option)
+                config_dict[option] = None
+    return config_dict
+
+
 def prun(sample,scanplan,**kwargs):
     '''on this 'sample' run this 'scanplan'
         
@@ -144,10 +195,19 @@ def prun(sample,scanplan,**kwargs):
     light_cnt_time = scanplan.md['sc_params']['exposure']
     expire_time = glbl.dk_window
     dark_field_uid = validate_dark(light_cnt_time, expire_time)
-    if not dark_field_uid: dark_field_uid = dark(sample, scanplan, **kwargs)
+    if not dark_field_uid:
+        dark_field_uid = dark(sample, scanplan, **kwargs)
+        # remove is_dark tag in md
+        dummy = scanplan.md.pop('xp_isdark')
     scanplan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
     scanplan.md['sc_params'].update({'dk_window':expire_time})
-    if scan.shutter: _open_shutter()
+    try:
+        (config_dict, config_name) = _load_calibration()
+        scan.md.update({'xp_config_dict':config_dict})
+        scan.md.update({'xp_config_name':config_name})
+    except TypeError:
+        print('INFO: No calibration config file found in config_base. Scan will still keep going on')
+    if scanplan.shutter: _open_shutter()
     _unpack_and_run(sample,scanplan,**kwargs)
     if scanplan.shutter: _close_shutter()
 
@@ -159,6 +219,8 @@ def dark(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
+    print('collect dark frame now....')
+    # print information to user since we might call dark during prun.
     dark_uid = str(uuid.uuid4())
     dark_exposure = scan.md['sc_params']['exposure']
     _close_shutter()
@@ -212,7 +274,8 @@ def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
     
     # setting up detector
     #area_det = _get_obj(det)
-    glbl.area_det.number_of_sets.put(1)
+    #glbl.area_det.number_of_sets.put(1)
+    area_det.number_of_sets.put(1)
     area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 

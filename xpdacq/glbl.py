@@ -4,7 +4,8 @@ import yaml
 import numpy as np
 from time import strftime, sleep
 from bluesky.run_engine import RunEngine
-from xpdacq.mock_objects import mock_shutter, mock_livetable, mock_areadetector 
+# test at XPD
+from xpdacq.mock_objects import mock_shutter, mock_livetable#, mock_areadetector 
 
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
@@ -106,8 +107,16 @@ class glbl():
     dk_yaml = DARK_YAML_NAME
     dk_window = DARK_WINDOW
     frame_acq_time = FRAME_ACQUIRE_TIME
+    # test at XPD
+    area_det = None
+    shutter = None
+    LiveTable = None
 
-
+    db = None
+    get_events = None
+    get_images = None
+    verify_files_saved = None
+    
     if hostname != BEAMLINE_HOST_NAME:
         SHUTTER = mock_shutter()
         LiveTable = mock_livetable

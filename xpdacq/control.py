@@ -16,7 +16,7 @@
 from xpdacq.glbl import glbl
 import time
 
-shutter = glbl.SHUTTER
+shutter = glbl.shutter
 
 
 def _open_shutter():
