@@ -84,10 +84,10 @@ def _timestampstr(timestamp, hour=False):
         timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y%m%d-%H%M')
     return timestring
 
-def save_last_tiff(dark_subtraction=True):
+def save_last_tiff(dark_subtraction=False):
     save_tiff(db[-1], dark_subtraction)
 
-def save_tiff(headers, dark_subtraction = True):
+def save_tiff(headers, dark_subtraction = False):
     ''' save images obtained from dataBroker as tiff format files. It returns nothing.
 
     arguments:
@@ -95,7 +95,8 @@ def save_tiff(headers, dark_subtraction = True):
     '''
     F_EXTEN = '.tiff'
     e = 'Can not find a proper dark image applied to this header.\nFiles will be saved but not no dark subtraction will be applied'
- 
+    is_dark_subtracted = False # align with default setting
+    
     # prepare header
     if type(list(headers)[1]) == str:
         header_list = list()
@@ -113,10 +114,14 @@ def save_tiff(headers, dark_subtraction = True):
             try:
                 # bluesky only looks for uid it defines
                 #dark_header = db[dark_uid_appended]
-                dark_search = {'group':'XPD',
-                        'scan_params':{'dk_field_uid':dark_uid_appended}} # this could be refine later
+                dark_search = {'group':'XPD','xp_dark_uid':dark_uid_appended} # this should be refine later
                 dark_header = db(**dark_search)
+                if dark_header: print('found a dark header')
                 dark_imgs = np.array(get_images(dark_header, img_field))
+                print('found the dark image')
+                is_dark_subtracted = True # label it only if it is successfully done
+                print('get dark label')
+
             except ValueError: 
                 print(e) # protection. Should not happen
                 dark_imgs = np.zeros_like(light_imgs) 
@@ -135,9 +140,10 @@ def save_tiff(headers, dark_subtraction = True):
         for i in range(len(img_list)):
             img = img_list[i]
             f_name = _feature_gen(header)
-            if 'temperautre' in header_events[i]['data']:
-                # temperautre is a typo from Dan but it roots in bluesky 
-                f_name = f_name + '_'+str(header_events[i]['data']['temperautre'])+'K'
+            if is_dark_subtracted:
+                f_name = 'sub_' + f_name # give it a label
+            if 'temperature' in header_events[i]['data']:
+                f_name = f_name + '_'+str(header_events[i]['data']['temperature'])+'K'
             ind = str(i)
             combind_f_name = '_'.join([f_name,ind]) + F_EXTEN # add index value
             w_name = os.path.join(W_DIR, combind_f_name)
