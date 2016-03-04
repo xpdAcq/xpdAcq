@@ -14,7 +14,7 @@ BEAMLINE_HOST_NAME = 'xf28id1-ws2'
 BASE_DIR = os.path.expanduser('~/')
 ARCHIVE_BASE_DIR = os.path.expanduser('~/pe2_data/.userBeamtimeArchive')
 USER_BACKUP_DIR_NAME = strftime('%Y')
-DARK_WINDOW = 15 # default value, in terms of minute
+DARK_WINDOW = 30 # default value, in terms of minute
 FRAME_ACQUIRE_TIME = 0.1 # pe1 frame acq time
 
 def _areaDET(area_det_obj=None):
@@ -54,7 +54,8 @@ xpdRE = RunEngine()
 xpdRE.md['owner'] = 'xf28id1'
 xpdRE.md['beamline_id'] = 'xpd'
 xpdRE.md['group'] = 'XPD'
-
+# test
+xpdRE.ignore_callback_exceptions = False
 
 hostname = socket.gethostname()
 if hostname == BEAMLINE_HOST_NAME:
@@ -107,9 +108,10 @@ class glbl():
     dk_yaml = DARK_YAML_NAME
     dk_window = DARK_WINDOW
     frame_acq_time = FRAME_ACQUIRE_TIME
+    
     # 0304 test at XPD
     auto_dark = True
-    # test at XPD
+    
     area_det = None
     shutter = None
     LiveTable = None

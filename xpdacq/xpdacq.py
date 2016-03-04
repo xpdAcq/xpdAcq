@@ -34,7 +34,7 @@ from xpdacq.glbl import glbl
 #from xpdacq.glbl import VERIFY_WRITE as verify_files_saved
 #from xpdacq.glbl import LIVETABLE as LiveTable
 from xpdacq.glbl import xpdRE
-from xpdacq.beamtime import Union, Xposure
+from xpdacq.beamtime import Union, Xposure, ScanPlan
 from xpdacq.control import _close_shutter, _open_shutter
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
@@ -84,7 +84,7 @@ def _unpack_and_run(sample,scan,**kwargs):
         #sys.exit(_graceful_exit('Please have the instrument scientist set the wavelength value before proceeding.'))
         print('There is no wavelength information in your sample acquire object. Scan will keep going')
         #print('Please follow instruction and re-define your sample object')
-     cmdo = Union(sample,scan)
+    cmdo = Union(sample,scan)
     #area_det = _get_obj('pe1c')
     parms = scan.md['sc_params']
     subs={}
@@ -201,12 +201,17 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     if auto_dark:
         dark_field_uid = validate_dark(light_cnt_time, expire_time)
         if not dark_field_uid:
-            dark_field_uid = dark(sample, scanplan, **kwargs)
-            print('!!!!! shutter should be CLOSED now. check !!!!!')
-            # my guess: opyhd needs wait time
-            time.sleep(2)
-            # remove is_dark tag in md
-            dummy = scanplan.md.pop('xp_isdark')
+            # this is a bug, we can't directly pass the same scan object in as
+            # the scan plan might be a temperature scan.
+            #dark_field_uid = dark(sample, scanplan, **kwargs)
+            
+            # instead, create a count plan with the same light_cnt_time
+            auto_dark_scanplan = ScanPlan('auto_dark_scan',
+                    'ct',{'exposure':light_cnt_time})
+            dark_field_uid = dark(sample, auto_dark_scanplan)
+            #print('!!!!! shutter should be CLOSED now. check !!!!!')
+            # confirmed: opyhd needs wait time
+            time.sleep(2.5)
         scanplan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
         scanplan.md['sc_params'].update({'dk_window':expire_time})
     try:
@@ -220,6 +225,7 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     _unpack_and_run(sample,scanplan,**kwargs)
     if scanplan.shutter: _close_shutter()
 
+
 def dark(sample,scan,**kwargs):
     '''on this 'scan' get dark images
     
@@ -228,12 +234,13 @@ def dark(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    print('INTO: Collecting dark frame now')
+    print('INTO: Automatically collect dark frame now')
     # print information to user since we might call dark during prun.
     dark_uid = str(uuid.uuid4())
     dark_exposure = scan.md['sc_params']['exposure']
     _close_shutter()
     scan.md.update({'xp_isdark':True})
+    scan.md.update({'xp_dark_uid':dark_uid})
     _unpack_and_run(sample,scan,**kwargs)
     dark_time = time.time() # get timestamp by the end of dark_scan 
     dark_def = (dark_uid, dark_exposure, dark_time)
