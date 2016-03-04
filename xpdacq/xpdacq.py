@@ -80,9 +80,11 @@ def dryrun(sample,scan,**kwargs):
 def _unpack_and_run(sample,scan,**kwargs):
     # check to see if wavelength has been set
     # bug
-    #if not sample.md['bt_wavelength']:
+    if not sample.md['bt_wavelength']:
         #sys.exit(_graceful_exit('Please have the instrument scientist set the wavelength value before proceeding.'))
-    cmdo = Union(sample,scan)
+        print('There is no wavelength information in your sample acquire object. Scan will keep going')
+        #print('Please follow instruction and re-define your sample object')
+     cmdo = Union(sample,scan)
     #area_det = _get_obj('pe1c')
     parms = scan.md['sc_params']
     subs={}
@@ -181,33 +183,40 @@ def _load_config(config_file_name):
                 config_dict[option] = None
     return config_dict
 
-
-def prun(sample,scanplan,**kwargs):
+def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
+#def prun(sample,scanplan,**kwargs):
     '''on this 'sample' run this 'scanplan'
         
     Arguments:
     sample - sample metadata object
     scanplan - scanplan metadata object
+    auto_dark - optional. Option to have automated dark collection during scan.
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
     if scanplan.shutter: _open_shutter()
     scanplan.md.update({'xp_isprun':True})
     light_cnt_time = scanplan.md['sc_params']['exposure']
     expire_time = glbl.dk_window
-    dark_field_uid = validate_dark(light_cnt_time, expire_time)
-    if not dark_field_uid:
-        dark_field_uid = dark(sample, scanplan, **kwargs)
-        # remove is_dark tag in md
-        dummy = scanplan.md.pop('xp_isdark')
-    scanplan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
-    scanplan.md['sc_params'].update({'dk_window':expire_time})
+    # user can also specify auto_dark in argument to overwrite glbl setting
+    if auto_dark:
+        dark_field_uid = validate_dark(light_cnt_time, expire_time)
+        if not dark_field_uid:
+            dark_field_uid = dark(sample, scanplan, **kwargs)
+            print('!!!!! shutter should be CLOSED now. check !!!!!')
+            # my guess: opyhd needs wait time
+            time.sleep(2)
+            # remove is_dark tag in md
+            dummy = scanplan.md.pop('xp_isdark')
+        scanplan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
+        scanplan.md['sc_params'].update({'dk_window':expire_time})
     try:
         (config_dict, config_name) = _load_calibration()
         scan.md.update({'xp_config_dict':config_dict})
         scan.md.update({'xp_config_name':config_name})
     except TypeError:
-        print('INFO: No calibration config file found in config_base. Scan will still keep going on')
+        print('INFO: No config file found in config_base. Scan will keep going on')
     if scanplan.shutter: _open_shutter()
+    print('!!!!! shutter should be OPEN now. check !!!!!')
     _unpack_and_run(sample,scanplan,**kwargs)
     if scanplan.shutter: _close_shutter()
 
@@ -219,7 +228,7 @@ def dark(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    print('collect dark frame now....')
+    print('INTO: Collecting dark frame now')
     # print information to user since we might call dark during prun.
     dark_uid = str(uuid.uuid4())
     dark_exposure = scan.md['sc_params']['exposure']

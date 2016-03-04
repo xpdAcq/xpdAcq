@@ -107,6 +107,8 @@ class glbl():
     dk_yaml = DARK_YAML_NAME
     dk_window = DARK_WINDOW
     frame_acq_time = FRAME_ACQUIRE_TIME
+    # 0304 test at XPD
+    auto_dark = True
     # test at XPD
     area_det = None
     shutter = None
