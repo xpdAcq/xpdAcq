@@ -204,6 +204,7 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     if auto_dark:
         dark_field_uid = validate_dark(light_cnt_time, expire_time)
         if not dark_field_uid:
+            print('INTO: Automatically collect dark frame now')
             # this is a bug, we can't directly pass the same scan object in as
             # the scan plan might be a temperature scan.
             #dark_field_uid = dark(sample, scanplan, **kwargs)
@@ -224,7 +225,7 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     except TypeError: # iterating on on None object causes TypeError
         print('INFO: No calibration file found in config_base. Scan will still keep going on')
     if scanplan.shutter: _open_shutter()
-    print('!!!!! shutter should be OPEN now. check !!!!!')
+    #print('!!!!! shutter should be OPEN now. check !!!!!')
     _unpack_and_run(sample,scanplan,**kwargs)
     if scanplan.shutter: _close_shutter()
 
@@ -249,12 +250,12 @@ def dark(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    print('INTO: Automatically collect dark frame now')
-    # print information to user since we might call dark during prun.
+        # print information to user since we might call dark during prun.
     dark_uid = str(uuid.uuid4())
     dark_exposure = scan.md['sc_params']['exposure']
     _close_shutter()
     scan.md.update({'xp_isdark':True})
+    # we need a hook to search this dark frame later on
     scan.md.update({'xp_dark_uid':dark_uid})
     _unpack_and_run(sample,scan,**kwargs)
     dark_time = time.time() # get timestamp by the end of dark_scan 
