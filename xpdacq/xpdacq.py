@@ -198,7 +198,7 @@ def prun(sample,scanplan,**kwargs):
     if not dark_field_uid:
         dark_field_uid = dark(sample, scanplan, **kwargs)
         # remove is_dark tag in md
-        dummy = scanplan.md.pop('xp_isdark')
+        dummy = scanplan.md.pop('xp_isdark') 
     scanplan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
     scanplan.md['sc_params'].update({'dk_window':expire_time})
     try:
@@ -228,7 +228,7 @@ def dark(sample,scan,**kwargs):
     _unpack_and_run(sample,scan,**kwargs)
     dark_time = time.time() # get timestamp by the end of dark_scan 
     dark_def = (dark_uid, dark_exposure, dark_time)
-    _yamify_dark(dark_def) 
+    scan.md.update({'xp_isdark':False}) #reset
     _close_shutter()
     return dark_uid
     

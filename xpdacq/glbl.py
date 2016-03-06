@@ -2,10 +2,11 @@ import os
 import socket
 import yaml
 import numpy as np
+from unittest.mock import MagicMock
 from time import strftime, sleep
 from bluesky.run_engine import RunEngine
 # test at XPD
-from xpdacq.mock_objects import mock_shutter, mock_livetable#, mock_areadetector 
+from xpdacq.mock_objects import mock_shutter, mock_livetable#, Cam, , mock_areadetector
 
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
@@ -55,16 +56,18 @@ xpdRE.md['owner'] = 'xf28id1'
 xpdRE.md['beamline_id'] = 'xpd'
 xpdRE.md['group'] = 'XPD'
 
-
 hostname = socket.gethostname()
 if hostname == BEAMLINE_HOST_NAME:
     # real experiment
+    simulation = False
     from bluesky.register_mds import register_mds
     register_mds(xpdRE)
-    pass
 else:
+    simulation = True
     BASE_DIR = os.getcwd()
     ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')
+    xpdRE = MagicMock()
+
     print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
 
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
@@ -118,9 +121,18 @@ class glbl():
     verify_files_saved = None
     
     if hostname != BEAMLINE_HOST_NAME:
-        SHUTTER = mock_shutter()
+        shutter = mock_shutter()
         LiveTable = mock_livetable
-        area_det = mock_areadetector
+        #area_det = mock_areadetector()
+        area_det = MagicMock()
+        area_det.cam = MagicMock()
+        area_det.cam.acquire_time = MagicMock()
+        area_det.cam.acquire_time.put = MagicMock(return_value=1)
+        area_det.cam.acquire_time.get = MagicMock(return_value=1)
+        area_det.number_of_sets = MagicMock()
+        area_det.number_of_sets.put = MagicMock(return_value=1)
+
+        temp_controller = None
 
 
 if __name__ == '__main__':
