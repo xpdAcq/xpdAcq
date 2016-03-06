@@ -45,8 +45,6 @@ area_det = glbl.area_det
 LiveTable = glbl.LiveTable
 temp_controller = glbl.temp_controller
 
-#expo_threshold = 60 # in seconds Deprecated!
-
 def dryrun(sample,scan,**kwargs):
     '''same as run but scans are not executed.
     
@@ -60,7 +58,8 @@ def dryrun(sample,scan,**kwargs):
     #area_det = _get_obj('pe1c')
     parms = scan.md['sc_params']
     subs={}
-    if 'subs' in parms: subsc = parms['subs']
+    if 'subs' in parms: 
+        subsc = parms['subs']
     for i in subsc:
         if i == 'livetable':
             subs.update({'all':LiveTable([area_det, temp_controller])})
@@ -150,7 +149,7 @@ def _load_calibration(calibration_file_name = None):
     config_dict : dict
     a dictionary containing calibration parameters calculated from SrXplanar
     '''
-    config_dir = os.path.join(glbl.home, 'config_base') # FIXME - remove it after make config_dir an attribute
+    config_dir = os.path.join(glbl.config_dir, 'config_base') # FIXME - remove it after make config_dir an attribute
     f_list = [ f for f in os.listdir(config_dir) if f.endswith('cfg')]
     if not f_list:
         return # no config at all
@@ -190,7 +189,8 @@ def prun(sample,scanplan,**kwargs):
     scanplan - scanplan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    if scanplan.shutter: _open_shutter()
+    if scanplan.shutter: 
+        _open_shutter()
     scanplan.md.update({'xp_isprun':True})
     light_cnt_time = scanplan.md['sc_params']['exposure']
     expire_time = glbl.dk_window

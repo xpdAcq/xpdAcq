@@ -15,8 +15,11 @@ BEAMLINE_HOST_NAME = 'xf28id1-ws2'
 BASE_DIR = os.path.expanduser('~/')
 ARCHIVE_BASE_DIR = os.path.expanduser('~/pe2_data/.userBeamtimeArchive')
 USER_BACKUP_DIR_NAME = strftime('%Y')
-DARK_WINDOW = 15 # default value, in terms of minute
+DARK_WINDOW = 30 # default value, in terms of minute
 FRAME_ACQUIRE_TIME = 0.1 # pe1 frame acq time
+OWNER = 'xf28id1'
+BEAMLINE_ID = 'xpd'
+GROUP = 'XPD'
 
 #def _areaDET(area_det_obj=None):
 #    global AREA_DET
@@ -50,11 +53,6 @@ FRAME_ACQUIRE_TIME = 0.1 # pe1 frame acq time
 #def _getImages(get_images_obj=None):
 #    global GET_IMG
 #    GET_IMG = get_images_obj
-
-xpdRE = RunEngine()
-xpdRE.md['owner'] = 'xf28id1'
-xpdRE.md['beamline_id'] = 'xpd'
-xpdRE.md['group'] = 'XPD'
 
 hostname = socket.gethostname()
 if hostname == BEAMLINE_HOST_NAME:
@@ -119,6 +117,11 @@ class glbl():
     get_events = None
     get_images = None
     verify_files_saved = None
+
+    xpdRE = RunEngine()
+    xpdRE.md['owner'] = OWNER
+    xpdRE.md['beamline_id'] = BEAMLINE_ID
+    xpdRE.md['group'] = GROUP
     
     if hostname != BEAMLINE_HOST_NAME:
         shutter = mock_shutter()

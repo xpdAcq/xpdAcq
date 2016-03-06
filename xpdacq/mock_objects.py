@@ -1,7 +1,6 @@
 import numpy as np
 from time import sleep
 
-
 class mock_shutter():
     def put(self,value):
         pass
@@ -10,7 +9,6 @@ class mock_shutter():
         callback = round(np.random.rand())
         sleep(0.1)
         return callback
-
 
 class mock_livetable():
     def __init__(self,mylist):
