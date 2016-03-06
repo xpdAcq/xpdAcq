@@ -9,17 +9,17 @@ import numpy as np
 import copy
 from xpdacq.glbl import glbl
 #from xpdacq.xpdacq import validate_dark,  _yamify_dark 
-from xpdacq.glbl import _areaDET, _tempController
+#from xpdacq.glbl import _areaDET, _tempController
 #from xpdacq.glbl import _shutter, _verify_write
-from xpdacq.glbl import _verify_write
-from xpdacq.glbl import _LiveTable
+#from xpdacq.glbl import _verify_write
+#from xpdacq.glbl import _LiveTable
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
-_areaDET()
-_tempController()
+#_areaDET()
+#_tempController()
 #_shutter()
-_verify_write()
-_LiveTable()
+#_verify_write()
+#_LiveTable()
 from xpdacq.xpdacq import validate_dark, _yamify_dark, prun
 #from xpdacq.mock_objects import Cam
 

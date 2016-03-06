@@ -16,15 +16,4 @@ class mock_livetable():
     def __init__(self,mylist):
     	self.mylist = mylist
 
-# commented out as unfinished error
-
-
-#class mock_areadetector():
-#    def number_of_sets(self):#
-#	    pass
-
-#class Cam(mock_areadetector):
-#    def acquire_time(self):
-#        self.put = 1
-#        pass
 
