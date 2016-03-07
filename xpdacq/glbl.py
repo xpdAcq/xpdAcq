@@ -73,6 +73,7 @@ BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
 EXPORT_DIR = os.path.join(HOME_DIR, 'Export')
 YAML_DIR = os.path.join(HOME_DIR, 'config_base', 'yml')
 DARK_YAML_NAME = os.path.join(YAML_DIR, '_dark_scan_list.yaml')
+CONFIG_BASE = os.path.join(HOME_DIR, 'config_base')
 
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 ALL_FOLDERS = [
@@ -81,7 +82,7 @@ ALL_FOLDERS = [
         os.path.join(HOME_DIR, 'tiff_base'),
         os.path.join(HOME_DIR, 'dark_base'),
         YAML_DIR,
-        os.path.join(HOME_DIR, 'config_base'),
+        CONFIG_BASE,
         os.path.join(HOME_DIR, 'userScripts'),
         EXPORT_DIR,
         os.path.join(HOME_DIR, 'Import'),
@@ -101,6 +102,7 @@ class glbl():
     home = HOME_DIR
     xpdconfig = BLCONFIG_DIR
     export_dir = EXPORT_DIR
+    config_base = CONFIG_BASE
     yaml_dir = YAML_DIR
     allfolders = ALL_FOLDERS
     archive_dir = USER_BACKUP_DIR

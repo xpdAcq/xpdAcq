@@ -149,7 +149,7 @@ def _load_calibration(calibration_file_name = None):
     config_dict : dict
     a dictionary containing calibration parameters calculated from SrXplanar
     '''
-    config_dir = os.path.join(glbl.config_dir, 'config_base') # FIXME - remove it after make config_dir an attribute
+    config_dir = glbl.config_base
     f_list = [ f for f in os.listdir(config_dir) if f.endswith('cfg')]
     if not f_list:
         return # no config at all
