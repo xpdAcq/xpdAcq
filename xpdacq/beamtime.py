@@ -303,7 +303,7 @@ class ScanPlan(XPD):
                 scan tyoe of XPD Scan object
         '''
         # based on structures in xpdacq.xpdacq.py
-        _Tramp_required_params = ['startingT', 'endingT', 'requested_Tstep', 'exposure']
+        _Tramp_required_params = ['startingT', 'endingT', 'Tstep', 'exposure']
         _Tramp_optional_params = ['det', 'subs_dict']
 
         _ct_required_params = ['exposure']

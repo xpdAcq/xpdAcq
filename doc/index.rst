@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 3
 
    beamlinestaff
+   quickstart
    xpdusers
    troubleshooting
 
