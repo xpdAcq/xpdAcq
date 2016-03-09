@@ -2,10 +2,11 @@ import os
 import socket
 import yaml
 import numpy as np
+from unittest.mock import MagicMock
 from time import strftime, sleep
 from bluesky.run_engine import RunEngine
 # test at XPD
-from xpdacq.mock_objects import mock_shutter, mock_livetable#, mock_areadetector 
+from xpdacq.mock_objects import mock_shutter, mock_livetable#, Cam, , mock_areadetector
 
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
@@ -14,57 +15,57 @@ BEAMLINE_HOST_NAME = 'xf28id1-ws2'
 BASE_DIR = os.path.expanduser('~/')
 ARCHIVE_BASE_DIR = os.path.expanduser('~/pe2_data/.userBeamtimeArchive')
 USER_BACKUP_DIR_NAME = strftime('%Y')
-DARK_WINDOW = 15 # default value, in terms of minute
+DARK_WINDOW = 30 # default value, in terms of minute
 FRAME_ACQUIRE_TIME = 0.1 # pe1 frame acq time
+OWNER = 'xf28id1'
+BEAMLINE_ID = 'xpd'
+GROUP = 'XPD'
 
-def _areaDET(area_det_obj=None):
-    global AREA_DET
-    AREA_DET = area_det_obj
+#def _areaDET(area_det_obj=None):
+#    global AREA_DET
+#    AREA_DET = area_det_obj
 
-def _tempController(temp_controller_obj=None):
-    global TEMP_CONTROLLER
-    TEMP_CONTROLLER = temp_controller_obj
+#def _tempController(temp_controller_obj=None):
+#    global TEMP_CONTROLLER
+#    TEMP_CONTROLLER = temp_controller_obj
 
 #def _shutter(shutter_obj=None):
 #    global SHUTTER
 #    SHUTTER = shutter_obj
 
-def _verify_write(verify_files_saved_obj=None):
-    global VERIFY_WRITE
-    VERIFY_WRITE = verify_files_saved_obj
+#def _verify_write(verify_files_saved_obj=None):
+#    global VERIFY_WRITE
+#    VERIFY_WRITE = verify_files_saved_obj
 
-def _LiveTable(livetable_obj=None):
-    global LIVETABLE
-    LIVETABLE = livetable_obj
+#def _LiveTable(livetable_obj=None):
+#    global LIVETABLE
+#    LIVETABLE = livetable_obj
 
 # analysis objects, maybe we should move them out in the future
-def _dataBroker(databroker_obj=None):
-    global DB
-    DB = databroker_obj
+#def _dataBroker(databroker_obj=None):
+#    global DB
+#    DB = databroker_obj
 
-def _getEvents(get_events_obj=None):
-    global GET_ENV
-    GET_ENV = get_events_obj
+#def _getEvents(get_events_obj=None):
+#    global GET_ENV
+#    GET_ENV = get_events_obj
 
-def _getImages(get_images_obj=None):
-    global GET_IMG
-    GET_IMG = get_images_obj
-
-xpdRE = RunEngine()
-xpdRE.md['owner'] = 'xf28id1'
-xpdRE.md['beamline_id'] = 'xpd'
-xpdRE.md['group'] = 'XPD'
-
+#def _getImages(get_images_obj=None):
+#    global GET_IMG
+#    GET_IMG = get_images_obj
 
 hostname = socket.gethostname()
 if hostname == BEAMLINE_HOST_NAME:
     # real experiment
+    simulation = False
     from bluesky.register_mds import register_mds
     register_mds(xpdRE)
-    pass
 else:
+    simulation = True
     BASE_DIR = os.getcwd()
     ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')
+    xpdRE = MagicMock()
+
     print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
 
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
@@ -72,6 +73,7 @@ BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
 EXPORT_DIR = os.path.join(HOME_DIR, 'Export')
 YAML_DIR = os.path.join(HOME_DIR, 'config_base', 'yml')
 DARK_YAML_NAME = os.path.join(YAML_DIR, '_dark_scan_list.yaml')
+CONFIG_BASE = os.path.join(HOME_DIR, 'config_base')
 
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 ALL_FOLDERS = [
@@ -80,7 +82,7 @@ ALL_FOLDERS = [
         os.path.join(HOME_DIR, 'tiff_base'),
         os.path.join(HOME_DIR, 'dark_base'),
         YAML_DIR,
-        os.path.join(HOME_DIR, 'config_base'),
+        CONFIG_BASE,
         os.path.join(HOME_DIR, 'userScripts'),
         EXPORT_DIR,
         os.path.join(HOME_DIR, 'Import'),
@@ -100,6 +102,7 @@ class glbl():
     home = HOME_DIR
     xpdconfig = BLCONFIG_DIR
     export_dir = EXPORT_DIR
+    config_base = CONFIG_BASE
     yaml_dir = YAML_DIR
     allfolders = ALL_FOLDERS
     archive_dir = USER_BACKUP_DIR
@@ -116,11 +119,25 @@ class glbl():
     get_events = None
     get_images = None
     verify_files_saved = None
+
+    xpdRE = RunEngine()
+    xpdRE.md['owner'] = OWNER
+    xpdRE.md['beamline_id'] = BEAMLINE_ID
+    xpdRE.md['group'] = GROUP
     
     if hostname != BEAMLINE_HOST_NAME:
-        SHUTTER = mock_shutter()
+        shutter = mock_shutter()
         LiveTable = mock_livetable
-        area_det = mock_areadetector
+        #area_det = mock_areadetector()
+        area_det = MagicMock()
+        area_det.cam = MagicMock()
+        area_det.cam.acquire_time = MagicMock()
+        area_det.cam.acquire_time.put = MagicMock(return_value=1)
+        area_det.cam.acquire_time.get = MagicMock(return_value=1)
+        area_det.number_of_sets = MagicMock()
+        area_det.number_of_sets.put = MagicMock(return_value=1)
+
+        temp_controller = None
 
 
 if __name__ == '__main__':

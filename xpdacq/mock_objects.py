@@ -1,7 +1,6 @@
 import numpy as np
 from time import sleep
 
-
 class mock_shutter():
     def put(self,value):
         pass
@@ -11,12 +10,8 @@ class mock_shutter():
         sleep(0.1)
         return callback
 
-
 class mock_livetable():
     def __init__(self,mylist):
     	self.mylist = mylist
 
-# commented out as unfinished error
-#class mock_areadetector():
-	#@property
-	#def number_of_sets(self):
+

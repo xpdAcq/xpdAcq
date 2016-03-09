@@ -45,8 +45,6 @@ area_det = glbl.area_det
 LiveTable = glbl.LiveTable
 temp_controller = glbl.temp_controller
 
-#expo_threshold = 60 # in seconds Deprecated!
-
 def dryrun(sample,scan,**kwargs):
     '''same as run but scans are not executed.
     
@@ -60,7 +58,8 @@ def dryrun(sample,scan,**kwargs):
     #area_det = _get_obj('pe1c')
     parms = scan.md['sc_params']
     subs={}
-    if 'subs' in parms: subsc = parms['subs']
+    if 'subs' in parms: 
+        subsc = parms['subs']
     for i in subsc:
         if i == 'livetable':
             subs.update({'all':LiveTable([area_det, temp_controller])})
@@ -151,7 +150,7 @@ def _load_calibration(calibration_file_name = None):
     config_dict : dict
     a dictionary containing calibration parameters calculated from SrXplanar
     '''
-    config_dir = os.path.join(glbl.home, 'config_base') # FIXME - remove it after make config_dir an attribute
+    config_dir = glbl.config_base
     f_list = [ f for f in os.listdir(config_dir) if f.endswith('cfg')]
     if not f_list:
         return # no config at all
@@ -191,7 +190,8 @@ def prun(sample,scanplan,**kwargs):
     scanplan - scanplan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    if scanplan.shutter: _open_shutter()
+    if scanplan.shutter: 
+        _open_shutter()
     scanplan.md.update({'xp_isprun':True})
     light_cnt_time = scanplan.md['sc_params']['exposure']
     expire_time = glbl.dk_window
@@ -199,7 +199,7 @@ def prun(sample,scanplan,**kwargs):
     if not dark_field_uid:
         dark_field_uid = dark(sample, scanplan, **kwargs)
         # remove is_dark tag in md
-        dummy = scanplan.md.pop('xp_isdark')
+        dummy = scanplan.md.pop('xp_isdark') 
     scanplan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
     scanplan.md['sc_params'].update({'dk_window':expire_time})
     try:
@@ -229,7 +229,7 @@ def dark(sample,scan,**kwargs):
     _unpack_and_run(sample,scan,**kwargs)
     dark_time = time.time() # get timestamp by the end of dark_scan 
     dark_def = (dark_uid, dark_exposure, dark_time)
-    _yamify_dark(dark_def) 
+    scan.md.update({'xp_isdark':False}) #reset
     _close_shutter()
     return dark_uid
     

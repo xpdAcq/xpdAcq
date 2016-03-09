@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import MagicMock
 import os
 import shutil
 import time
@@ -8,21 +9,27 @@ import numpy as np
 import copy
 from xpdacq.glbl import glbl
 #from xpdacq.xpdacq import validate_dark,  _yamify_dark 
-from xpdacq.glbl import _areaDET, _tempController
+#from xpdacq.glbl import _areaDET, _tempController
 #from xpdacq.glbl import _shutter, _verify_write
-from xpdacq.glbl import _verify_write
-from xpdacq.glbl import _LiveTable
+#from xpdacq.glbl import _verify_write
+#from xpdacq.glbl import _LiveTable
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
-_areaDET()
-_tempController()
+#_areaDET()
+#_tempController()
 #_shutter()
-_verify_write()
-_LiveTable()
+#_verify_write()
+#_LiveTable()
 from xpdacq.xpdacq import validate_dark, _yamify_dark, prun
+#from xpdacq.mock_objects import Cam
 
-shutter = glbl.SHUTTER
+shutter = glbl.shutter
 shutter.put(1)
+#glbl.area_det.number_of_sets.put = MagicMock(return_value=1)
+#glbl.area_det.cam = Cam()
+#glbl.area_det.cam.acquire_time.put = MagicMock(return_value=1)
+
+
 
 # this is here temporarily.  Simon wanted it out of the production code.  Needs to be refactored.
 # the issue is to mock RE properly.  This is basically prun without the call to RE which
@@ -132,7 +139,8 @@ class findRightDarkTest(unittest.TestCase):
         light_cnt_time = 0.2
         scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.2})
         self.bt.set_wavelength(0.18448)
-        self.assertEqual(prun(self.sa, scanplan)['sc_params']['dk_field_uid'], dark_uid)
+        prun(self.sa, scanplan)
+        self.assertEqual(scanplan.md['sc_params']['dk_field_uid'], dark_uid)
 
     @unittest.skip('skipping test with prun.  Need to refactor prun to take a dk_expiration_time optional variable?')
     def test_prun_with_no_matched_dark(self):
