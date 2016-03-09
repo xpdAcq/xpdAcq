@@ -86,7 +86,8 @@ def _unpack_and_run(sample,scan,**kwargs):
     #area_det = _get_obj('pe1c')
     parms = scan.md['sc_params']
     subs={}
-    if 'subs' in parms: subsc = parms['subs']
+    if 'subs' in parms: 
+        subsc = parms['subs']
     for i in subsc:
         if i == 'livetable':
             subs.update({'all':LiveTable([area_det, temp_controller])})
