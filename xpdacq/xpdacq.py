@@ -139,7 +139,7 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
     else:
         return None # nothing in dark_scan_list. collect a dark
 
-def _load_config(calibration_file_name = None):
+def _load_calibration(calibration_file_name = None):
     ''' function to load calibration file in config_base directory
     Parameters
     ----------
@@ -207,7 +207,7 @@ def prun(sample,scanplan,**kwargs):
         scan.md.update({'xp_config_dict':config_dict})
         scan.md.update({'xp_config_name':config_name})
     except TypeError: # iterating on on None object causes TypeError
-        print('INFO: No calibration config file found in config_base. Scan will still keep going on')
+        print('INFO: No calibration file found in config_base. Scan will still keep going on')
     if scanplan.shutter: _open_shutter()
     _unpack_and_run(sample,scanplan,**kwargs)
     if scanplan.shutter: _close_shutter()
