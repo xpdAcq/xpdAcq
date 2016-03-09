@@ -135,16 +135,16 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
             if abs(test[1]-light_cnt_time) < 0.9*glbl.frame_acq_time: 
                 return test[0] 
             elif len(test_list) == 0:
-                return  None # scan list there but no good dark found
+                return  None # scan list is there but no good dark found
     else:
         return None # nothing in dark_scan_list. collect a dark
 
-def _load_calibration(calibration_file_name = None):
+def _load_config(calibration_file_name = None):
     ''' function to load calibration file in config_base directory
     Parameters
     ----------
     calibration_file_name : str
-    name of calibration file that are going to be used. if it is not specified, load the most recent one
+    name of calibration file used. if it is None, load the most recent one
     Returns
     -------
     config_dict : dict
@@ -159,21 +159,21 @@ def _load_calibration(calibration_file_name = None):
     config_in_use = sorted(f_list, key=os.path.getmtime)[-1]
     config_timestamp = os.path.getmtime(config_in_use)
     config_time = datetime.datetime.fromtimestamp(config_timestamp).strftime('%Y%m%d-%H%M')
-    config_dict = _load_config(os.path.join(config_dir,config_in_use))
+    config_dict = _parse_calibration_file(os.path.join(config_dir,config_in_use))
     return (config_dict, config_in_use)
 
-def _load_config(config_file_name):
+def _parse_calibration_file(config_file_name):
     ''' help function to load config file '''
-    config = ConfigParser()
-    config.read(config_file_name)
-    sections = config.sections()
+    config_parser = ConfigParser()
+    config_parser.read(config_file_name)
+    sections = config_parser.sections()
     config_dict = {}
     for section in sections:
         config_dict[section] = {} # write down header
-        options = config.options(section)
+        options = config_parser.options(section)
         for option in options:
             try:
-                config_dict[section][option] = config.get(section, option)
+                config_dict[section][option] = config_parser.get(section, option)
                 #if config_dict[option] == -1:
                 # DebugPrint("skip: %s" % option)
             except:
@@ -190,7 +190,7 @@ def prun(sample,scanplan,**kwargs):
     scanplan - scanplan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    if scanplan.shutter: 
+    if scanplan.shutter:
         _open_shutter()
     scanplan.md.update({'xp_isprun':True})
     light_cnt_time = scanplan.md['sc_params']['exposure']
@@ -206,7 +206,7 @@ def prun(sample,scanplan,**kwargs):
         (config_dict, config_name) = _load_calibration()
         scan.md.update({'xp_config_dict':config_dict})
         scan.md.update({'xp_config_name':config_name})
-    except TypeError:
+    except TypeError: # iterating on on None object causes TypeError
         print('INFO: No calibration config file found in config_base. Scan will still keep going on')
     if scanplan.shutter: _open_shutter()
     _unpack_and_run(sample,scanplan,**kwargs)
