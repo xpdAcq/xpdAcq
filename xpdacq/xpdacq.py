@@ -212,6 +212,19 @@ def prun(sample,scanplan,**kwargs):
     _unpack_and_run(sample,scanplan,**kwargs)
     if scanplan.shutter: _close_shutter()
 
+def calibration(sample, scanplan, **kwargs):
+    ''' function to run calibration on this sample with this scanplan
+    
+    Arguments:
+    sample - sample metadata object
+    scanplan - scanplan metadata object
+    **kwargs - dictionary that will be passed through to the run-engine metadata
+    '''
+    _scanplan = scanplan # make a copy
+    _scanplan.md.update({'xp_iscalibration':True})
+    prun(sample, _scanplan)
+    # this way is cleaner and dark is collected as well. but "no calibration file" warning might appear while people are doing calibration run.
+
 def dark(sample,scan,**kwargs):
     '''on this 'scan' get dark images
     
