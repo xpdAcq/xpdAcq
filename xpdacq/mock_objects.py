@@ -7,7 +7,7 @@ class mock_shutter():
     def get(self,status=1):
         # this will keep returning 0 or 1 until the calling program is satisfied
         callback = round(np.random.rand())
-        sleep(0.1)
+        #sleep(0.1)
         return callback
 
 class mock_livetable():
