@@ -107,6 +107,8 @@ def _unpack_and_run(sample,scan,**kwargs):
 
 def _read_dark_yaml():
     dark_yaml_name = glbl.dk_yaml
+    if not os.path.isfile(dark_yaml_name):
+        return None # doesn't exit. Return None and trigger all the way to collect the first dark
     with open(dark_yaml_name, 'r') as f:
         dark_scan_list = yaml.load(f)
     return dark_scan_list 
@@ -127,8 +129,10 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
         dark_field_uid : str
             uid to qualified dark frame
     '''
-    if not dark_scan_list: dark_scan_list= _read_dark_yaml()
-    if len(dark_scan_list) > 0:
+    if not dark_scan_list:
+        dark_scan_list= _read_dark_yaml()
+    #if len(dark_scan_list) > 0:
+    if dark_scan_list: # avoid bug catched inside rea_dark_yaml()
         test_list = copy.copy(dark_scan_list)
         while time.time() - test_list[-1][2] < expire_time*60.:
             test = test_list.pop()
@@ -212,34 +216,41 @@ def prun(sample,scanplan,**kwargs):
     _unpack_and_run(sample,scanplan,**kwargs)
     if scanplan.shutter: _close_shutter()
 
-def dark(sample,scan,**kwargs):
-    '''on this 'scan' get dark images
+def dark(sample, scanplan ,**kwargs):
+    '''on this 'scanplan' get dark images
     
     Arguments:
     sample - sample metadata object
-    scan - scan metadata object
+    scanplan - scanplan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
     print('collect dark frame now....')
     # print information to user since we might call dark during prun.
     dark_uid = str(uuid.uuid4())
-    dark_exposure = scan.md['sc_params']['exposure']
+    dark_exposure = scanplan.md['sc_params']['exposure']
     _close_shutter()
-    scan.md.update({'xp_isdark':True})
-    _unpack_and_run(sample,scan,**kwargs)
-    dark_time = time.time() # get timestamp by the end of dark_scan 
+    scanplan.md.update({'xp_isdark':True})
+    # this hook is needed for performing dark subtraction later
+    scanplan.md.update({'xp_dark_frame_uid':dark_uid})
+    _unpack_and_run(sample, scanplan, **kwargs)
+    dark_time = time.time() # get timestamp by the end of dark_scan
     dark_def = (dark_uid, dark_exposure, dark_time)
-    scan.md.update({'xp_isdark':False}) #reset
+    scanplan.md.update({'xp_isdark':False}) #reset
+    _yamify_dark(dark_def)
     _close_shutter()
     return dark_uid
     
 def _yamify_dark(dark_def):
     dark_yaml_name = glbl.dk_yaml
+    if not os.path.isfile(dark_yaml_name):
+        with open(dark_yaml_name, 'w') as f:
+            dark_scan_list = []
+            yaml.dump(dark_scan_list, f)
     with open(dark_yaml_name, 'r') as f:
-        dark_list = yaml.load(f)
-    dark_list.append(dark_def)
+        dark_scan_list = yaml.load(f)
+    dark_scan_list.append(dark_def)
     with open(dark_yaml_name, 'w') as f:
-        yaml.dump(dark_list, f)
+        yaml.dump(dark_scan_list, f)
 
 def setupscan(sample,scan,**kwargs):
     '''used for setup scans NOT production scans
