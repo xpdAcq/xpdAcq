@@ -22,6 +22,7 @@ import numpy as np
 import copy
 import sys
 import uuid
+from configparser import ConfigParser
 
 from bluesky.plans import Count
 from bluesky import Msg
@@ -139,7 +140,7 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
     else:
         return None # nothing in dark_scan_list. collect a dark
 
-def _load_calibration(calibration_file_name = None):
+def _load_calibration_file(calibration_file_name = None):
     ''' function to load calibration file in config_base directory
     Parameters
     ----------
@@ -163,17 +164,17 @@ def _load_calibration(calibration_file_name = None):
     return (config_dict, config_in_use)
 
 def _parse_calibration_file(config_file_name):
-    ''' help function to load config file '''
-    config_parser = ConfigParser()
-    config_parser.read(config_file_name)
-    sections = config_parser.sections()
+    ''' helper function to parse calibration file '''
+    calibration_parser = ConfigParser()
+    calibration_parser.read(config_file_name)
+    sections = calibration_parser.sections()
     config_dict = {}
     for section in sections:
         config_dict[section] = {} # write down header
-        options = config_parser.options(section)
+        options = calibration_parser.options(section)
         for option in options:
             try:
-                config_dict[section][option] = config_parser.get(section, option)
+                config_dict[section][option] = calibration_parser.get(section, option)
                 #if config_dict[option] == -1:
                 # DebugPrint("skip: %s" % option)
             except:
@@ -203,7 +204,7 @@ def prun(sample,scanplan,**kwargs):
     scanplan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
     scanplan.md['sc_params'].update({'dk_window':expire_time})
     try:
-        (config_dict, config_name) = _load_calibration()
+        (config_dict, config_name) = _load_calibration_file()
         scan.md.update({'xp_config_dict':config_dict})
         scan.md.update({'xp_config_name':config_name})
     except TypeError: # iterating on on None object causes TypeError
