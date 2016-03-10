@@ -235,11 +235,15 @@ def dark(sample,scan,**kwargs):
     
 def _yamify_dark(dark_def):
     dark_yaml_name = glbl.dk_yaml
+    if not os.path.isfile(dark_yaml_name):
+        with open(dark_yaml_name, 'w') as f:
+            dark_scan_list = []
+            yaml.dump(dark_scan_list, f)
     with open(dark_yaml_name, 'r') as f:
-        dark_list = yaml.load(f)
-    dark_list.append(dark_def)
+        dark_scan_list = yaml.load(f)
+    dark_scan_list.append(dark_def)
     with open(dark_yaml_name, 'w') as f:
-        yaml.dump(dark_list, f)
+        yaml.dump(dark_scan_list, f)
 
 def setupscan(sample,scan,**kwargs):
     '''used for setup scans NOT production scans
