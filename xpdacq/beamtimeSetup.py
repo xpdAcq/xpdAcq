@@ -58,13 +58,11 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
         archive_dir = os.path.expanduser(strftime('~/pe2_data/%Y/userBeamtimeArchive'))
     if base_dir is None:
         base_dir = glbl.base
+    # get bt by loading the yaml.
     if bto is None:
-        try:
-            bto = bt  # problem comes from bt only exists if _start_beamtime has been run and ipython never crash
-                      # FIXME - load_yaml directly ?
-        except NameError:
-            bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
-    #dp = DataPath(base_dir)
+        btoname = os.path.join(glbl.yaml_dir,'bt_bt.yml')
+        with open(btoname, 'r') as fi:
+            bto = yaml.load(fi)
     files = os.listdir(glbl.home)
     if len(files)==1:
         print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
