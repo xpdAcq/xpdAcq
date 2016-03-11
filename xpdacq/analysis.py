@@ -84,18 +84,19 @@ def _timestampstr(timestamp, hour=False):
         timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y%m%d-%H%M')
     return timestring
 
-def save_last_tiff(dark_subtraction=False):
+def save_last_tiff(dark_subtraction=True):
     save_tiff(db[-1], dark_subtraction)
 
-def save_tiff(headers, dark_subtraction = False):
+def save_tiff(headers, dark_subtraction = True):
     ''' save images obtained from dataBroker as tiff format files. It returns nothing.
 
     arguments:
         headers - list - a list of header objects obtained from a query to dataBroker
     '''
     F_EXTEN = '.tiff'
-    e = 'Can not find a proper dark image applied to this header.\nFiles will be saved but not no dark subtraction will be applied'
-    is_dark_subtracted = False # align with default setting
+    e = '''Can not find a proper dark image applied to this header.
+        Files will be saved but not no dark subtraction will be applied'''
+    is_dark_subtracted = False # assume not has been done
     
     # prepare header
     if type(list(headers)[1]) == str:
@@ -103,49 +104,32 @@ def save_tiff(headers, dark_subtraction = False):
         header_list.append(headers)
     else:
         header_list = headers
+
     for header in header_list:
         print('Saving your image(s) now....')
         img_field = _identify_image_field(header)
-        header_events = list(get_events(header))
-        light_imgs = np.array(get_images(header, img_field))
-        # dark subtration logic
-        if dark_subtraction:
-            dark_uid_appended = header.start['sc_params']['dk_field_uid']
-            try:
-                # bluesky only looks for uid it defines
-                #dark_header = db[dark_uid_appended]
-                dark_search = {'group':'XPD','xp_dark_uid':dark_uid_appended} # this should be refine later
-                dark_header = db(**dark_search)
-                if dark_header: print('found a dark header')
-                dark_imgs = np.array(get_images(dark_header, img_field))
-                print('found the dark image')
+        for ev in header:
+            img = ev['data'][img_field]
+            ind = ev['seq_num']
+            # dark subtration logic 
+            if dark_subtraction:
+                dark_uid_appended = header.start['sc_params']['dk_field_uid']
+                try:
+                    # bluesky only looks for uid it defines
+                    dark_search = {'group':'XPD','xp_dark_uid':dark_uid_appended} # this should be refine later
+                    dark_header = db(**dark_search)
+                    dark_img = np.array(get_images(dark_header, img_field)).squeeze()
+                except ValueError: 
+                    print(e) # protection. Should not happen
+                    dark_img = np.zeros_like(light_imgs)
+                img -= dark_img
                 is_dark_subtracted = True # label it only if it is successfully done
-                print('get dark label')
-
-            except ValueError: 
-                print(e) # protection. Should not happen
-                dark_imgs = np.zeros_like(light_imgs) 
-        else:
-            dark_imgs = np.zeros_like(light_imgs) 
-        
-        img_list = list()
-        for i in range(light_imgs.shape[0]):
-            if np.shape(dark_imgs) == np.shape(light_imgs):
-                dummy = light_imgs[i] - dark_imgs[i]
-            else:
-                print(e) # protection. In case tiff_squashing issue happen in the faster
-                dummy =light_imgs[i]
-            img_list.append(dummy)
-        
-        for i in range(len(img_list)):
-            img = img_list[i]
             f_name = _feature_gen(header)
             if is_dark_subtracted:
                 f_name = 'sub_' + f_name # give it a label
-            if 'temperature' in header_events[i]['data']:
-                f_name = f_name + '_'+str(header_events[i]['data']['temperature'])+'K'
-            ind = str(i)
-            combind_f_name = '_'.join([f_name,ind]) + F_EXTEN # add index value
+            if 'temperature' in ev['data']:
+                f_name = f_name + '_'+str(ev['data']['temperature'])+'K'
+            combind_f_name = '{}_{}{}'.join(f_name,ind, F_EXTEN) # add index value
             w_name = os.path.join(W_DIR, combind_f_name)
             tif.imsave(w_name, img) 
             if os.path.isfile(w_name):
@@ -153,6 +137,8 @@ def save_tiff(headers, dark_subtraction = False):
             else:
                 print('Sorry, something went wrong with your tif saving')
                 return
+            if max_count is not None and ind<= max_count:
+                break
     print('||********Saving process SUCCEEDED********||')
 
 def plot_images(header):
