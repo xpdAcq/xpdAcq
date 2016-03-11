@@ -84,10 +84,13 @@ def _timestampstr(timestamp, hour=False):
         timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y%m%d-%H%M')
     return timestring
 
-def save_last_tiff(dark_subtraction=True):
-    save_tiff(db[-1], dark_subtraction)
+def save_last_tiff(dark_subtraction=True, max_count_num=None):
+    if not max_count_num:
+        save_tiff(db[-1], dark_subtraction=True, max_count = max_count_num)
+    else:
+        save_tiff(db[-1], dark_subtraction)
 
-def save_tiff(headers, dark_subtraction = True):
+def save_tiff(headers, dark_subtraction = True, *, max_count = None):
     ''' save images obtained from dataBroker as tiff format files. It returns nothing.
 
     arguments:
@@ -124,6 +127,7 @@ def save_tiff(headers, dark_subtraction = True):
                     dark_img = np.zeros_like(light_imgs)
                 img -= dark_img
                 is_dark_subtracted = True # label it only if it is successfully done
+
             f_name = _feature_gen(header)
             if is_dark_subtracted:
                 f_name = 'sub_' + f_name # give it a label
@@ -138,7 +142,7 @@ def save_tiff(headers, dark_subtraction = True):
                 print('Sorry, something went wrong with your tif saving')
                 return
             if max_count is not None and ind<= max_count:
-                break
+                break # break the loop if max_count reach or already collect all images
     print('||********Saving process SUCCEEDED********||')
 
 def plot_images(header):
