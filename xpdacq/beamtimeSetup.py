@@ -23,6 +23,8 @@ from xpdacq.utils import _graceful_exit
 from xpdacq.beamtime import Beamtime, XPD, Experiment, Sample, ScanPlan
 from xpdacq.beamtime import export_data,_clean_md_input,_get_hidden_list
 from xpdacq.glbl import glbl
+from shutil import ReadError
+
 
 home_dir = glbl.home
 all_folders = glbl.allfolders
@@ -199,6 +201,39 @@ def _execute_start_beamtime(piname,safn,explist,wavelength=None,home_dir=None):
     sc10 = ScanPlan('ct10s','ct',{'exposure':10.0})
     sc30 = ScanPlan('ct30s','ct',{'exposure':30.0})
     return bt
+
+def import_yaml():
+    '''
+    import user pre-defined files from ~/xpdUser/Import
+
+    Files can be compreesed or .yml, once imported, bt.list() should show updated acquire object list
+    '''
+    src_dir = glbl.import_dir
+    dst_dir = glbl.yaml_dir
+    f_list = os.listdir(src_dir)
+    if len(f_list) == 0:
+        print('INFO: There is no pre-defined user objects in {}'.format(src_dir))
+        return 
+    # two possibilites: .yml or compressed files; shutil should handle all compressed cases
+    moved_f_list = []
+    for f in f_list:
+        full_path = os.path.join(src_dir, f)
+        (root, ext) = os.path.splitext(f)
+        if ext == '.yml':
+            shutil.copy(full_path, dst_dir)
+            moved_f_list.append(f)
+            # FIXME - do we want user confirmation?
+            os.remove(full_path)
+        else:
+            try:
+                shutil.unpack_archive(full_path, dst_dir)
+                moved_f_list.append(f)
+                # FIXME - do we want user confirmation?
+                os.remove(full_path)
+            except ReadError:
+                print('Unrecongnized file type {} is found inside {}'.format(f, src_dir))
+                pass
+    return moved_f_list
 
 if __name__ == '__main__':
     print(glbl.home)

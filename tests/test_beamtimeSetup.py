@@ -3,9 +3,11 @@ import os
 import shutil
 import yaml
 from time import strftime
-from xpdacq.glbl import _areaDET, _tempController
-from xpdacq.glbl import _shutter, _verify_write
-from xpdacq.glbl import _LiveTable
+# old global variable logic, can be cleaned anytime
+
+#from xpdacq.glbl import _areaDET, _tempController
+#from xpdacq.glbl import _shutter, _verify_write
+#from xpdacq.glbl import _LiveTable
 
 # these are now included in glbl class
 #from xpdacq.xpdacq import _bdir
@@ -15,7 +17,7 @@ from xpdacq.glbl import _LiveTable
 from xpdacq.glbl import glbl
 
 import xpdacq.beamtimeSetup as bts
-from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment
+from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment, import_yaml
 from xpdacq.beamtime import Beamtime,_get_yaml_list
 
 
@@ -32,11 +34,13 @@ class NewBeamtimeTest(unittest.TestCase):
         self.saffile = os.path.join(self.config_dir,'saf123.yml')
         #_make_clean_env()
 #        self.bt = _execute_start_beamtime(self.PI_name,self.saf_num,self.wavelength,self.experimenters,home_dir=self.home_dir)
-        _areaDET()
-        _tempController()
-        _shutter()
-        _verify_write()
-        _LiveTable()
+    
+        # old logic, clean at anytime
+        #_areaDET()
+        #_tempController()
+        #_shutter()
+        #_verify_write()
+        #_LiveTable()
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -174,4 +178,36 @@ class NewBeamtimeTest(unittest.TestCase):
         # program places the file in Export directory
         # program gives friendly informational statement to user to email the file to Instr. Scientist.
 
-    
+    def test_import_yaml(self):
+        src = glbl.import_dir
+        dst = glbl.yaml_dir
+        os.makedirs(src, exist_ok = True)
+        os.makedirs(dst, exist_ok = True)
+        # case1 : no files in import_dir, should return nothing
+        self.assertEqual(import_yaml(), None)
+        # case2 : all three kinds of files together, test if they are successfully move and unpackedsuccesfully
+        yaml_name = 'touched.yml'
+        tar_name = 'tar_yaml.tar'
+        tar_yaml_name = 'tar.yml'
+        exception_name = 'yaml.pdf'
+        new_yaml = os.path.join(src, yaml_name)
+        open(new_yaml, 'a').close()
+        new_tar_yaml = os.path.join(src, tar_yaml_name)
+        open(new_tar_yaml, 'a').close()
+        exception_f = os.path.join(src, exception_name)
+        open(exception_f, 'a').close()
+        cwd = os.getcwd()
+        os.chdir(src) # inevitable step for compression
+        (root, ext) = os.path.splitext(tar_name)
+        shutil.make_archive(root,'tar') # now data should be in xpdUser/Import/
+        os.chdir(cwd)
+        os.remove(new_tar_yaml)
+        self.assertEqual(import_yaml(), [tar_name, yaml_name])
+        import_yaml()
+        # confirm valied files are successfully moved and original copy is flushed
+        self.assertTrue(yaml_name in os.listdir(dst))
+        self.assertTrue(tar_yaml_name in os.listdir(dst))
+        self.assertFalse(os.path.isfile(new_yaml))
+        self.assertFalse(os.path.isfile(new_tar_yaml))
+        # confirm unrecongnized file is left in import dir
+        self.assertTrue(os.path.isfile(exception_f))
