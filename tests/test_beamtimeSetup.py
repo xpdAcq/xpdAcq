@@ -20,7 +20,6 @@ import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment, import_yaml
 from xpdacq.beamtime import Beamtime,_get_yaml_list
 
-
 class NewBeamtimeTest(unittest.TestCase): 
 
     def setUp(self):
@@ -162,12 +161,6 @@ class NewBeamtimeTest(unittest.TestCase):
     @unittest.expectedFailure
     def test_inputs_in_end_beamtime(self):
         self.fail('need to refactor this function and build the tests')
-
-    @unittest.expectedFailure
-    def test_load_user_yml(self):
-        self.fail('need to build this function and the tests')
-        # after start_beamtime, Sanjit places user yml.tar (or some other archive format) file into xpdUser directory
-        # then runs _load_user_yml() which unpacks and installs it in yml_dir
 
     @unittest.expectedFailure
     def test_export_bt_objects(self):

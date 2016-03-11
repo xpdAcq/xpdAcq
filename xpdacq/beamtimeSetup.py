@@ -232,6 +232,3 @@ def import_yaml():
                 print('Unrecongnized file type {} is found inside {}'.format(f, src_dir))
                 pass
     return moved_f_list
-
-if __name__ == '__main__':
-    print(glbl.home)
