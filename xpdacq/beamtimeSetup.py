@@ -138,12 +138,9 @@ def get_full_ext(path, post_ext=''):
         return get_full_ext(path, ext + post_ext)
     return post_ext
 
-#def _check_empty_environment(home_dir = None):
 def _check_empty_environment(base_dir=None):
     if base_dir is None:
         base_dir = glbl.base
-    #if home_dir is None:
-        #home_dir = glbl.home
     if os.path.exists(home_dir):
         if not os.path.isdir(home_dir):
             sys.exit(_graceful_exit("Expected a folder, got a file.  "
