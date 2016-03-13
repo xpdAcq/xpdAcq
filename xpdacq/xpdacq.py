@@ -127,7 +127,8 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
         dark_field_uid : str
             uid to qualified dark frame
     '''
-    if not dark_scan_list: dark_scan_list= _read_dark_yaml()
+    if not dark_scan_list: 
+        dark_scan_list = _read_dark_yaml()
     if len(dark_scan_list) > 0:
         test_list = copy.copy(dark_scan_list)
         while time.time() - test_list[-1][2] < expire_time*60.:
@@ -195,7 +196,6 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     scanplan.md.update({'xp_isprun':True})
     light_cnt_time = scanplan.md['sc_params']['exposure']
     expire_time = glbl.dk_window
-    dark_field_uid = validate_dark(light_cnt_time, expire_time)
     # user can also specify auto_dark in argument to overwrite glbl setting
     if auto_dark:
         dark_field_uid = validate_dark(light_cnt_time, expire_time)
@@ -215,9 +215,11 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
         scan.md.update({'xp_config_name':config_name})
     except TypeError: # iterating on on None object causes TypeError
         print('INFO: No calibration file found in config_base. Scan will still keep going on')
-    if scanplan.shutter: _open_shutter()
+    if scanplan.shutter: 
+        _open_shutter()
     _unpack_and_run(sample,scanplan,**kwargs)
-    if scanplan.shutter: _close_shutter()
+    if scanplan.shutter: 
+        _close_shutter()
 
 def calibration(sample, scanplan, **kwargs):
     ''' function to run calibration on this sample with this scanplan
@@ -305,7 +307,8 @@ def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
     
     # compute number of frames and save metadata
     num_frame = int(exposure / acq_time)
-    if num_frame == 0: num_frame = 1
+    if num_frame == 0: 
+        num_frame = 1
     computed_exposure = num_frame*acq_time
     print('INFO: requested exposure time = ',exposure,' -> computed exposure time:',computed_exposure)
     exp.md.update({'xp_requested_exposure':exposure,'xp_computed_exposure':computed_exposure}) 
@@ -317,8 +320,6 @@ def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
     
     plan = Count([area_det])
     xpdRE(plan,subs_dict,**md_dict)
-
-    print('End of get_light_image...')
 
 
 def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det, subs_dict={}, **kwargs):
