@@ -81,11 +81,8 @@ def _unpack_and_run(sample,scan,**kwargs):
     # check to see if wavelength has been set
     # bug
     if not sample.md['bt_wavelength']:
-        #sys.exit(_graceful_exit('Please have the instrument scientist set the wavelength value before proceeding.'))
-        print('There is no wavelength information in your sample acquire object. Scan will keep going')
-        #print('Please follow instruction and re-define your sample object')
+        print('WARNING: There is no wavelength information in your sample acquire object')
     cmdo = Union(sample,scan)
-    #area_det = _get_obj('pe1c')
     parms = scan.md['sc_params']
     subs={}
     if 'subs' in parms: 
@@ -185,13 +182,12 @@ def _parse_calibration_file(config_file_name):
     return config_dict
 
 def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
-#def prun(sample,scanplan,**kwargs):
     '''on this 'sample' run this 'scanplan'
         
     Arguments:
     sample - sample metadata object
     scanplan - scanplan metadata object
-    auto_dark - optional. Option to have automated dark collection during scan.
+    auto_dark - optional. Type auto_dark = False to suppress the automatic collection of a dark image (default = True). Strongly recommend to leave as True unless problems are encountered
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
     if scanplan.shutter:
@@ -204,18 +200,13 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     if auto_dark:
         dark_field_uid = validate_dark(light_cnt_time, expire_time)
         if not dark_field_uid:
-            print('INTO: Automatically collect dark frame now')
-            # this is a bug, we can't directly pass the same scan object in as
-            # the scan plan might be a temperature scan.
-            #dark_field_uid = dark(sample, scanplan, **kwargs)
-            
-            # instead, create a count plan with the same light_cnt_time
+            print('''INFO: auto_dark didn't detect a valid dark, so is collecting a new dark frame.
+                    See documentation at http://xpdacq.github.io for more information about controlling this behavior''')
+            # create a count plan with the same light_cnt_time
             auto_dark_scanplan = ScanPlan('auto_dark_scan',
                     'ct',{'exposure':light_cnt_time})
             dark_field_uid = dark(sample, auto_dark_scanplan)
-            #print('!!!!! shutter should be CLOSED now. check !!!!!')
-            # confirmed: opyhd needs wait time
-            time.sleep(2.5)
+            time.sleep(2.5) # this hasn't been solved as of 03/11/2016
         scanplan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
         scanplan.md['sc_params'].update({'dk_window':expire_time})
     try:
@@ -225,7 +216,6 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     except TypeError: # iterating on on None object causes TypeError
         print('INFO: No calibration file found in config_base. Scan will still keep going on')
     if scanplan.shutter: _open_shutter()
-    #print('!!!!! shutter should be OPEN now. check !!!!!')
     _unpack_and_run(sample,scanplan,**kwargs)
     if scanplan.shutter: _close_shutter()
 
@@ -366,8 +356,6 @@ def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det
     Nsteps = _nstep(Tstart, Tstop, Tstep) # computed steps
     exp.md.update({'sc_startingT':Tstart,'sc_endingT':Tstop,'sc_requested_Tstep':Tstep}) 
     exp.md.update({'sc_Nsteps':Nsteps}) 
-    #print('INFO: requested temperature step = ',Tstep,' -> computed temperature step:', _Tstep)
-    # information is taking care in _nstep
 
     area_det.images_per_set.put(num_frame)
     md_dict = exp.md
