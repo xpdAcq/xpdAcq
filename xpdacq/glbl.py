@@ -5,7 +5,6 @@ import numpy as np
 from unittest.mock import MagicMock
 from time import strftime, sleep
 from bluesky.run_engine import RunEngine
-# test at XPD
 from xpdacq.mock_objects import mock_shutter, mock_livetable#, Cam, , mock_areadetector
 
 # better to get this from a config file in the fullness of time
@@ -53,6 +52,11 @@ GROUP = 'XPD'
 #def _getImages(get_images_obj=None):
 #    global GET_IMG
 #    GET_IMG = get_images_obj
+
+xpdRE = RunEngine()
+xpdRE.md['owner'] = 'xf28id1'
+xpdRE.md['beamline_id'] = 'xpd'
+xpdRE.md['group'] = 'XPD'
 
 hostname = socket.gethostname()
 if hostname == BEAMLINE_HOST_NAME:
@@ -112,7 +116,7 @@ class glbl():
     dk_yaml = DARK_YAML_NAME
     dk_window = DARK_WINDOW
     frame_acq_time = FRAME_ACQUIRE_TIME
-    # test at XPD
+    auto_dark = True
     area_det = None
     shutter = None
     LiveTable = None
