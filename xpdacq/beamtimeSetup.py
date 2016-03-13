@@ -161,6 +161,11 @@ def _check_empty_environment(base_dir=None):
         sys.exit(_graceful_exit("The xpdUser directory appears not to exist "
                                "Please Talk to beamline staff"))
 
+def _init_dark_yaml():
+    dark_scan_list = []
+    with open(glbl.dk_yaml, 'r') as f:
+        yaml.dump(dark_scan_list, f)
+
 def _start_beamtime(safn,home_dir=None):
     if home_dir is None:
         home_dir = glbl.home
@@ -180,6 +185,8 @@ def _start_beamtime(safn,home_dir=None):
     except KeyError:
         sys.exit(_graceful_exit('Cannot load input info. File syntax in {} maybe corrupted.'.format(configfile)))
     bt = _execute_start_beamtime(piname, safn, explist, home_dir=home_dir)
+    _init_dark_yaml()
+
     return bt
 
 def _execute_start_beamtime(piname,safn,explist,wavelength=None,home_dir=None):
