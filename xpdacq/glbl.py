@@ -5,7 +5,6 @@ import numpy as np
 from unittest.mock import MagicMock
 from time import strftime, sleep
 from bluesky.run_engine import RunEngine
-# test at XPD
 from xpdacq.mock_objects import mock_shutter, mock_livetable#, Cam, , mock_areadetector
 
 # better to get this from a config file in the fullness of time
@@ -54,6 +53,11 @@ GROUP = 'XPD'
 #    global GET_IMG
 #    GET_IMG = get_images_obj
 
+xpdRE = RunEngine()
+xpdRE.md['owner'] = 'xf28id1'
+xpdRE.md['beamline_id'] = 'xpd'
+xpdRE.md['group'] = 'XPD'
+
 hostname = socket.gethostname()
 if hostname == BEAMLINE_HOST_NAME:
     # real experiment
@@ -74,6 +78,7 @@ EXPORT_DIR = os.path.join(HOME_DIR, 'Export')
 YAML_DIR = os.path.join(HOME_DIR, 'config_base', 'yml')
 DARK_YAML_NAME = os.path.join(YAML_DIR, '_dark_scan_list.yaml')
 CONFIG_BASE = os.path.join(HOME_DIR, 'config_base')
+IMPORT_DIR = os.path.join(HOME_DIR, 'Import')
 
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 ALL_FOLDERS = [
@@ -85,7 +90,7 @@ ALL_FOLDERS = [
         CONFIG_BASE,
         os.path.join(HOME_DIR, 'userScripts'),
         EXPORT_DIR,
-        os.path.join(HOME_DIR, 'Import'),
+        IMPORT_DIR,
         os.path.join(HOME_DIR, 'userAnalysis')
 ]
 # for simulation put a summy saf file in BLCONFIG_DIR
@@ -102,6 +107,7 @@ class glbl():
     home = HOME_DIR
     xpdconfig = BLCONFIG_DIR
     export_dir = EXPORT_DIR
+    import_dir = IMPORT_DIR
     config_base = CONFIG_BASE
     yaml_dir = YAML_DIR
     allfolders = ALL_FOLDERS
@@ -110,7 +116,7 @@ class glbl():
     dk_yaml = DARK_YAML_NAME
     dk_window = DARK_WINDOW
     frame_acq_time = FRAME_ACQUIRE_TIME
-    # test at XPD
+    auto_dark = True
     area_det = None
     shutter = None
     LiveTable = None
