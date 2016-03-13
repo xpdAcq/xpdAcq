@@ -8,18 +8,8 @@ import yaml
 import numpy as np
 import copy
 from xpdacq.glbl import glbl
-#from xpdacq.xpdacq import validate_dark,  _yamify_dark 
-#from xpdacq.glbl import _areaDET, _tempController
-#from xpdacq.glbl import _shutter, _verify_write
-#from xpdacq.glbl import _verify_write
-#from xpdacq.glbl import _LiveTable
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
-#_areaDET()
-#_tempController()
-#_shutter()
-#_verify_write()
-#_LiveTable()
 from xpdacq.xpdacq import validate_dark, _yamify_dark, prun, _read_dark_yaml
 #from xpdacq.mock_objects import Cam
 
@@ -74,13 +64,6 @@ class findRightDarkTest(unittest.TestCase):
         self.ex = Experiment('validateDark_unittest', self.bt)
         self.sa = Sample('unitttestSample', self.ex)
 
-        os.makedirs(glbl.yaml_dir, exist_ok = True)
-        # initiate dark_scan_list
-        self.dark_scan_list = []
-        with open (glbl.dk_yaml, 'w') as f:
-            yaml.dump(self.dark_scan_list, f)
-
-                
     def tearDown(self):
         os.chdir(glbl.base)
         if os.path.isdir(glbl.home):
@@ -165,4 +148,9 @@ class findRightDarkTest(unittest.TestCase):
         scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.3})
         prun(self.sa, scanplan)
         self.assertNotEqual(scanplan.md['sc_params']['dk_field_uid'], dark_uid2)        
-
+    
+    def test_read_dark_yaml(self):
+        # test if _read_dark_yaml captures exception as we hope
+        self.assertTrue(os.path.isfile(glbl.dk_yaml)) # make sure it exit after _start_beamtime()
+        os.remove(glbl.dk_yaml)
+        self.assertRaises(SystemExit, lambda: _read_dark_yaml())

@@ -21,10 +21,9 @@ import yaml
 from time import strftime
 from xpdacq.utils import _graceful_exit
 from xpdacq.beamtime import Beamtime, XPD, Experiment, Sample, ScanPlan
-from xpdacq.beamtime import export_data,_clean_md_input,_get_hidden_list
+from xpdacq.beamtime import export_data, _clean_md_input, _get_hidden_list
 from xpdacq.glbl import glbl
 from shutil import ReadError
-
 
 home_dir = glbl.home
 all_folders = glbl.allfolders
@@ -139,15 +138,18 @@ def get_full_ext(path, post_ext=''):
         return get_full_ext(path, ext + post_ext)
     return post_ext
 
+#def _check_empty_environment(home_dir = None):
 def _check_empty_environment(base_dir=None):
     if base_dir is None:
         base_dir = glbl.base
-    #dp = DataPath(base_dir)
+    #if home_dir is None:
+        #home_dir = glbl.home
     if os.path.exists(home_dir):
         if not os.path.isdir(home_dir):
             sys.exit(_graceful_exit("Expected a folder, got a file.  "
                                "Please Talk to beamline staff"))
         files = os.listdir(home_dir) # that also list dirs that have been created
+        print('find files {} when doing _check_empty_environment'.format(files))
         if len(files) > 1:
             sys.exit(_graceful_exit("Unexpected files in {}, you need to run _end_beamtime(). Please Talk to beamline staff".format(home_dir)))
         elif len(files) == 1:
@@ -163,7 +165,7 @@ def _check_empty_environment(base_dir=None):
 
 def _init_dark_yaml():
     dark_scan_list = []
-    with open(glbl.dk_yaml, 'r') as f:
+    with open(glbl.dk_yaml, 'w') as f:
         yaml.dump(dark_scan_list, f)
 
 def _start_beamtime(safn,home_dir=None):
