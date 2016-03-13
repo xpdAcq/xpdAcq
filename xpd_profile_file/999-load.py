@@ -42,11 +42,51 @@ from xpdacq.beamtime import *
 # try to keep attribute names the same as the way we are goona use. Can be
 # changed later
 
+
+# logic to make correct objects depends on simulation or real experiment
+hostname = socket.gethostname()
+if hostname == BEAMLINE_HOST_NAME:
+    # real experiment
+    simulation = False
+    from bluesky.run_engine import RunEngine
+    from bluesky.register_mds import register_mds
+    from bluesky import Msg
+    from bluesky.plans import Count
+    from bluesky.plans import AbsScanPlan
+
+    xpdRE = RunEngine()
+    xpdRE.md['owner'] = glbl.owner
+    xpdRE.md['beamline_id'] = glbl.beamline_id
+    xpdRE.md['group'] = glbl.group
+    register_mds(xpdRE)
+else:
+    simulation = True
+    BASE_DIR = os.getcwd()
+    ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')
+    xpdRE = MagicMock()
+    shutter = mock_shutter()
+    LiveTable = mock_livetable
+    #area_det = mock_areadetector()
+    area_det = MagicMock()
+    area_det.cam = MagicMock()
+    area_det.cam.acquire_time = MagicMock()
+    area_det.cam.acquire_time.put = MagicMock(return_value=1)
+    area_det.cam.acquire_time.get = MagicMock(return_value=1)
+    area_det.number_of_sets = MagicMock()
+    area_det.number_of_sets.put = MagicMock(return_value=1)
+    print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
+
+# objects for collection activities
+glbl.Msg = Msg
+glbl.xpdRE = xpdRE
+glbl.Count = Count
+glbl.AbsScanPlan = AbsScanPlan
 glbl.area_det = pe1c
 glbl.shutter = shctl1
 glbl.LiveTable = LiveTable
 glbl.temp_controller = cs700
 
+# objects for analysis activities
 glbl.db = db
 glbl.get_events = get_events
 glbl.get_images = get_images
