@@ -146,7 +146,6 @@ def _check_empty_environment(base_dir=None):
             sys.exit(_graceful_exit("Expected a folder, got a file.  "
                                "Please Talk to beamline staff"))
         files = os.listdir(home_dir) # that also list dirs that have been created
-        print('find files {} when doing _check_empty_environment'.format(files))
         if len(files) > 1:
             sys.exit(_graceful_exit("Unexpected files in {}, you need to run _end_beamtime(). Please Talk to beamline staff".format(home_dir)))
         elif len(files) == 1:
