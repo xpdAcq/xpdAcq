@@ -5,10 +5,12 @@ from time import strftime
 import numpy as np
 import tifffile as tif
 import matplotlib as plt
-#from xpdacq.glbl import glbl
+#from xpdacq.glbl import glbl 
+# no xpdAcq installed on notebook server
 
-_fname_field = ['sa_name','sc_name'] 
-w_dir = os.path.join('xpdUser', 'tiff_base')
+_fname_field = ['sa_name','sc_name']
+home_dir = os.path.expanduser('~/xpdUser')
+w_dir = os.path.join(home_dir, 'tiff_base')
 W_DIR = w_dir # in case of crashes in old codes
 
 def _feature_gen(header):
@@ -135,8 +137,19 @@ def _identify_image_field(header):
 
 
 ## functional tests on notebook server ##
-from dataportal import DataBroker as db
-from dataportal import get_events, get_images
-save_tiff(db['ded100bc-66d4-4b3c-a441-ba3a37fe3730']) # Temperature ramp scan
-save_tiff(db['4674074a-d6e8-459f-a5c4-3bd505f2e867']) # auto_dark = off scan
-save_tiff(db['8bec2649-6b66-4859-b6cd-00b3761d2d0d']) # time series scan
+def main():
+    try:
+        # at notebook server
+        from dataportal import DataBroker as db
+        from dataportal import get_events, get_images
+    except:
+        # at XPD
+        from databroker import DataBroker as db
+        from databroker import get_events, get_images
+
+    save_tiff(db['ded100bc-66d4-4b3c-a441-ba3a37fe3730']) # Temperature ramp scan
+    save_tiff(db['4674074a-d6e8-459f-a5c4-3bd505f2e867']) # 'auto_dark = off' scan
+    save_tiff(db['8bec2649-6b66-4859-b6cd-00b3761d2d0d']) # time series scan
+
+if __name__ == '__main__':
+    main()
