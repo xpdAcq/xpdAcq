@@ -4,7 +4,6 @@ import yaml
 import numpy as np
 from unittest.mock import MagicMock
 from time import strftime, sleep
-from bluesky.run_engine import RunEngine
 from xpdacq.mock_objects import mock_shutter, mock_livetable#, Cam, , mock_areadetector
 
 # better to get this from a config file in the fullness of time
@@ -38,6 +37,7 @@ else:
     xpdRE = MagicMock()
 
     print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
+'''
 
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
 BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
@@ -84,20 +84,28 @@ class glbl():
     dk_window = DARK_WINDOW
     frame_acq_time = FRAME_ACQUIRE_TIME
     auto_dark = True
+    owner = OWNER
+    beamline_id = BEAMLINE_ID
+    group = GROUP
+    # objects for collection activities
+    Msg = None
+    xpdRE = None
+    Count = None
+    AbsScanPlan = None
+
     area_det = None
     shutter = None
     LiveTable = None
+    temp_controller = None
 
+    # objects for analysis activities
     db = None
     get_events = None
     get_images = None
     verify_files_saved = None
-
-    xpdRE = RunEngine()
-    xpdRE.md['owner'] = OWNER
-    xpdRE.md['beamline_id'] = BEAMLINE_ID
-    xpdRE.md['group'] = GROUP
     
+    # this block of code has been moved to 999-load.py. Clean it after testing at XPD
+    '''   
     if hostname != BEAMLINE_HOST_NAME:
         shutter = mock_shutter()
         LiveTable = mock_livetable
@@ -109,9 +117,7 @@ class glbl():
         area_det.cam.acquire_time.get = MagicMock(return_value=1)
         area_det.number_of_sets = MagicMock()
         area_det.number_of_sets.put = MagicMock(return_value=1)
-
-        temp_controller = None
-
+    '''
 
 if __name__ == '__main__':
     print(glbl.dp().home)
