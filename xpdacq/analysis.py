@@ -48,7 +48,6 @@ def _feature_gen(header):
     uid = header.start.uid[:6]
     feature_list = []
     
-    
     field = header['start']
     for key in _fname_field:
 
@@ -71,22 +70,17 @@ def _feature_gen(header):
             feature_list.append(''.join(feature))
         except KeyError:
             pass # protection to allow missing required fields. This should not happen
-    # FIXME - find a way to include motor information
     f_name = "_".join(feature_list)
-    exp_time = _timestampstr(header.start.time, hour=True)
-    return '_'.join([f_name, exp_time])
+    return f_name
 
-def _timestampstr(timestamp, hour=False):
+def _timestampstr(timestamp):
     ''' convert timestamp to strftime formate '''
-    if not hour:
-        timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y%m%d')
-    elif hour:
-        timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y%m%d-%H%M')
+    timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y%m%d-%H%M')
     return timestring
 
 def save_last_tiff(dark_subtraction=True, max_count_num=None):
     if not max_count_num:
-        save_tiff(db[-1], dark_subtraction=True, max_count = max_count_num)
+        save_tiff(db[-1], dark_subtraction, max_count = max_count_num)
     else:
         save_tiff(db[-1], dark_subtraction)
 
@@ -110,10 +104,14 @@ def save_tiff(headers, dark_subtraction = True, *, max_count = None):
 
     for header in header_list:
         print('Saving your image(s) now....')
+        # information at header level
         img_field = _identify_image_field(header)
-        for ev in header:
+        f_name = _feature_gen(header)
+        for ev in get_events(header):
             img = ev['data'][img_field]
             ind = ev['seq_num']
+            event_timestamp = ev['timestamps']['pe1_image'] # time when triggering area detector
+            time_info = _timestampstr(event_timestamp)
             # dark subtration logic 
             if dark_subtraction:
                 dark_uid_appended = header.start['sc_params']['dk_field_uid']
@@ -127,13 +125,12 @@ def save_tiff(headers, dark_subtraction = True, *, max_count = None):
                     dark_img = np.zeros_like(light_imgs)
                 img -= dark_img
                 is_dark_subtracted = True # label it only if it is successfully done
-
-            f_name = _feature_gen(header)
             if is_dark_subtracted:
-                f_name = 'sub_' + f_name # give it a label
+                f_name = 'sub_' + f_name
             if 'temperature' in ev['data']:
                 f_name = f_name + '_'+str(ev['data']['temperature'])+'K'
-            combind_f_name = '{}_{}{}'.join(f_name,ind, F_EXTEN) # add index value
+            # index is still needed as we don't want timestamp in file name down to seconds
+            combind_f_name = '{}_{}_{}{}'.join(f_name, time_info, ind, F_EXTEN)
             w_name = os.path.join(W_DIR, combind_f_name)
             tif.imsave(w_name, img) 
             if os.path.isfile(w_name):
@@ -141,7 +138,7 @@ def save_tiff(headers, dark_subtraction = True, *, max_count = None):
             else:
                 print('Sorry, something went wrong with your tif saving')
                 return
-            if max_count is not None and ind<= max_count:
+            if max_count is not None and ind >= max_count:
                 break # break the loop if max_count reach or already collect all images
     print('||********Saving process SUCCEEDED********||')
 
