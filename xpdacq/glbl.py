@@ -20,39 +20,6 @@ OWNER = 'xf28id1'
 BEAMLINE_ID = 'xpd'
 GROUP = 'XPD'
 
-#def _areaDET(area_det_obj=None):
-#    global AREA_DET
-#    AREA_DET = area_det_obj
-
-#def _tempController(temp_controller_obj=None):
-#    global TEMP_CONTROLLER
-#    TEMP_CONTROLLER = temp_controller_obj
-
-#def _shutter(shutter_obj=None):
-#    global SHUTTER
-#    SHUTTER = shutter_obj
-
-#def _verify_write(verify_files_saved_obj=None):
-#    global VERIFY_WRITE
-#    VERIFY_WRITE = verify_files_saved_obj
-
-#def _LiveTable(livetable_obj=None):
-#    global LIVETABLE
-#    LIVETABLE = livetable_obj
-
-# analysis objects, maybe we should move them out in the future
-#def _dataBroker(databroker_obj=None):
-#    global DB
-#    DB = databroker_obj
-
-#def _getEvents(get_events_obj=None):
-#    global GET_ENV
-#    GET_ENV = get_events_obj
-
-#def _getImages(get_images_obj=None):
-#    global GET_IMG
-#    GET_IMG = get_images_obj
-
 xpdRE = RunEngine()
 xpdRE.md['owner'] = 'xf28id1'
 xpdRE.md['beamline_id'] = 'xpd'
