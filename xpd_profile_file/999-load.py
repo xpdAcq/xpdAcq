@@ -19,6 +19,8 @@
 import os
 import socket
 from xpdacq.glbl import glbl
+from unittest.mock import MagicMock
+from xpdacq.mock_objects import mock_shutter, mock_livetable
 #from xpdacq.glbl import _areaDET
 #from xpdacq.glbl import _tempController
 # test at xpd
@@ -45,7 +47,8 @@ from xpdacq.beamtime import *
 
 # logic to make correct objects depends on simulation or real experiment
 hostname = socket.gethostname()
-if hostname == BEAMLINE_HOST_NAME:
+#if hostname == BEAMLINE_HOST_NAME:
+if hostname == glbl.beamline_host_name:
     # real experiment
     simulation = False
     from bluesky.run_engine import RunEngine
@@ -64,6 +67,16 @@ else:
     BASE_DIR = os.getcwd()
     ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')
     xpdRE = MagicMock()
+    # magic mock objects
+    Msg = MagicMock()
+    Count = MagicMock()
+    AbsScanPlan = MagicMock()
+    cs700 = MagicMock()
+    db = MagicMock()
+    get_events = MagicMock()
+    get_images = MagicMock()
+    verify_files_saved = MagicMock()
+    ########################
     shutter = mock_shutter()
     LiveTable = mock_livetable
     #area_det = mock_areadetector()
@@ -74,6 +87,9 @@ else:
     area_det.cam.acquire_time.get = MagicMock(return_value=1)
     area_det.number_of_sets = MagicMock()
     area_det.number_of_sets.put = MagicMock(return_value=1)
+    pe1c = area_det
+    shctl1 = shutter
+    
     print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
 
 # objects for collection activities

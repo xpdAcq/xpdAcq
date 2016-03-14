@@ -105,6 +105,7 @@ if not os.path.isfile(tmp_safname):
         yaml.dump(dummy_config,fo)
 
 class glbl():
+    beamline_host_name = BEAMLINE_HOST_NAME
     base = BASE_DIR
     home = HOME_DIR
     xpdconfig = BLCONFIG_DIR
