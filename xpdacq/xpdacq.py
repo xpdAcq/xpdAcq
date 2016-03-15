@@ -26,6 +26,7 @@ from configparser import ConfigParser
 
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
+
 from xpdacq.beamtime import Union, Xposure, ScanPlan
 from xpdacq.control import _close_shutter, _open_shutter
 
@@ -39,11 +40,14 @@ from bluesky.plans import AbsScanPlan
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 
-
 # top definition for minial impacts on the code. Can be changed later
+Msg = glbl.Msg # still leave Msg alive, just in case
+xpdRE = glbl.xpdRE
+Count = glbl.Count
+AbsScanPlan = glbl.AbsScanPlan
 area_det = glbl.area_det
 LiveTable = glbl.LiveTable
-temp_controller = glbl.temp_controller
+temp_controller = glbl
 
 def dryrun(sample,scan,**kwargs):
     '''same as run but scans are not executed.

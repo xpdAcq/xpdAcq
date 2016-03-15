@@ -19,14 +19,90 @@
 import os
 import socket
 from xpdacq.glbl import glbl
+from unittest.mock import MagicMock
+from xpdacq.mock_objects import mock_shutter, mock_livetable
+#from xpdacq.glbl import _areaDET
+#from xpdacq.glbl import _tempController
+# test at xpd
+#from xpdacq.glbl import _shutter
+#from xpdacq.glbl import _verify_write
+#from xpdacq.glbl import _LiveTable
+#from xpdacq.glbl import _dataBroker
+#from xpdacq.glbl import _getEvents
+#from xpdacq.glbl import _getImages
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
 from xpdacq.beamtime import *
 
+#_areaDET(pe1c)
+#_tempController(cs700)
+
+#######
+# watch out, some testing here
+#######
+#_shutter(shctl1)
+
+# try to keep attribute names the same as the way we are goona use. Can be
+# changed later
+
+
+# logic to make correct objects depends on simulation or real experiment
+hostname = socket.gethostname()
+#if hostname == BEAMLINE_HOST_NAME:
+if hostname == glbl.beamline_host_name:
+    # real experiment
+    simulation = False
+    from bluesky.run_engine import RunEngine
+    from bluesky.register_mds import register_mds
+    from bluesky import Msg
+    from bluesky.plans import Count
+    from bluesky.plans import AbsScanPlan
+
+    xpdRE = RunEngine()
+    xpdRE.md['owner'] = glbl.owner
+    xpdRE.md['beamline_id'] = glbl.beamline_id
+    xpdRE.md['group'] = glbl.group
+    register_mds(xpdRE)
+else:
+    simulation = True
+    BASE_DIR = os.getcwd()
+    ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')
+    xpdRE = MagicMock()
+    # magic mock objects
+    Msg = MagicMock()
+    Count = MagicMock()
+    AbsScanPlan = MagicMock()
+    cs700 = MagicMock()
+    db = MagicMock()
+    get_events = MagicMock()
+    get_images = MagicMock()
+    verify_files_saved = MagicMock()
+    ########################
+    shutter = mock_shutter()
+    LiveTable = mock_livetable
+    #area_det = mock_areadetector()
+    area_det = MagicMock()
+    area_det.cam = MagicMock()
+    area_det.cam.acquire_time = MagicMock()
+    area_det.cam.acquire_time.put = MagicMock(return_value=1)
+    area_det.cam.acquire_time.get = MagicMock(return_value=1)
+    area_det.number_of_sets = MagicMock()
+    area_det.number_of_sets.put = MagicMock(return_value=1)
+    pe1c = area_det
+    shctl1 = shutter
+    
+    print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
+
+# objects for collection activities
+glbl.Msg = Msg
+glbl.xpdRE = xpdRE
+glbl.Count = Count
+glbl.AbsScanPlan = AbsScanPlan
 glbl.area_det = pe1c
 glbl.shutter = shctl1
 glbl.LiveTable = LiveTable
 glbl.temp_controller = cs700
 
+# objects for analysis activities
 glbl.db = db
 glbl.get_events = get_events
 glbl.get_images = get_images
