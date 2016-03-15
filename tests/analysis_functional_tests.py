@@ -1,44 +1,17 @@
-#!/usr/bin/env python
-##############################################################################
-#
-# xpdacq            by Billinge Group
-#                   Simon J. L. Billinge sb2896@columbia.edu
-#                   (c) 2016 trustees of Columbia University in the City of
-#                        New York.
-#                   All rights reserved
-#
-# File coded by:    Timothy Liu, Simon Billinge
-#
-# See AUTHORS.txt for a list of people who contributed.
-# See LICENSE.txt for license information.
-#
-##############################################################################
-#from dataportal import DataBroker as db
-#from dataportal import get_events, get_table, get_images
-#from metadatastore.commands import find_run_starts
-
+# functional test on notebook server (analysis side)
 import os
 import datetime
 from time import strftime
 import numpy as np
 import tifffile as tif
 import matplotlib as plt
-from xpdacq.glbl import glbl
-#from xpdacq.glbl import _dataBroker as db
-#from xpdacq.glbl import _getEvents as get_events
-#from xpdacq.glbl import _getImages as get_images
+#from xpdacq.glbl import glbl 
+# no xpdAcq installed on notebook server
 
-# top definition for minial impacts on the code. Can be changed later
-db = glbl.db
-get_events = glbl.get_events
-get_images = glbl.get_images
-
-_fname_field = ['sa_name','sc_name'] 
-w_dir = os.path.join(glbl.home, 'tiff_base')
+_fname_field = ['sa_name','sc_name']
+home_dir = os.path.expanduser('~/xpdUser')
+w_dir = os.path.join(home_dir, 'tiff_base')
 W_DIR = w_dir # in case of crashes in old codes
-
-def bt_uid():
-    return bt.get(0).md['bt_uid']
 
 def _feature_gen(header):
     ''' generate a human readable file name. 
@@ -127,10 +100,10 @@ def save_tiff(headers, dark_subtraction = True, *, max_count = None):
                     img -= dark_img
                     is_dark_subtracted = True # label it only if it is successfully done
                 except KeyError:
-                    print(e) # backward support. For scans with auto_dark turn offn
+                    print(e) # backward support. For scans with auto_dark turned off
                     pass
             # complete file name
-            f_name = '_'.join([f_name, _timestampstr(event_timestamp)])
+            f_name = f_name +_timestampstr(event_timestamp)
             if is_dark_subtracted:
                 f_name = 'sub_' + f_name
             if 'temperature' in ev['data']:
@@ -138,54 +111,16 @@ def save_tiff(headers, dark_subtraction = True, *, max_count = None):
             # index is still needed as we don't want timestamp in file name down to seconds
             combind_f_name = '{}_{}{}'.format(f_name, ind, F_EXTEN)
             w_name = os.path.join(W_DIR, combind_f_name)
-            tif.imsave(w_name, img) 
-            if os.path.isfile(w_name):
-                print('image "%s" has been saved at "%s"' % (combind_f_name, W_DIR))
-            else:
-                print('Sorry, something went wrong with your tif saving')
-                return
+            print(w_name)
+            #tif.imsave(w_name, img) 
+            #if os.path.isfile(w_name):
+                #print('image "%s" has been saved at "%s"' % (combind_f_name, W_DIR))
+            #else:
+                #print('Sorry, something went wrong with your tif saving')
+                #return
             if max_count is not None and ind >= max_count:
                 break # break the loop if max_count reach or already collect all images
     print('||********Saving process FINISHED********||')
-
-def plot_images(header):
-    ''' function to plot images from header.
-    
-    It plots images, return nothing
-    Parameters
-    ----------
-        header : databroker header object
-            header pulled out from central file system
-    '''
-    # prepare header
-    if type(list(headers)[1]) == str:
-        header_list = list()
-        header_list.append(headers)
-    else:
-        header_list = headers
-    
-    for header in header_list:
-        uid = header.start.uid 
-        img_field = _identify_image_field(header)
-        imgs = np.array(get_images(header, img_field))
-        print('Plotting your data now...')
-        for i in range(imgs.shape[0]):
-            img = imgs[i]
-            plot_title = '_'.join(uid, str(i))
-            # just display user uid and index of this image
-            try:
-                fig = plt.figure(plot_title)
-                plt.imshow(img)
-                plt.show()
-            except:
-                pass # allow matplotlib to crash without stopping other function
-
-def plot_last_scan():
-    ''' function to plot images from last header
-    '''
-    plot_images(db[-1])
-
-
 def _identify_image_field(header):
     ''' small function to identify image filed key words in header
     '''
@@ -200,3 +135,21 @@ def _identify_image_field(header):
         print('Stop here')
         return
 
+
+## functional tests on notebook server ##
+def main():
+    try:
+        # at notebook server
+        from dataportal import DataBroker as db
+        from dataportal import get_events, get_images
+    except:
+        # at XPD
+        from databroker import DataBroker as db
+        from databroker import get_events, get_images
+
+    save_tiff(db['ded100bc-66d4-4b3c-a441-ba3a37fe3730']) # Temperature ramp scan
+    save_tiff(db['4674074a-d6e8-459f-a5c4-3bd505f2e867']) # 'auto_dark = off' scan
+    save_tiff(db['8bec2649-6b66-4859-b6cd-00b3761d2d0d']) # time series scan
+
+if __name__ == '__main__':
+    main()
