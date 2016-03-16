@@ -19,47 +19,6 @@ OWNER = 'xf28id1'
 BEAMLINE_ID = 'xpd'
 GROUP = 'XPD'
 
-# logic to assign correct objects depends on simulation or real experiment
-hostname = socket.gethostname()
-if hostname == BEAMLINE_HOST_NAME:
-    # real experiment
-    simulation = False
-    from bluesky.run_engine import RunEngine
-    from bluesky.register_mds import register_mds
-    from bluesky import Msg
-    from bluesky.plans import Count
-    from bluesky.plans import AbsScanPlan
-    xpdRE = RunEngine()
-    xpdRE.md['owner'] = glbl.owner
-    xpdRE.md['beamline_id'] = glbl.beamline_id
-    xpdRE.md['group'] = glbl.group
-    register_mds(xpdRE)
-else:
-    simulation = True
-    BASE_DIR = os.getcwd()
-    ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')
-    xpdRE = MagicMock()
-    # magic mock objects
-    Msg = MagicMock()
-    Count = MagicMock()
-    AbsScanPlan = MagicMock()
-    cs700 = MagicMock()
-    db = MagicMock()
-    get_events = MagicMock()
-    get_images = MagicMock()
-    verify_files_saved = MagicMock()
-    ########################
-    shctl1 = mock_shutter()
-    LiveTable = mock_livetable
-    pe1c = MagicMock()
-    pe1c.cam = MagicMock()
-    pe1c.cam.acquire_time = MagicMock()
-    pe1c.cam.acquire_time.put = MagicMock(return_value=0.1)
-    pe1c_det.cam.acquire_time.get = MagicMock(return_value=0.1)
-    pe1c.number_of_sets = MagicMock()
-    pe1c.number_of_sets.put = MagicMock(return_value=1)
-    print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
-
 # directories
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
 BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
@@ -109,6 +68,7 @@ class glbl():
     owner = OWNER
     beamline_id = BEAMLINE_ID
     group = GROUP
+    '''
     # objects for collection activities
     Msg = None
     xpdRE = None
@@ -125,8 +85,49 @@ class glbl():
     get_events = None
     get_images = None
     verify_files_saved = None
-   
-    
+    '''
+    # logic to assign correct objects depends on simulation or real experiment
+    hostname = socket.gethostname()
+    if hostname == BEAMLINE_HOST_NAME:
+        # real experiment
+        simulation = False
+        from bluesky.run_engine import RunEngine
+        from bluesky.register_mds import register_mds
+        from bluesky import Msg
+        from bluesky.plans import Count
+        from bluesky.plans import AbsScanPlan
+        xpdRE = RunEngine()
+        xpdRE.md['owner'] = glbl.owner
+        xpdRE.md['beamline_id'] = glbl.beamline_id
+        xpdRE.md['group'] = glbl.group
+        register_mds(xpdRE)
+    else:
+        simulation = True
+        BASE_DIR = os.getcwd()
+        ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')
+        xpdRE = MagicMock()
+        # magic mock objects
+        Msg = MagicMock()
+        Count = MagicMock()
+        AbsScanPlan = MagicMock()
+        cs700 = MagicMock()
+        db = MagicMock()
+        get_events = MagicMock()
+        get_images = MagicMock()
+        verify_files_saved = MagicMock()
+        ########################
+        shutter = mock_shutter()
+        LiveTable = mock_livetable
+        area_det = MagicMock()
+        area_det.cam = MagicMock()
+        area_det.cam.acquire_time = MagicMock()
+        area_det.cam.acquire_time.put = MagicMock(return_value=0.1)
+        area_det.cam.acquire_time.get = MagicMock(return_value=0.1)
+        area_det.number_of_sets = MagicMock()
+        area_det.number_of_sets.put = MagicMock(return_value=1)
+        print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
 
-if __name__ == '__main__':
-    print(glbl.dp().home)
+#if __name__ == '__main__':
+    #print(glbl.home)
+    #glbl.Msg = Msg
+
