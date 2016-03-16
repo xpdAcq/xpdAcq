@@ -24,6 +24,7 @@ import numpy as np
 import tifffile as tif
 import matplotlib as plt
 from xpdacq.glbl import glbl
+import warnings
 #from xpdacq.glbl import _dataBroker as db
 #from xpdacq.glbl import _getEvents as get_events
 #from xpdacq.glbl import _getImages as get_images
@@ -107,24 +108,28 @@ def save_tiff(headers, dark_subtraction = True, *, max_count = None):
         # information at header level
         img_field = _identify_image_field(header)
         dark_img = None
-        if dark_subtraction:
-            try:
-                dark_uid_appended = header.start['sc_params']['dk_field_uid']
-                try:
-                    # bluesky only looks for uid it defines
-                    # this should be refine later
-                    dark_search = {'group': 'XPD',
-                                   'xp_dark_uid': dark_uid_appended}
+        if 'dk_field_uid' not in header.start['sc_params']:
+            warnings.warn("Requested to do dark correction, but header does "
+                          "not contain a 'dk_field_uid' entry.  "
+                          "Disabling dark subtraction.")
+            dark_subtraction = False
 
-                    dark_header = db(**dark_search)
-                    dark_img = np.asarray(get_images(dark_header,
-                                                     img_field)).squeeze()
-                except ValueError:
-                    print(e)  # protection. Should not happen
-            except KeyError:
-                # backward support. For scans with auto_dark turn offn
-                print(e)
-                pass
+        if dark_subtraction:
+            dark_uid_appended = header.start['sc_params']['dk_field_uid']
+            try:
+                # bluesky only looks for uid it defines
+                # this should be refine later
+                dark_search = {'group': 'XPD',
+                               'xp_dark_uid': dark_uid_appended}
+
+                dark_header = db(**dark_search)
+                dark_img = np.asarray(get_images(dark_header,
+                                                 img_field)).squeeze()
+            except ValueError:
+                print(e)  # protection. Should not happen
+                warnings.warn("Requested to do dark correction, but "
+                              "extracting the dark image failed.  Proceeding "
+                              "with out correction.")
         for ev in get_events(header):
             img = ev['data'][img_field]
             ind = ev['seq_num']
