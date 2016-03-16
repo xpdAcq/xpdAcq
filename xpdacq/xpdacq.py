@@ -28,14 +28,6 @@ from xpdacq.glbl import glbl
 from xpdacq.beamtime import Union, Xposure, ScanPlan
 from xpdacq.control import _close_shutter, _open_shutter
 
-# FIXME - clean this section in next PR
-from xpdacq.glbl import xpdRE
-from bluesky.plans import Count
-from bluesky import Msg
-from bluesky.plans import AbsScanPlan
-#########################################
-
-
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 
 # top definition for minial impacts on the code. Can be changed later
