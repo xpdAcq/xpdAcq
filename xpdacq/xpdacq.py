@@ -22,28 +22,49 @@ import numpy as np
 import copy
 import sys
 import uuid
+from unittest.mock import MagicMock
 from configparser import ConfigParser
 
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
+
 from xpdacq.beamtime import Union, Xposure, ScanPlan
 from xpdacq.control import _close_shutter, _open_shutter
 
 # FIXME - clean this section in next PR
-from xpdacq.glbl import xpdRE
-from bluesky.plans import Count
-from bluesky import Msg
-from bluesky.plans import AbsScanPlan
+#from xpdacq.glbl import xpdRE
+#from bluesky.plans import Count
+#from bluesky import Msg
+#from bluesky.plans import AbsScanPlan
 #########################################
 
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 
-
 # top definition for minial impacts on the code. Can be changed later
+Msg = glbl.Msg # still leave Msg alive, just in case
+xpdRE = glbl.xpdRE
+Count = glbl.Count
+AbsScanPlan = glbl.AbsScanPlan
 area_det = glbl.area_det
 LiveTable = glbl.LiveTable
 temp_controller = glbl.temp_controller
+
+# test if every object is assigned
+if not Msg:
+    Msg = MagicMock()
+if not xpdRE:
+    xpdRE = MagicMock()
+if not Count:
+    Count = MagicMock()
+if not AbsScanPlan:
+    AbsScanPlan = MagicMock()
+if not area_det:
+    area_det = MagicMock()
+if not LiveTable:
+    LiveTable = MagicMock()
+if not temp_controller:
+    temp_controller = MagicMock()
 
 def dryrun(sample,scan,**kwargs):
     '''same as run but scans are not executed.
@@ -75,16 +96,17 @@ def dryrun(sample,scan,**kwargs):
     else:
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
-    
-def _unpack_and_run(sample,scan,**kwargs):
+
+def _unpack_and_run(scan, **kwargs):   
+#def _unpack_and_run(sample,scan,**kwargs):
     # check to see if wavelength has been set
     # bug
-    if not sample.md['bt_wavelength']:
+    if not scan.md['bt_wavelength']:
         print('WARNING: There is no wavelength information in your sample acquire object')
-    cmdo = Union(sample,scan)
+    #cmdo = Union(sample,scan) # this should happen before _unpack_and_run
     parms = scan.md['sc_params']
     subs={}
-    if 'subs' in parms: 
+    if 'subs' in parms:
         subsc = parms['subs']
     for i in subsc:
         if i == 'livetable':
@@ -92,15 +114,24 @@ def _unpack_and_run(sample,scan,**kwargs):
         elif i == 'verify_write':
             subs.update({'stop':verify_files_saved})
 
+    if scan.md['sc_type'] == 'ct':
+        get_light_images(scan, parms['exposure'], area_det, subs,**kwargs)
+    elif scan.md['sc_type'] == 'tseries':
+        collect_time_series(scan, parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
+    elif scan.md['sc_type'] == 'Tramp':
+        collect_Temp_series(scan, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], area_det, subs, **kwargs)
+    else:
+        print('unrecognized scan type.  Please rerun with a different scan object')
+        return
+    '''
     if scan.scan == 'ct':
         get_light_images(cmdo,parms['exposure'], area_det, subs,**kwargs)
     elif scan.scan == 'tseries':
         collect_time_series(cmdo,parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
     elif scan.scan == 'Tramp':
         collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], area_det, subs, **kwargs)
-    else:
-        print('unrecognized scan type.  Please rerun with a different scan object')
-        return
+    '''
+    
 
 #### dark subtration code block ####
 
@@ -194,10 +225,12 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     auto_dark - optional. Type auto_dark = False to suppress the automatic collection of a dark image (default = True). Strongly recommend to leave as True unless problems are encountered
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    if scanplan.shutter:
+    # create Scan object
+    scan = Union(sample, scanplan)
+    if scan.sc.shutter:
         _open_shutter()
-    scanplan.md.update({'xp_isprun':True})
-    light_cnt_time = scanplan.md['sc_params']['exposure']
+    scan.md.update({'xp_isprun':True})
+    light_cnt_time = scan.md['sc_params']['exposure']
     expire_time = glbl.dk_window
     # user can also specify auto_dark in argument to overwrite glbl setting
     if auto_dark:
@@ -210,18 +243,19 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
                     'ct',{'exposure':light_cnt_time})
             dark_field_uid = dark(sample, auto_dark_scanplan)
             time.sleep(2.5) # this hasn't been solved as of 03/11/2016
-        scanplan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
-        scanplan.md['sc_params'].update({'dk_window':expire_time})
+        scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
+        scan.md['sc_params'].update({'dk_window':expire_time})
     try:
         (config_dict, config_name) = _load_calibration_file()
         scan.md.update({'xp_config_dict':config_dict})
         scan.md.update({'xp_config_name':config_name})
     except TypeError: # iterating on on None object causes TypeError
         print('INFO: No calibration file found in config_base. Scan will still keep going on')
-    if scanplan.shutter: 
+    if scan.sc.shutter: 
         _open_shutter()
-    _unpack_and_run(sample,scanplan,**kwargs)
-    if scanplan.shutter: 
+    #_unpack_and_run(sample,scanplan,**kwargs)
+    _unpack_and_run(scan, **kwargs) # all md should be ready before _unpack_and_run
+    if scan.sc.shutter: 
         _close_shutter()
 
 def calibration(sample, scanplan, **kwargs):
@@ -237,7 +271,7 @@ def calibration(sample, scanplan, **kwargs):
     prun(sample, _scanplan)
     # this way is cleaner and dark is collected as well. but "no calibration file" warning might appear while people are doing calibration run.
 
-def dark(sample,scan,**kwargs):
+def dark(sample, scanplan, **kwargs):
     '''on this 'scan' get dark images
     
     Arguments:
@@ -245,17 +279,19 @@ def dark(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-        # print information to user since we might call dark during prun.
+    scan = Union(sample, scanplan)
     dark_uid = str(uuid.uuid4())
     dark_exposure = scan.md['sc_params']['exposure']
     _close_shutter()
     scan.md.update({'xp_isdark':True})
     # we need a hook to search this dark frame later on
     scan.md.update({'xp_dark_uid':dark_uid})
-    _unpack_and_run(sample,scan,**kwargs)
+    #_unpack_and_run(sample,scan,**kwargs)
+    _unpack_and_run(scan, **kwargs)
     dark_time = time.time() # get timestamp by the end of dark_scan 
     dark_def = (dark_uid, dark_exposure, dark_time)
-    scan.md.update({'xp_isdark':False}) #reset
+    _yamify_dark(dark_def)
+    #scan.md.update({'xp_isdark':False}) #reset should be unnecessary
     _close_shutter()
     return dark_uid
     

@@ -15,9 +15,13 @@
 #from xpdacq.glbl import SHUTTER as shutter
 from xpdacq.glbl import glbl
 import time
+from xpdacq.mock_objects import mock_shutter
 
 shutter = glbl.shutter
 
+# check it before used it
+if not shutter:
+    shutter = mock_shutter()
 
 def _open_shutter():
     shutter.put(1)
