@@ -37,7 +37,7 @@ Count = glbl.Count
 AbsScanPlan = glbl.AbsScanPlan
 area_det = glbl.area_det
 LiveTable = glbl.LiveTable
-temp_controller = glbl
+temp_controller = glbl.temp_controller
 
 def dryrun(sample,scan,**kwargs):
     '''same as run but scans are not executed.
