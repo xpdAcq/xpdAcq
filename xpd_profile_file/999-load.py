@@ -23,7 +23,7 @@ from xpdacq.mock_objects import mock_shutter, mock_livetable
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
 from xpdacq.beamtime import *
 
-'''
+''' assignment happen inside glbl
 # assign objects for collection activities
 glbl.Msg = Msg
 glbl.xpdRE = xpdRE

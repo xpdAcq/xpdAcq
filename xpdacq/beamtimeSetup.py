@@ -21,10 +21,9 @@ import yaml
 from time import strftime
 from xpdacq.utils import _graceful_exit
 from xpdacq.beamtime import Beamtime, XPD, Experiment, Sample, ScanPlan
-from xpdacq.beamtime import export_data,_clean_md_input,_get_hidden_list
+from xpdacq.beamtime import export_data, _clean_md_input, _get_hidden_list
 from xpdacq.glbl import glbl
 from shutil import ReadError
-
 
 home_dir = glbl.home
 all_folders = glbl.allfolders
@@ -142,7 +141,6 @@ def get_full_ext(path, post_ext=''):
 def _check_empty_environment(base_dir=None):
     if base_dir is None:
         base_dir = glbl.base
-    #dp = DataPath(base_dir)
     if os.path.exists(home_dir):
         if not os.path.isdir(home_dir):
             sys.exit(_graceful_exit("Expected a folder, got a file.  "
@@ -160,6 +158,11 @@ def _check_empty_environment(base_dir=None):
     else:
         sys.exit(_graceful_exit("The xpdUser directory appears not to exist "
                                "Please Talk to beamline staff"))
+
+def _init_dark_yaml():
+    dark_scan_list = []
+    with open(glbl.dk_yaml, 'w') as f:
+        yaml.dump(dark_scan_list, f)
 
 def _start_beamtime(safn,home_dir=None):
     if home_dir is None:
@@ -180,6 +183,8 @@ def _start_beamtime(safn,home_dir=None):
     except KeyError:
         sys.exit(_graceful_exit('Cannot load input info. File syntax in {} maybe corrupted.'.format(configfile)))
     bt = _execute_start_beamtime(piname, safn, explist, home_dir=home_dir)
+    _init_dark_yaml()
+
     return bt
 
 def _execute_start_beamtime(piname,safn,explist,wavelength=None,home_dir=None):

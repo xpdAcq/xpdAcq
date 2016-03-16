@@ -25,12 +25,16 @@ import uuid
 from configparser import ConfigParser
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
-#from xpdacq.glbl import AREA_DET as area_det
-#from xpdacq.glbl import TEMP_CONTROLLER as temp_controller
-#from xpdacq.glbl import VERIFY_WRITE as verify_files_saved
-#from xpdacq.glbl import LIVETABLE as LiveTable
 from xpdacq.beamtime import Union, Xposure, ScanPlan
 from xpdacq.control import _close_shutter, _open_shutter
+
+# FIXME - clean this section in next PR
+from xpdacq.glbl import xpdRE
+from bluesky.plans import Count
+from bluesky import Msg
+from bluesky.plans import AbsScanPlan
+#########################################
+
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
 
@@ -104,9 +108,13 @@ def _unpack_and_run(sample,scan,**kwargs):
 
 def _read_dark_yaml():
     dark_yaml_name = glbl.dk_yaml
-    with open(dark_yaml_name, 'r') as f:
-        dark_scan_list = yaml.load(f)
-    return dark_scan_list 
+    try:
+        with open(dark_yaml_name, 'r') as f:
+            dark_scan_list = yaml.load(f)
+        return dark_scan_list
+    except FileNotFoundError:
+        sys.exit(_graceful_exit('''It seems you haven't initiated your beamtime.
+                Please run _start_beamtime(<your SAF number>) or contact beamline scientist'''))
 
 def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
     ''' find the uid of appropriate dark inside dark_base
