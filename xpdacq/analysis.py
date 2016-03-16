@@ -86,11 +86,22 @@ def save_last_tiff(dark_subtraction=True, max_count_num=None):
         save_tiff(db[-1], dark_subtraction)
 
 
-def save_tiff(headers, dark_subtraction = True, *, max_count = None):
-    ''' save images obtained from dataBroker as tiff format files. It returns nothing.
+def save_tiff(headers, dark_subtraction=True, *, max_count=None):
+    ''' save images obtained from dataBroker as tiff format files.
 
-    arguments:
-        headers - list - a list of header objects obtained from a query to dataBroker
+    Parameters
+    ----------
+    headers : list
+        a list of header objects obtained from a query to dataBroker
+
+    dark_subtraction : bool, optional
+        If background / dark subtraction should be done before saving
+        each image.
+
+    max_count : int, optional
+        The maximum number of events to process per-run.  This can be
+        useful to 'preview' an export or if there are corrupted files
+        in the data stream (ex from the IOC crashing during data acquisition).
     '''
     F_EXTEN = '.tiff'
     e = '''Can not find a proper dark image applied to this header.
