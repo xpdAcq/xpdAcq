@@ -13,8 +13,8 @@ from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
 from xpdacq.xpdacq import validate_dark, _yamify_dark, prun, _read_dark_yaml
 #from xpdacq.mock_objects import Cam
 
-shutter = glbl.shutter
-shutter.put(1)
+#shutter = glbl.shutter
+#shutter.put(1)
 #glbl.area_det.number_of_sets.put = MagicMock(return_value=1)
 #glbl.area_det.cam = Cam()
 #glbl.area_det.cam.acquire_time.put = MagicMock(return_value=1)

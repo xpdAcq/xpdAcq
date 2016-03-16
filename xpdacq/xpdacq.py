@@ -22,6 +22,7 @@ import numpy as np
 import copy
 import sys
 import uuid
+from unittest.mock import MagicMock
 from configparser import ConfigParser
 
 from xpdacq.utils import _graceful_exit
@@ -31,10 +32,10 @@ from xpdacq.beamtime import Union, Xposure, ScanPlan
 from xpdacq.control import _close_shutter, _open_shutter
 
 # FIXME - clean this section in next PR
-from xpdacq.glbl import xpdRE
-from bluesky.plans import Count
-from bluesky import Msg
-from bluesky.plans import AbsScanPlan
+#from xpdacq.glbl import xpdRE
+#from bluesky.plans import Count
+#from bluesky import Msg
+#from bluesky.plans import AbsScanPlan
 #########################################
 
 
@@ -47,7 +48,23 @@ Count = glbl.Count
 AbsScanPlan = glbl.AbsScanPlan
 area_det = glbl.area_det
 LiveTable = glbl.LiveTable
-temp_controller = glbl
+temp_controller = glbl.temp_controller
+
+# test if every object is assigned
+if not Msg:
+    Msg = MagicMock()
+if not xpdRE:
+    xpdRE = MagicMock()
+if not Count:
+    Count = MagicMock()
+if not AbsScanPlan:
+    AbsScanPlan = MagicMock()
+if not area_det:
+    area_det = MagicMock()
+if not LiveTable:
+    LiveTable = MagicMock()
+if not temp_controller:
+    temp_controller = MagicMock()
 
 def dryrun(sample,scan,**kwargs):
     '''same as run but scans are not executed.
@@ -97,13 +114,15 @@ def _unpack_and_run(scan, **kwargs):
         elif i == 'verify_write':
             subs.update({'stop':verify_files_saved})
 
-    if scan['sc_type'] == 'ct':
+    if scan.md['sc_type'] == 'ct':
         get_light_images(scan, parms['exposure'], area_det, subs,**kwargs)
-    elif scan['sc_type'] == 'tseries':
+    elif scan.md['sc_type'] == 'tseries':
         collect_time_series(scan, parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
-    elif scan['sc_type'] == 'Tramp':
+    elif scan.md['sc_type'] == 'Tramp':
         collect_Temp_series(scan, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], area_det, subs, **kwargs)
-
+    else:
+        print('unrecognized scan type.  Please rerun with a different scan object')
+        return
     '''
     if scan.scan == 'ct':
         get_light_images(cmdo,parms['exposure'], area_det, subs,**kwargs)
@@ -112,9 +131,7 @@ def _unpack_and_run(scan, **kwargs):
     elif scan.scan == 'Tramp':
         collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], area_det, subs, **kwargs)
     '''
-    else:
-        print('unrecognized scan type.  Please rerun with a different scan object')
-        return
+    
 
 #### dark subtration code block ####
 
@@ -210,7 +227,7 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     '''
     # create Scan object
     scan = Union(sample, scanplan)
-    if scan.shutter:
+    if scan.sc.shutter:
         _open_shutter()
     scan.md.update({'xp_isprun':True})
     light_cnt_time = scan.md['sc_params']['exposure']
@@ -234,11 +251,11 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
         scan.md.update({'xp_config_name':config_name})
     except TypeError: # iterating on on None object causes TypeError
         print('INFO: No calibration file found in config_base. Scan will still keep going on')
-    if scan.shutter: 
+    if scan.sc.shutter: 
         _open_shutter()
     #_unpack_and_run(sample,scanplan,**kwargs)
     _unpack_and_run(scan, **kwargs) # all md should be ready before _unpack_and_run
-    if scan.shutter: 
+    if scan.sc.shutter: 
         _close_shutter()
 
 def calibration(sample, scanplan, **kwargs):
