@@ -160,19 +160,24 @@ def save_tiff(headers, dark_subtraction=True, *, max_count=None):
             if is_dark_subtracted:
                 f_name = 'sub_' + f_name
             if 'temperature' in ev['data']:
-                f_name = f_name + '_'+str(ev['data']['temperature'])+'K'
-            # index is still needed as we don't want timestamp in file name down to seconds
+                f_name = f_name + '_' + str(ev['data']['temperature']) + 'K'
+            # index is still needed as we don't want timestamp in file
+            # name down to seconds
             combind_f_name = '{}_{}{}'.format(f_name, ind, F_EXTEN)
             w_name = os.path.join(W_DIR, combind_f_name)
             tif.imsave(w_name, img)
             if os.path.isfile(w_name):
-                print('image "%s" has been saved at "%s"' % (combind_f_name, W_DIR))
+                print('image "%s" has been saved at "%s"' %
+                      (combind_f_name, W_DIR))
             else:
                 print('Sorry, something went wrong with your tif saving')
                 return
             if max_count is not None and ind >= max_count:
-                break # break the loop if max_count reach or already collect all images
+                # break the loop if max_count reached, move to next header
+                break
+
     print('||********Saving process FINISHED********||')
+
 
 def plot_images(header):
     ''' function to plot images from header.
