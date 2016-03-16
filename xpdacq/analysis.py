@@ -160,7 +160,7 @@ def save_tiff(headers, dark_subtraction=True, *, max_count=None):
                 f_name = f_name + '_' + str(ev['data']['temperature']) + 'K'
             # index is still needed as we don't want timestamp in file
             # name down to seconds
-            combind_f_name = '{}_{}{}'.format(f_name, ind, F_EXTEN)
+            combind_f_name = '{}_{:05d}{}'.format(f_name, ind, F_EXTEN)
             w_name = os.path.join(W_DIR, combind_f_name)
             tif.imsave(w_name, img)
             if os.path.isfile(w_name):
