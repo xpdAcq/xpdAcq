@@ -148,17 +148,14 @@ def save_tiff(headers, dark_subtraction=True, *, max_count=None):
             # time when triggering area detector
             event_timestamp = ev['timestamps']['pe1_image']
 
+            f_name = '_'.join([f_name, _timestampstr(event_timestamp)])
             # dark subtration logic
             if dark_img is not None:
                 img -= dark_img
-                is_dark_subtracted = True
-            else:
-                is_dark_subtracted = False
+                # add prefix if subtracted
+                f_name = 'sub_' + f_name
 
             # complete file name
-            f_name = '_'.join([f_name, _timestampstr(event_timestamp)])
-            if is_dark_subtracted:
-                f_name = 'sub_' + f_name
             if 'temperature' in ev['data']:
                 f_name = f_name + '_' + str(ev['data']['temperature']) + 'K'
             # index is still needed as we don't want timestamp in file
