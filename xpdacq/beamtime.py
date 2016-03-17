@@ -258,38 +258,67 @@ class ScanPlan(XPD):
                    for each event.  It introduces a significant overhead so mostly used for
                    testing.
     '''
-    def __init__(self,name, scan_type, scan_params, shutter=True, livetable=True, verify_write=False, **kwargs):
+    def __init__(self,name, scanplan_type, scanplan_params, shutter=True, livetable=True, verify_write=False, **kwargs):
         self.name = _clean_md_input(name)
-        self.type = 'sc'
-        self.scan = _clean_md_input(scan_type)
-        self.sc_params = scan_params # sc_parms is a dictionary
+        self.type = 'sp'
+        self.scanplan = _clean_md_input(scanplan_type)
+        self.sp_params = scanplan_params # sc_parms is a dictionary
         
         self._plan_validator()
         
         self.shutter = shutter
         self.md = {}
-        self.md.update({'sc_name': _clean_md_input(self.name)})
-        self.md.update({'sc_type': _clean_md_input(self.scan)})
-        self.md.update({'sc_usermd':_clean_md_input(kwargs)})
+        self.md.update({'sp_name': _clean_md_input(self.name)})
+        self.md.update({'sp_type': _clean_md_input(self.scanplan:)})
+        self.md.update({'sp_usermd':_clean_md_input(kwargs)})
         if self.shutter: 
-            self.md.update({'sc_shutter_control':'in-scan'})
+            self.md.update({'sp_shutter_control':'in-scan'})
         else:
-            self.md.update({'sc_shutter_control':'external'})
+            self.md.update({'sp_shutter_control':'external'})
         
         subs=[]
-        if livetable: subs.append('livetable')
-        if verify_write: subs.append('verify_write')
-        if len(subs) > 0: scan_params.update({'subs':_clean_md_input(subs)}) 
-        self.md.update({'sc_params': _clean_md_input(scan_params)})
+        if livetable:
+            subs.append('livetable')
+        if verify_write:
+            subs.append('verify_write')
+        if len(subs) > 0:
+            scanplan_params.update({'subs':_clean_md_input(subs)}) 
+        self.md.update({'sp_params': _clean_md_input(scanplan_params)})
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
         # get objlist from yaml file
         if fname in objlist:
             olduid = self._get_obj_uid(self.name,self.type)
-            self.md.update({'sc_uid': olduid})
+            self.md.update({'sp_uid': olduid})
         else:
-            self.md.update({'sc_uid': self._getuid()})
+            self.md.update({'sp_uid': self._getuid()})
         self._yamify()
+    
+    class Union(XPD):
+        def __init__(self,sample,scan):
+            self.type = 'cmdo'
+            self.sc = scan
+            self.sa = sample
+            self.md = self.sc.md
+            self.md.update(self.sa.md)
+     #       self._yamify()    # no need to yamify this
+
+    class Scan(XPD):
+        ''' a scan class that is the joint unit of Sample and ScanPlan objects'''
+        def __init__(self,sample, scanplan):
+            self.type = 'sc'
+            self.sp = scanplan
+            self.sa = sample
+            self.md = self.sp.md
+            self.md.update(self.sa.md)
+     #       self._yamify()    # no need to yamify this    
+
+    class Xposure(XPD):
+        def __init__(self,scan):
+            self.type = 'xp'
+            self.sc = scan
+            self.md = self.sc.md
+     #       self._yamify()    # no need to yamify this
 
     #FIXME - make validator clean later
     def _plan_validator(self):
@@ -346,21 +375,7 @@ class ScanPlan(XPD):
             sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
 
-class Union(XPD):
-    def __init__(self,sample,scan):
-        self.type = 'cmdo'
-        self.sc = scan
-        self.sa = sample
-        self.md = self.sc.md
-        self.md.update(self.sa.md)
- #       self._yamify()    # no need to yamify this
 
-class Xposure(XPD):
-    def __init__(self,scan):
-        self.type = 'xp'
-        self.sc = scan
-        self.md = self.sc.md
- #       self._yamify()    # no need to yamify this
 
 def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
     """Create a tarball of all of the data in the user folders.

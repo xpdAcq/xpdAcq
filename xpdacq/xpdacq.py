@@ -25,7 +25,7 @@ import uuid
 from configparser import ConfigParser
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
-from xpdacq.beamtime import Union, Xposure, ScanPlan
+from xpdacq.beamtime import Union, Xposure, ScanPlan, Scan
 from xpdacq.control import _close_shutter, _open_shutter
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
@@ -69,14 +69,16 @@ def dryrun(sample,scan,**kwargs):
     else:
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
-    
-def _unpack_and_run(sample,scan,**kwargs):
+ 
+def _unpack_and_run(scan, **kwargs):
+#def _unpack_and_run(sample,scan,**kwargs):
     # check to see if wavelength has been set
     # bug
-    if not sample.md['bt_wavelength']:
+    #if not sample.md['bt_wavelength']:
+    if not scan.md['bt_wavelength']:
         print('WARNING: There is no wavelength information in your sample acquire object')
-    cmdo = Union(sample,scan)
-    parms = scan.md['sc_params']
+    #cmdo = Union(sample,scan)
+    parms = scan.md['sp_params']
     subs={}
     if 'subs' in parms: 
         subsc = parms['subs']
@@ -85,8 +87,19 @@ def _unpack_and_run(sample,scan,**kwargs):
             subs.update({'all':LiveTable([area_det, temp_controller])})
         elif i == 'verify_write':
             subs.update({'stop':verify_files_saved})
-
-    if scan.scan == 'ct':
+    
+    if scan.md['sp_type'] == 'ct'
+        get_light_images(scan, parms['exposure'], area_det, subs,**kwargs)
+    elif scan.md['sp_type'] == 'tseries':
+        collect_time_series(scan, parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
+    elif scan.md['sp_type'] == 'Tramp':
+        collect_Temp_series(scan, parms['startingT'], parms['endingT'], parms['requested_Tstep'], parms['exposure'], area_det, subs, **kwargs)
+    else:
+        print('unrecognized scan type.  Please rerun with a different scan object')
+        return
+    
+    ''' delete it after test at XPD
+    if scan.scan == 'ct'
         get_light_images(cmdo,parms['exposure'], area_det, subs,**kwargs)
     elif scan.scan == 'tseries':
         collect_time_series(cmdo,parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
@@ -95,7 +108,7 @@ def _unpack_and_run(sample,scan,**kwargs):
     else:
         print('unrecognized scan type.  Please rerun with a different scan object')
         return
-
+    '''
 #### dark subtration code block ####
 
 def _read_dark_yaml():
@@ -188,34 +201,34 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     auto_dark - optional. Type auto_dark = False to suppress the automatic collection of a dark image (default = True). Strongly recommend to leave as True unless problems are encountered
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    if scanplan.shutter:
-        _open_shutter()
-    scanplan.md.update({'xp_isprun':True})
-    light_cnt_time = scanplan.md['sc_params']['exposure']
+    scan = Scan(sample, scanplan)
+    scan.md.update({'sc_isprun':True})
+    light_cnt_time = scan.md['sp_params']['exposure']
     expire_time = glbl.dk_window
     # user can also specify auto_dark in argument to overwrite glbl setting
     if auto_dark:
         dark_field_uid = validate_dark(light_cnt_time, expire_time)
         if not dark_field_uid:
             print('''INFO: auto_dark didn't detect a valid dark, so is collecting a new dark frame.
-                    See documentation at http://xpdacq.github.io for more information about controlling this behavior''')
+See documentation at http://xpdacq.github.io for more information about controlling this behavior''')
             # create a count plan with the same light_cnt_time
             auto_dark_scanplan = ScanPlan('auto_dark_scan',
                     'ct',{'exposure':light_cnt_time})
             dark_field_uid = dark(sample, auto_dark_scanplan)
             time.sleep(2.5) # this hasn't been solved as of 03/11/2016
-        scanplan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
-        scanplan.md['sc_params'].update({'dk_window':expire_time})
+        scan.md['sp_params'].update({'dk_field_uid': dark_field_uid})
+        scan.md['sp_params'].update({'dk_window':expire_time})
     try:
         (config_dict, config_name) = _load_calibration_file()
-        scan.md.update({'xp_config_dict':config_dict})
-        scan.md.update({'xp_config_name':config_name})
+        scan.md.update({'sp_config_dict':config_dict})
+        scan.md.update({'sp_config_name':config_name})
     except TypeError: # iterating on on None object causes TypeError
         print('INFO: No calibration file found in config_base. Scan will still keep going on')
-    if scanplan.shutter: 
+    if scan.sp.shutter: 
         _open_shutter()
-    _unpack_and_run(sample,scanplan,**kwargs)
-    if scanplan.shutter: 
+    #_unpack_and_run(sample,scanplan,**kwargs)
+    _unpack_and_run(scan, **kwargs)
+    if scan.sp.shutter: 
         _close_shutter()
 
 def calibration(sample, scanplan, **kwargs):
@@ -280,11 +293,11 @@ def setupscan(sample,scan,**kwargs):
     #parms = scan.sc_params
     if scan.shutter: _close_shutter()
 
-def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
+def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
     '''the main xpdAcq function for getting an exposure
     
     Arguments:
-      mdo - xpdacq.beamtime.Scan metadata object - generated by beamtime metadata setup sequence
+      scan - xpdacq.beamtime.Scan metadata object - generated by beamtime metadata setup sequence
       area_det - bluesky detector object - the instance of the detector you are using. 
                    by default area_det defined when xpdacq is loaded
       exposure - float - exposure time in seconds
@@ -294,13 +307,11 @@ def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
     '''   
     
     # setting up detector
-    #area_det = _get_obj(det)
-    #glbl.area_det.number_of_sets.put(1)
     area_det.number_of_sets.put(1)
     area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 
-    exp = Xposure(mdo)
+    #exp = Xposure(mdo)
     
     # compute number of frames and save metadata
     num_frame = int(exposure / acq_time)
@@ -308,22 +319,22 @@ def get_light_images(mdo, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
         num_frame = 1
     computed_exposure = num_frame*acq_time
     print('INFO: requested exposure time = ',exposure,' -> computed exposure time:',computed_exposure)
-    exp.md.update({'xp_requested_exposure':exposure,'xp_computed_exposure':computed_exposure}) 
-    exp.md.update({'xp_time_per_frame':acq_time,'xp_num_frames':num_frame})
+    scan.md.update({'sp_requested_exposure':exposure,'sp_computed_exposure':computed_exposure}) 
+    scan.md.update({'sp_time_per_frame':acq_time,'sp_num_frames':num_frame})
     
     area_det.images_per_set.put(num_frame)
-    md_dict = exp.md
+    md_dict = scan.md
     md_dict.update(kwargs)
     
     plan = Count([area_det])
-    xpdRE(plan,subs_dict,**md_dict)
+    xpdRE(plan, subs_dict, **md_dict)
 
 
-def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det, subs_dict={}, **kwargs):
+def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det, subs_dict={}, **kwargs):
     '''the main xpdAcq function for getting a temperature series
     
     Arguments:
-      mdo - xpdacq.beamtime.Scan metadata object - generated by beamtime metadata setup sequence
+      scan - xpdacq.beamtime.Scan metadata object - generated by beamtime metadata setup sequence
       T_start - flot - start setpoint of Temperature ramp
       
       area_det - bluesky detector object - the instance of the detector you are using. 
@@ -333,30 +344,26 @@ def collect_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det
     Returns:
       nothing
     '''   
-    #temp_controller = _get_obj('cs700')
-    
-    # setting up detector
-    #area_det = _get_obj(det)
     area_det.number_of_sets.put(1)
     area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 
-    exp = Xposure(mdo)
+    #exp = Xposure(mdo)
     
     # compute number of frames and save metadata
     num_frame = int(exposure / acq_time)
     if num_frame == 0: num_frame = 1
     computed_exposure = num_frame*acq_time
     print('INFO: requested exposure time = ',exposure,' -> computed exposure time:',computed_exposure)
-    exp.md.update({'xp_requested_exposure':exposure,'xp_computed_exposure':computed_exposure}) 
-    exp.md.update({'xp_time_per_frame':acq_time,'xp_num_frames':num_frame})
+    scan.md.update({'sp_requested_exposure':exposure,'sp_computed_exposure':computed_exposure}) 
+    scan.md.update({'sp_time_per_frame':acq_time,'sp_num_frames':num_frame})
     
     Nsteps = _nstep(Tstart, Tstop, Tstep) # computed steps
-    exp.md.update({'sc_startingT':Tstart,'sc_endingT':Tstop,'sc_requested_Tstep':Tstep}) 
-    exp.md.update({'sc_Nsteps':Nsteps}) 
+    scan.md.update({'sp_startingT':Tstart,'sp_endingT':Tstop,'sp_requested_Tstep':Tstep}) 
+    scan.md.update({'sp_Nsteps':Nsteps}) 
 
     area_det.images_per_set.put(num_frame)
-    md_dict = exp.md
+    md_dict = scan.md
     md_dict.update(kwargs)
         
     plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
@@ -374,7 +381,7 @@ def _nstep(start, stop, step_size):
     print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',abs(computed_step_size))
     return computed_nsteps
 
-def collect_time_series(mdo, exposure=1.0, delay=0., num=1, det= area_det, subs_dict={}, **kwargs):
+def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs_dict={}, **kwargs):
     """Collect a time series
 
     Any extra keywords are passed through to RE() as metadata
@@ -382,7 +389,8 @@ def collect_time_series(mdo, exposure=1.0, delay=0., num=1, det= area_det, subs_
     Parameters
     ----------
     mdo : XPD
-        Object to carry around the metadata
+        xpdacq.beamtime.Scan metadata object - generated by beamtime metadata setup sequence
+    
     num : int
         The number of points in the time series
 
@@ -395,15 +403,14 @@ def collect_time_series(mdo, exposure=1.0, delay=0., num=1, det= area_det, subs_
     """
    
     # arrange md object
-    exp = Xposure(mdo)
+    #exp = Xposure(mdo)
     #md_dict = exp.md
     #md_dict.update(kwargs)
 
     # get a local copy of md to update
-    md = dict(exp.md)
+    md = dict(scan.md)
 
     # grab the area detector
-    #area_det = _get_obj(det)
     area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
 
@@ -411,23 +418,24 @@ def collect_time_series(mdo, exposure=1.0, delay=0., num=1, det= area_det, subs_
     num_frame = max(int(exposure / acq_time), 1)
     computed_exposure = num_frame * acq_time
     num_sets = 1
-    
-        
+
     real_delay = max(0, delay - computed_exposure)
     period = max(computed_exposure, real_delay + computed_exposure)
     # set how many frames to average
     area_det.images_per_set.put(num_frame)
     area_det.number_of_sets.put(num_sets)
 
-    md.update({'requested_exposure': exposure,
-               'computed_exposure': computed_exposure,
-               'period': period})
-    md.update({'time_per_frame': acq_time,
-               'num_frames': num_frame,
-               'number_of_sets': num_sets})
-    md.update(kwargs)
+    scan.md.update({'sp_requested_exposure': exposure,
+               'sp_computed_exposure': computed_exposure,
+               'sp_period': period})
+    scan.md.update({'sp_time_per_frame': acq_time,
+               'sp_num_frames': num_frame,
+               'sp_number_of_sets': num_sets}) # number_of_sets might not bee needed as we always sum to 1 fram
+    
+    md_dict = scan.md
+    md_dict.update(kwargs)
     plan = Count([area_det], num=num, delay=real_delay)
-    xpdRE(plan, subs_dict, **md)
+    xpdRE(plan, subs_dict, **md_dict)
 
     print('End of time series scan ....')
 
