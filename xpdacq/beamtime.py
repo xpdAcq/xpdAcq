@@ -269,7 +269,7 @@ class ScanPlan(XPD):
         self.shutter = shutter
         self.md = {}
         self.md.update({'sp_name': _clean_md_input(self.name)})
-        self.md.update({'sp_type': _clean_md_input(self.scanplan:)})
+        self.md.update({'sp_type': _clean_md_input(self.scanplan)})
         self.md.update({'sp_usermd':_clean_md_input(kwargs)})
         if self.shutter: 
             self.md.update({'sp_shutter_control':'in-scan'})
@@ -294,31 +294,7 @@ class ScanPlan(XPD):
             self.md.update({'sp_uid': self._getuid()})
         self._yamify()
     
-    class Union(XPD):
-        def __init__(self,sample,scan):
-            self.type = 'cmdo'
-            self.sc = scan
-            self.sa = sample
-            self.md = self.sc.md
-            self.md.update(self.sa.md)
-     #       self._yamify()    # no need to yamify this
-
-    class Scan(XPD):
-        ''' a scan class that is the joint unit of Sample and ScanPlan objects'''
-        def __init__(self,sample, scanplan):
-            self.type = 'sc'
-            self.sp = scanplan
-            self.sa = sample
-            self.md = self.sp.md
-            self.md.update(self.sa.md)
-     #       self._yamify()    # no need to yamify this    
-
-    class Xposure(XPD):
-        def __init__(self,scan):
-            self.type = 'xp'
-            self.sc = scan
-            self.md = self.sc.md
-     #       self._yamify()    # no need to yamify this
+    
 
     #FIXME - make validator clean later
     def _plan_validator(self):
@@ -343,28 +319,28 @@ class ScanPlan(XPD):
         # params in tseries is not completely finalized
         _tseries_required_params = ['exposure', 'delay', 'num']
         
-        if self.scan == 'ct':
+        if self.scanplan == 'ct':
             for el in _ct_required_params:
                 try:
-                    self.sc_params[el]
+                    self.sp_params[el]
                 except KeyError:
                     print('It seems you are using a Count scan but the scan_params dictionary does not contain {}  which is needed.'.format(el))
                     print('Please use uparrow to edit and retry making your ScanPlan object')
                     sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
-        elif self.scan == 'Tramp':
+        elif self.scanplan == 'Tramp':
             for el in _Tramp_required_params:
                 try:
-                   self.sc_params[el]
+                   self.sp_params[el]
                 except KeyError:
                    print('It seems you are using a temperature ramp scan but the scan_params dictionary does not contain {} which is needed.'.format(el))
                    print('Please use uparrow to edit and retry making your ScanPlan object')
                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
         
-        elif self.scan == 'tseries':
+        elif self.scanplan == 'tseries':
            for el in _tseries_required_params:
                try:
-                   self.sc_params[el]
+                   self.sp_params[el]
                except KeyError:
                    print('It seems you are using a tseries scan but the scan_params dictionary does not contain {} which is needed.'.format(el))
                    print('Please use uparrow to edit and retry making your ScanPlan object')
@@ -374,7 +350,31 @@ class ScanPlan(XPD):
             print('Please use uparrow to edit and retry making your ScanPlan object')
             sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
+class Union(XPD):
+    def __init__(self,sample,scan):
+        self.type = 'cmdo'
+        self.sc = scan
+        self.sa = sample
+        self.md = self.sc.md
+        self.md.update(self.sa.md)
+ #       self._yamify()    # no need to yamify this
 
+class Scan(XPD):
+    ''' a scan class that is the joint unit of Sample and ScanPlan objects'''
+    def __init__(self,sample, scanplan):
+        self.type = 'sc'
+        self.sp = scanplan
+        self.sa = sample
+        self.md = self.sp.md
+        self.md.update(self.sa.md)
+ #       self._yamify()    # no need to yamify this    
+
+class Xposure(XPD):
+    def __init__(self,scan):
+        self.type = 'xp'
+        self.sc = scan
+        self.md = self.sc.md
+ #       self._yamify()    # no need to yamify this
 
 
 def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):

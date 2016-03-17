@@ -88,7 +88,7 @@ def _unpack_and_run(scan, **kwargs):
         elif i == 'verify_write':
             subs.update({'stop':verify_files_saved})
     
-    if scan.md['sp_type'] == 'ct'
+    if scan.md['sp_type'] == 'ct':
         get_light_images(scan, parms['exposure'], area_det, subs,**kwargs)
     elif scan.md['sp_type'] == 'tseries':
         collect_time_series(scan, parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
@@ -244,25 +244,27 @@ def calibration(sample, scanplan, **kwargs):
     prun(sample, _scanplan)
     # this way is cleaner and dark is collected as well. but "no calibration file" warning might appear while people are doing calibration run.
 
-def dark(sample,scan,**kwargs):
+def dark(sample, scanplan, **kwargs):
     '''on this 'scan' get dark images
     
     Arguments:
     sample - sample metadata object
-    scan - scan metadata object
+    scanplan - scanplan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
         # print information to user since we might call dark during prun.
+    scan = Scan(sample, scanplan)
     dark_uid = str(uuid.uuid4())
-    dark_exposure = scan.md['sc_params']['exposure']
+    dark_exposure = scan.md['sp_params']['exposure']
     _close_shutter()
-    scan.md.update({'xp_isdark':True})
+    scan.md.update({'sc_isdark':True})
     # we need a hook to search this dark frame later on
-    scan.md.update({'xp_dark_uid':dark_uid})
-    _unpack_and_run(sample,scan,**kwargs)
+    scan.md.update({'sc_dark_uid':dark_uid})
+    #_unpack_and_run(sample,scan,**kwargs)
+    _unpack_and_run(scan, **kwargs)
     dark_time = time.time() # get timestamp by the end of dark_scan 
     dark_def = (dark_uid, dark_exposure, dark_time)
-    scan.md.update({'xp_isdark':False}) #reset
+    #scan.md.update({'xp_isdark':False}) #reset should not be required
     _close_shutter()
     return dark_uid
     
