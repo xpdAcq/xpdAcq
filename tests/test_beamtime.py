@@ -25,7 +25,7 @@ class NewExptTest(unittest.TestCase):
         with open(self.saffile, 'w') as fo:
             yaml.dump(loadinfo,fo)
         self.bt = _start_beamtime(self.saf_num,home_dir=self.home_dir)     
-        self.stbt_list = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sc_ct.1s.yml','sc_ct.5s.yml','sc_ct1s.yml','sc_ct5s.yml','sc_ct10s.yml','sc_ct30s.yml']
+        self.stbt_list = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sp_ct.1s.yml','sp_ct.5s.yml','sp_ct1s.yml','sp_ct5s.yml','sp_ct10s.yml','sp_ct30s.yml']
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -158,21 +158,21 @@ class NewExptTest(unittest.TestCase):
         self.assertEqual(newobjlist,self.stbt_list+['ex_myexp.yml','sa_mysample.yml','sa_yoursample.yml'])
 
     def test_make_scanPlan(self):
-        self.sc = ScanPlan('myScan','ct',{'exposure':1.0})
-        self.assertIsInstance(self.sc,ScanPlan)
-        self.assertEqual(self.sc.md['sc_params'],{'exposure':1.0,'subs':['livetable']})
-        uid1 = self.sc.md['sc_uid']
+        self.sp = ScanPlan('myScan','ct',{'exposure':1.0})
+        self.assertIsInstance(self.sp,ScanPlan)
+        self.assertEqual(self.sp.md['sp_params'],{'exposure':1.0,'subs':['livetable']})
+        uid1 = self.sp.md['sp_uid']
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,self.stbt_list+['sc_myScan.yml'])
-        self.sc2 = ScanPlan(' your scan','ct',{'exposure':1.0})
-        self.assertEqual(self.sc2.md['sc_name'],'your scan')
-        uid2 = self.sc2.md['sc_uid']
+        self.assertEqual(newobjlist,self.stbt_list+['sp_myScan.yml'])
+        self.sp2 = ScanPlan(' your scan','ct',{'exposure':1.0})
+        self.assertEqual(self.sp2.md['sp_name'],'your scan')
+        uid2 = self.sp2.md['sp_uid']
         self.assertNotEqual(uid1,uid2)
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,self.stbt_list+['sc_myScan.yml','sc_yourscan.yml'])
-        self.sc3 = ScanPlan(' your scan','ct',{'exposure':1.0})
-        self.assertEqual(self.sc3.md['sc_name'],'your scan')
-        uid3 = self.sc3.md['sc_uid']
+        self.assertEqual(newobjlist,self.stbt_list+['sp_myScan.yml','sp_yourscan.yml'])
+        self.sp3 = ScanPlan(' your scan','ct',{'exposure':1.0})
+        self.assertEqual(self.sp3.md['sp_name'],'your scan')
+        uid3 = self.sp3.md['sp_uid']
         self.assertEqual(uid2,uid3)
         # and one that fails the validator
         self.assertRaises(SystemExit,lambda: ScanPlan(' your scan','ct',{'exposur':1.0}))
@@ -215,5 +215,3 @@ class NewExptTest(unittest.TestCase):
         self.assertEqual(self.bt.name,'bt')
         self.assertEqual(self.bt.md['bt_piLast'],'test')
         
-
-

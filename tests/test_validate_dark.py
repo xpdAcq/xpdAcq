@@ -122,7 +122,7 @@ class findRightDarkTest(unittest.TestCase):
         self.assertEqual(test_list,dark_scan_list)
         scanplan = ScanPlan('ctTest', 'ct', {'exposure':light_cnt_time})
         prun(self.sa, scanplan)
-        self.assertEqual(scanplan.md['sc_params']['dk_field_uid'], dark_uid)
+        self.assertEqual(scanplan.md['sp_params']['dk_field_uid'], dark_uid)
 
     def test_dark_in_prun_cannot_find_a_valid_dark(self):
         # case 2: can't find a qualified dark and test if md got updated
@@ -142,12 +142,12 @@ class findRightDarkTest(unittest.TestCase):
         # none with the right exposure
         scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.4})
         prun(self.sa, scanplan)
-        self.assertNotEqual(scanplan.md['sc_params']['dk_field_uid'], dark_uid)
+        self.assertNotEqual(scanplan.md['sp_params']['dk_field_uid'], dark_uid)
         # Second one has the right right exposure time
         glbl.dk_window = 1.
         scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.3})
         prun(self.sa, scanplan)
-        self.assertNotEqual(scanplan.md['sc_params']['dk_field_uid'], dark_uid2)        
+        self.assertNotEqual(scanplan.md['sp_params']['dk_field_uid'], dark_uid2)        
     
     def test_read_dark_yaml(self):
         # test if _read_dark_yaml captures exception as we hope
