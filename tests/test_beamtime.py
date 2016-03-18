@@ -14,6 +14,11 @@ class NewExptTest(unittest.TestCase):
         self.base_dir = glbl.base
         self.home_dir = glbl.home
         self.config_dir = glbl.xpdconfig
+        os.chdir(self.base_dir)
+        if os.path.isdir(self.home_dir):
+            shutil.rmtree(self.home_dir)
+        if os.path.isdir(self.config_dir):
+            shutil.rmtree(self.config_dir)   
         os.makedirs(self.config_dir, exist_ok=True)
         self.PI_name = 'Billinge '
         self.saf_num = 234

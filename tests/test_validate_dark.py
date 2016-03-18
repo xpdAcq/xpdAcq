@@ -140,12 +140,12 @@ class findRightDarkTest(unittest.TestCase):
         self.assertEqual(test_list,dark_scan_list)
 
         # none with the right exposure
-        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.01})
+        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.01}, shutter=False)
         prun(self.sa, scanplan)
         self.assertNotEqual(scanplan.md['sc_params']['dk_field_uid'], dark_uid)
         # Second one has the right right exposure time
         glbl.dk_window = 1.
-        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.01})
+        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.01}, shutter=False)
         prun(self.sa, scanplan)
         self.assertNotEqual(scanplan.md['sc_params']['dk_field_uid'], dark_uid2)        
     
