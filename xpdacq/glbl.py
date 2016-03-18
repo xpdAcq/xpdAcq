@@ -32,7 +32,7 @@ else:
 # directories
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
 BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
-ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'pe2_data/.userBeamtimeArchive')
+ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,ARCHIVE_BASE_DIR_NAME)
 EXPORT_DIR = os.path.join(HOME_DIR, 'Export')
 YAML_DIR = os.path.join(HOME_DIR, 'config_base', 'yml')
 DARK_YAML_NAME = os.path.join(YAML_DIR, '_dark_scan_list.yaml')
@@ -154,7 +154,4 @@ class glbl():
         area_det.number_of_sets.put = MagicMock(return_value=1)
         print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
 
-# this line never gets executed 
-#if __name__ == '__main__':
-    #print(glbl.dp().home)
 
