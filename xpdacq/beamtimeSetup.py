@@ -56,7 +56,7 @@ def _make_clean_env():
 
 def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
     if archive_dir is None:
-        archive_dir = os.path.expanduser(strftime('~/pe2_data/%Y/userBeamtimeArchive'))
+        archive_dir = glbl.archive_dir
     if base_dir is None:
         base_dir = glbl.base
     # get bt by loading the yaml.
