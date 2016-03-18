@@ -212,12 +212,16 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
             print('''INFO: auto_dark didn't detect a valid dark, so is collecting a new dark frame.
 See documentation at http://xpdacq.github.io for more information about controlling this behavior''')
             # create a count plan with the same light_cnt_time
-            auto_dark_scanplan = ScanPlan('auto_dark_scan',
+            if scanplan.shutter:
+                auto_dark_scanplan = ScanPlan('auto_dark_scan',
                     'ct',{'exposure':light_cnt_time})
+            else:
+                auto_dark_scanplan = ScanPlan('auto_dark_scan',
+                    'ct',{'exposure':light_cnt_time},shutter=False)
             dark_field_uid = dark(sample, auto_dark_scanplan)
-            time.sleep(2.5) # this hasn't been solved as of 03/11/2016
         scan.md['sp_params'].update({'dk_field_uid': dark_field_uid})
         scan.md['sp_params'].update({'dk_window':expire_time})
+
     try:
         (config_dict, config_name) = _load_calibration_file()
         scan.md.update({'sp_config_dict':config_dict})
