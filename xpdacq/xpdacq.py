@@ -260,7 +260,8 @@ def dark(sample, scanplan, **kwargs):
     scan = Scan(sample, scanplan)
     dark_uid = str(uuid.uuid4())
     dark_exposure = scan.md['sp_params']['exposure']
-    _close_shutter()
+    if scan.sp.shutter:
+        _close_shutter()
     scan.md.update({'sc_isdark':True})
     # we need a hook to search this dark frame later on
     scan.md.update({'sc_dark_uid':dark_uid})
@@ -269,7 +270,8 @@ def dark(sample, scanplan, **kwargs):
     dark_time = time.time() # get timestamp by the end of dark_scan 
     dark_def = (dark_uid, dark_exposure, dark_time)
     #scan.md.update({'xp_isdark':False}) #reset should not be required
-    _close_shutter()
+    if scan.sp.shutter:
+        _close_shutter()
     return dark_uid
     
 def _yamify_dark(dark_def):
