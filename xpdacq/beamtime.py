@@ -365,17 +365,8 @@ class Scan(XPD):
         self.type = 'sc'
         self.sp = scanplan
         self.sa = sample
-        self.md = self.sp.md
+        self.md = dict(self.sp.md) # create a new dict copy.
         self.md.update(self.sa.md)
- #       self._yamify()    # no need to yamify this    
-
-class Xposure(XPD):
-    def __init__(self,scan):
-        self.type = 'xp'
-        self.sc = scan
-        self.md = self.sc.md
- #       self._yamify()    # no need to yamify this
-
 
 def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
     """Create a tarball of all of the data in the user folders.
