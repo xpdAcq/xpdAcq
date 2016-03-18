@@ -244,6 +244,29 @@ def calibration(sample, scanplan, **kwargs):
     prun(sample, _scanplan)
     # this way is cleaner and dark is collected as well. but "no calibration file" warning might appear while people are doing calibration run.
 
+def background(sample, scanplan, **kwargs):
+    ''' function to measure background image on this sample with this scanplan
+    
+        metadata to this scan will be labeled as `sp_background = True` so that it can be search easier later
+        
+        Parameters
+        ----------
+        sample : xpdacq.beamtime.Sample object
+            object carries sample metadata
+        scanplan : xpdacq.beamtime.ScanPlan object
+            object carries scanplan metadata
+        **kwargs : dict
+             dictionary that will be passed through to the run-engine metadata
+        
+        Returns
+        -------
+        None
+    '''
+    scanplan = _scanplan
+    _scanplan.md.update({'sp_isbackground':True})
+    prun(sampe, _scanplan) 
+    
+
 def dark(sample, scanplan, **kwargs):
     '''on this 'scan' get dark images
     
