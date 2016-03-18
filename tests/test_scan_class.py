@@ -9,7 +9,7 @@ import copy
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample, Scan
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
-from xpdacq.xpdacq import validate_dark, _yamify_dark, prun, _read_dark_yaml
+from xpdacq.xpdacq import prun, calibration, dark
 
 shutter = glbl.shutter
 shutter.put(1)
@@ -66,10 +66,21 @@ class ScanClassTest(unittest.TestCase):
             shutil.rmtree(os.path.join(glbl.base,'xpdConfig'))
 
     def test_scan_calss(self):
-        self.sp = ScanPlan('unittest_ScanPlan', 'ct', {'exposure':1.0})
+        self.sp = ScanPlan('unittest_ScanPlan', 'ct', {'exposure':1.0}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         sp_md_copy = copy.deepcopy(self.sp.md)
-        # alternating md in sc and see if md in ScanPlan remain unchanged
-        self.sc.md.update({'sc_isprun':True})
+        # alternating md in sc and see if md in ScanPlan remains unchanged
+        self.sc.md.update({'changes':True})
         self.assertEqual(self.sp.md, sp_md_copy)
+        self.assertFalse('changes' in self.sp.md)
+        self.assertTrue(self.sc.md['changes'], True)
+        # test with prun
+        prun(self.sa, self.sp)
+        #self.assertTrue('sc_isprun' in self.sc.md) # can't test it as Scan class only lives inside prun
         self.assertFalse('sc_isprun' in self.sp.md)
+        # test with dark
+        dark(self.sa, self.sp)
+        #self.assertTrue('sc_isdark' in self.sc.md)
+        self.assertFalse('sc_isdark' in self.sp.md)
+        #self.assertTrue('sc_dark_uid' in self.sc.md)
+        self.assertFalse('sc_dark_uid' in self.sp.md)
