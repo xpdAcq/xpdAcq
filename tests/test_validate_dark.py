@@ -111,7 +111,7 @@ class findRightDarkTest(unittest.TestCase):
         # case 1: find a qualified dark and test if md got updated
         time_now = time.time()
         self.bt.set_wavelength(0.18448)
-        light_cnt_time = 0.3
+        light_cnt_time = 0.01
 
         dark_scan_list = []
         dark_uid = str(uuid.uuid4())
@@ -140,12 +140,12 @@ class findRightDarkTest(unittest.TestCase):
         self.assertEqual(test_list,dark_scan_list)
 
         # none with the right exposure
-        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.4})
+        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.01})
         prun(self.sa, scanplan)
         self.assertNotEqual(scanplan.md['sc_params']['dk_field_uid'], dark_uid)
         # Second one has the right right exposure time
         glbl.dk_window = 1.
-        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.3})
+        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.01})
         prun(self.sa, scanplan)
         self.assertNotEqual(scanplan.md['sc_params']['dk_field_uid'], dark_uid2)        
     

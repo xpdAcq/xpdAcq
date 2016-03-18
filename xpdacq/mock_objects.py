@@ -6,7 +6,7 @@ class mock_shutter():
         pass
     def get(self,status=1):
         # this will keep returning 0 or 1 until the calling program is satisfied
-        callback = round(np.random.rand())
+        callback = np.random.randint(2)
         #sleep(0.1)
         return callback
 
