@@ -10,18 +10,29 @@ from xpdacq.mock_objects import mock_shutter, mock_livetable#, Cam, , mock_aread
 HOME_DIR_NAME = 'xpdUser'
 BLCONFIG_DIR_NAME = 'xpdConfig'
 BEAMLINE_HOST_NAME = 'xf28id1-ws2'
-BASE_DIR = os.path.expanduser('~/')
-ARCHIVE_BASE_DIR = os.path.expanduser('~/pe2_data/.userBeamtimeArchive')
+ARCHIVE_BASE_DIR_NAME = 'pe2_data/.userBeamtimeArchive'
 USER_BACKUP_DIR_NAME = strftime('%Y')
-DARK_WINDOW = 30 # default value, in terms of minute
+DARK_WINDOW = 3000 # default value, in terms of minute
 FRAME_ACQUIRE_TIME = 0.1 # pe1 frame acq time
 OWNER = 'xf28id1'
 BEAMLINE_ID = 'xpd'
 GROUP = 'XPD'
 
+# change this to be handled by an environment variable later
+hostname = socket.gethostname()
+if hostname == BEAMLINE_HOST_NAME:
+    simulation = False
+else:
+    simulation = True
+
+if simulation:
+    BASE_DIR = os.getcwd()
+else:
+    BASE_DIR = os.path.expanduser('~/')
 # directories
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
 BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
+ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,ARCHIVE_BASE_DIR_NAME)
 EXPORT_DIR = os.path.join(HOME_DIR, 'Export')
 YAML_DIR = os.path.join(HOME_DIR, 'config_base', 'yml')
 DARK_YAML_NAME = os.path.join(YAML_DIR, '_dark_scan_list.yaml')
@@ -87,9 +98,7 @@ class glbl():
     verify_files_saved = None
     '''
     # logic to assign correct objects depends on simulation or real experiment
-    hostname = socket.gethostname()
-    if hostname == BEAMLINE_HOST_NAME:
-        simulation = False
+    if not simulation:
         from bluesky.run_engine import RunEngine
         from bluesky.register_mds import register_mds
         # import real object as other names to avoid possible self-referencing later
@@ -122,7 +131,6 @@ class glbl():
         
     else:
         simulation = True
-        BASE_DIR = os.getcwd()
         ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')
         # mock imports
         Msg = MagicMock()
@@ -146,7 +154,4 @@ class glbl():
         area_det.number_of_sets.put = MagicMock(return_value=1)
         print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
 
-# this line never gets executed 
-#if __name__ == '__main__':
-    #print(glbl.dp().home)
 
