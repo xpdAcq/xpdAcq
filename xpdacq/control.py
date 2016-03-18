@@ -25,6 +25,7 @@ def _open_shutter():
         if shutter.get():
             break
         time.sleep(0.5)
+    time.sleep(2.5) # this hasn't been solved as of 03/11/2016
     return 
            
 def _close_shutter():
@@ -33,4 +34,5 @@ def _close_shutter():
         if not shutter.get():
             break
         time.sleep(0.5)
+    time.sleep(2.5) # this hasn't been solved as of 03/11/2016
     return        

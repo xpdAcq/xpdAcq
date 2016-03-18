@@ -120,7 +120,7 @@ class findRightDarkTest(unittest.TestCase):
             yaml.dump(dark_scan_list, f)
         test_list = _read_dark_yaml()
         self.assertEqual(test_list,dark_scan_list)
-        scanplan = ScanPlan('ctTest', 'ct', {'exposure':light_cnt_time})
+        scanplan = ScanPlan('ctTest', 'ct', {'exposure':light_cnt_time}, shutter=False)
         prun(self.sa, scanplan)
         self.assertEqual(scanplan.md['sp_params']['dk_field_uid'], dark_uid)
 
