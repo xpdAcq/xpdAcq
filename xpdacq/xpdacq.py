@@ -124,18 +124,18 @@ def _read_dark_yaml():
 def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
     ''' find the uid of appropriate dark inside dark_base
     
-        Parameters
-        ----------
-        light_cnt_time : float
-            exposure time of light image, expressed in seconds
-        expire_time : float
-            expire time of dark images, expressed in minute
-        dark_scan_list : list, optional
-            a list of dark dictionaries
-        Returns
-        -------
-        dark_field_uid : str
-            uid to qualified dark frame
+    Parameters
+    ----------
+    light_cnt_time : float
+        exposure time of light image, expressed in seconds
+    expire_time : float
+        expire time of dark images, expressed in minute
+    dark_scan_list : list, optional
+        a list of dark dictionaries
+    Returns
+    -------
+    dark_field_uid : str
+        uid to qualified dark frame
     '''
     if not dark_scan_list: 
         dark_scan_list = _read_dark_yaml()
@@ -152,10 +152,12 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
 
 def _load_calibration_file(calibration_file_name = None):
     ''' function to load calibration file in config_base directory
+
     Parameters
     ----------
     calibration_file_name : str
     name of calibration file used. if it is None, load the most recent one
+    
     Returns
     -------
     config_dict : dict
@@ -240,7 +242,7 @@ def calibration(sample, scanplan, **kwargs):
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
     _scanplan = scanplan # make a copy
-    _scanplan.md.update({'xp_iscalibration':True})
+    _scanplan.md.update({'sc_iscalibration':True})
     prun(sample, _scanplan)
     # this way is cleaner and dark is collected as well. but "no calibration file" warning might appear while people are doing calibration run.
 
@@ -263,7 +265,7 @@ def background(sample, scanplan, **kwargs):
         None
     '''
     scanplan = _scanplan
-    _scanplan.md.update({'sp_isbackground':True})
+    _scanplan.md.update({'sc_isbackground':True})
     prun(sampe, _scanplan) 
     
 
@@ -289,6 +291,7 @@ def dark(sample, scanplan, **kwargs):
     dark_def = (dark_uid, dark_exposure, dark_time)
     #scan.md.update({'xp_isdark':False}) #reset should not be required
     _close_shutter()
+    _yamify_dark(dark_def)
     return dark_uid
     
 def _yamify_dark(dark_def):
@@ -299,7 +302,7 @@ def _yamify_dark(dark_def):
     with open(dark_yaml_name, 'w') as f:
         yaml.dump(dark_list, f)
 
-def setupscan(sample,scan,**kwargs):
+def setupscan(sample, scanplan, **kwargs):
     '''used for setup scans NOT production scans
      
     Scans run this way will get tagged with "setup_scan=True".  They
@@ -312,12 +315,14 @@ def setupscan(sample,scan,**kwargs):
     scan - scan metadata object
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    if scan.shutter: _open_shutter()
-    scan.md.update({'xp_isprun':False})
-    _unpack_and_run(sample,scan,**kwargs)
-    #parms = scan.sc_params
-    if scan.shutter: _close_shutter()
-
+    scan = Scan(sample, scanplan)
+    scan.md.update({'sc_isprun':False})
+    if scan.sp.shutter: 
+        _open_shutter()
+    _unpack_and_run(scan, **kwargs)
+    if scan.sp.shutter: 
+        _close_shutter()
+    
 def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}, **kwargs):
     '''the main xpdAcq function for getting an exposure
     
