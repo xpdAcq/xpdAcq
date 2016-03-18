@@ -188,8 +188,9 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     auto_dark - optional. Type auto_dark = False to suppress the automatic collection of a dark image (default = True). Strongly recommend to leave as True unless problems are encountered
     **kwargs - dictionary that will be passed through to the run-engine metadata
     '''
-    if scanplan.shutter:
-        _open_shutter()
+    # I think open_shutter is not needed at this point.
+    #if scanplan.shutter:
+    #    _open_shutter()
     scanplan.md.update({'xp_isprun':True})
     light_cnt_time = scanplan.md['sc_params']['exposure']
     expire_time = glbl.dk_window
