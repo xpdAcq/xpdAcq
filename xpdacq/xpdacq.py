@@ -25,7 +25,7 @@ import uuid
 from configparser import ConfigParser
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
-from xpdacq.beamtime import Union, Xposure, ScanPlan, Scan
+from xpdacq.beamtime import Union, ScanPlan, Scan
 from xpdacq.control import _close_shutter, _open_shutter
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
