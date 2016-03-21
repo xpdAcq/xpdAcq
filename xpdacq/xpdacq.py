@@ -150,28 +150,27 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
     else:
         return None # nothing in dark_scan_list. collect a dark
 
-def _load_calibration_file(calibration_file_name = None):
-    ''' function to load calibration file in config_base directory
-    Parameters
-    ----------
-    calibration_file_name : str
-    name of calibration file used. if it is None, load the most recent one
+def _auto_load_calibration_file():
+    ''' function to load the most recent calibration file in config_base directory
+
     Returns
     -------
-    config_dict : dict
-    a dictionary containing calibration parameters calculated from SrXplanar
+    config_md_dict : dict
+    dictionary contains calibration parameters computed by SrXplanar, file name and timestamp of the most recent calibration file. If no calibration file exits in xpdUser/config_base, returns None.
     '''
     config_dir = glbl.config_base
     f_list = [ f for f in os.listdir(config_dir) if f.endswith('cfg')]
     if not f_list:
-        return # no config at all
-    if calibration_file_name:
-        config_in_use = calibration_file_name
-    config_in_use = sorted(f_list, key=os.path.getmtime)[-1]
+        print('INFO: No calibration file found in config_base. Scan will still keep going on')
+        return
+    f_list_full_path = list(map(lambda f: os.path.join(config_dir, f), f_list)) # join elemnts in f_list with config_dir
+    config_in_use = sorted(f_list_full_path, key=os.path.getatime)[-1]
+    print('Use {} as current config file'.format(config_in_use))
     config_timestamp = os.path.getmtime(config_in_use)
     config_time = datetime.datetime.fromtimestamp(config_timestamp).strftime('%Y%m%d-%H%M')
     config_dict = _parse_calibration_file(os.path.join(config_dir,config_in_use))
-    return (config_dict, config_in_use)
+    config_md_dict = {'sc_calibration_parameters':config_dict, 'sc_calibration_file_name': os.path.basename(config_in_use), 'sc_calibration_file_timestamp':config_time}
+    return config_md_dict
 
 def _parse_calibration_file(config_file_name):
     ''' helper function to parse calibration file '''
@@ -185,44 +184,37 @@ def _parse_calibration_file(config_file_name):
         for option in options:
             try:
                 config_dict[section][option] = calibration_parser.get(section, option)
-                #if config_dict[option] == -1:
+                # if config_dict[option] == -1:
                 # DebugPrint("skip: %s" % option)
             except:
                 print("exception on %s!" % option)
                 config_dict[option] = None
     return config_dict
 
-def new_prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
-    '''on this 'sample' run this 'scanplan'
-        
-    Arguments:
-    sample - sample metadata object
-    scanplan - scanplan metadata object
-    auto_dark - optional. Type auto_dark = False to suppress the automatic collection of a dark image (default = True). Strongly recommend to leave as True unless problems are encountered
-    **kwargs - dictionary that will be passed through to the run-engine metadata
+def _execute_scans(scan, auto_dark):
+    '''execute this scan run'
+    
+    Parameters:
+    -----------
+    scan : xpdAcq.beamtime.Scan object
+        object carries metadata of Scanplan and Sample object    
     '''
-    scan = Scan(sample, scanplan)
-    scan.md.update({'sc_isprun':True})
     if auto_dark:
         auto_dark_md_dict = _auto_dark(scan)
         scan.md.update(auto_dark_dict)
-    '''
-    try:
-        (config_dict, config_name) = _load_calibration_file()
-        scan.md.update({'sp_config_dict':config_dict})
-        scan.md.update({'sp_config_name':config_name})
-    except TypeError: # iterating on on None object causes TypeError
-        print('INFO: No calibration file found in config_base. Scan will still keep going on')
-    '''
-    if scan.sp.shutter: 
+    
+    auto_load_calibration_dict = _auto_load_calibration_file()
+    if auto_calibration_dict:
+        scan.md.update(auto_calibration_dict)
+
+    if scan.sp.shutter:
         _open_shutter()
-    #_unpack_and_run(sample,scanplan,**kwargs)
     _unpack_and_run(scan, **kwargs)
     if scan.sp.shutter: 
         _close_shutter()
 
 def _auto_dark(scan):
-    ''' function include automated dark collection logic '''
+    ''' function to cover automated dark collection logic '''
     light_cnt_time = scan.md['sp_params']['exposure']
     if 'dk_window' in scan.md['sp_params']:
         expire_time = scan.md['sp_params']['dk_window']
@@ -243,6 +235,14 @@ See documentation at http://xpdacq.github.io for more information about controll
     auto_dark_md_dict = {'sc_dk_field_uid': dark_field_uid,
                         'sc_dk_window': expire_time}
     return auto_dark_md_dict
+
+def _auto_load_calibration():
+    ''' function to load calibration file '''
+    try:
+        (config_dict, config_name) = _load_calibration_file()
+        return (config_dict, config_name) 
+    except TypeError:
+                return
 
 def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     '''on this 'sample' run this 'scanplan'
