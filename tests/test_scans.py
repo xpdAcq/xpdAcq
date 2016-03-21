@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import MagicMock
+from unittest import patch
 import os
 import shutil
 import time
@@ -11,6 +12,7 @@ from xpdacq.glbl import glbl
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample, Scan
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
 from xpdacq.xpdacq import prun, new_prun, calibration, dark, _auto_dark_collection, _auto_load_calibration_file
+#from xpdacq.xpdacq import *
 from xpdacq.control import _open_shutter, _close_shutter
 
 # this is here temporarily.  Simon wanted it out of the production code.  Needs to be refactored.
@@ -74,6 +76,7 @@ class findRightDarkTest(unittest.TestCase):
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
         prun(self.sa, self.sp)
+        self.assertTrue(glbl.xpdRE.called)
         self.assertFalse('sc_isprun' in self.sp.md) # after prun buch of md should be updated
         #self.assertEqual((), glbl.xpdRE.count_args[1]) # in interactive shell, that works but not in module
 
@@ -118,13 +121,21 @@ class findRightDarkTest(unittest.TestCase):
         self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_file_name'], modified_cfg_f_name)
         self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_parameters']['Others']['uncertaintyenable'], 'False')
    
-    # not a very conclusive test 
+    # not a very conclusive test
+    @patch('__main__._auto_dark_collection') 
     def test_new_prun(self):
         self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
         new_prun(self.sa, self.sp)
-        self.assertFalse('sc_isprun' in self.sp.md)
+        # is xpdRE used?
+        self.assertTrue(glbl.xpdRE.called)
+        # make sure _auto_dark_collection is called
+        self.assertTrue(_auto_dark_collection in glbl.xpdRE.method_calls)
+        # make sure _auto_load_calibration_file is not called
+        #self.assertTrue(_auto_load_calibration_file not in glbl.xpdRE.method_calls)
+        # is  ScanPlan.md remain unchanged?
+        #self.assertFalse('sc_isprun' in self.sp.md)
    
      # not a very conclusive test
     def test_dark(self):
@@ -132,6 +143,13 @@ class findRightDarkTest(unittest.TestCase):
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
         dark(self.sa, self.sp)
+        # is xpdRE used?
+        self.assertTrue(glbl.xpdRE.called)
+        # make sure _auto_dark_collection is not called
+        self.assertFalse(_auto_dark_collection in glbl.xpdRE.method_calls)
+        # make sure _auto_load_calibration_file is not called
+        self.assertFalse(_auto_load_calibration_file in glbl.xpdRE.method_calls)
+        # is  ScanPlan.md remain unchanged?
         self.assertFalse('sc_isdark' in self.sp.md)
     
     # not a very conclusive test
