@@ -71,13 +71,8 @@ def dryrun(sample,scan,**kwargs):
        return
  
 def _unpack_and_run(scan, **kwargs):
-#def _unpack_and_run(sample,scan,**kwargs):
-    # check to see if wavelength has been set
-    # bug
-    #if not sample.md['bt_wavelength']:
     if not scan.md['bt_wavelength']:
         print('WARNING: There is no wavelength information in your sample acquire object')
-    #cmdo = Union(sample,scan)
     parms = scan.md['sp_params']
     subs={}
     if 'subs' in parms: 
@@ -200,7 +195,7 @@ def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True):
         object carries metadata of Scanplan and Sample object    
     '''
     if auto_dark:
-        auto_dark_md_dict = _auto_dark(scan)
+        auto_dark_md_dict = _auto_dark_collection(scan)
         scan.md.update(auto_dark_dict)
     
     if auto_calibration: 
@@ -214,7 +209,7 @@ def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True):
     if scan.sp.shutter: 
         _close_shutter()
 
-def _auto_dark(scan):
+def _auto_dark_collection(scan):
     ''' function to cover automated dark collection logic '''
     light_cnt_time = scan.md['sp_params']['exposure']
     if 'dk_window' in scan.md['sp_params']:
@@ -236,14 +231,6 @@ See documentation at http://xpdacq.github.io for more information about controll
     auto_dark_md_dict = {'sc_dk_field_uid': dark_field_uid,
                         'sc_dk_window': expire_time}
     return auto_dark_md_dict
-
-def _auto_load_calibration():
-    ''' function to load calibration file '''
-    try:
-        (config_dict, config_name) = _load_calibration_file()
-        return (config_dict, config_name) 
-    except TypeError:
-                return
 
 def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     '''on this 'sample' run this 'scanplan'

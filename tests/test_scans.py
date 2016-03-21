@@ -10,7 +10,7 @@ import copy
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample, Scan
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
-from xpdacq.xpdacq import prun, _auto_dark, _auto_load_calibration_file
+from xpdacq.xpdacq import prun, _auto_dark_collection, _auto_load_calibration_file
 from xpdacq.control import _open_shutter, _close_shutter
 
 # this is here temporarily.  Simon wanted it out of the production code.  Needs to be refactored.
@@ -78,13 +78,13 @@ class findRightDarkTest(unittest.TestCase):
         self.assertFalse('sc_isprun' in self.sp.md) # after prun buch of md should be updated
         #self.assertEqual((), glbl.xpdRE.count_args[1]) # in interactive shell, that works but not in module
 
-    def test_auto_dark(self):
+    def test_auto_dark_collection(self):
         self.sp_set_dk_window = ScanPlan('unittest_count','ct', {'exposure': 0.1, 'dk_window':25575}, shutter = False)
         self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
         self.sc_set_dk_window = Scan(self.sa, self.sp_set_dk_window)
         self.sc = Scan(self.sa, self.sp)
-        auto_dark_md_dict_set_dk_window = _auto_dark(self.sc_set_dk_window)
-        auto_dark_md_dict = _auto_dark(self.sc)
+        auto_dark_md_dict_set_dk_window = _auto_dark_collection(self.sc_set_dk_window)
+        auto_dark_md_dict = _auto_dark_collection(self.sc)
         # test if md is updated
         self.assertTrue('sc_dk_field_uid' in auto_dark_md_dict_set_dk_window and 'sc_dk_field_uid' in auto_dark_md_dict)
         # test if dk_window is overwrittten
