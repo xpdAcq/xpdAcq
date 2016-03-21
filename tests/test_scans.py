@@ -114,14 +114,10 @@ class findRightDarkTest(unittest.TestCase):
         modified_cfg_src = os.path.join(os.path.dirname(__file__), modified_cfg_f_name)
         modified_cfg_dst = os.path.join(glbl.config_base, modified_cfg_f_name)
         shutil.copy(modified_cfg_src, modified_cfg_dst)
-        print(os.listdir(glbl.config_base)) # debug
-        print((modified_cfg_dst, os.path.getatime(modified_cfg_dst))) # debug
-        print((cfg_dst, os.path.getatime(cfg_dst))) # debug
-        self.assertTrue(os.path.isfile(modified_cfg_dst)) # debug
         modified_auto_calibration_md_dict = _auto_load_calibration_file()
         # is information loaded in correctly?
-        #self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_file_name'], modified_cfg_f_name)
-        #self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_parameters']['Others']['uncertaintyenable'], 'False')
+        self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_file_name'], modified_cfg_f_name)
+        self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_parameters']['Others']['uncertaintyenable'], 'False')
     
     def test_unpack_and_run(self):
         pass 
