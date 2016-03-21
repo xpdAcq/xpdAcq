@@ -192,6 +192,58 @@ def _parse_calibration_file(config_file_name):
                 config_dict[option] = None
     return config_dict
 
+def new_prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
+    '''on this 'sample' run this 'scanplan'
+        
+    Arguments:
+    sample - sample metadata object
+    scanplan - scanplan metadata object
+    auto_dark - optional. Type auto_dark = False to suppress the automatic collection of a dark image (default = True). Strongly recommend to leave as True unless problems are encountered
+    **kwargs - dictionary that will be passed through to the run-engine metadata
+    '''
+    scan = Scan(sample, scanplan)
+    scan.md.update({'sc_isprun':True})
+    if auto_dark:
+        auto_dark_md_dict = _auto_dark(scan)
+        scan.md.update(auto_dark_dict)
+    '''
+    try:
+        (config_dict, config_name) = _load_calibration_file()
+        scan.md.update({'sp_config_dict':config_dict})
+        scan.md.update({'sp_config_name':config_name})
+    except TypeError: # iterating on on None object causes TypeError
+        print('INFO: No calibration file found in config_base. Scan will still keep going on')
+    '''
+    if scan.sp.shutter: 
+        _open_shutter()
+    #_unpack_and_run(sample,scanplan,**kwargs)
+    _unpack_and_run(scan, **kwargs)
+    if scan.sp.shutter: 
+        _close_shutter()
+
+def _auto_dark(scan):
+    ''' function include automated dark collection logic '''
+    light_cnt_time = scan.md['sp_params']['exposure']
+    if 'dk_window' in scan.md['sp_params']:
+        expire_time = scan.md['sp_params']['dk_window']
+    else:
+        expire_time = glbl.dk_window
+    dark_field_uid = validate_dark(light_cnt_time, expire_time)
+    if not dark_field_uid:
+        print('''INFO: auto_dark didn't detect a valid dark, so is collecting a new dark frame.
+See documentation at http://xpdacq.github.io for more information about controlling this behavior''')
+        # create a count plan with the same light_cnt_time
+        if scan.sp.shutter:
+            auto_dark_scanplan = ScanPlan('auto_dark_scan',
+                'ct',{'exposure':light_cnt_time})
+        else:
+            auto_dark_scanplan = ScanPlan('auto_dark_scan',
+                'ct',{'exposure':light_cnt_time},shutter=False)
+        dark_field_uid = dark(scan.sa, auto_dark_scanplan)
+    auto_dark_md_dict = {'sc_dk_field_uid': dark_field_uid,
+                        'sc_dk_window': expire_time}
+    return auto_dark_md_dict
+
 def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     '''on this 'sample' run this 'scanplan'
         
