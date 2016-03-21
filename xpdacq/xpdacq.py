@@ -191,7 +191,7 @@ def _parse_calibration_file(config_file_name):
                 config_dict[option] = None
     return config_dict
 
-def _execute_scans(scan, auto_dark):
+def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True):
     '''execute this scan run'
     
     Parameters:
@@ -203,11 +203,12 @@ def _execute_scans(scan, auto_dark):
         auto_dark_md_dict = _auto_dark(scan)
         scan.md.update(auto_dark_dict)
     
-    auto_load_calibration_dict = _auto_load_calibration_file()
-    if auto_calibration_dict:
-        scan.md.update(auto_calibration_dict)
-
-    if scan.sp.shutter:
+    if auto_calibration: 
+        auto_load_calibration_dict = _auto_load_calibration_file()
+        if auto_calibration_dict:
+            scan.md.update(auto_calibration_dict)
+    
+    if light_frame and scan.sp.shutter:
         _open_shutter()
     _unpack_and_run(scan, **kwargs)
     if scan.sp.shutter: 
