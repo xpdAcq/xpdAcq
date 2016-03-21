@@ -10,7 +10,7 @@ import copy
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample, Scan
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
-from xpdacq.xpdacq import prun, new_prun, _auto_dark_collection, _auto_load_calibration_file
+from xpdacq.xpdacq import prun, new_prun, calibration, dark, _auto_dark_collection, _auto_load_calibration_file
 from xpdacq.control import _open_shutter, _close_shutter
 
 # this is here temporarily.  Simon wanted it out of the production code.  Needs to be refactored.
@@ -117,10 +117,27 @@ class findRightDarkTest(unittest.TestCase):
         # is information loaded in correctly?
         self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_file_name'], modified_cfg_f_name)
         self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_parameters']['Others']['uncertaintyenable'], 'False')
-    
+   
+    # not a very conclusive test 
     def test_new_prun(self):
         self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
         new_prun(self.sa, self.sp)
         self.assertFalse('sc_isprun' in self.sp.md)
+   
+     # not a very conclusive test
+    def test_dark(self):
+        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
+        self.sc = Scan(self.sa, self.sp)
+        self.assertEqual(self.sc.sp, self.sp)
+        dark(self.sa, self.sp)
+        self.assertFalse('sc_isdark' in self.sp.md)
+    
+    # not a very conclusive test
+    def test_calibration(self):
+        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
+        self.sc = Scan(self.sa, self.sp)
+        self.assertEqual(self.sc.sp, self.sp)
+        calibration(self.sa, self.sp)
+        self.assertFalse('sc_iscalibration' in self.sp.md)
