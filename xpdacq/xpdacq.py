@@ -70,40 +70,6 @@ def dryrun(sample,scan,**kwargs):
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
  
-def _unpack_and_run(scan, **kwargs):
-    if not scan.md['bt_wavelength']:
-        print('WARNING: There is no wavelength information in your sample acquire object')
-    parms = scan.md['sp_params']
-    subs={}
-    if 'subs' in parms: 
-        subsc = parms['subs']
-    for i in subsc:
-        if i == 'livetable':
-            subs.update({'all':LiveTable([area_det, temp_controller])})
-        elif i == 'verify_write':
-            subs.update({'stop':verify_files_saved})
-    
-    if scan.md['sp_type'] == 'ct':
-        get_light_images(scan, parms['exposure'], area_det, subs,**kwargs)
-    elif scan.md['sp_type'] == 'tseries':
-        collect_time_series(scan, parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
-    elif scan.md['sp_type'] == 'Tramp':
-        collect_Temp_series(scan, parms['startingT'], parms['endingT'], parms['requested_Tstep'], parms['exposure'], area_det, subs, **kwargs)
-    else:
-        print('unrecognized scan type.  Please rerun with a different scan object')
-        return
-    
-    ''' delete it after test at XPD
-    if scan.scan == 'ct'
-        get_light_images(cmdo,parms['exposure'], area_det, subs,**kwargs)
-    elif scan.scan == 'tseries':
-        collect_time_series(cmdo,parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
-    elif scan.scan == 'Tramp':
-        collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], area_det, subs, **kwargs)
-    else:
-        print('unrecognized scan type.  Please rerun with a different scan object')
-        return
-    '''
 #### dark subtration code block ####
 
 def _read_dark_yaml():
@@ -145,28 +111,6 @@ def validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
     else:
         return None # nothing in dark_scan_list. collect a dark
 
-def _auto_load_calibration_file():
-    ''' function to load the most recent calibration file in config_base directory
-
-    Returns
-    -------
-    config_md_dict : dict
-    dictionary contains calibration parameters computed by SrXplanar, file name and timestamp of the most recent calibration file. If no calibration file exits in xpdUser/config_base, returns None.
-    '''
-    config_dir = glbl.config_base
-    f_list = [ f for f in os.listdir(config_dir) if f.endswith('cfg')]
-    if not f_list:
-        print('INFO: No calibration file found in config_base. Scan will still keep going on')
-        return
-    f_list_full_path = list(map(lambda f: os.path.join(config_dir, f), f_list)) # join elemnts in f_list with config_dir
-    config_in_use = sorted(f_list_full_path, key=os.stat)[-1]
-    print('INFO: This scan will append calibration parameters recorded in {}'.format(os.path.basename(config_in_use)))
-    config_timestamp = os.path.getmtime(config_in_use)
-    config_time = datetime.datetime.fromtimestamp(config_timestamp).strftime('%Y%m%d-%H%M')
-    config_dict = _parse_calibration_file(os.path.join(config_dir,config_in_use))
-    config_md_dict = {'sc_calibration_parameters':config_dict, 'sc_calibration_file_name': os.path.basename(config_in_use), 'sc_calibration_file_timestamp':config_time}
-    return config_md_dict
-
 def _parse_calibration_file(config_file_name):
     ''' helper function to parse calibration file '''
     calibration_parser = ConfigParser()
@@ -186,23 +130,69 @@ def _parse_calibration_file(config_file_name):
                 config_dict[option] = None
     return config_dict
 
-def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True):
-    '''execute this scan run'
+def _unpack_and_run(scan, **kwargs):
+    if not scan.md['bt_wavelength']:
+        print('WARNING: There is no wavelength information in your sample acquire object')
+    parms = scan.md['sp_params']
+    subs={}
+    if 'subs' in parms: 
+        subsc = parms['subs']
+    for i in subsc:
+        if i == 'livetable':
+            subs.update({'all':LiveTable([area_det, temp_controller])})
+        elif i == 'verify_write':
+            subs.update({'stop':verify_files_saved})
+    
+    if scan.md['sp_type'] == 'ct':
+        get_light_images(scan, parms['exposure'], area_det, subs,**kwargs)
+    elif scan.md['sp_type'] == 'tseries':
+        collect_time_series(scan, parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
+    elif scan.md['sp_type'] == 'Tramp':
+        collect_Temp_series(scan, parms['startingT'], parms['endingT'], parms['requested_Tstep'], parms['exposure'], area_det, subs, **kwargs)
+    else:
+        print('unrecognized scan type.  Please rerun with a different scan object')
+        return
+    
+    ''' delete it after test at XPD
+    if scan.scan == 'ct'
+        get_light_images(cmdo,parms['exposure'], area_det, subs,**kwargs)
+    elif scan.scan == 'tseries':
+        collect_time_series(cmdo,parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
+    elif scan.scan == 'Tramp':
+        collect_Temp_series(cmdo, parms['startingT'], parms['endingT'],parms['requested_Tstep'], parms['exposure'], area_det, subs, **kwargs)
+    else:
+        print('unrecognized scan type.  Please rerun with a different scan object')
+        return
+    '''
+
+
+def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun = False, **kwargs):
+    '''execute this scan'
     
     Parameters:
     -----------
     scan : xpdAcq.beamtime.Scan object
-        object carries metadata of Scanplan and Sample object    
+        object carries metadata of Scanplan and Sample object
+    
+    auto_dark : bool
+        option of automated dark collection. Set to true to allow collect dark automatically during scans
+    
+    auto_calibration : bool
+        option of loading calibration parameter from SrXplan config file. If True, the most recent calibration file in xpdUser/config_base will be loaded
+
+    light_frame : bool
+        optiontional. Default is True and this allows program to open shutter before _unpack_and_run()
+    
+    dryrun : bool
+        optional. Default is False. If option is set to True, scan won't be executed but corresponding medata as if executing real scans will be printed
     '''
     if auto_dark:
         auto_dark_md_dict = _auto_dark_collection(scan)
-        scan.md.update(auto_dark_dict)
-    
+        scan.md.update(auto_dark_md_dict)
     if auto_calibration: 
         auto_load_calibration_dict = _auto_load_calibration_file()
-        if auto_calibration_dict:
+        if auto_load_calibration_dict:
             scan.md.update(auto_calibration_dict)
-    
     if light_frame and scan.sp.shutter:
         _open_shutter()
     _unpack_and_run(scan, **kwargs)
@@ -231,6 +221,53 @@ See documentation at http://xpdacq.github.io for more information about controll
     auto_dark_md_dict = {'sc_dk_field_uid': dark_field_uid,
                         'sc_dk_window': expire_time}
     return auto_dark_md_dict
+
+def _auto_load_calibration_file():
+    ''' function to load the most recent calibration file in config_base directory
+
+    Returns
+    -------
+    config_md_dict : dict
+    dictionary contains calibration parameters computed by SrXplanar, file name and timestamp of the most recent calibration file. If no calibration file exits in xpdUser/config_base, returns None.
+    '''
+    config_dir = glbl.config_base
+    f_list = [ f for f in os.listdir(config_dir) if f.endswith('cfg')]
+    if not f_list:
+        print('INFO: No calibration file found in config_base. Scan will still keep going on')
+        return
+    f_list_full_path = list(map(lambda f: os.path.join(config_dir, f), f_list)) # join elemnts in f_list with config_dir
+    config_in_use = sorted(f_list_full_path, key=os.stat)[-1]
+    print('INFO: This scan will append calibration parameters recorded in {}'.format(os.path.basename(config_in_use)))
+    config_timestamp = os.path.getmtime(config_in_use)
+    config_time = datetime.datetime.fromtimestamp(config_timestamp).strftime('%Y%m%d-%H%M')
+    config_dict = _parse_calibration_file(os.path.join(config_dir,config_in_use))
+    config_md_dict = {'sc_calibration_parameters':config_dict, 'sc_calibration_file_name': os.path.basename(config_in_use), 'sc_calibration_file_timestamp':config_time}
+    return config_md_dict
+
+def new_prun(sample, scanplan, auto_dark = glbl.auto_dark, auto_calibration = True, **kwargs):
+    ''' on this sample run this scanplan
+
+    Parameters
+    ----------
+    sample : xpdAcq.beamtime.Sample object
+        object carries metadata of Sample object
+    
+    scanplan : xpdAcq.beamtime.ScanPlan object
+        object carries metadata of ScanPlan object
+    
+    auto_dark : bool
+        option of automated dark collection. Set to true to allow collect dark automatically during scans
+    
+    auto_calibration : bool
+        option of loading calibration parameter from SrXplan config file. Default is  True then the most recent calibration file in xpdUser/config_base will be loaded
+
+    '''
+    scan = Scan(sample, scanplan)
+    scan.md.update({'sc_usermd':kwargs})
+    scan.md.update({'sc_isprun':True})
+    _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun = False)
+    return
+
 
 def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     '''on this 'sample' run this 'scanplan'
@@ -262,15 +299,11 @@ See documentation at http://xpdacq.github.io for more information about controll
         scan.md['sp_params'].update({'dk_field_uid': dark_field_uid})
         scan.md['sp_params'].update({'dk_window':expire_time})
 
-    try:
-        (config_dict, config_name) = _load_calibration_file()
-        scan.md.update({'sp_config_dict':config_dict})
-        scan.md.update({'sp_config_name':config_name})
-    except TypeError: # iterating on on None object causes TypeError
-        print('INFO: No calibration file found in config_base. Scan will still keep going on')
+    auto_load_calibration_dict = _auto_load_calibration_file()
+    if auto_load_calibration_dict:
+        scan.md.update(auto_load_calibration_dict)
     if scan.sp.shutter: 
         _open_shutter()
-    #_unpack_and_run(sample,scanplan,**kwargs)
     _unpack_and_run(scan, **kwargs)
     if scan.sp.shutter: 
         _close_shutter()
@@ -305,11 +338,11 @@ def dark(sample, scanplan, **kwargs):
     scan.md.update({'sc_isdark':True})
     # we need a hook to search this dark frame later on
     scan.md.update({'sc_dark_uid':dark_uid})
-    #_unpack_and_run(sample,scan,**kwargs)
     _unpack_and_run(scan, **kwargs)
     dark_time = time.time() # get timestamp by the end of dark_scan 
     dark_def = (dark_uid, dark_exposure, dark_time)
     #scan.md.update({'xp_isdark':False}) #reset should not be required
+    _yamify_dark(dark_def)
     if scan.sp.shutter:
         _close_shutter()
     return dark_uid
@@ -478,7 +511,7 @@ def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs
                'sp_period': period})
     scan.md.update({'sp_time_per_frame': acq_time,
                'sp_num_frames': num_frame,
-               'sp_number_of_sets': num_sets}) # number_of_sets might not bee needed as we always sum to 1 fram
+               'sp_number_of_sets': num_sets}) # number_of_sets might not bee needed as we always sum to 1 frame
     
     md_dict = scan.md
     md_dict.update(kwargs)
