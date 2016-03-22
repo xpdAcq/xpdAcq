@@ -34,7 +34,7 @@ db = glbl.db
 get_events = glbl.get_events
 get_images = glbl.get_images
 
-_fname_field = ['sa_name','sc_name']
+_fname_field = ['sa_name','sp_name']
 w_dir = os.path.join(glbl.home, 'tiff_base')
 W_DIR = w_dir # in case of crashes in old codes
 
@@ -71,6 +71,7 @@ def _feature_gen(header):
             feature_list.append(''.join(feature))
         except KeyError:
             pass # protection to allow missing required fields. This should not happen
+    feature_list.append(uid)
     f_name = "_".join(feature_list)
     return f_name
 
@@ -119,14 +120,14 @@ def save_tiff(headers, dark_subtraction=True, *, max_count=None):
         # information at header level
         img_field = _identify_image_field(header)
         dark_img = None
-        if 'dk_field_uid' not in header.start['sc_params']:
+        if 'dk_field_uid' not in header.start['sp_params']:
             warnings.warn("Requested to do dark correction, but header does "
                           "not contain a 'dk_field_uid' entry.  "
                           "Disabling dark subtraction.")
             dark_subtraction = False
 
         if dark_subtraction:
-            dark_uid_appended = header.start['sc_params']['dk_field_uid']
+            dark_uid_appended = header.start['sp_params']['dk_field_uid']
             try:
                 # bluesky only looks for uid it defines
                 # this should be refine later

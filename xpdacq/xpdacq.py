@@ -377,8 +377,18 @@ def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}):
     md_dict = scan.md
 
     plan = Count([area_det])
+    # 0322 XPD test
     xpdRE(plan, subs_dict, **md_dict)
-
+    while xpdRE.state == 'paused':
+        usr_input = input('')
+        if usr_input in ('resume()'):
+            xpdRE.resume()
+        elif usr_input in ('abort()'):
+            xpdRE.abort()
+        elif usr_input in ('stop()'):
+            xpdRE.stop()
+        else:
+            print('please renter your input')
 
 def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det, subs_dict={}):
     '''the main xpdAcq function for getting an exposure
@@ -425,8 +435,17 @@ def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_de
 
     plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
     xpdRE(plan,subs_dict, **md_dict)
-
-    print('End of collect_Temp_scans....')
+    while xpdRE.state == 'paused':
+        usr_input = input('')
+        if usr_input in ('resume()'):
+            xpdRE.resume()
+        elif usr_input in ('abort()'):
+            xpdRE.abort()
+        elif usr_input in ('stop()'):
+            xpdRE.stop()
+        else:
+            print('please renter your input')
+    print('End of collect_Tramp_scans....')
 
 def _nstep(start, stop, step_size):
     ''' return (start, stop, nsteps)'''
@@ -491,6 +510,16 @@ def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs
     md_dict = scan.md
     plan = Count([area_det], num=num, delay=real_delay)
     xpdRE(plan, subs_dict, **md_dict)
+    while xpdRE.state == 'paused':
+        usr_input = input('')
+        if usr_input in ('resume()'):
+            xpdRE.resume()
+        elif usr_input in ('abort()'):
+            xpdRE.abort()
+        elif usr_input in ('stop()'):
+            xpdRE.stop()
+        else:
+            print('please renter your input')
     print('End of time series scan ....')
 
 
@@ -699,13 +728,4 @@ def SPEC_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det = area_det, 
     exp.md.update({'sc_Nsteps':Nsteps})
     #print('INFO: requested temperature step = ',Tstep,' -> computed temperature step:', _Tstep)
     # information is taking care in _nstep
-
-    area_det.images_per_set.put(num_frame)
-    md_dict = exp.md
-    md_dict.update(kwargs)
-
-    plan = SPEC_Tseries_plan([area_det], temp_controller, Tstart, Tstop, Nsteps)
-    xpdRE(plan,subs_dict, **md_dict)
-
-    print('End of SPEC_Temp_scans....')
 '''
