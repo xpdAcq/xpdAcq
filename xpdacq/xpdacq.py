@@ -25,7 +25,7 @@ import uuid
 from configparser import ConfigParser
 from xpdacq.utils import _graceful_exit
 from xpdacq.glbl import glbl
-rom xpdacq.beamtime import Union, ScanPlan, Scan
+from xpdacq.beamtime import Union, ScanPlan, Scan
 from xpdacq.control import _close_shutter, _open_shutter
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
@@ -261,7 +261,7 @@ def _auto_load_calibration_file():
     config_md_dict = {'sc_calibration_parameters':config_dict, 'sc_calibration_file_name': os.path.basename(config_in_use), 'sc_calibration_file_timestamp':config_time}
     return config_md_dict
 
-def new_prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
+def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     ''' on this sample run this scanplan
 
     Parameters
@@ -352,44 +352,6 @@ def dryrun(sample,scan,**kwargs):
        print('unrecognized scan type.  Please rerun with a different scan object')
        return
 
-def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
-    '''on this 'sample' run this 'scanplan'
-        
-    Arguments:
-    sample - sample metadata object
-    scanplan - scanplan metadata object
-    auto_dark - optional. Type auto_dark = False to suppress the automatic collection of a dark image (default = True). Strongly recommend to leave as True unless problems are encountered
-    **kwargs - dictionary that will be passed through to the run-engine metadata
-    '''
-    scan = Scan(sample, scanplan)
-    scan.md.update({'sc_isprun':True})
-    light_cnt_time = scan.md['sp_params']['exposure']
-    expire_time = glbl.dk_window
-    # user can also specify auto_dark in argument to overwrite glbl setting
-    if auto_dark:
-        dark_field_uid = validate_dark(light_cnt_time, expire_time)
-        if not dark_field_uid:
-            print('''INFO: auto_dark didn't detect a valid dark, so is collecting a new dark frame.
-See documentation at http://xpdacq.github.io for more information about controlling this behavior''')
-            # create a count plan with the same light_cnt_time
-            if scanplan.shutter:
-                auto_dark_scanplan = ScanPlan('auto_dark_scan',
-                    'ct',{'exposure':light_cnt_time})
-            else:
-                auto_dark_scanplan = ScanPlan('auto_dark_scan',
-                    'ct',{'exposure':light_cnt_time},shutter=False)
-            dark_field_uid = dark(sample, auto_dark_scanplan)
-        scan.md['sp_params'].update({'dk_field_uid': dark_field_uid})
-        scan.md['sp_params'].update({'dk_window':expire_time})
-
-    auto_load_calibration_dict = _auto_load_calibration_file()
-    if auto_load_calibration_dict:
-        scan.md.update(auto_load_calibration_dict)
-    if scan.sp.shutter: 
-        _open_shutter()
-    _unpack_and_run(scan, **kwargs)
-    if scan.sp.shutter: 
-        _close_shutter()
 
 def setupscan(sample,scan,**kwargs):
     '''used for setup scans NOT production scans
@@ -444,8 +406,18 @@ def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}, **kwargs)
     md_dict.update(kwargs)
     
     plan = Count([area_det])
+    # 0322 XPD test
     xpdRE(plan, subs_dict, **md_dict)
-
+    while xpdRE.state == 'paused':
+        usr_input = input('')
+        if usr_input in ('resume()'):
+            xpdRE.resume()
+        elif usr_input in ('abort()'):
+            xpdRE.abort()
+        elif usr_input in ('stop()'):
+            xpdRE.stop()
+        else:
+            print('please renter your input')
 
 def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det, subs_dict={}, **kwargs):
     '''the main xpdAcq function for getting a temperature series
@@ -485,8 +457,17 @@ def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_de
         
     plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
     xpdRE(plan,subs_dict, **md_dict)
-
-    print('End of collect_Temp_scans....')
+    while xpdRE.state == 'paused':
+        usr_input = input('')
+        if usr_input in ('resume()'):
+            xpdRE.resume()
+        elif usr_input in ('abort()'):
+            xpdRE.abort()
+        elif usr_input in ('stop()'):
+            xpdRE.stop()
+        else:
+            print('please renter your input')
+    print('End of collect_Tramp_scans....')
 
 def _nstep(start, stop, step_size):
     ''' return (start, stop, nsteps)'''
@@ -553,7 +534,16 @@ def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs
     md_dict.update(kwargs)
     plan = Count([area_det], num=num, delay=real_delay)
     xpdRE(plan, subs_dict, **md_dict)
-
+    while xpdRE.state == 'paused':
+        usr_input = input('')
+        if usr_input in ('resume()'):
+            xpdRE.resume()
+        elif usr_input in ('abort()'):
+            xpdRE.abort()
+        elif usr_input in ('stop()'):
+            xpdRE.stop()
+        else:
+            print('please renter your input')
     print('End of time series scan ....')
 
 
@@ -872,5 +862,44 @@ def QXRD_plan():
     # hook to visualize data
     # FIXME - make sure to plot dark corrected image
     plot_scan(db[-1])
+
+def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
+    on this 'sample' run this 'scanplan'
+        
+    Arguments:
+    sample - sample metadata object
+    scanplan - scanplan metadata object
+    auto_dark - optional. Type auto_dark = False to suppress the automatic collection of a dark image (default = True). Strongly recommend to leave as True unless problems are encountered
+    **kwargs - dictionary that will be passed through to the run-engine metadata
+    
+    scan = Scan(sample, scanplan)
+    scan.md.update({'sc_isprun':True})
+    light_cnt_time = scan.md['sp_params']['exposure']
+    expire_time = glbl.dk_window
+    # user can also specify auto_dark in argument to overwrite glbl setting
+    if auto_dark:
+        dark_field_uid = validate_dark(light_cnt_time, expire_time)
+        if not dark_field_uid:
+            #print(INFO: auto_dark didn't detect a valid dark, so is collecting a new dark frame. See documentation at http://xpdacq.github.io for more information about
+controlling this behavior)#
+            # create a count plan with the same light_cnt_time
+            if scanplan.shutter:
+                auto_dark_scanplan = ScanPlan('auto_dark_scan',
+                    'ct',{'exposure':light_cnt_time})
+            else:
+                auto_dark_scanplan = ScanPlan('auto_dark_scan',
+                    'ct',{'exposure':light_cnt_time},shutter=False)
+            dark_field_uid = dark(sample, auto_dark_scanplan)
+        scan.md['sp_params'].update({'dk_field_uid': dark_field_uid})
+        scan.md['sp_params'].update({'dk_window':expire_time})
+
+    auto_load_calibration_dict = _auto_load_calibration_file()
+    if auto_load_calibration_dict:
+        scan.md.update(auto_load_calibration_dict)
+    if scan.sp.shutter: 
+        _open_shutter()
+    _unpack_and_run(scan, **kwargs)
+    if scan.sp.shutter: 
+        _close_shutter()
 
 '''
