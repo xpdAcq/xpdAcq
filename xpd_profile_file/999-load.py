@@ -19,47 +19,27 @@
 import os
 import socket
 from xpdacq.glbl import glbl
-#from xpdacq.glbl import _areaDET
-#from xpdacq.glbl import _tempController
-# test at xpd
-#from xpdacq.glbl import _shutter
-#from xpdacq.glbl import _verify_write
-#from xpdacq.glbl import _LiveTable
-#from xpdacq.glbl import _dataBroker
-#from xpdacq.glbl import _getEvents
-#from xpdacq.glbl import _getImages
+from xpdacq.mock_objects import mock_shutter, mock_livetable
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
 from xpdacq.beamtime import *
 
-#_areaDET(pe1c)
-#_tempController(cs700)
-
-#######
-# watch out, some testing here
-#######
-#_shutter(shctl1)
-
-# try to keep attribute names the same as the way we are goona use. Can be
-# changed later
-
+''' assignment happen inside glbl
+# assign objects for collection activities
+glbl.Msg = Msg
+glbl.xpdRE = xpdRE
+glbl.Count = Count
+glbl.AbsScanPlan = AbsScanPlan
 glbl.area_det = pe1c
 glbl.shutter = shctl1
 glbl.LiveTable = LiveTable
 glbl.temp_controller = cs700
 
+# assign objects for analysis activities
 glbl.db = db
 glbl.get_events = get_events
 glbl.get_images = get_images
 glbl.verify_files_saved = verify_files_saved
-
-
-# revisit these and remove them
-#_shutter(shctl1)
-#_verify_write(verify_files_saved)
-#_LiveTable(LiveTable)
-#_dataBroker(db)
-#_getEvents(get_events)
-#_getImages(get_images)
+'''
 
 from xpdacq.xpdacq import *
 from xpdacq.analysis import *
@@ -67,7 +47,6 @@ from xpdacq.analysis import *
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
 YAML_DIR = glbl.yaml_dir
-BEAMLINE_HOST_NAME = glbl.beamhost
 
 print('Initializing the XPD data acquisition simulation environment') 
 if os.path.isdir(HOME_DIR):
@@ -83,9 +62,5 @@ if os.path.isfile(bt_fname):
     tmp = XPD()
     bt = tmp.loadyamls()[0]
 
-# XPD test
-if not os.path.isfile(glbl.dk_yaml):
-    print('init dark_yaml')
-    XPD()._init_dark_scan_list()
 print('OK, ready to go.  To continue, follow the steps in the xpdAcq')
 print('documentation at http://xpdacq.github.io/xpdacq')

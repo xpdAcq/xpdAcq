@@ -21,8 +21,9 @@ import yaml
 from time import strftime
 from xpdacq.utils import _graceful_exit
 from xpdacq.beamtime import Beamtime, XPD, Experiment, Sample, ScanPlan
-from xpdacq.beamtime import export_data,_clean_md_input,_get_hidden_list
+from xpdacq.beamtime import export_data, _clean_md_input, _get_hidden_list
 from xpdacq.glbl import glbl
+from shutil import ReadError
 
 home_dir = glbl.home
 all_folders = glbl.allfolders
@@ -55,16 +56,14 @@ def _make_clean_env():
 
 def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
     if archive_dir is None:
-        archive_dir = os.path.expanduser(strftime('~/pe2_data/%Y/userBeamtimeArchive'))
+        archive_dir = glbl.archive_dir
     if base_dir is None:
         base_dir = glbl.base
+    # get bt by loading the yaml.
     if bto is None:
-        try:
-            bto = bt  # problem comes from bt only exists if _start_beamtime has been run and ipython never crash
-                      # FIXME - load_yaml directly ?
-        except NameError:
-            bto = {}              # FIXME, temporary hack. Remove when we have object imports working properly
-    #dp = DataPath(base_dir)
+        btoname = os.path.join(glbl.yaml_dir,'bt_bt.yml')
+        with open(btoname, 'r') as fi:
+            bto = yaml.load(fi)
     files = os.listdir(glbl.home)
     if len(files)==1:
         print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
@@ -142,7 +141,6 @@ def get_full_ext(path, post_ext=''):
 def _check_empty_environment(base_dir=None):
     if base_dir is None:
         base_dir = glbl.base
-    #dp = DataPath(base_dir)
     if os.path.exists(home_dir):
         if not os.path.isdir(home_dir):
             sys.exit(_graceful_exit("Expected a folder, got a file.  "
@@ -160,6 +158,11 @@ def _check_empty_environment(base_dir=None):
     else:
         sys.exit(_graceful_exit("The xpdUser directory appears not to exist "
                                "Please Talk to beamline staff"))
+
+def _init_dark_yaml():
+    dark_scan_list = []
+    with open(glbl.dk_yaml, 'w') as f:
+        yaml.dump(dark_scan_list, f)
 
 def _start_beamtime(safn,home_dir=None):
     if home_dir is None:
@@ -180,6 +183,8 @@ def _start_beamtime(safn,home_dir=None):
     except KeyError:
         sys.exit(_graceful_exit('Cannot load input info. File syntax in {} maybe corrupted.'.format(configfile)))
     bt = _execute_start_beamtime(piname, safn, explist, home_dir=home_dir)
+    _init_dark_yaml()
+
     return bt
 
 def _execute_start_beamtime(piname,safn,explist,wavelength=None,home_dir=None):
@@ -199,6 +204,39 @@ def _execute_start_beamtime(piname,safn,explist,wavelength=None,home_dir=None):
     sc10 = ScanPlan('ct10s','ct',{'exposure':10.0})
     sc30 = ScanPlan('ct30s','ct',{'exposure':30.0})
     return bt
+
+def import_yaml():
+    '''
+    import user pre-defined files from ~/xpdUser/Import
+
+    Files can be compreesed or .yml, once imported, bt.list() should show updated acquire object list
+    '''
+    src_dir = glbl.import_dir
+    dst_dir = glbl.yaml_dir
+    f_list = os.listdir(src_dir)
+    if len(f_list) == 0:
+        print('INFO: There is no pre-defined user objects in {}'.format(src_dir))
+        return 
+    # two possibilites: .yml or compressed files; shutil should handle all compressed cases
+    moved_f_list = []
+    for f in f_list:
+        full_path = os.path.join(src_dir, f)
+        (root, ext) = os.path.splitext(f)
+        if ext == '.yml':
+            shutil.copy(full_path, dst_dir)
+            moved_f_list.append(f)
+            # FIXME - do we want user confirmation?
+            os.remove(full_path)
+        else:
+            try:
+                shutil.unpack_archive(full_path, dst_dir)
+                moved_f_list.append(f)
+                # FIXME - do we want user confirmation?
+                os.remove(full_path)
+            except ReadError:
+                print('Unrecongnized file type {} is found inside {}'.format(f, src_dir))
+                pass
+    return moved_f_list
 
 if __name__ == '__main__':
     print(glbl.home)

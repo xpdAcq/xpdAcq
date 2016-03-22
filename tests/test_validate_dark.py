@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import MagicMock
 import os
 import shutil
 import time
@@ -7,29 +8,25 @@ import yaml
 import numpy as np
 import copy
 from xpdacq.glbl import glbl
-#from xpdacq.xpdacq import validate_dark,  _yamify_dark 
-from xpdacq.glbl import _areaDET, _tempController
-#from xpdacq.glbl import _shutter, _verify_write
-from xpdacq.glbl import _verify_write
-from xpdacq.glbl import _LiveTable
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
-_areaDET()
-_tempController()
-#_shutter()
-_verify_write()
-_LiveTable()
-from xpdacq.xpdacq import validate_dark, _yamify_dark, prun
+from xpdacq.xpdacq import validate_dark, _yamify_dark, prun, _read_dark_yaml
+#from xpdacq.mock_objects import Cam
 
-shutter = glbl.SHUTTER
+shutter = glbl.shutter
 shutter.put(1)
+#glbl.area_det.number_of_sets.put = MagicMock(return_value=1)
+#glbl.area_det.cam = Cam()
+#glbl.area_det.cam.acquire_time.put = MagicMock(return_value=1)
+
+
 
 # this is here temporarily.  Simon wanted it out of the production code.  Needs to be refactored.
 # the issue is to mock RE properly.  This is basically prun without the call to RE which
 # isn't properly mocked yet.
 def _unittest_prun(sample,scan,**kwargs):
     '''on this 'sample' run this 'scan'
-    
+
     this function doesn't control shutter nor trigger run engine. It is designed to test functionality
 
     Arguments:
@@ -67,13 +64,6 @@ class findRightDarkTest(unittest.TestCase):
         self.ex = Experiment('validateDark_unittest', self.bt)
         self.sa = Sample('unitttestSample', self.ex)
 
-        os.makedirs(glbl.yaml_dir, exist_ok = True)
-        # initiate dark_scan_list
-        self.dark_scan_list = []
-        with open (glbl.dk_yaml, 'w') as f:
-            yaml.dump(self.dark_scan_list, f)
-
-                
     def tearDown(self):
         os.chdir(glbl.base)
         if os.path.isdir(glbl.home):
@@ -117,41 +107,50 @@ class findRightDarkTest(unittest.TestCase):
         light_cnt_time = 0.2
         self.assertEqual(validate_dark(light_cnt_time, expire_time,dark_scan_list), dark_uid)
 
-#    @unittest.skip('skipping test with prun.  Need to refactor prun to take a dk_expiration_time optional variable?')
-    def test_prun_varying_exposure_and_expire_time(self):
+    def test_dark_in_prun_can_find_a_valid_dark(self):
         # case 1: find a qualified dark and test if md got updated
         time_now = time.time()
-        dark_scan_list = []
-
-        for i in range(3):
-            dark_def = (str(uuid.uuid1()), 0.1*(i+1), time_now-1200+600*i)
-            dark_scan_list.append(dark_def)
-        test_list = copy.copy(dark_scan_list)
-        dark_uid = dark_scan_list[-2][0]
-        expire_time = 22.
-        light_cnt_time = 0.2
-        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.2})
         self.bt.set_wavelength(0.18448)
-        self.assertEqual(prun(self.sa, scanplan)['sc_params']['dk_field_uid'], dark_uid)
+        light_cnt_time = 0.01
 
-    @unittest.skip('skipping test with prun.  Need to refactor prun to take a dk_expiration_time optional variable?')
-    def test_prun_with_no_matched_dark(self):
-        # case 2: can't find a qualified dark
-
-        time_now = time.time()
         dark_scan_list = []
+        dark_uid = str(uuid.uuid4())
+        dark_scan_list.append((dark_uid, light_cnt_time, time_now-600))
+        with open (glbl.dk_yaml, 'w') as f:
+            yaml.dump(dark_scan_list, f)
+        test_list = _read_dark_yaml()
+        self.assertEqual(test_list,dark_scan_list)
+        scanplan = ScanPlan('ctTest', 'ct', {'exposure':light_cnt_time}, shutter=False)
+        prun(self.sa, scanplan)
+        self.assertEqual(scanplan.md['sp_params']['dk_field_uid'], dark_uid)
 
-        from xpdacq.xpdacq import validate_dark, _qualified_dark, _yamify_dark, _unittest_prun
-        self.assertTrue(os.path.isfile(glbl.dk_yaml))
+    def test_dark_in_prun_cannot_find_a_valid_dark(self):
+        # case 2: can't find a qualified dark and test if md got updated
+        time_now = time.time()
+        self.bt.set_wavelength(0.18448)
+        # build the dark yml
+        dark_scan_list = []
+        dark_uid = str(uuid.uuid4())
+        dark_uid2 = str(uuid.uuid4())
+        dark_scan_list.append((dark_uid, 0.3, time_now-2000))
+        dark_scan_list.append((dark_uid2, 0.3, time_now-200))
+        with open (glbl.dk_yaml, 'w') as f:
+            yaml.dump(dark_scan_list, f)
+        test_list = _read_dark_yaml()
+        self.assertEqual(test_list,dark_scan_list)
 
-        for i in range(1,3):
-            dark_def = (str(uuid.uuid1()), 0.1*i, time_now-600*(i))
-            dark_scan_list.append(dark_def)
-
-        for i in range(1,3):
-            scan = ScanPlan('ctTest', 'ct', {'exposure':0.1*i + (np.random.randn()+2)})
-            info_tuple = list(dark_scan_list[i-1].values())
-            for el in info_tuple:
-                for sub_el in el:
-                    if isinstance(sub_el, str): dark_uid = sub_el
-            self.assertEqual(_unittest_prun(self.sa, scan)['sc_params']['dk_field_uid'], 'can not find a qualified dark uid')
+        # none with the right exposure
+        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.01}, shutter=False)
+        prun(self.sa, scanplan)
+        self.assertNotEqual(scanplan.md['sp_params']['dk_field_uid'], dark_uid)
+        # Second one has the right right exposure time
+        glbl.dk_window = 1.
+        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.01}, shutter=False)
+        prun(self.sa, scanplan)
+        self.assertNotEqual(scanplan.md['sp_params']['dk_field_uid'], dark_uid2)        
+    
+    def test_read_dark_yaml(self):
+        # test if _read_dark_yaml captures exception as we hope
+        self.assertTrue(os.path.isfile(glbl.dk_yaml)) # make sure it exit after _start_beamtime()
+        os.remove(glbl.dk_yaml)
+        self.assertRaises(SystemExit, lambda: _read_dark_yaml())
