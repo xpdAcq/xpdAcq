@@ -176,7 +176,7 @@ def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun
     if auto_calibration: 
         auto_load_calibration_dict = _auto_load_calibration_file()
         if auto_load_calibration_dict:
-            scan.md.update(auto_calibration_dict)
+            scan.md.update(auto_load_calibration_dict)
     if light_frame and scan.sp.shutter:
         _open_shutter()
     _unpack_and_run(scan, **kwargs)

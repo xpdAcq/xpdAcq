@@ -1,6 +1,5 @@
 import unittest
-from unittest.mock import MagicMock
-from unittest import patch
+from unittest.mock import MagicMock, patch
 import os
 import shutil
 import time
@@ -121,41 +120,88 @@ class findRightDarkTest(unittest.TestCase):
         self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_file_name'], modified_cfg_f_name)
         self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_parameters']['Others']['uncertaintyenable'], 'False')
    
-    # not a very conclusive test
-    @patch('__main__._auto_dark_collection') 
-    def test_new_prun(self):
-        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
+    def test_new_prun_with_auto_dark_and_auto_calibration(self):
+        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1, 'dk_window':32767}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
+        cfg_f_name = 'srxconfig.cfg'
+        cfg_src = os.path.join(os.path.dirname(__file__), cfg_f_name) # __file__ gives relative path
+        cfg_dst = os.path.join(glbl.config_base, cfg_f_name)
+        shutil.copy(cfg_src, cfg_dst)
         new_prun(self.sa, self.sp)
         # is xpdRE used?
         self.assertTrue(glbl.xpdRE.called)
-        # make sure _auto_dark_collection is called
-        self.assertTrue(_auto_dark_collection in glbl.xpdRE.method_calls)
-        # make sure _auto_load_calibration_file is not called
-        #self.assertTrue(_auto_load_calibration_file not in glbl.xpdRE.method_calls)
-        # is  ScanPlan.md remain unchanged?
-        #self.assertFalse('sc_isprun' in self.sp.md)
-   
-     # not a very conclusive test
+        # is md updated?
+        self.assertFalse(glbl.xpdRE.call_args_list[-1][1] == self.sc.md)
+        # is prun passed eventually?
+        self.assertTrue('sc_isprun' in glbl.xpdRE.call_args_list[-1][1])
+        # is auto_dark executed?
+        self.assertTrue('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
+        # is dk_window changed as ScanPlan object changed??
+        self.assertEqual(glbl.xpdRE.call_args_list[-1][1]['sc_dk_window'], 32767)
+        # is calibration loaded?
+        self.assertEqual(glbl.xpdRE.call_args_list[-1][1]['sc_calibration_file_name'], cfg_f_name)
+        # is  ScanPlan.md remain unchanged after scan?
+        self.assertFalse('sc_isprun' in self.sp.md)
+    
+    def test_new_prun_no_auto_dark_but_auto_calibration(self):
+        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1, 'dk_window':32767}, shutter = False)
+        self.sc = Scan(self.sa, self.sp)
+        self.assertEqual(self.sc.sp, self.sp)
+        cfg_f_name = 'srxconfig.cfg'
+        cfg_src = os.path.join(os.path.dirname(__file__), cfg_f_name) # __file__ gives relative path
+        cfg_dst = os.path.join(glbl.config_base, cfg_f_name)
+        shutil.copy(cfg_src, cfg_dst)
+        new_prun(self.sa, self.sp, auto_dark = False)
+        # is xpdRE used?
+        self.assertTrue(glbl.xpdRE.called)
+        # is md updated?
+        self.assertFalse(glbl.xpdRE.call_args_list[-1][1] == self.sc.md)
+        # is prun passed eventually?
+        self.assertTrue('sc_isprun' in glbl.xpdRE.call_args_list[-1][1])
+        # is auto_dark executed? -> No
+        self.assertFalse('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
+        # is calibration loaded?
+        self.assertTrue(cfg_f_name in glbl.xpdRE.call_args_list[-1][1]['sc_calibration_file_name'])
+        # is  ScanPlan.md remain unchanged after scan?
+        self.assertFalse('sc_isprun' in self.sp.md)   
+
     def test_dark(self):
         self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
+        cfg_f_name = 'srxconfig.cfg'
+        cfg_src = os.path.join(os.path.dirname(__file__), cfg_f_name) # __file__ gives relative path
+        cfg_dst = os.path.join(glbl.config_base, cfg_f_name)
+        shutil.copy(cfg_src, cfg_dst)
         dark(self.sa, self.sp)
         # is xpdRE used?
         self.assertTrue(glbl.xpdRE.called)
-        # make sure _auto_dark_collection is not called
-        self.assertFalse(_auto_dark_collection in glbl.xpdRE.method_calls)
-        # make sure _auto_load_calibration_file is not called
-        self.assertFalse(_auto_load_calibration_file in glbl.xpdRE.method_calls)
-        # is  ScanPlan.md remain unchanged?
+        # is md updated?
+        self.assertFalse(glbl.xpdRE.call_args_list[-1][1] == self.sc.md)
+        # is dark labeled eventually?
+        self.assertTrue('sc_isdark' in glbl.xpdRE.call_args_list[-1][1])
+        # is auto_dark executed? -> No
+        self.assertFalse('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
+        # is calibration loaded? -> No
+        self.assertFalse('sc_calibration_file_name' in glbl.xpdRE.call_args_list[-1][1])
+        # is  ScanPlan.md remain unchanged after scan?
         self.assertFalse('sc_isdark' in self.sp.md)
     
-    # not a very conclusive test
     def test_calibration(self):
         self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
         calibration(self.sa, self.sp)
+        # is xpdRE used?
+        self.assertTrue(glbl.xpdRE.called)
+        # is md updated?
+        self.assertFalse(glbl.xpdRE.call_args_list[-1][1] == self.sc.md)
+        # is calibration labeled eventually?
+        self.assertTrue('sc_iscalibration' in glbl.xpdRE.call_args_list[-1][1])
+        # is auto_dark executed?
+        self.assertTrue('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
+        # is calibration loaded? -> No
+        self.assertFalse('sc_calibration_file_name' in glbl.xpdRE.call_args_list[-1][1])
+        # is  ScanPlan.md remain unchanged after scan?
         self.assertFalse('sc_iscalibration' in self.sp.md)
