@@ -103,7 +103,9 @@ def save_tiff(headers, dark_subtraction=True, *, max_count=None):
         useful to 'preview' an export or if there are corrupted files
         in the data stream (ex from the IOC crashing during data acquisition).
     '''
-    F_EXTEN = '.tiff'
+    # 0323 Tim ssh-in patch. per Sanjit's request
+    #F_EXTEN = '.tiff'
+    F_EXTEN = '.tif'
     e = '''Can not find a proper dark image applied to this header. 
     Files will be saved but not no dark subtraction will be applied'''
     is_dark_subtracted = False # Flip it only if subtraction is successfully done
@@ -120,19 +122,24 @@ def save_tiff(headers, dark_subtraction=True, *, max_count=None):
         # information at header level
         img_field = _identify_image_field(header)
         dark_img = None
-        if 'dk_field_uid' not in header.start['sp_params']:
+        # 0323 Tim ssh-in path
+        if 'sc_dk_field_uid' not in header.start:
+        #if 'dk_field_uid' not in header.start['sp_params']:
             warnings.warn("Requested to do dark correction, but header does "
                           "not contain a 'dk_field_uid' entry.  "
                           "Disabling dark subtraction.")
             dark_subtraction = False
 
         if dark_subtraction:
-            dark_uid_appended = header.start['sp_params']['dk_field_uid']
+            # 0323 Tim ssh-in path
+            dark_uid_appended = header.start['sc_dk_field_uid']
+            #dark_uid_appended = header.start['sp_params']['dk_field_uid']
             try:
                 # bluesky only looks for uid it defines
                 # this should be refine later
+                # 0323 Tim ssh-in path
                 dark_search = {'group': 'XPD',
-                               'xp_dark_uid': dark_uid_appended}
+                               'sc_dark_uid': dark_uid_appended}
 
                 dark_header = db(**dark_search)
                 dark_img = np.asarray(get_images(dark_header,
