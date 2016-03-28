@@ -370,7 +370,6 @@ def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}):
 
     area_det.images_per_set.put(num_frame)
     md_dict = scan.md
-    md_dict.update(kwargs)
 
     plan = Count([area_det])
     xpdRE(plan, subs_dict, **md_dict)
@@ -418,7 +417,6 @@ def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_de
 
     area_det.images_per_set.put(num_frame)
     md_dict = scan.md
-    md_dict.update(kwargs)
 
     plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
     xpdRE(plan,subs_dict, **md_dict)
@@ -442,21 +440,26 @@ def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs
     ----------
     scan : xpdacq.beamtime.Scan object
         an object carries all metadata of your experiment
+
     exposure : float
         optional. total exposure time in seconds
+    
     delay : float
         delay between consecutive scans in seconds.  If less than exposure, the exposure time will be maintained and this time will be increased.
+    
     num : int
         total number of scans wanted in this time series scan
+    
     det : Ophyd object
         optional. the instance of the detector you are using. by default area_det defined when xpdacq is loaded.
+    
     subs_dict : dict
         optional. dictionary specifies live feedback options during scans
 
-Returns
--------
-None
-'''
+    Returns
+    -------
+    None
+    '''
     # get a local copy of md to update
     md = dict(scan.md)
     area_det.cam.acquire_time.put(glbl.frame_acq_time)
@@ -481,7 +484,6 @@ None
                'sp_number_of_sets': num_sets})
 
     md_dict = scan.md
-    md_dict.update(kwargs)
     plan = Count([area_det], num=num, delay=real_delay)
     xpdRE(plan, subs_dict, **md_dict)
     print('End of time series scan ....')
