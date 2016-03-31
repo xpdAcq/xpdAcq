@@ -57,7 +57,6 @@ ALL_FOLDERS = [
 
 # directories that won't be tar in the end of beamtime
 _EXCLUDE_DIR = [HOME_DIR, BLCONFIG_DIR, YAML_DIR]
-_END_BT_TAR_DIR = [ el for el in ALL_FOLDERS if el not in _EXCLUDE_DIR]
 _EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
 
 # for simulation put a summy saf file in BLCONFIG_DIR

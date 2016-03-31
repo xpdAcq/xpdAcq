@@ -1,5 +1,8 @@
-
+import os
 import sys
+import shutil
+import tarfile as tar
+from time import strftime
 
 def _graceful_exit(error_message):
     try:
@@ -37,3 +40,32 @@ def composition_analysis(compstring):
     getfraction = lambda s: (s == '' and 1.0 or float(s))
     fractions = [getfraction(w) for w in namefracs[1::2]]
     return names, fractions
+
+def export_usermetadata():
+    """ functions exporting user meata stored in config_base and userScript under xpdUser directory
+        
+        it will create a uncompressed tarball inside xpdUser/Export
+
+    Return
+    ------
+        archive_path : str
+        path to archive file just created
+    """
+    root_dir = glbl.home
+    os.chdir(root_dir)
+    f_name = strftime('userMetadata_%Y-%m-%dT%H%M')
+    # extra work to avoid comple directory structure in tarball
+    os.makedirs(glbl.export_dir, exist_ok = True)
+    (dir_head, dir_tail) = os.path.split(glbl.export_dir)
+    tar_f_name = os.path.join(dir_tail, f_name)
+    export_dir_list = list(map(lambda x: os.path.basename(x), glbl._export_tar_dir))
+    with tar.open(tar_f_name, 'w') as f:
+        for el in export_dir_list:
+            f.add(el)
+    archive_path = os.path.join(glbl.export_dir, f_name)
+    if os.path.isfile(archive_path):
+        return archive_path
+    else:
+        _graceful_exit('Did you accidentally change write privilege to {}'.format(glbl.export_dir))
+        print('Please try `export_usermetadata()` again at command prompt')
+        return
