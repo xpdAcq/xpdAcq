@@ -39,6 +39,13 @@ w_dir = os.path.join(glbl.home, 'tiff_base')
 W_DIR = w_dir # in case of crashes in old codes
 
 def bt_uid():
+    """ function to obtain uid of current beamtime
+    
+    Returns
+    -------
+    bt_uid : str
+        uid of xpdacq.beamtime.Beamtime object
+    """
     return bt.get(0).md['bt_uid']
 
 def _feature_gen(header):
@@ -80,6 +87,19 @@ def _timestampstr(timestamp):
     return timestring
 
 def save_last_tiff(dark_subtraction=True, max_count_num=None):
+    """ save images from the most recent scan as tiff format files.
+
+    Parameters
+    ----------
+    dark_subtraction : bool, optional
+        If background / dark subtraction should be done before saving
+        each image.
+
+    max_count : int, optional
+        The maximum number of events to process per-run.  This can be
+        useful to 'preview' an export or if there are corrupted files
+        in the data stream (ex from the IOC crashing during data acquisition).
+    """
     if not max_count_num:
         save_tiff(db[-1], dark_subtraction, max_count = max_count_num)
     else:

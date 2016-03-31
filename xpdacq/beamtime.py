@@ -160,6 +160,21 @@ class XPD:
         self._yamify()
 
 class Beamtime(XPD):
+    ''' beamtime object that holds basic information to current beamtime 
+    
+    Parameters
+    ----------
+    pi_last : str
+        last name of PI to this beamtime
+    safn : str
+        SAF number to this beamtime
+    wavelength : float
+        optional but it is strongly recommended to enter. x-ray wavelength to this beamtime, it will be used during data deduction
+    experimenters : list
+        optional. a list of tuples that are made of (last_name, first_name, id) of each experimenter involved.
+    **kwargs : dict
+        optional. a dictionary for user-supplied information.
+    ''' 
     def __init__(self, pi_last, safn, wavelength=None, experimenters=[], **kwargs):
         self.name = 'bt'
         self.type = 'bt'
