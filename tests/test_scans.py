@@ -92,7 +92,11 @@ class NewScanTest(unittest.TestCase):
         cfg_f_name = 'srxconfig.cfg'
         cfg_src = os.path.join(os.path.dirname(__file__), cfg_f_name) # __file__ gives relative path
         cfg_dst = os.path.join(glbl.config_base, cfg_f_name)
-        shutil.copy(cfg_src, cfg_dst)
+        config = ConfigParser()
+        config.read(cfg_src)
+        with open(cfg_dst, 'w') as f_original:
+            config.write(f_original) 
+        #shutil.copy(cfg_src, cfg_dst)
         auto_calibration_md_dict = _auto_load_calibration_file()
         # is file loaded??
         self.assertTrue('sc_calibration_parameters' in auto_calibration_md_dict)
@@ -107,8 +111,8 @@ class NewScanTest(unittest.TestCase):
         config = ConfigParser()
         config.read(cfg_src)
         config['Others']['avgmask'] = 'False'
-        with open(modified_cfg_dst, 'w') as f:
-            config.write(f)
+        with open(modified_cfg_dst, 'w') as f_modified:
+            config.write(f_modified)
         self.assertTrue(os.path.isfile(modified_cfg_dst))
         #modified_cfg_src = os.path.join(os.path.dirname(__file__), modified_cfg_f_name)
         #shutil.copy(modified_cfg_src, modified_cfg_dst)
