@@ -39,7 +39,7 @@ The basic way to collect data is to carry out a "scan", by typing the kind of sc
 Remember!
 +++++++++
    1. ``bt.list()`` to see what objects are available
-   2. ``prun(bt.get(<sampleIndex>)bt.get(<scanIndex>))`` to run the scan
+   2. ``prun(bt.get(<sampleIndex>)bt.get(<scanplanIndex>))`` to run the scan
    3. ``save_tiff(db[list_of_scans])`` to get the data back as a tiff file
    4. ``xPDFsuite`` to visualize it, integrate it to 1D and process to get a diffraction pattern or PDF.
    
@@ -69,24 +69,25 @@ Types of ScanPlan available in current version:
 
 Here is a summary table:
 
-+--------------+-----------------------------------------------------------------------------------------------------+
-|Scan Plan name|Syntax Example                                                                                       |
-+==============+=====================================================================================================+
-|``ct``        |``ScanPlan('ct17.5s','ct',{'exposure':17.5})``                                                       |
-+--------------+-----------------------------------------------------------------------------------------------------+
-|``tseries``   |``ScanPlan('t50_e1s_d59s','tseries',{'num':50,'exposure':1,'delay':59})``                            |
-|              |                                                                                                     |
-|              |                                                                                                     |
-+--------------+-----------------------------------------------------------------------------------------------------+
-|``Tramp``     |``ScanPlan('T200K_500K_5K_1s','Tramp',{'startingT':200, 'endingT':500, 'Tstep':5, 'exposure':1})``   |
-+--------------+-----------------------------------------------------------------------------------------------------+
-
+=========== ==================================================================================================
+ScanPlan    Syntax
+=========== ==================================================================================================
+``ct``      ``ScanPlan('ct17.5s','ct',{'exposure':17.5})``
+``tseries`` ``ScanPlan('t50_e1s_d59s','tseries',{'num':50,'exposure':1,'delay':59})``
+``Tramp``   ``ScanPlan('T200K_500K_5K_1s','Tramp',{'startingT':200, 'endingT':500, 'Tstep':5, 'exposure':1})``
+=========== ==================================================================================================
 
 Experiment and sample objects:
-  1. The tiff file will be saved with the name ``<sample-name>_<scan-name>_<time-stamp>_<something-else>.tiff``, and all the information in the scan and sample objects will be saved to metadata and searchable and usable for processing later.  The <something-else> depends on the scan type, for example, for a ``Tramp`` it is the actual temperature read from the temperature controller when the data-collection was initiated for that point.  It is time well spent to set up all your experimnet and sample objects accurately. [not implemented yet] It is possible to download xpdAcq and run it on your own computer to set up the sample and scan objects you think you will need at the beamtime, so when you are at XPD you can concentrate on collecting data and not typing metadata.  It is strongly recommended.  See the full documentation for more details.
+  1. The tiff file will be saved with the name ``<sample-name>_<scanplan-name>_<time-stamp>_<something-else>.tiff``, and all the information in the ``scanplan`` and ``sample`` objects will be saved to metadata and searchable and usable for processing later.  The <something-else> depends on the ``scanplan`` type, for example, for a ``Tramp`` it is the actual temperature read from the temperature controller when the data-collection was initiated for that point.  It is time well spent to set up all your experimnet and sample objects accurately. [not implemented yet] It is possible to download xpdAcq and run it on your own computer to set up the ``sample`` and ``scanplan`` objects you think you will need at the beamtime, so when you are at XPD you can concentrate on collecting data and not typing metadata.  It is strongly recommended.  See the full documentation for more details.
   2. To set up a sample you have to give it an experiment object, so ``Sample('Li battery electrode',bt.get(96))`` uses the object in ``bt.list(96)`` which must be an ``ex`` type object, for example I may have made it with ``Experiment('cycled and uncycled batteries',bt)``.  The ``bt`` is the beamtime object.  For more info on why it is set up this way, see the docs!
+
 User scripts:
-  Your scans can be sequenced into scripts, executing one after the other as you desire.  To set this up, write a sequence of commands into a text file, save it with the extension ``.py`` in the ``userScripts`` directory with a memorable name, like ``myNightShiftScript.py``. Double and triple check it, then when you are ready to execute it, type ``!run ~/userScripts/myNightShiftScript.py``, make sure it is running as expected, and go to bed!
+  Your ``scanplan`` objects can be sequenced into scripts, executing one after the other as you desire.  To set this up, write a sequence of commands into a text file, save it with the extension ``.py`` in the ``userScripts`` directory with a memorable name, like ``myNightShiftScript.py``.  Double and triple check your script, then when you are ready to execute it, in ``ipython`` session type:
+.. code-block:: python
+  
+   run -i ~/xpdUser/userScripts/myNightShiftScript.py
+
+Stay there for a while to make sure everything is running as expected and go to bed!
 
 There is much more to the xpdAcq software that will give you superpowers in rapid and flexible data collection, data retrieval and processing.  This was just the quick start, but much more information is in the full documentation.
 

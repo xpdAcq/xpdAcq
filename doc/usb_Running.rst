@@ -17,10 +17,10 @@ The allowed scan types are:
 
 .. code-block:: python
 
-  >>> prun(sample,scan)
-  >>> dark(sample,scan)
-  >>> setupscan(sample,scan)
-  >>> dryrun(sample,scan)
+  >>> prun(sample,scanplan)
+  >>> dark(sample,scanplan)
+  >>> setupscan(sample,scanplan)
+  >>> dryrun(sample,scanplan)
   
 ``prun`` stands for "production run" which is a normal run.  ``dark`` collects dark frames.
 Strictly speaking the sample is irrelevant here because the shutter is closed, but
@@ -76,7 +76,7 @@ and then compare them.
   >>> setupscan(bt.get(3),bt.get(10))  #100.5 seconds
   [Fixme] output here
 
-what is nice about these is that they are tagged with an ``'xp_isprun':False`` metadata field
+what is nice about these is that they are tagged with an ``sc_isprun':False`` metadata field
 which means that, by default, they will not be retrieved when searching for production data.  It
 keeps our setup scans and production scans nicely separated in the database, though
 the underlying scans that are carried out are all still there and can be retrieved if need

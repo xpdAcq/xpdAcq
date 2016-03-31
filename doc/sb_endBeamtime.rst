@@ -7,7 +7,7 @@ Required Information
 """"""""""""""""""""
 
 Goals of the Process
-""""""""""""""""""
+""""""""""""""""""""
 
  1. Ensure that the ``Export`` directory is empty. If not, delete everything in ``Export``. Confirm before doing this.
  2. Tar and zip the entire xpdUser tree with name ``<PIlastname>_<saf#>_<date>.tar.gz``
@@ -17,6 +17,6 @@ Goals of the Process
  6. Keep operator informed of what is going on
  
 Process Steps
-"""""""""""
+"""""""""""""
 
 return to :ref:`bls`

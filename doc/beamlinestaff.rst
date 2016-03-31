@@ -12,5 +12,4 @@ Start Beamtime
 
 End Beamtime
 ++++++++++++
-
-*contents*
+ * :ref:`sb_endBeamtime`

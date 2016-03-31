@@ -51,16 +51,16 @@ The hierarch is as follows:
     
        * Sample
        
-          * Scan
+          * ScanPlan
           
-             * Exposure
+             * Scan
      
-where it is assumed that a `Beamtime` may consist of one or more `experiments`
+where it is assumed that a `Beamtime` may consist of one or more `Experiments`
 (such as "temperature and doping dependence of In1-xGaxA"). Each experiment
-will make measurements on one or more `samples` (in the example case the samples
+will make measurements on one or more `Samples` (in the example case the samples
 may be GaAs, In0.25Ga0.75As, In0.5Ga0.5As, In 0.75Ga0.25As and InAs) and on each
-sample we do one or more `scans` (for example a temperature scan from 100 K to 300 K)
-which consist of one or more `exposures`.
+sample we would have one or more `ScanPlans` (for example a temperature scanplan from 100 K to 300 K)
+which consist of one or more `Scans`.
 
 When we are running the experiment we pretty much just want to be worrying about
 setting up and running the scans, but to find the data later, and to help with
@@ -74,12 +74,12 @@ Two required pieces of data at the Beamtime level are ``PIlastName`` and ``SAF#`
 the last name of the PI in charge of the beamtime and the number of the safety 
 approval form for the experiment.  This information will be typed once, but saved
 with every dataset during that beamtime.  You can create multiple `instances` 
-of each metadata level and these will be saved for later use.  So at the 
+of each metadata level and these will be saved for later use. So at the 
 beginning of the beamtime (or at home before you arrive using the xpdSim package)
 you can create a ``myGaAs`` object, an ``myIn25Ga75As``, and so on.  When you create
-a scan you just have tell it that the sample is ``myGaAs`` and all the metadata
-in myGaAs will automatically be saved with every exposure in that scan.  In ``xpdAcq``
-there are helpful functions for setting up these metadata libraries.  In the
+a scanplan you just have tell it that the sample is ``myGaAs`` and all the metadata
+in myGaAs will automatically be saved with every scan in that scanplan.  In ``xpdAcq``
+there are helpful functions for setting up these metadata libraries. In the
 future, a GUI is planned to facilitate this even further.
 
 With this information in mind, please go ahead and start the step-by-step process

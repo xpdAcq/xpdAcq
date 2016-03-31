@@ -12,8 +12,20 @@ Contents:
    :maxdepth: 3
 
    beamlinestaff
-   quickstart
+
+.. toctree::
+   :maxdepth: 3
+
    xpdusers
+
+.. toctree::
+   :maxdepth: 3
+
+   quickstart
+
+.. toctree::
+   :maxdepth: 3
+
    troubleshooting
 
 
