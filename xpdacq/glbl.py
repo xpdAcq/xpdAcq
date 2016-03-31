@@ -38,20 +38,28 @@ YAML_DIR = os.path.join(HOME_DIR, 'config_base', 'yml')
 DARK_YAML_NAME = os.path.join(YAML_DIR, '_dark_scan_list.yaml')
 CONFIG_BASE = os.path.join(HOME_DIR, 'config_base')
 IMPORT_DIR = os.path.join(HOME_DIR, 'Import')
+USERSCRIPT_DIR = os.path.join(HOME_DIR, 'userScripts')
+TIFF_BASE = os.path.join(HOME_DIR, 'tiff_base')
 
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 ALL_FOLDERS = [
         HOME_DIR,
         BLCONFIG_DIR,
-        os.path.join(HOME_DIR, 'tiff_base'),
+        TIFF_BASE,
         os.path.join(HOME_DIR, 'dark_base'),
         YAML_DIR,
         CONFIG_BASE,
-        os.path.join(HOME_DIR, 'userScripts'),
+        USERSCRIPT_DIR,
         EXPORT_DIR,
         IMPORT_DIR,
         os.path.join(HOME_DIR, 'userAnalysis')
 ]
+
+# directories that won't be tar in the end of beamtime
+_EXCLUDE_DIR = [HOME_DIR, BLCONFIG_DIR, YAML_DIR]
+_END_BT_TAR_DIR = [ el for el in ALL_FOLDERS if el not in _EXCLUDE_DIR]
+_EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
+
 # for simulation put a summy saf file in BLCONFIG_DIR
 os.makedirs(BLCONFIG_DIR, exist_ok=True)
 tmp_safname = os.path.join(BLCONFIG_DIR,'saf123.yml')
@@ -65,10 +73,14 @@ class glbl():
     beamline_host_name = BEAMLINE_HOST_NAME
     base = BASE_DIR
     home = HOME_DIR
+    _end_bt_tar_dir = _END_BT_TAR_DIR
+    _export_tar_dir = _EXPORT_TAR_DIR
     xpdconfig = BLCONFIG_DIR
     export_dir = EXPORT_DIR
     import_dir = IMPORT_DIR
     config_base = CONFIG_BASE
+    tiff_base =TIFF_BASE
+    usrScript_dir = USERSCRIPT_DIR
     yaml_dir = YAML_DIR
     allfolders = ALL_FOLDERS
     archive_dir = USER_BACKUP_DIR
