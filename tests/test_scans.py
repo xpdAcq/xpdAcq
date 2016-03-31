@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import os
+from configparser import ConfigParser
 import shutil
 import time
 import uuid
@@ -42,7 +43,7 @@ def ideal_prun(sample, scanplan, **kwargs):
     _executes_scan(scan)
     return 
     
-class findRightDarkTest(unittest.TestCase): 
+class NewScanTest(unittest.TestCase): 
     def setUp(self):
         self.base_dir = glbl.base
         self.home_dir = glbl.home
@@ -68,15 +69,6 @@ class findRightDarkTest(unittest.TestCase):
             shutil.rmtree(glbl.home)
         if os.path.isdir(os.path.join(glbl.base,'xpdConfig')):
             shutil.rmtree(os.path.join(glbl.base,'xpdConfig'))
-    
-    def test_current_prun(self):
-        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
-        self.sc = Scan(self.sa, self.sp)
-        self.assertEqual(self.sc.sp, self.sp)
-        prun(self.sa, self.sp)
-        self.assertTrue(glbl.xpdRE.called)
-        self.assertFalse('sc_isprun' in self.sp.md) # after prun buch of md should be updated
-        #self.assertEqual((), glbl.xpdRE.count_args[1]) # in interactive shell, that works but not in module
 
     def test_auto_dark_collection(self):
         self.sp_set_dk_window = ScanPlan('unittest_count','ct', {'exposure': 0.1, 'dk_window':25575}, shutter = False)
@@ -111,13 +103,19 @@ class findRightDarkTest(unittest.TestCase):
         # multiple config files in xpdUser/config_base:
         self.assertTrue(os.path.isfile(cfg_dst))
         modified_cfg_f_name = 'modified_srxconfig.cfg'
-        modified_cfg_src = os.path.join(os.path.dirname(__file__), modified_cfg_f_name)
         modified_cfg_dst = os.path.join(glbl.config_base, modified_cfg_f_name)
-        shutil.copy(modified_cfg_src, modified_cfg_dst)
+        config = ConfigParser()
+        config.read(cfg_src)
+        config['Others']['avgmask'] = 'False'
+        with open(modified_cfg_dst, 'w') as f:
+            config.write(f)
+        self.assertTrue(os.path.isfile(modified_cfg_dst))
+        #modified_cfg_src = os.path.join(os.path.dirname(__file__), modified_cfg_f_name)
+        #shutil.copy(modified_cfg_src, modified_cfg_dst)
         modified_auto_calibration_md_dict = _auto_load_calibration_file()
         # is information loaded in correctly?
         self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_file_name'], modified_cfg_f_name)
-        self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_parameters']['Others']['uncertaintyenable'], 'False')
+        self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_parameters']['Others']['avgmask'], 'False')
    
     def test_new_prun_with_auto_dark_and_auto_calibration(self):
         self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1, 'dk_window':32767}, shutter = False)
