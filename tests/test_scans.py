@@ -95,7 +95,7 @@ class NewScanTest(unittest.TestCase):
         config = ConfigParser()
         config.read(cfg_src)
         with open(cfg_dst, 'w') as f_original:
-            config.write(f_original) 
+            config.write(f_original)
         #shutil.copy(cfg_src, cfg_dst)
         auto_calibration_md_dict = _auto_load_calibration_file()
         # is file loaded??
@@ -106,7 +106,7 @@ class NewScanTest(unittest.TestCase):
         self.assertEqual(auto_calibration_md_dict['sc_calibration_file_name'], cfg_f_name)
         # multiple config files in xpdUser/config_base:
         self.assertTrue(os.path.isfile(cfg_dst))
-        modified_cfg_f_name = 'new_srxconfig.cfg'
+        modified_cfg_f_name = 'srxconfig_1.cfg'
         modified_cfg_dst = os.path.join(glbl.config_base, modified_cfg_f_name)
         config = ConfigParser()
         config.read(cfg_src)
