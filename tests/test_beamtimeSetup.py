@@ -8,6 +8,7 @@ from xpdacq.glbl import glbl
 import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment, import_yaml
 from xpdacq.beamtime import Beamtime,_get_yaml_list
+from xpdacq.utils import export_usermetadata
 
 class NewBeamtimeTest(unittest.TestCase): 
 
@@ -186,3 +187,24 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertFalse(os.path.isfile(new_tar_yaml))
         # confirm unrecongnized file is left in import dir
         self.assertTrue(os.path.isfile(exception_f))
+
+
+    def test_export_usermetadata(self):
+        os.makedirs(glbl.usrScript_dir, exist_ok = True)
+        os.makedirs(glbl.yaml_dir, exist_ok = True)
+        new_script = os.path.join(glbl.usrScript_dir, 'script.py')
+        open(new_script, 'a').close()
+        new_yaml = os.path.join(glbl.yaml_dir, 'touched.yml')
+        open(new_yaml, 'a').close()
+        tar_f_path = export_usermetadata()
+        shutil.unpack_archive(tar_f_path,glbl.export_dir)
+        
+        userScript_dir_tail = os.path.split(glbl.usrScript_dir)[1]
+        config_base_tail = os.path.split(glbl.config_base)[1]
+        yaml_dir_tail = os.path.split(glbl.yaml_dir)[1]
+        # are parent dirs in export_dir?
+        self.assertTrue(os.path.isdir(os.path.join(glbl.export_dir, userScript_dir_tail)))
+        self.assertTrue(os.path.isdir(os.path.join(glbl.export_dir, config_base_tail)))
+        # are files in unpacked dirs?
+        self.assertTrue('script.py' in os.listdir(os.path.join(glbl.export_dir, userScript_dir_tail)))
+        self.assertTrue('touched.yml' in os.listdir(os.path.join(glbl.export_dir, config_base_tail, yaml_dir_tail)))

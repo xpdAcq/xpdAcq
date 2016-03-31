@@ -4,6 +4,7 @@ import shutil
 import tarfile as tar
 from time import strftime
 
+from xpdacq.glbl import glbl
 def _graceful_exit(error_message):
     try:
         raise RuntimeError(error_message)
@@ -51,9 +52,10 @@ def export_usermetadata():
         archive_path : str
         path to archive file just created
     """
+    F_EXT = '.tar'
     root_dir = glbl.home
     os.chdir(root_dir)
-    f_name = strftime('userMetadata_%Y-%m-%dT%H%M')
+    f_name = strftime('userMetadata_%Y-%m-%dT%H%M') + F_EXT
     # extra work to avoid comple directory structure in tarball
     os.makedirs(glbl.export_dir, exist_ok = True)
     (dir_head, dir_tail) = os.path.split(glbl.export_dir)

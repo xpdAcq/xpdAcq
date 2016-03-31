@@ -72,7 +72,6 @@ class glbl():
     beamline_host_name = BEAMLINE_HOST_NAME
     base = BASE_DIR
     home = HOME_DIR
-    _end_bt_tar_dir = _END_BT_TAR_DIR
     _export_tar_dir = _EXPORT_TAR_DIR
     xpdconfig = BLCONFIG_DIR
     export_dir = EXPORT_DIR
