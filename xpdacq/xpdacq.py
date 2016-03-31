@@ -207,7 +207,8 @@ def _auto_load_calibration_file():
         print('INFO: No calibration file found in config_base. Scan will still keep going on')
         return
     f_list_full_path = list(map(lambda f: os.path.join(config_dir, f), f_list)) # join elemnts in f_list with config_dir
-    config_in_use = sorted(f_list_full_path, key=os.stat)[-1]
+    #config_in_use = sorted(f_list_full_path, key=os.stat)[-1]
+    config_in_use = sorted(f_list_full_path, key=os.path.getmtime)[-1]
     print('INFO: This scan will append calibration parameters recorded in {}'.format(os.path.basename(config_in_use)))
     config_timestamp = os.path.getmtime(config_in_use)
     config_time = datetime.datetime.fromtimestamp(config_timestamp).strftime('%Y%m%d-%H%M')
@@ -443,16 +444,16 @@ def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs
 
     exposure : float
         optional. total exposure time in seconds
-    
+
     delay : float
         delay between consecutive scans in seconds.  If less than exposure, the exposure time will be maintained and this time will be increased.
-    
+
     num : int
         total number of scans wanted in this time series scan
-    
+
     det : Ophyd object
         optional. the instance of the detector you are using. by default area_det defined when xpdacq is loaded.
-    
+
     subs_dict : dict
         optional. dictionary specifies live feedback options during scans
 

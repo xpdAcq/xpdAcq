@@ -41,9 +41,9 @@ def ideal_prun(sample, scanplan, **kwargs):
     scan = Scan(samplm, scanplan)
     scan.md.update({'sc_isprun':True})
     _executes_scan(scan)
-    return 
-    
-class NewScanTest(unittest.TestCase): 
+    return
+
+class NewScanTest(unittest.TestCase):
     def setUp(self):
         self.base_dir = glbl.base
         self.home_dir = glbl.home
@@ -58,7 +58,7 @@ class NewScanTest(unittest.TestCase):
         loadinfo = {'saf number':self.saf_num,'PI last name':self.PI_name,'experimenter list':self.experimenters}
         with open(self.saffile, 'w') as fo:
             yaml.dump(loadinfo,fo)
-        self.bt = _start_beamtime(self.saf_num,home_dir=self.home_dir)  
+        self.bt = _start_beamtime(self.saf_num,home_dir=self.home_dir)
         self.stbt_list = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sp_ct.1s.yml','sp_ct.5s.yml','sp_ct1s.yml','sp_ct5s.yml','sp_ct10s.yml','sp_ct30s.yml']
         self.ex = Experiment('validateDark_unittest', self.bt)
         self.sa = Sample('unitttestSample', self.ex)
@@ -114,9 +114,11 @@ class NewScanTest(unittest.TestCase):
         #shutil.copy(modified_cfg_src, modified_cfg_dst)
         modified_auto_calibration_md_dict = _auto_load_calibration_file()
         # is information loaded in correctly?
+        #debug = list(map(lambda x: os.path.getmtime(x), os.listdir(glbl.config_base)))
+        #print(debug)
         self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_file_name'], modified_cfg_f_name)
         self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_parameters']['Others']['avgmask'], 'False')
-   
+
     def test_new_prun_with_auto_dark_and_auto_calibration(self):
         self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1, 'dk_window':32767}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
@@ -140,7 +142,7 @@ class NewScanTest(unittest.TestCase):
         self.assertEqual(glbl.xpdRE.call_args_list[-1][1]['sc_calibration_file_name'], cfg_f_name)
         # is  ScanPlan.md remain unchanged after scan?
         self.assertFalse('sc_isprun' in self.sp.md)
-    
+
     def test_new_prun_no_auto_dark_but_auto_calibration(self):
         self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1, 'dk_window':32767}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
@@ -161,7 +163,7 @@ class NewScanTest(unittest.TestCase):
         # is calibration loaded?
         self.assertTrue(cfg_f_name in glbl.xpdRE.call_args_list[-1][1]['sc_calibration_file_name'])
         # is  ScanPlan.md remain unchanged after scan?
-        self.assertFalse('sc_isprun' in self.sp.md)   
+        self.assertFalse('sc_isprun' in self.sp.md)
 
     def test_dark(self):
         self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
@@ -184,7 +186,7 @@ class NewScanTest(unittest.TestCase):
         self.assertFalse('sc_calibration_file_name' in glbl.xpdRE.call_args_list[-1][1])
         # is  ScanPlan.md remain unchanged after scan?
         self.assertFalse('sc_isdark' in self.sp.md)
-    
+
     def test_calibration(self):
         self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
