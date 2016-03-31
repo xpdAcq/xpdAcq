@@ -208,7 +208,8 @@ def _auto_load_calibration_file():
         return
     f_list_full_path = list(map(lambda f: os.path.join(config_dir, f), f_list)) # join elemnts in f_list with config_dir
     #config_in_use = sorted(f_list_full_path, key=os.stat)[-1]
-    config_in_use = sorted(f_list_full_path, key=os.path.getmtime)[-1]
+    f_list_full_path.sort(key=os.path.getmtime)
+    config_in_use = f_list_full_path [-1]
     print('INFO: This scan will append calibration parameters recorded in {}'.format(os.path.basename(config_in_use)))
     config_timestamp = os.path.getmtime(config_in_use)
     config_time = datetime.datetime.fromtimestamp(config_timestamp).strftime('%Y%m%d-%H%M')

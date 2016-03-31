@@ -102,7 +102,7 @@ class NewScanTest(unittest.TestCase):
         self.assertEqual(auto_calibration_md_dict['sc_calibration_file_name'], cfg_f_name)
         # multiple config files in xpdUser/config_base:
         self.assertTrue(os.path.isfile(cfg_dst))
-        modified_cfg_f_name = 'modified_srxconfig.cfg'
+        modified_cfg_f_name = 'new_srxconfig.cfg'
         modified_cfg_dst = os.path.join(glbl.config_base, modified_cfg_f_name)
         config = ConfigParser()
         config.read(cfg_src)
