@@ -46,7 +46,6 @@ ALL_FOLDERS = [
         HOME_DIR,
         BLCONFIG_DIR,
         TIFF_BASE,
-        os.path.join(HOME_DIR, 'dark_base'),
         YAML_DIR,
         CONFIG_BASE,
         USERSCRIPT_DIR,
