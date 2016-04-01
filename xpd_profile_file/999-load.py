@@ -17,41 +17,23 @@
 '''
 
 import os
-import socket
 from xpdacq.glbl import glbl
-from xpdacq.mock_objects import mock_shutter, mock_livetable
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
 from xpdacq.beamtime import *
 
-''' assignment happen inside glbl
-# assign objects for collection activities
-glbl.Msg = Msg
-glbl.xpdRE = xpdRE
-glbl.Count = Count
-glbl.AbsScanPlan = AbsScanPlan
-
-glbl.LiveTable = LiveTable
-
-
-# assign objects for analysis activities
-glbl.db = db
-glbl.get_events = get_events
-glbl.get_images = get_images
-glbl.verify_files_saved = verify_files_saved
-'''
-
-glbl.area_det = pe1c
-glbl.shutter = shctl1
-glbl.temp_controller = cs700
-
+try:
+    # if pe1c and other exits, i.e. at XPD 
+    glbl.area_det = pe1c
+    glbl.shutter = shctl1
+    glbl.temp_controller = cs700
+except NameError:
+    pass
 
 from xpdacq.xpdacq import *
 from xpdacq.analysis import *
-
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
 YAML_DIR = glbl.yaml_dir
-# 0322 XPD hotfix
 
 print('Initializing the XPD data acquisition simulation environment') 
 if os.path.isdir(HOME_DIR):
