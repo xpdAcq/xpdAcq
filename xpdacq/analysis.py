@@ -25,9 +25,6 @@ import tifffile as tif
 import matplotlib as plt
 from xpdacq.glbl import glbl
 import warnings
-#from xpdacq.glbl import _dataBroker as db
-#from xpdacq.glbl import _getEvents as get_events
-#from xpdacq.glbl import _getImages as get_images
 
 # top definition for minial impacts on the code. Can be changed later
 db = glbl.db

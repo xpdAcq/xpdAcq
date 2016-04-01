@@ -207,11 +207,7 @@ def _auto_load_calibration_file():
         print('INFO: No calibration file found in config_base. Scan will still keep going on')
         return
     f_list_full_path = list(map(lambda f: os.path.join(config_dir, f), f_list)) # join elemnts in f_list with config_dir
-    #config_in_use = sorted(f_list_full_path, key=os.stat)[-1]
-    f_list_full_path.sort(key=os.path.getmtime)
-    #print(f_list_full_path)
     sorted_list = sorted(f_list_full_path, key=os.path.getmtime)
-    print(sorted_list)
     config_in_use = sorted_list [-1]
     print('INFO: This scan will append calibration parameters recorded in {}'.format(os.path.basename(config_in_use)))
     config_timestamp = os.path.getmtime(config_in_use)

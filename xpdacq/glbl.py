@@ -1,6 +1,3 @@
-# 0322 XPD hotfix
-from runpy import run_path
-
 import os
 import socket
 import yaml
@@ -82,24 +79,7 @@ class glbl():
     owner = OWNER
     beamline_id = BEAMLINE_ID
     group = GROUP
-    ''' this block of code should be taken care in the following block of code. Delete it after testing
-    # objects for collection activities
-    Msg = None
-    xpdRE = None
-    Count = None
-    AbsScanPlan = None
 
-    area_det = None
-    shutter = None
-    LiveTable = None
-    temp_controller = None
-
-    # objects for analysis activities
-    db = None
-    get_events = None
-    get_images = None
-    verify_files_saved = None
-    '''
     # logic to assign correct objects depends on simulation or real experiment
     if not simulation:
         from bluesky.run_engine import RunEngine
@@ -134,10 +114,6 @@ class glbl():
         AbsScanPlan = absScanPlan 
         verify_files_saved = verifyFiles
         # real collection objects
-        # 0322 XPD hotfix
-        #area_det = pe1c
-        #temp_controller = cs700
-        #shutter = shctl1
         area_det = None
         temp_controller = None
         shutter = None
