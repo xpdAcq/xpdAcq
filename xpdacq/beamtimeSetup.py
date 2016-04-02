@@ -80,11 +80,27 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
         btuid = bto.md['bt_uid'][:7]
     except AttributeError:
         btuid = ''
-    archive_f = _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto)
-    _confirm_archive(archive_f)
-    _delete_home_dir_tree(base_dir,archive_f, bto)
+    archive_full_name = _execute_end_beamtime(piname, safn, btuid, base_dir)
+    _confirm_archive(archive_full_name)
+    _delete_home_dir_tree(base_dir, bto)
 
-def _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto):
+def _tar_user_data(archive_name, root_dir = None, archive_format ='tar'):
+    """ Create a remote tarball of all user folders under xpdUser directory
+    """
+    archive_full_name = os.path.join(glbl.archive_dir, archive_name)
+    if root_dir is None:
+        root_dir = glbl.base
+    cur_path = os.getcwd()
+    try:
+        os.chdir(glbl.base)
+        print('Archiving your data now. That may take several minutes, please be patient :)' )
+        tar_return = shutil.make_archive(archive_full_name, archive_format, root_dir=glbl.base,
+                base_dir='xpdUser', verbose=1, dry_run=False)
+    finally:
+        os.chdir(cur_path)
+    return archive_full_name
+
+def _execute_end_beamtime(piname, safn, btuid, base_dir):
     '''cleans up at the end of a beamtime
 
     Function takes all the user-generated tifs and config files, etc.,
@@ -98,16 +114,12 @@ def _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto):
       3. removes all the un-tarred data
 
     '''
-    tar_ball = export_data(base_dir, end_beamtime=True)
-    ext = get_full_ext(tar_ball)
     os.makedirs(archive_dir, exist_ok=True)
-
-    full_info = '_'.join([piname.strip().replace(' ', ''),
+    archive_name = '_'.join([piname.strip().replace(' ', ''),
                             str(safn).strip(), strftime('%Y-%m-%d-%H%M'), btuid]
                             )
-    archive_f_name = os.path.join(archive_dir, full_info) + ext
-    shutil.copyfile(tar_ball, archive_f_name) # remote archive'
-    return archive_f_name
+    archive_full_name = _tar_user_data(archive_name)
+    return archive_full_name
 
 def  _get_user_confirmation():
     conf = input("Please confirm data are backed up. Are you ready to continue with xpdUser directory contents deletion (y,[n])?: ")
@@ -121,16 +133,12 @@ def _confirm_archive(archive_f_name):
     else:
         sys.exit(_graceful_exit('xpdUser directory delete operation cancelled at Users request'))
 
-def _delete_home_dir_tree(base_dir, archive_f_name, bto):
-    #dp = DataPath(base_dir)
-    os.chdir(glbl.base)   # don't remember the name, but move up one directory out of xpdUser before deleting it!
+def _delete_home_dir_tree(base_dir, bto):
+    os.chdir(glbl.base) # move out from xpdUser before deletion
     shutil.rmtree(glbl.home)
     os.makedirs(glbl.home, exist_ok=True)
-    shutil.copy(archive_f_name, glbl.home)
-    os.chdir(glbl.home)   # now move back into xpdUser so everyone is not confused....
-    final_path = os.path.join(glbl.home, os.path.basename(archive_f_name)) # local archive
-    #print("Final archive file at {}".format(final_path))
-    return 'local copy of tarball for user: '+final_path
+    os.chdir(glbl.home)  # now move back into xpdUser
+    return
 
 def get_full_ext(path, post_ext=''):
     path, ext = os.path.splitext(path)
