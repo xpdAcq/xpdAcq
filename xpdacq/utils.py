@@ -42,7 +42,7 @@ def composition_analysis(compstring):
     fractions = [getfraction(w) for w in namefracs[1::2]]
     return names, fractions
 
-def export_userScript_etc():
+def export_userScriptEtc():
     """ function that exports user defined objects/scripts stored under config_base and userScript
         
         it will create a uncompressed tarball inside xpdUser/Export
@@ -55,7 +55,7 @@ def export_userScript_etc():
     F_EXT = '.tar'
     root_dir = glbl.home
     os.chdir(root_dir)
-    f_name = strftime('userScript_etc_%Y-%m-%dT%H%M') + F_EXT
+    f_name = strftime('userScriptEtc_%Y-%m-%dT%H%M') + F_EXT
     # extra work to avoid comple directory structure in tarball
     os.makedirs(glbl.export_dir, exist_ok = True)
     (dir_head, dir_tail) = os.path.split(glbl.export_dir)

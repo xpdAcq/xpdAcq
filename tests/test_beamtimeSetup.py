@@ -8,7 +8,7 @@ from xpdacq.glbl import glbl
 import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment, import_yaml
 from xpdacq.beamtime import Beamtime,_get_yaml_list
-from xpdacq.utils import export_userScript_etc
+from xpdacq.utils import export_userScriptEtc
 
 class NewBeamtimeTest(unittest.TestCase): 
 
@@ -187,14 +187,14 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertTrue(os.path.isfile(exception_f))
 
 
-    def test_export_userScript_etc(self):
+    def test_export_userScriptEtc(self):
         os.makedirs(glbl.usrScript_dir, exist_ok = True)
         os.makedirs(glbl.yaml_dir, exist_ok = True)
         new_script = os.path.join(glbl.usrScript_dir, 'script.py')
         open(new_script, 'a').close()
         new_yaml = os.path.join(glbl.yaml_dir, 'touched.yml')
         open(new_yaml, 'a').close()
-        tar_f_path = export_userScript_etc()
+        tar_f_path = export_userScriptEtc()
         shutil.unpack_archive(tar_f_path,glbl.export_dir)
         
         userScript_dir_tail = os.path.split(glbl.usrScript_dir)[1]
