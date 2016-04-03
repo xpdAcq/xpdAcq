@@ -130,7 +130,7 @@ def _unpack_and_run(scan, **kwargs):
     elif scan.md['sp_type'] == 'tseries':
         collect_time_series(scan, parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
     elif scan.md['sp_type'] == 'Tramp':
-        collect_Temp_series(scan, parms['startingT'], parms['endingT'], parms['requested_Tstep'], parms['exposure'], area_det, subs, **kwargs)
+        collect_Temp_series(scan, parms['startingT'], parms['endingT'], parms['Tstep'], parms['exposure'], area_det, subs, **kwargs)
     else:
         print('unrecognized scan type.  Please rerun with a different scan object')
         return
