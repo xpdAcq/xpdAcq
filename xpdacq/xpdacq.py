@@ -23,7 +23,7 @@ import copy
 import sys
 import uuid
 from configparser import ConfigParser
-from xpdacq.utils import _graceful_exit
+from xpdacq.utils import _graceful_exit, _RE_state_wrapper
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import Union, ScanPlan, Scan
 from xpdacq.control import _close_shutter, _open_shutter
@@ -373,18 +373,9 @@ def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}):
     md_dict = scan.md
 
     plan = Count([area_det])
-    # 0322 XPD test
     xpdRE(plan, subs_dict, **md_dict)
-    while xpdRE.state == 'paused':
-        usr_input = input('')
-        if usr_input in ('resume()'):
-            xpdRE.resume()
-        elif usr_input in ('abort()'):
-            xpdRE.abort()
-        elif usr_input in ('stop()'):
-            xpdRE.stop()
-        else:
-            print('please renter your input')
+    if xpdRE.state == 'paused':
+        _RE_state_wrapper(xpdRE)
 
 def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det, subs_dict={}):
     '''the main xpdAcq function for getting an exposure
@@ -431,16 +422,8 @@ def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_de
 
     plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
     xpdRE(plan,subs_dict, **md_dict)
-    while xpdRE.state == 'paused':
-        usr_input = input('')
-        if usr_input in ('resume()'):
-            xpdRE.resume()
-        elif usr_input in ('abort()'):
-            xpdRE.abort()
-        elif usr_input in ('stop()'):
-            xpdRE.stop()
-        else:
-            print('please renter your input')
+    if xpdRE.state == 'paused':
+        _RE_state_wrapper(xpdRE) 
     print('End of collect_Tramp_scans....')
 
 def _nstep(start, stop, step_size):
@@ -506,16 +489,8 @@ def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs
     md_dict = scan.md
     plan = Count([area_det], num=num, delay=real_delay)
     xpdRE(plan, subs_dict, **md_dict)
-    while xpdRE.state == 'paused':
-        usr_input = input('')
-        if usr_input in ('resume()'):
-            xpdRE.resume()
-        elif usr_input in ('abort()'):
-            xpdRE.abort()
-        elif usr_input in ('stop()'):
-            xpdRE.stop()
-        else:
-            print('please renter your input')
+    if xpdRE.state == 'paused':
+        _RE_state_wrapper(RE_obj)
     print('End of time series scan ....')
 
 

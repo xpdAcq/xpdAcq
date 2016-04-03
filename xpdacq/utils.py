@@ -37,3 +37,28 @@ def composition_analysis(compstring):
     getfraction = lambda s: (s == '' and 1.0 or float(s))
     fractions = [getfraction(w) for w in namefracs[1::2]]
     return names, fractions
+
+def _RE_state_wrapper(RE_obj):
+    ''' a wrapper to check state of bluesky runengine object after pausing
+
+        it provides control to stop/abort/resume runengine under current package structure
+    '''
+    usr_input = input('')
+    # while loop gives chance to iteratively confirm user's input
+    while RE_obj.state == 'paused':
+        if usr_input in ('resume()'):
+            RE_obj.resume()
+        elif usr_input in ('abort()'):
+            abort_all = input('''current scan will be aborted. Do you want to abort all successive scans (if you are running a script)? y/[n]  ''')
+            while True:
+                if abort_all in ('y', 'yes'):
+                    sys.exit(_graceful_exit('''INFO: All successive scans are aborted'''))
+                elif abort_all in ('n', 'no'):
+                    print('''INFO: Current scan is aborted and successive ones are kept''')
+                    RE_obj.abort()
+                else:
+                    print('please reenter your input')
+        elif usr_input in ('stop()'):
+            RE_obj.stop()
+        else:
+            print('please renter your input')
