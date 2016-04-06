@@ -54,20 +54,24 @@ def _make_clean_env():
         out.append(d)
     return out
 
-def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
+def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
     if archive_dir is None:
         archive_dir = glbl.archive_dir
     if base_dir is None:
         base_dir = glbl.base
+    # new structure, no local tarball
+    os.makedirs(glbl.home, exist_ok = True)
+    files = os.listdir(glbl.home)
+    if len(files)==0:
+        sys.exit(_graceful_exit('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime'))
     # get bt by loading the yaml.
     if bto is None:
         btoname = os.path.join(glbl.yaml_dir,'bt_bt.yml')
+        if not os.path.isfile(btoname):
+            sys.exit(_graceful_exit('''It seems {} does not exist in {}. User might have deleted it accidentally.
+Please create it based on user information or contect user'''))
         with open(btoname, 'r') as fi:
             bto = yaml.load(fi)
-    files = os.listdir(glbl.home)
-    if len(files)==1:
-        print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
-        return
     try:
         piname = bto.md['bt_piLast']
     except AttributeError:
@@ -114,7 +118,7 @@ def _execute_end_beamtime(piname, safn, btuid, base_dir):
       3. removes all the un-tarred data
 
     '''
-    os.makedirs(archive_dir, exist_ok=True)
+    os.makedirs(glbl.archive_dir, exist_ok=True)
     archive_name = '_'.join([piname.strip().replace(' ', ''),
                             str(safn).strip(), strftime('%Y-%m-%d-%H%M'), btuid]
                             )

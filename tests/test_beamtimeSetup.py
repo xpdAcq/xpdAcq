@@ -129,12 +129,26 @@ class NewBeamtimeTest(unittest.TestCase):
         strtScnLst = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sp_ct.1s.yml','sp_ct.5s.yml','sp_ct1s.yml','sp_ct5s.yml','sp_ct10s.yml','sp_ct30s.yml']
         self.assertEqual(newobjlist,strtScnLst)
     
-    @unittest.expectedFailure
-    def test_execute_end_beamtime(self):
-        os.mkdir(self.home_dir)
-        #self.assertRaises(OSError, lambda: _end_beamtime(base_dir=self.base_dir,bto=self.bt))
-        self.fail('finish making the test')
-        #archive_dir = os.path.expanduser(strftime('./pe2_data/2016/userBeamtimeArchive'))
+    def test_end_beamtime(self):
+        # end_beamtime has been run
+        self.assertRaises(SystemExit, lambda:_end_beamtime())
+        # no bt_bt.yaml
+        self.PI_name = 'Billinge '
+        self.saf_num = 234
+        self.wavelength = 0.1812
+        self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
+        self.saffile = os.path.join(self.config_dir,'saf{}.yml'.format(self.saf_num))
+        loadinfo = {'saf number':self.saf_num,'PI last name':self.PI_name,'experimenter list':self.experimenters}
+        os.makedirs(self.config_dir, exist_ok = True)
+        with open(self.saffile, 'w') as fo:
+            yaml.dump(loadinfo,fo)
+        self.bt = _start_beamtime(self.saf_num,home_dir=self.home_dir)
+        saffile_move_name = os.path.join(glbl.import_dir, 'saf{}.yml'.format(self.saf_num))
+        # move out for now
+        shutil.move(self.saffile, saffile_move_name)
+        print('dir list after bt removal = {}'.format(os.listdir(glbl.yaml_dir)))
+        self.assertRaises(SystemExit, lambda:_end_beamtime())
+        
 
     @unittest.expectedFailure
     def test_delete_home_dir_tree(self):
