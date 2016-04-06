@@ -57,17 +57,15 @@ def export_userScriptEtc():
     os.chdir(root_dir)
     f_name = strftime('userScriptEtc_%Y-%m-%dT%H%M') + F_EXT
     # extra work to avoid comple directory structure in tarball
-    os.makedirs(glbl.export_dir, exist_ok = True)
-    (dir_head, dir_tail) = os.path.split(glbl.export_dir)
-    tar_f_name = os.path.join(dir_tail, f_name)
+    tar_f_name = os.path.join(glbl.home, f_name)
     export_dir_list = list(map(lambda x: os.path.basename(x), glbl._export_tar_dir))
     with tar.open(tar_f_name, 'w') as f:
         for el in export_dir_list:
             f.add(el)
-    archive_path = os.path.join(glbl.export_dir, f_name)
+    archive_path = os.path.join(glbl.home, f_name)
     if os.path.isfile(archive_path):
         return archive_path
     else:
-        _graceful_exit('Did you accidentally change write privilege to {}'.format(glbl.export_dir))
-        print('Please try `export_usermetadata()` again at command prompt')
+        _graceful_exit('Did you accidentally change write privilege to {}'.format(glbl.home))
+        print('Please check your setting and try `export_userScriptEtc()` again at command prompt')
         return

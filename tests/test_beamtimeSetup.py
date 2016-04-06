@@ -195,14 +195,14 @@ class NewBeamtimeTest(unittest.TestCase):
         new_yaml = os.path.join(glbl.yaml_dir, 'touched.yml')
         open(new_yaml, 'a').close()
         tar_f_path = export_userScriptEtc()
-        shutil.unpack_archive(tar_f_path,glbl.export_dir)
+        shutil.unpack_archive(tar_f_path,glbl.home)
         
         userScript_dir_tail = os.path.split(glbl.usrScript_dir)[1]
         config_base_tail = os.path.split(glbl.config_base)[1]
         yaml_dir_tail = os.path.split(glbl.yaml_dir)[1]
-        # are parent dirs in export_dir?
-        self.assertTrue(os.path.isdir(os.path.join(glbl.export_dir, userScript_dir_tail)))
-        self.assertTrue(os.path.isdir(os.path.join(glbl.export_dir, config_base_tail)))
+        # are parent dirs in xpdUser?
+        self.assertTrue(os.path.isdir(os.path.join(glbl.home, userScript_dir_tail)))
+        self.assertTrue(os.path.isdir(os.path.join(glbl.home, config_base_tail)))
         # are files in unpacked dirs?
-        self.assertTrue('script.py' in os.listdir(os.path.join(glbl.export_dir, userScript_dir_tail)))
-        self.assertTrue('touched.yml' in os.listdir(os.path.join(glbl.export_dir, config_base_tail, yaml_dir_tail)))
+        self.assertTrue('script.py' in os.listdir(os.path.join(glbl.home, userScript_dir_tail)))
+        self.assertTrue('touched.yml' in os.listdir(os.path.join(glbl.home, config_base_tail, yaml_dir_tail)))
