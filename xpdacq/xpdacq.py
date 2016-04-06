@@ -23,7 +23,7 @@ import copy
 import sys
 import uuid
 from configparser import ConfigParser
-from xpdacq.utils import _graceful_exit
+from xpdacq.utils import _graceful_exit, _RE_state_wrapper
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import Union, ScanPlan, Scan
 from xpdacq.control import _close_shutter, _open_shutter
@@ -130,7 +130,7 @@ def _unpack_and_run(scan, **kwargs):
     elif scan.md['sp_type'] == 'tseries':
         collect_time_series(scan, parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
     elif scan.md['sp_type'] == 'Tramp':
-        collect_Temp_series(scan, parms['startingT'], parms['endingT'], parms['requested_Tstep'], parms['exposure'], area_det, subs, **kwargs)
+        collect_Temp_series(scan, parms['startingT'], parms['endingT'], parms['Tstep'], parms['exposure'], area_det, subs, **kwargs)
     else:
         print('unrecognized scan type.  Please rerun with a different scan object')
         return
@@ -207,11 +207,7 @@ def _auto_load_calibration_file():
         print('INFO: No calibration file found in config_base. Scan will still keep going on')
         return
     f_list_full_path = list(map(lambda f: os.path.join(config_dir, f), f_list)) # join elemnts in f_list with config_dir
-    #config_in_use = sorted(f_list_full_path, key=os.stat)[-1]
-    f_list_full_path.sort(key=os.path.getmtime)
-    #print(f_list_full_path)
     sorted_list = sorted(f_list_full_path, key=os.path.getmtime)
-    print(sorted_list)
     config_in_use = sorted_list [-1]
     print('INFO: This scan will append calibration parameters recorded in {}'.format(os.path.basename(config_in_use)))
     config_timestamp = os.path.getmtime(config_in_use)
@@ -378,7 +374,8 @@ def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}):
 
     plan = Count([area_det])
     xpdRE(plan, subs_dict, **md_dict)
-
+    if xpdRE.state == 'paused':
+        _RE_state_wrapper(xpdRE)
 
 def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det, subs_dict={}):
     '''the main xpdAcq function for getting an exposure
@@ -425,8 +422,9 @@ def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_de
 
     plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
     xpdRE(plan,subs_dict, **md_dict)
-
-    print('End of collect_Temp_scans....')
+    if xpdRE.state == 'paused':
+        _RE_state_wrapper(xpdRE) 
+    print('End of collect_Tramp_scans....')
 
 def _nstep(start, stop, step_size):
     ''' return (start, stop, nsteps)'''
@@ -491,6 +489,8 @@ def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs
     md_dict = scan.md
     plan = Count([area_det], num=num, delay=real_delay)
     xpdRE(plan, subs_dict, **md_dict)
+    if xpdRE.state == 'paused':
+        _RE_state_wrapper(RE_obj)
     print('End of time series scan ....')
 
 
@@ -699,13 +699,4 @@ def SPEC_Temp_series(mdo, Tstart, Tstop, Tstep, exposure = 1.0, det = area_det, 
     exp.md.update({'sc_Nsteps':Nsteps})
     #print('INFO: requested temperature step = ',Tstep,' -> computed temperature step:', _Tstep)
     # information is taking care in _nstep
-
-    area_det.images_per_set.put(num_frame)
-    md_dict = exp.md
-    md_dict.update(kwargs)
-
-    plan = SPEC_Tseries_plan([area_det], temp_controller, Tstart, Tstop, Nsteps)
-    xpdRE(plan,subs_dict, **md_dict)
-
-    print('End of SPEC_Temp_scans....')
 '''

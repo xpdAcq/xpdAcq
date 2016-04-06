@@ -88,24 +88,7 @@ class glbl():
     owner = OWNER
     beamline_id = BEAMLINE_ID
     group = GROUP
-    ''' this block of code should be taken care in the following block of code. Delete it after testing
-    # objects for collection activities
-    Msg = None
-    xpdRE = None
-    Count = None
-    AbsScanPlan = None
 
-    area_det = None
-    shutter = None
-    LiveTable = None
-    temp_controller = None
-
-    # objects for analysis activities
-    db = None
-    get_events = None
-    get_images = None
-    verify_files_saved = None
-    '''
     # logic to assign correct objects depends on simulation or real experiment
     if not simulation:
         from bluesky.run_engine import RunEngine
@@ -119,11 +102,17 @@ class glbl():
         from databroker import get_events as getEvents
         from bluesky.callbacks import LiveTable as livetable
         from bluesky.broker_callbacks import verify_files_saved as verifyFiles
+        
+        from ophyd import EpicsSignalRO, EpicsSignal
+        from bluesky.suspenders import PVSuspendFloor
+        ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I', name='ring_current')
         xpdRE = RunEngine()
-        xpdRE.md['owner'] = glbl.owner
-        xpdRE.md['beamline_id'] = glbl.beamline_id
-        xpdRE.md['group'] = glbl.group
+        xpdRE.md['owner'] = owner
+        xpdRE.md['beamline_id'] = beamline_id
+        xpdRE.md['group'] = group
         register_mds(xpdRE)
+        PVSuspendFloor(xpdRE,'SR:OPS-BI{DCCT:1}I:Real-I',
+                    ring_current.get()-10, resume_thresh = ring_current.get())
         # real imports
         Msg = msg
         Count = count
@@ -134,9 +123,9 @@ class glbl():
         AbsScanPlan = absScanPlan 
         verify_files_saved = verifyFiles
         # real collection objects
-        area_det = pe1c
-        temp_controller = cs700
-        shutter = shctl1
+        area_det = None
+        temp_controller = None
+        shutter = None
         
     else:
         simulation = True
@@ -162,5 +151,3 @@ class glbl():
         area_det.number_of_sets = MagicMock()
         area_det.number_of_sets.put = MagicMock(return_value=1)
         print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
-
-
