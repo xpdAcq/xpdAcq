@@ -8,6 +8,7 @@ from xpdacq.glbl import glbl
 import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment, import_yaml
 from xpdacq.beamtime import Beamtime,_get_yaml_list
+from xpdacq.utils import export_userScriptEtc
 
 class NewBeamtimeTest(unittest.TestCase): 
 
@@ -78,16 +79,14 @@ class NewBeamtimeTest(unittest.TestCase):
         home_dir = os.path.join(self.base_dir,'xpdUser')
         conf_dir = os.path.join(self.base_dir,'xpdConfig')
         tiff_dir = os.path.join(self.home_dir,'tiff_base')
-        dark_dir = os.path.join(self.home_dir,'dark_base')
         usrconfig_dir = os.path.join(self.home_dir,'config_base')
         export_dir = os.path.join(self.home_dir,'Export')
         import_dir = os.path.join(self.home_dir,'Import')
         userysis_dir = os.path.join(self.home_dir,'userAnalysis')
         userscripts_dir = os.path.join(self.home_dir,'userScripts')
         yml_dir = os.path.join(self.home_dir,usrconfig_dir,'yml')
-        #dp = DataPath(self.base_dir)
         dirs = _make_clean_env()
-        self.assertEqual(dirs,[home_dir,conf_dir,tiff_dir,dark_dir,yml_dir,
+        self.assertEqual(dirs,[home_dir,conf_dir,tiff_dir,yml_dir,
             usrconfig_dir,userscripts_dir,export_dir,import_dir,userysis_dir])
 
     def test_bt_creation(self):
@@ -186,3 +185,24 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertFalse(os.path.isfile(new_tar_yaml))
         # confirm unrecongnized file is left in import dir
         self.assertTrue(os.path.isfile(exception_f))
+
+
+    def test_export_userScriptEtc(self):
+        os.makedirs(glbl.usrScript_dir, exist_ok = True)
+        os.makedirs(glbl.yaml_dir, exist_ok = True)
+        new_script = os.path.join(glbl.usrScript_dir, 'script.py')
+        open(new_script, 'a').close()
+        new_yaml = os.path.join(glbl.yaml_dir, 'touched.yml')
+        open(new_yaml, 'a').close()
+        tar_f_path = export_userScriptEtc()
+        shutil.unpack_archive(tar_f_path,glbl.home)
+        
+        userScript_dir_tail = os.path.split(glbl.usrScript_dir)[1]
+        config_base_tail = os.path.split(glbl.config_base)[1]
+        yaml_dir_tail = os.path.split(glbl.yaml_dir)[1]
+        # are parent dirs in xpdUser?
+        self.assertTrue(os.path.isdir(os.path.join(glbl.home, userScript_dir_tail)))
+        self.assertTrue(os.path.isdir(os.path.join(glbl.home, config_base_tail)))
+        # are files in unpacked dirs?
+        self.assertTrue('script.py' in os.listdir(os.path.join(glbl.home, userScript_dir_tail)))
+        self.assertTrue('touched.yml' in os.listdir(os.path.join(glbl.home, config_base_tail, yaml_dir_tail)))
