@@ -1,6 +1,10 @@
-
+import os
 import sys
+import shutil
+import tarfile as tar
+from time import strftime
 
+from xpdacq.glbl import glbl
 def _graceful_exit(error_message):
     try:
         raise RuntimeError(error_message)
@@ -62,3 +66,31 @@ def _RE_state_wrapper(RE_obj):
             RE_obj.stop()
         else:
             print('please renter your input')
+
+def export_userScriptEtc():
+    """ function that exports user defined objects/scripts stored under config_base and userScript
+        
+        it will create a uncompressed tarball inside xpdUser/Export
+
+    Return
+    ------
+        archive_path : str
+        path to archive file just created
+    """
+    F_EXT = '.tar'
+    root_dir = glbl.home
+    os.chdir(root_dir)
+    f_name = strftime('userScriptEtc_%Y-%m-%dT%H%M') + F_EXT
+    # extra work to avoid comple directory structure in tarball
+    tar_f_name = os.path.join(glbl.home, f_name)
+    export_dir_list = list(map(lambda x: os.path.basename(x), glbl._export_tar_dir))
+    with tar.open(tar_f_name, 'w') as f:
+        for el in export_dir_list:
+            f.add(el)
+    archive_path = os.path.join(glbl.home, f_name)
+    if os.path.isfile(archive_path):
+        return archive_path
+    else:
+        _graceful_exit('Did you accidentally change write privilege to {}'.format(glbl.home))
+        print('Please check your setting and try `export_userScriptEtc()` again at command prompt')
+        return
