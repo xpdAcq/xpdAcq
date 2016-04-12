@@ -37,18 +37,24 @@ YAML_DIR = os.path.join(HOME_DIR, 'config_base', 'yml')
 DARK_YAML_NAME = os.path.join(YAML_DIR, '_dark_scan_list.yaml')
 CONFIG_BASE = os.path.join(HOME_DIR, 'config_base')
 IMPORT_DIR = os.path.join(HOME_DIR, 'Import')
+USERSCRIPT_DIR = os.path.join(HOME_DIR, 'userScripts')
+TIFF_BASE = os.path.join(HOME_DIR, 'tiff_base')
 
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 ALL_FOLDERS = [
         HOME_DIR,
         BLCONFIG_DIR,
-        os.path.join(HOME_DIR, 'tiff_base'),
         YAML_DIR,
         CONFIG_BASE,
-        os.path.join(HOME_DIR, 'userScripts'),
+        USERSCRIPT_DIR,
         IMPORT_DIR,
         os.path.join(HOME_DIR, 'userAnalysis')
 ]
+
+# directories that won't be tar in the end of beamtime
+_EXCLUDE_DIR = [HOME_DIR, BLCONFIG_DIR, YAML_DIR]
+_EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
+
 # for simulation put a summy saf file in BLCONFIG_DIR
 os.makedirs(BLCONFIG_DIR, exist_ok=True)
 tmp_safname = os.path.join(BLCONFIG_DIR,'saf123.yml')
@@ -62,9 +68,12 @@ class glbl():
     beamline_host_name = BEAMLINE_HOST_NAME
     base = BASE_DIR
     home = HOME_DIR
+    _export_tar_dir = _EXPORT_TAR_DIR
     xpdconfig = BLCONFIG_DIR
     import_dir = IMPORT_DIR
     config_base = CONFIG_BASE
+    tiff_base =TIFF_BASE
+    usrScript_dir = USERSCRIPT_DIR
     yaml_dir = YAML_DIR
     allfolders = ALL_FOLDERS
     archive_dir = USER_BACKUP_DIR
@@ -75,24 +84,7 @@ class glbl():
     owner = OWNER
     beamline_id = BEAMLINE_ID
     group = GROUP
-    ''' this block of code should be taken care in the following block of code. Delete it after testing
-    # objects for collection activities
-    Msg = None
-    xpdRE = None
-    Count = None
-    AbsScanPlan = None
 
-    area_det = None
-    shutter = None
-    LiveTable = None
-    temp_controller = None
-
-    # objects for analysis activities
-    db = None
-    get_events = None
-    get_images = None
-    verify_files_saved = None
-    '''
     # logic to assign correct objects depends on simulation or real experiment
     if not simulation:
         from bluesky.run_engine import RunEngine
@@ -106,11 +98,17 @@ class glbl():
         from databroker import get_events as getEvents
         from bluesky.callbacks import LiveTable as livetable
         from bluesky.broker_callbacks import verify_files_saved as verifyFiles
+        
+        from ophyd import EpicsSignalRO, EpicsSignal
+        from bluesky.suspenders import PVSuspendFloor
+        ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I', name='ring_current')
         xpdRE = RunEngine()
-        xpdRE.md['owner'] = glbl.owner
-        xpdRE.md['beamline_id'] = glbl.beamline_id
-        xpdRE.md['group'] = glbl.group
+        xpdRE.md['owner'] = owner
+        xpdRE.md['beamline_id'] = beamline_id
+        xpdRE.md['group'] = group
         register_mds(xpdRE)
+        PVSuspendFloor(xpdRE,'SR:OPS-BI{DCCT:1}I:Real-I',
+                    ring_current.get()-10, resume_thresh = ring_current.get())
         # real imports
         Msg = msg
         Count = count
@@ -121,9 +119,9 @@ class glbl():
         AbsScanPlan = absScanPlan 
         verify_files_saved = verifyFiles
         # real collection objects
-        area_det = pe1c
-        temp_controller = cs700
-        shutter = shctl1
+        area_det = None
+        temp_controller = None
+        shutter = None
         
     else:
         simulation = True
@@ -149,5 +147,3 @@ class glbl():
         area_det.number_of_sets = MagicMock()
         area_det.number_of_sets.put = MagicMock(return_value=1)
         print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
-
-

@@ -324,7 +324,7 @@ class ScanPlan(XPD):
                 try:
                     self.sp_params[el]
                 except KeyError:
-                    print('It seems you are using a Count scan but the scan_params dictionary does not contain {}  which is needed.'.format(el))
+                    print('It seems you are using a Count scan but the scan_params dictionary does not contain "{}"which is needed.'.format(el))
                     print('Please use uparrow to edit and retry making your ScanPlan object')
                     sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
