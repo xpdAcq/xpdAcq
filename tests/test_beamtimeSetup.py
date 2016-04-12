@@ -4,9 +4,8 @@ import shutil
 import yaml
 from time import strftime
 from xpdacq.glbl import glbl
-
 import xpdacq.beamtimeSetup as bts
-from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment, import_yaml
+from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment, import_yaml, _load_bt, _execute_end_beamtime
 from xpdacq.beamtime import Beamtime,_get_yaml_list
 
 class NewBeamtimeTest(unittest.TestCase): 
@@ -78,17 +77,14 @@ class NewBeamtimeTest(unittest.TestCase):
         home_dir = os.path.join(self.base_dir,'xpdUser')
         conf_dir = os.path.join(self.base_dir,'xpdConfig')
         tiff_dir = os.path.join(self.home_dir,'tiff_base')
-        dark_dir = os.path.join(self.home_dir,'dark_base')
         usrconfig_dir = os.path.join(self.home_dir,'config_base')
-        export_dir = os.path.join(self.home_dir,'Export')
         import_dir = os.path.join(self.home_dir,'Import')
         userysis_dir = os.path.join(self.home_dir,'userAnalysis')
         userscripts_dir = os.path.join(self.home_dir,'userScripts')
         yml_dir = os.path.join(self.home_dir,usrconfig_dir,'yml')
-        #dp = DataPath(self.base_dir)
         dirs = _make_clean_env()
-        self.assertEqual(dirs,[home_dir,conf_dir,tiff_dir,dark_dir,yml_dir,
-            usrconfig_dir,userscripts_dir,export_dir,import_dir,userysis_dir])
+        self.assertEqual(dirs,[home_dir, conf_dir, tiff_dir, yml_dir,
+            usrconfig_dir, userscripts_dir, import_dir, userysis_dir])
 
     def test_bt_creation(self):
         _make_clean_env()
@@ -132,7 +128,6 @@ class NewBeamtimeTest(unittest.TestCase):
     def test_end_beamtime(self):
         # end_beamtime has been run
         self.assertRaises(SystemExit, lambda:_end_beamtime())
-        # no bt_bt.yaml
         self.PI_name = 'Billinge '
         self.saf_num = 234
         self.wavelength = 0.1812
@@ -143,13 +138,25 @@ class NewBeamtimeTest(unittest.TestCase):
         with open(self.saffile, 'w') as fo:
             yaml.dump(loadinfo,fo)
         self.bt = _start_beamtime(self.saf_num,home_dir=self.home_dir)
-        saffile_move_name = os.path.join(glbl.import_dir, 'saf{}.yml'.format(self.saf_num))
-        # move out for now
-        shutil.move(self.saffile, saffile_move_name)
-        print('dir list after bt removal = {}'.format(os.listdir(glbl.yaml_dir)))
-        self.assertRaises(SystemExit, lambda:_end_beamtime())
+        bt_path_src = os.path.join(glbl.yaml_dir,'bt_bt.yml') 
+        bt_path_dst = os.path.join(glbl.import_dir, 'bt_bt.yml')
+        # move out for now, no bt
+        shutil.move(bt_path_src, bt_path_dst)
+        self.assertTrue(os.path.isfile(bt_path_dst))
+        self.assertFalse(os.path.isfile(bt_path_src))
+        self.assertRaises(SystemExit, lambda:_load_bt(glbl.yaml_dir))
+        # move back and test archieving funtionality
+        shutil.move(bt_path_dst, bt_path_src)
+        self.assertTrue(os.path.isfile(bt_path_src))
+        self.assertFalse(os.path.isfile(bt_path_dst))
+        bt_uid = self.bt.md['bt_uid']
+        archive_full_name = _execute_end_beamtime(self.PI_name, self.saf_num, bt_uid, glbl.base)
+        test_tar_name = '_'.join([self.PI_name.strip().replace(' ', ''),
+                                str(self.saf_num).strip(), strftime('%Y-%m-%d-%H%M'), bt_uid])
+        # is tar file name correct? 
+        self.assertEqual(archive_full_name, os.path.join(glbl.archive_dir, test_tar_name))
+        # are contents tared correctly?
         
-
     @unittest.expectedFailure
     def test_delete_home_dir_tree(self):
         self.fail('need to build tests for this function')
