@@ -329,26 +329,6 @@ def dark(sample, scanplan, **kwargs):
     _yamify_dark(dark_def)
     return dark_uid
 
-def background(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
-    ''' on this sample run this scanplan in dryrun mode (only metadata will be printed)
-
-    Parameters
-    ----------
-    sample : xpdAcq.beamtime.Sample object
-        object carries metadata of Sample object
-
-    scanplan : xpdAcq.beamtime.ScanPlan object
-        object carries metadata of ScanPlan object
-
-    auto_dark : bool
-        option of automated dark collection. Set to true to allow collect dark automatically during scans
-    '''
-    scan = Scan(sample, scanplan)
-    scan.md.update({'sc_usermd':kwargs})
-    scan.md.update({'sc_isdryrun':True})
-    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = True)
-    return
-
 def dryrun(sample, scanplan, **kwargs):
     ''' on this sample run this scanplan in dryrun mode (only metadata will be printed)
 
@@ -366,7 +346,7 @@ def dryrun(sample, scanplan, **kwargs):
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_isdryrun':True})
-    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = True)
+    _execute_scans(scan, auto_dark = False, auto_calibration = False, light_frame = True, dryrun = True)
     return
 
 def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}, dryrun = False):
@@ -416,13 +396,15 @@ def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}, dryrun = 
 def _get_light_image_dryrun(md_dict):
     acq_time = md_dict['sp_time_per_frame']
     num_frame = md_dict['sp_num_frames']
+    print(' === dryrun mode ===')
     print('this will execute a single bluesky Count type scan')
-    print('Sample metadata is {}'.format(md_dict['sa_name'])) # enrich it later
+    print('Sample metadata: Sample name = {}'.format(md_dict['sa_name'])) # enrich it later
     print('using the "pe1c" detector (Perkin-Elmer in continuous acquisition mode)')
     print('in the form of {} frames of {} s summed into a single event'.format(num_frame, acq_time))
     print('(i.e. accessible as a single tiff file)')
     print('')
     print('The metadata saved with the scan will be:')
+    print(md_dict) # make it prettier
     return md_dict
 
 
@@ -480,24 +462,25 @@ def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_de
 
 def _collect_Temp_series_dryrun(md_dict, Tstep, computed_step_size):
     num_frame = md_dict['sp_num_frames']
-    num_sets = md_dict['sp_number_of_sets']
     acq_time = md_dict['sp_time_per_frame']
     Tstart = md_dict['sp_startingT']
     Tstop = md_dict['sp_endingT']
     Tstep = md_dict['sp_requested_Tstep']
     Nsteps = md_dict['sp_Nsteps']
+    print(' === dryrun mode ===')
     print('this will execute a temperature series scan with bluesky AbsScanPlan on temperature controller {}'.format(temp_controller.name))
-    print('Sample metadata will be = {}'.format(md_dict['sa_name'])) # enrich it later
+    print('Sample metadata: Sample name = {}'.format(md_dict['sa_name'])) # enrich it later
     print('using the "pe1c" detector (Perkin-Elmer in continuous acquisition mode)')
-    print('in the form of {} frames of {} s summed into a single event'.format(num_fram, acq_time))
+    print('in the form of {} frames of {} s summed into a single event'.format(num_frame, acq_time))
     print('(i.e. accessible as a single tiff file)')
     print('')
     print('starting temperature is {} and ending temperature is {}'.format(Tstart, Tstop))
-    print('requested step size is {} and computed step size is {}'.format(step_size, computed_step_size))
+    print('requested step size is {} and computed step size is {}'.format(Tstep, computed_step_size))
     print('that will be summed into a single event (e.g. accessible as a single tiff file)')
     print('')
     print('The metadata saved with the scan will be:')
-    return md_dict # make it pretty print later
+    print(md_dict) # make it pretty print later
+    return md_dict
 
 def _nstep(start, stop, step_size):
     ''' return (start, stop, nsteps)'''
@@ -540,14 +523,17 @@ def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs
     md = dict(scan.md)
     area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
-
     # compute how many frames to collect
     num_frame = max(int(exposure / acq_time), 1)
     computed_exposure = num_frame * acq_time
     num_sets = 1
-
+    print('INFO: requested exposure time = {}s -> computed exposure time = {}s '.format(exposure,computed_exposure))
     real_delay = max(0, delay - computed_exposure)
+    
     period = max(computed_exposure, real_delay + computed_exposure)
+    print('INFO: requested delay = {}s  -> computed delay = {}s'.format(delay, real_delay))
+    print('INFO: nominal period (neglecting readout overheads) of {} s'.format(period))
+
     # set how many frames to average
     area_det.images_per_set.put(num_frame)
     area_det.number_of_sets.put(num_sets)
@@ -562,41 +548,44 @@ def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs
     md_dict = scan.md
     plan = Count([area_det], num=num, delay=real_delay)
     if dryrun:
-        _collect_time_series_dryrun(md_dict, real_dely, delay, num)
+        _collect_time_series_dryrun(md_dict, real_delay, delay, num)
     else:
         xpdRE(plan, subs_dict, **md_dict)
         if xpdRE.state == 'paused':
             _RE_state_wrapper(RE_obj)
 
 def _collect_time_series_dryrun(md_dict, real_delay, delay, num):
+    print(' === dryrun mode ===')
     num_frame = md_dict['sp_num_frames']
-    num_sets = md_dict['sp_number_of_sets']
     acq_time = md_dict['sp_time_per_frame']
     period = md_dict['sp_period']
+    #num_sets = md_dict['sp_number_of_sets']
     est_writeout_ohead = 2 # this might vary
-    scan_length_s = period*num_sets
+    scan_length_s = period*num
     m, s = divmod(scan_length_s, 60)
     h, m = divmod(m, 60)
     scan_length = str("%d:%02d:%02d" % (h, m, s))
-    est_real_scan_length_s = (period+est_writeout_ohead)*num_sets
+    est_real_scan_length_s = (period+est_writeout_ohead)*num
     m, s = divmod(est_real_scan_length_s, 60)
     h, m = divmod(m, 60)
     est_real_scan_length = str("%d:%02d:%02d" % (h, m, s))
     
     print('this will execute a series of {} bluesky Count type scans'.format(num))
-    print('Sample metadata will be = {}'.format(md_dict['sa_name'])) # enrich it later
+    print('Sample metadata will be: Sample name = {}'.format(md_dict['sa_name'])) # enrich it later
     print('using the "pe1c" detector (Perkin-Elmer in continuous acquisition mode)')
-    print('in the form of {} frames of {} s summed into a single event'.format(num_fram, acq_time))
+    print('in the form of {} frames of {} s summed into a single event'.format(num_frame, acq_time))
     print('(i.e. accessible as a single tiff file)')
     print('')
-    print('There will be a delay of {} s (compared to the requested delay of {} s)'.format(real_delay, delay))
+    print('There will be a delay of {}s between scans (compared to the requested delay of {} s)'.format(real_delay, delay))
     print('This will result in a nominal period (neglecting readout overheads) of {} s'.format(period))
-    print('Which results in a total scan time of {} s'.format(est_real_scan_length_s))
-    print('Using an estimated write-out overhead of '+str(est_writeout_ohead)+' this gives and estimated total scan length of '+str(est_real_scan_length))
+    print('Using an estimated write-out overhead of {}s'.format(est_writeout_ohead))
+    print('Which results in a total scan time of {}s'.format(est_real_scan_length_s))
+    print('Estimated total scan length = {}'.format(est_real_scan_length))
     print('Real outcomes may vary!')
     print('that will be summed into a single event (e.g. accessible as a single tiff file)')
     print('')
     print('The metadata saved with the scan will be:')
+    print(md_dict)
     return md_dict
 
 def get_bluesky_run(mdo, plan, det = area_det, subs_dict={}, **kwargs):
