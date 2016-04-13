@@ -216,7 +216,7 @@ def _auto_load_calibration_file():
     config_md_dict = {'sc_calibration_parameters':config_dict, 'sc_calibration_file_name': os.path.basename(config_in_use), 'sc_calibration_file_timestamp':config_time}
     return config_md_dict
 
-def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
+def prun(sample, scanplan, auto_dark = None, **kwargs):
     ''' on this sample run this scanplan
 
     Parameters
@@ -228,15 +228,17 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
         object carries metadata of ScanPlan object
 
     auto_dark : bool
-        option of automated dark collection. Set to true to allow collect dark automatically during scans
+        option of automated dark collection. Default is True to allow collect dark automatically during scans
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_isprun':True})
+    if not auto_dark:
+        auto_dark = glbl.auto_dark
     _execute_scans(scan, auto_dark, auto_calibration = True, light_frame = True, dryrun = False)
     return
 
-def calibration(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
+def calibration(sample, scanplan, auto_dark = None, **kwargs):
     ''' on this calibration sample (calibrant) run this scanplan
 
     Parameters
@@ -248,16 +250,18 @@ def calibration(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
         object carries metadata of ScanPlan object
 
     auto_dark : bool
-        option of automated dark collection. Set to true to allow collect dark automatically during scans
+        option of automated dark collection. Default is True to allow collect dark automatically during scans
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_iscalibration':True})
     # only auto_dark is exposed to user
+    if not auto_dark:
+        auto_dark = glbl.auto_dark
     _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
     return
 
-def background(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
+def background(sample, scanplan, auto_dark = None, **kwargs):
     ''' on this sample (kepton tube) run this scanplan
 
     Parameters
@@ -269,16 +273,18 @@ def background(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
         object carries metadata of ScanPlan object
 
     auto_dark : bool
-        option of automated dark collection. Set to true to allow collect dark automatically during scans
+        option of automated dark collection. Default is True to allow collect dark automatically during scans
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_isbackground':True})
     # only auto_dark is exposed to user
+    if not auto_dark:
+        auto_dark = glbl.auto_dark
     _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
     return
 
-def setupscan(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
+def setupscan(sample, scanplan, auto_dark = None, **kwargs):
     ''' on this sample run this scanplan as a setupscan
 
     Parameters
@@ -290,12 +296,14 @@ def setupscan(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
         object carries metadata of ScanPlan object
 
     auto_dark : bool
-        option of automated dark collection. Set to true to allow collect dark automatically during scans
+        option of automated dark collection. Default is True to allow collect dark automatically during scans
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_issetupscan':True})
     # only auto_dark is exposed to user
+    if not auto_dark:
+        auto_dark = glbl.auto_dark
     _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
     return
 
@@ -339,9 +347,6 @@ def dryrun(sample, scanplan, **kwargs):
 
     scanplan : xpdAcq.beamtime.ScanPlan object
         object carries metadata of ScanPlan object
-
-    auto_dark : bool
-        option of automated dark collection. Set to true to allow collect dark automatically during scans
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
