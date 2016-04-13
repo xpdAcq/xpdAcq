@@ -89,8 +89,7 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
         btuid = ''
     archive_full_name = _execute_end_beamtime(piname, safn, btuid, base_dir)
     _confirm_archive(archive_full_name)
-    _delete_home_dir_tree(base_dir, bto)
-
+    _delete_home_dir_tree()
 
 def _load_bt(bt_yaml_path):
     btoname = os.path.join(glbl.yaml_dir,'bt_bt.yml')
@@ -150,7 +149,7 @@ def _confirm_archive(archive_f_name):
     else:
         sys.exit(_graceful_exit('xpdUser directory delete operation cancelled at Users request'))
 
-def _delete_home_dir_tree(base_dir, bto):
+def _delete_home_dir_tree():
     os.chdir(glbl.base) # move out from xpdUser before deletion
     shutil.rmtree(glbl.home)
     os.makedirs(glbl.home, exist_ok=True)

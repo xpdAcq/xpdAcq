@@ -5,7 +5,7 @@ import yaml
 from time import strftime
 from xpdacq.glbl import glbl
 import xpdacq.beamtimeSetup as bts
-from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment, import_yaml, _load_bt, _execute_end_beamtime
+from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment, import_yaml, _load_bt, _execute_end_beamtime, _delete_home_dir_tree
 from xpdacq.beamtime import Beamtime,_get_yaml_list
 from xpdacq.utils import export_userScriptEtc
 
@@ -84,8 +84,9 @@ class NewBeamtimeTest(unittest.TestCase):
         userscripts_dir = os.path.join(self.home_dir,'userScripts')
         yml_dir = os.path.join(self.home_dir,usrconfig_dir,'yml')
         dirs = _make_clean_env()
-        self.assertEqual(dirs,[home_dir, conf_dir, tiff_dir, yml_dir,
-            usrconfig_dir, userscripts_dir, import_dir, userysis_dir])
+        self.assertTrue(dirs == glbl.allfolders)
+        #self.assertEqual(dirs,[home_dir, conf_dir, tiff_dir, yml_dir,
+            #usrconfig_dir, userscripts_dir, import_dir, userysis_dir])
 
     def test_bt_creation(self):
         _make_clean_env()
@@ -157,10 +158,22 @@ class NewBeamtimeTest(unittest.TestCase):
         # is tar file name correct? 
         self.assertEqual(archive_full_name, os.path.join(glbl.archive_dir, test_tar_name))
         # are contents tared correctly?
-        
-    @unittest.expectedFailure
-    def test_delete_home_dir_tree(self):
-        self.fail('need to build tests for this function')
+        archive_test_dir = os.path.join(glbl.home,'tar_test')
+        os.makedirs(archive_test_dir, exist_ok = True)
+        shutil.unpack_archive(archive_full_name+'.tar', archive_test_dir)
+        content_list = os.listdir(archive_test_dir)
+        # is tarball starting from xpdUser?
+        self.assertTrue('xpdUser' in content_list)
+        # is every directory included
+        basename_list = list(map(os.path.basename, glbl.allfolders))
+        _exclude_list = ['xpdUser','xpdConfig','yml']
+        for el in _exclude_list:
+            basename_list.remove(el)
+        for el in basename_list:
+            self.assertTrue(el in os.listdir(os.path.join(archive_test_dir,'xpdUser')))
+        # now test deleting directories
+        _delete_home_dir_tree()
+        self.assertTrue(len(os.listdir(glbl.home)) == 0)
 
     @unittest.expectedFailure
     def test_inputs_in_end_beamtime(self):

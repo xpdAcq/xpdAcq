@@ -46,6 +46,7 @@ ALL_FOLDERS = [
         BLCONFIG_DIR,
         YAML_DIR,
         CONFIG_BASE,
+        TIFF_BASE,
         USERSCRIPT_DIR,
         IMPORT_DIR,
         os.path.join(HOME_DIR, 'userAnalysis')
