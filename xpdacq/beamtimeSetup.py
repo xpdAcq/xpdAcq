@@ -54,37 +54,69 @@ def _make_clean_env():
         out.append(d)
     return out
 
-def _end_beamtime(base_dir=None,archive_dir=None,bto=None):
+def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
+    _required_bt_info = ['bt_piLast', 'bt_safN', 'bt_uid']
     if archive_dir is None:
         archive_dir = glbl.archive_dir
     if base_dir is None:
         base_dir = glbl.base
-    # get bt by loading the yaml.
-    if bto is None:
-        btoname = os.path.join(glbl.yaml_dir,'bt_bt.yml')
-        with open(btoname, 'r') as fi:
-            bto = yaml.load(fi)
+    os.makedirs(glbl.home, exist_ok = True)
+    # check env
     files = os.listdir(glbl.home)
-    if len(files)==1:
-        print('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime')
-        return
+    if len(files)==0:
+        sys.exit(_graceful_exit('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime'))
+    # laod bt yaml
+    if not bto: 
+        bto = _load_bt(glbl.yaml_dir)
     try:
+        bt_md = bto.md
+    except AttributeError:
+        # worst situation, user didn't even instantiate bt object with xpdAcq
+        _graceful_exit('''There is no metadata attribute in beamtime object "{}".
+                        User might have gone throgh entirely different workflow.
+                        Reconmend to contact user before executing end_beamtime''')
+    if 'bt_piLast' in bt_md.keys():
         piname = bto.md['bt_piLast']
-    except AttributeError:
+    else:
         piname = input('Please enter PI last name for this beamtime: ')
-    try:
+    if 'bt_safN' in bt_md.keys():
         safn = bto.md['bt_safN']
-    except AttributeError:
+    else:
         safn = input('Please enter your SAF number to this beamtime: ')
-    try:
+    if 'bt_uid' in bt_md.keys():
         btuid = bto.md['bt_uid'][:7]
-    except AttributeError:
+    else:
         btuid = ''
-    archive_f = _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto)
-    _confirm_archive(archive_f)
-    _delete_home_dir_tree(base_dir,archive_f, bto)
+    archive_full_name = _execute_end_beamtime(piname, safn, btuid, base_dir)
+    _confirm_archive(archive_full_name)
+    _delete_home_dir_tree()
 
-def _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto):
+def _load_bt(bt_yaml_path):
+    btoname = os.path.join(glbl.yaml_dir,'bt_bt.yml')
+    if not os.path.isfile(btoname):
+        sys.exit(_graceful_exit('''{} does not exist in {}. User might have deleted it accidentally.
+Please create it based on user information or contect user'''.format(os.path.basename(btoname), glbl.yaml_dir)))
+    with open(btoname, 'r') as fi:
+        bto = yaml.load(fi)
+    return bto
+    
+def _tar_user_data(archive_name, root_dir = None, archive_format ='tar'):
+    """ Create a remote tarball of all user folders under xpdUser directory
+    """
+    archive_full_name = os.path.join(glbl.archive_dir, archive_name)
+    if root_dir is None:
+        root_dir = glbl.base
+    cur_path = os.getcwd()
+    try:
+        os.chdir(glbl.base)
+        print('Archiving your data now. That may take several minutes, please be patient :)' )
+        tar_return = shutil.make_archive(archive_full_name, archive_format, root_dir=glbl.base,
+                base_dir='xpdUser', verbose=1, dry_run=False)
+    finally:
+        os.chdir(cur_path)
+    return archive_full_name
+
+def _execute_end_beamtime(piname, safn, btuid, base_dir):
     '''cleans up at the end of a beamtime
 
     Function takes all the user-generated tifs and config files, etc.,
@@ -98,16 +130,12 @@ def _execute_end_beamtime(piname, safn, btuid, base_dir, archive_dir, bto):
       3. removes all the un-tarred data
 
     '''
-    tar_ball = export_data(base_dir, end_beamtime=True)
-    ext = get_full_ext(tar_ball)
-    os.makedirs(archive_dir, exist_ok=True)
-
-    full_info = '_'.join([piname.strip().replace(' ', ''),
+    os.makedirs(glbl.archive_dir, exist_ok=True)
+    archive_name = '_'.join([piname.strip().replace(' ', ''),
                             str(safn).strip(), strftime('%Y-%m-%d-%H%M'), btuid]
                             )
-    archive_f_name = os.path.join(archive_dir, full_info) + ext
-    shutil.copyfile(tar_ball, archive_f_name) # remote archive'
-    return archive_f_name
+    archive_full_name = _tar_user_data(archive_name)
+    return archive_full_name
 
 def  _get_user_confirmation():
     conf = input("Please confirm data are backed up. Are you ready to continue with xpdUser directory contents deletion (y,[n])?: ")
@@ -121,16 +149,12 @@ def _confirm_archive(archive_f_name):
     else:
         sys.exit(_graceful_exit('xpdUser directory delete operation cancelled at Users request'))
 
-def _delete_home_dir_tree(base_dir, archive_f_name, bto):
-    #dp = DataPath(base_dir)
-    os.chdir(glbl.base)   # don't remember the name, but move up one directory out of xpdUser before deleting it!
+def _delete_home_dir_tree():
+    os.chdir(glbl.base) # move out from xpdUser before deletion
     shutil.rmtree(glbl.home)
     os.makedirs(glbl.home, exist_ok=True)
-    shutil.copy(archive_f_name, glbl.home)
-    os.chdir(glbl.home)   # now move back into xpdUser so everyone is not confused....
-    final_path = os.path.join(glbl.home, os.path.basename(archive_f_name)) # local archive
-    #print("Final archive file at {}".format(final_path))
-    return 'local copy of tarball for user: '+final_path
+    os.chdir(glbl.home)  # now move back into xpdUser
+    return
 
 def get_full_ext(path, post_ext=''):
     path, ext = os.path.splitext(path)
@@ -146,15 +170,8 @@ def _check_empty_environment(base_dir=None):
             sys.exit(_graceful_exit("Expected a folder, got a file.  "
                                "Please Talk to beamline staff"))
         files = os.listdir(home_dir) # that also list dirs that have been created
-        if len(files) > 1:
+        if len(files) > 0:
             sys.exit(_graceful_exit("Unexpected files in {}, you need to run _end_beamtime(). Please Talk to beamline staff".format(home_dir)))
-        elif len(files) == 1:
-            tf, = files
-            if 'tar' not in tf:
-                sys.exit(_graceful_exit("Expected a tarball of some sort, found {} "
-                                   "Please talk to beamline staff"
-                                   .format(tf)))
-            os.unlink(os.path.join(home_dir, tf))
     else:
         sys.exit(_graceful_exit("The xpdUser directory appears not to exist "
                                "Please Talk to beamline staff"))

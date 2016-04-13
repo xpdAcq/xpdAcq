@@ -4,9 +4,8 @@ import shutil
 import yaml
 from time import strftime
 from xpdacq.glbl import glbl
-
 import xpdacq.beamtimeSetup as bts
-from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment, import_yaml
+from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment, import_yaml, _load_bt, _execute_end_beamtime, _delete_home_dir_tree
 from xpdacq.beamtime import Beamtime,_get_yaml_list
 from xpdacq.utils import export_userScriptEtc
 
@@ -80,14 +79,14 @@ class NewBeamtimeTest(unittest.TestCase):
         conf_dir = os.path.join(self.base_dir,'xpdConfig')
         tiff_dir = os.path.join(self.home_dir,'tiff_base')
         usrconfig_dir = os.path.join(self.home_dir,'config_base')
-        export_dir = os.path.join(self.home_dir,'Export')
         import_dir = os.path.join(self.home_dir,'Import')
         userysis_dir = os.path.join(self.home_dir,'userAnalysis')
         userscripts_dir = os.path.join(self.home_dir,'userScripts')
         yml_dir = os.path.join(self.home_dir,usrconfig_dir,'yml')
         dirs = _make_clean_env()
-        self.assertEqual(dirs,[home_dir,conf_dir,tiff_dir,yml_dir,
-            usrconfig_dir,userscripts_dir,export_dir,import_dir,userysis_dir])
+        dir_list = [home_dir, conf_dir, tiff_dir, usrconfig_dir, import_dir, userysis_dir, userscripts_dir, yml_dir]
+        for el in dir_list:
+            self.assertTrue(el in glbl.allfolders)
 
     def test_bt_creation(self):
         _make_clean_env()
@@ -128,16 +127,53 @@ class NewBeamtimeTest(unittest.TestCase):
         strtScnLst = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sp_ct.1s.yml','sp_ct.5s.yml','sp_ct1s.yml','sp_ct5s.yml','sp_ct10s.yml','sp_ct30s.yml']
         self.assertEqual(newobjlist,strtScnLst)
     
-    @unittest.expectedFailure
-    def test_execute_end_beamtime(self):
-        os.mkdir(self.home_dir)
-        #self.assertRaises(OSError, lambda: _end_beamtime(base_dir=self.base_dir,bto=self.bt))
-        self.fail('finish making the test')
-        #archive_dir = os.path.expanduser(strftime('./pe2_data/2016/userBeamtimeArchive'))
-
-    @unittest.expectedFailure
-    def test_delete_home_dir_tree(self):
-        self.fail('need to build tests for this function')
+    def test_end_beamtime(self):
+        # end_beamtime has been run
+        self.assertRaises(SystemExit, lambda:_end_beamtime())
+        self.PI_name = 'Billinge '
+        self.saf_num = 234
+        self.wavelength = 0.1812
+        self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
+        self.saffile = os.path.join(self.config_dir,'saf{}.yml'.format(self.saf_num))
+        loadinfo = {'saf number':self.saf_num,'PI last name':self.PI_name,'experimenter list':self.experimenters}
+        os.makedirs(self.config_dir, exist_ok = True)
+        with open(self.saffile, 'w') as fo:
+            yaml.dump(loadinfo,fo)
+        self.bt = _start_beamtime(self.saf_num,home_dir=self.home_dir)
+        bt_path_src = os.path.join(glbl.yaml_dir,'bt_bt.yml') 
+        bt_path_dst = os.path.join(glbl.import_dir, 'bt_bt.yml')
+        # move out for now, no bt
+        shutil.move(bt_path_src, bt_path_dst)
+        self.assertTrue(os.path.isfile(bt_path_dst))
+        self.assertFalse(os.path.isfile(bt_path_src))
+        self.assertRaises(SystemExit, lambda:_load_bt(glbl.yaml_dir))
+        # move back and test archieving funtionality
+        shutil.move(bt_path_dst, bt_path_src)
+        self.assertTrue(os.path.isfile(bt_path_src))
+        self.assertFalse(os.path.isfile(bt_path_dst))
+        bt_uid = self.bt.md['bt_uid']
+        archive_full_name = _execute_end_beamtime(self.PI_name, self.saf_num, bt_uid, glbl.base)
+        test_tar_name = '_'.join([self.PI_name.strip().replace(' ', ''),
+                                str(self.saf_num).strip(), strftime('%Y-%m-%d-%H%M'), bt_uid])
+        # is tar file name correct? 
+        self.assertEqual(archive_full_name, os.path.join(glbl.archive_dir, test_tar_name))
+        # are contents tared correctly?
+        archive_test_dir = os.path.join(glbl.home,'tar_test')
+        os.makedirs(archive_test_dir, exist_ok = True)
+        shutil.unpack_archive(archive_full_name+'.tar', archive_test_dir)
+        content_list = os.listdir(archive_test_dir)
+        # is tarball starting from xpdUser?
+        self.assertTrue('xpdUser' in content_list)
+        # is every directory included
+        basename_list = list(map(os.path.basename, glbl.allfolders))
+        _exclude_list = ['xpdUser','xpdConfig','yml']
+        for el in _exclude_list:
+            basename_list.remove(el)
+        for el in basename_list:
+            self.assertTrue(el in os.listdir(os.path.join(archive_test_dir,'xpdUser')))
+        # now test deleting directories
+        _delete_home_dir_tree()
+        self.assertTrue(len(os.listdir(glbl.home)) == 0)
 
     @unittest.expectedFailure
     def test_inputs_in_end_beamtime(self):

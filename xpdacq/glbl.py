@@ -33,7 +33,6 @@ else:
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
 BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
 ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,ARCHIVE_BASE_DIR_NAME)
-EXPORT_DIR = os.path.join(HOME_DIR, 'Export')
 YAML_DIR = os.path.join(HOME_DIR, 'config_base', 'yml')
 DARK_YAML_NAME = os.path.join(YAML_DIR, '_dark_scan_list.yaml')
 CONFIG_BASE = os.path.join(HOME_DIR, 'config_base')
@@ -45,11 +44,10 @@ USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 ALL_FOLDERS = [
         HOME_DIR,
         BLCONFIG_DIR,
-        TIFF_BASE,
         YAML_DIR,
         CONFIG_BASE,
+        TIFF_BASE,
         USERSCRIPT_DIR,
-        EXPORT_DIR,
         IMPORT_DIR,
         os.path.join(HOME_DIR, 'userAnalysis')
 ]
@@ -73,7 +71,6 @@ class glbl():
     home = HOME_DIR
     _export_tar_dir = _EXPORT_TAR_DIR
     xpdconfig = BLCONFIG_DIR
-    export_dir = EXPORT_DIR
     import_dir = IMPORT_DIR
     config_base = CONFIG_BASE
     tiff_base =TIFF_BASE
