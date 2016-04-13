@@ -462,18 +462,42 @@ def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_de
     scan.md.update({'sp_requested_exposure':exposure,'sp_computed_exposure':computed_exposure})
     scan.md.update({'sp_time_per_frame':acq_time,'sp_num_frames':num_frame})
 
-    Nsteps = _nstep(Tstart, Tstop, Tstep) # computed steps
+    Nsteps = _nstep(Tstart, Tstop, Tstep)[0] # computed steps
+    computed_step_size = _nstep(Tstart, Tstop, Tstep)[1] # computed step size
     scan.md.update({'sp_startingT':Tstart,'sp_endingT':Tstop,'sp_requested_Tstep':Tstep})
-    scan.md.update({'sp_Nsteps':Nsteps})
+    scan.md.update({'sp_Nsteps':Nsteps, 'sp_computed_Tstep':computed_step_size})
 
     area_det.images_per_set.put(num_frame)
     md_dict = scan.md
-
+    
     plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
-    xpdRE(plan,subs_dict, **md_dict)
-    if xpdRE.state == 'paused':
-        _RE_state_wrapper(xpdRE) 
-    print('End of collect_Tramp_scans....')
+    if dryrun:
+        _collect_Temp_series_dryrun(md_dict, Tstep, computed_step_size)
+    else:
+        xpdRE(plan,subs_dict, **md_dict)
+        if xpdRE.state == 'paused':
+            _RE_state_wrapper(xpdRE) 
+
+def _collect_Temp_series_dryrun(md_dict, Tstep, computed_step_size):
+    num_frame = md_dict['sp_num_frames']
+    num_sets = md_dict['sp_number_of_sets']
+    acq_time = md_dict['sp_time_per_frame']
+    Tstart = md_dict['sp_startingT']
+    Tstop = md_dict['sp_endingT']
+    Tstep = md_dict['sp_requested_Tstep']
+    Nsteps = md_dict['sp_Nsteps']
+    print('this will execute a temperature series scan with bluesky AbsScanPlan on temperature controller {}'.format(temp_controller.name))
+    print('Sample metadata will be = {}'.format(md_dict['sa_name'])) # enrich it later
+    print('using the "pe1c" detector (Perkin-Elmer in continuous acquisition mode)')
+    print('in the form of {} frames of {} s summed into a single event'.format(num_fram, acq_time))
+    print('(i.e. accessible as a single tiff file)')
+    print('')
+    print('starting temperature is {} and ending temperature is {}'.format(Tstart, Tstop))
+    print('requested step size is {} and computed step size is {}'.format(step_size, computed_step_size))
+    print('that will be summed into a single event (e.g. accessible as a single tiff file)')
+    print('')
+    print('The metadata saved with the scan will be:')
+    return md_dict # make it pretty print later
 
 def _nstep(start, stop, step_size):
     ''' return (start, stop, nsteps)'''
@@ -483,7 +507,7 @@ def _nstep(start, stop, step_size):
     computed_step_list = np.linspace(start, stop, computed_nsteps)
     computed_step_size = computed_step_list[1]- computed_step_list[0]
     print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',abs(computed_step_size))
-    return computed_nsteps
+    return (computed_nsteps, computed_step_size)
 
 def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs_dict={}, dryrun = False):
     '''the main xpdAcq function for getting a time series scan
@@ -545,21 +569,11 @@ def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs
             _RE_state_wrapper(RE_obj)
 
 def _collect_time_series_dryrun(md_dict, real_delay, delay, num):
-    real_delay = max(0, delay - computed_exposure)
-    scan.md.update({'sp_requested_exposure': exposure,
-               'sp_computed_exposure': computed_exposure,
-               'sp_period': period})
-    scan.md.update({'sp_time_per_frame': acq_time,
-               'sp_num_frames': num_frame,
-               'sp_number_of_sets': num_sets})
     num_frame = md_dict['sp_num_frames']
     num_sets = md_dict['sp_number_of_sets']
     acq_time = md_dict['sp_time_per_frame']
     period = md_dict['sp_period']
-    
-    # this value might vary
-    est_writeout_ohead = 2
-
+    est_writeout_ohead = 2 # this might vary
     scan_length_s = period*num_sets
     m, s = divmod(scan_length_s, 60)
     h, m = divmod(m, 60)
