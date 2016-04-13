@@ -237,7 +237,7 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     return
 
 def calibration(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
-    ''' on this calibration sample(calibrant) run this scanplan
+    ''' on this calibration sample (calibrant) run this scanplan
 
     Parameters
     ----------
@@ -253,6 +253,48 @@ def calibration(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_iscalibration':True})
+    # only auto_dark is exposed to user
+    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
+    return
+
+def background(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
+    ''' on this sample (kepton tube) run this scanplan
+
+    Parameters
+    ----------
+    sample : xpdAcq.beamtime.Sample object
+        object carries metadata of Sample object
+
+    scanplan : xpdAcq.beamtime.ScanPlan object
+        object carries metadata of ScanPlan object
+
+    auto_dark : bool
+        option of automated dark collection. Set to true to allow collect dark automatically during scans
+    '''
+    scan = Scan(sample, scanplan)
+    scan.md.update({'sc_usermd':kwargs})
+    scan.md.update({'sc_isbackground':True})
+    # only auto_dark is exposed to user
+    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
+    return
+
+def setupscan(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
+    ''' on this sample run this scanplan as a setupscan
+
+    Parameters
+    ----------
+    sample : xpdAcq.beamtime.Sample object
+        object carries metadata of Sample object
+
+    scanplan : xpdAcq.beamtime.ScanPlan object
+        object carries metadata of ScanPlan object
+
+    auto_dark : bool
+        option of automated dark collection. Set to true to allow collect dark automatically during scans
+    '''
+    scan = Scan(sample, scanplan)
+    scan.md.update({'sc_usermd':kwargs})
+    scan.md.update({'sc_issetupscan':True})
     # only auto_dark is exposed to user
     _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
     return
@@ -287,54 +329,45 @@ def dark(sample, scanplan, **kwargs):
     _yamify_dark(dark_def)
     return dark_uid
 
-def dryrun(sample,scan,**kwargs):
-    '''same as run but scans are not executed.
+def background(sample, scanplan, **kwargs):
+    ''' on this sample run this scanplan in dryrun mode (only metadata will be printed)
 
-    for testing.
-    currently supported scans are "ct","tseries","Tramp"
-    where "ct"=count, "tseries=time series (series of counts)",
-    and "Tramp"=Temperature ramp.
+    Parameters
+    ----------
+    sample : xpdAcq.beamtime.Sample object
+        object carries metadata of Sample object
 
+    scanplan : xpdAcq.beamtime.ScanPlan object
+        object carries metadata of ScanPlan object
+
+    auto_dark : bool
+        option of automated dark collection. Set to true to allow collect dark automatically during scans
     '''
-    cmdo = Union(sample,scan)
-    #area_det = _get_obj('pe1c')
-    parms = scan.md['sc_params']
-    subs={}
-    if 'subs' in parms:
-        subsc = parms['subs']
-    for i in subsc:
-        if i == 'livetable':
-            subs.update({'all':LiveTable([area_det, temp_controller])})
-        elif i == 'verify_write':
-            subs.update({'stop':verify_files_saved})
+    scan = Scan(sample, scanplan)
+    scan.md.update({'sc_usermd':kwargs})
+    scan.md.update({'sc_isdryrun':True})
+    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = True)
+    return
 
-    if scan.scan == 'ct':
-       get_light_images_dryrun(cmdo,parms['exposure'],area_det, parms['subs'],**kwargs)
-    elif scan.scan == 'tseries':
-       collect_time_series_dryrun(scan,parms[0],area_det, **kwargs)
-    elif scan.scan == 'Tramp':
-        pass
-    else:
-       print('unrecognized scan type.  Please rerun with a different scan object')
-       return
+def dryrun(sample, scanplan, **kwargs):
+    ''' on this sample run this scanplan in dryrun mode (only metadata will be printed)
 
-def setupscan(sample,scan,**kwargs):
-    '''used for setup scans NOT production scans
+    Parameters
+    ----------
+    sample : xpdAcq.beamtime.Sample object
+        object carries metadata of Sample object
 
-    Scans run this way will get tagged with "setup_scan=True".  They
-    will be saved for later retrieval but will be harder to search for
-    in the database.
-    Use prun() for production scans
+    scanplan : xpdAcq.beamtime.ScanPlan object
+        object carries metadata of ScanPlan object
 
-    Arguments:
-    sample - sample metadata object
-    scan - scan metadata object
-    **kwargs - dictionary that will be passed through to the run-engine metadata
+    auto_dark : bool
+        option of automated dark collection. Set to true to allow collect dark automatically during scans
     '''
-    if scan.shutter: _open_shutter()
-    scan.md.update({'xp_isprun':False})
-    _unpack_and_run(sample,scan,**kwargs)
-    if scan.shutter: _close_shutter()
+    scan = Scan(sample, scanplan)
+    scan.md.update({'sc_usermd':kwargs})
+    scan.md.update({'sc_isdryrun':True})
+    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = True)
+    return
 
 def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}):
     '''the main xpdAcq function for getting an exposure
