@@ -79,11 +79,11 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
         piname = bto.md['bt_piLast']
     else:
         piname = input('Please enter PI last name for this beamtime: ')
-    if 'bt_safN' in bt.md.keys():
+    if 'bt_safN' in bt_md.keys():
         safn = bto.md['bt_safN']
     else:
         safn = input('Please enter your SAF number to this beamtime: ')
-    if 'bt_uid' in bt.md.keys():
+    if 'bt_uid' in bt_md.keys():
         btuid = bto.md['bt_uid'][:7]
     else:
         btuid = ''
