@@ -11,37 +11,8 @@ import copy
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample, Scan
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
-from xpdacq.xpdacq import prun, calibration, dark, _auto_dark_collection, _auto_load_calibration_file
+from xpdacq.xpdacq import prun, calibration, dark, dryrun, background, _auto_dark_collection, _auto_load_calibration_file
 from xpdacq.control import _open_shutter, _close_shutter
-
-# this is here temporarily.  Simon wanted it out of the production code.  Needs to be refactored.
-# the issue is to mock RE properly.  This is basically prun without the call to RE which
-# isn't properly mocked yet.
-def _unittest_prun(sample,scan,**kwargs):
-    '''on this 'sample' run this 'scan'
-
-    this function doesn't control shutter nor trigger run engine. It is designed to test functionality
-
-    Arguments:
-    sample - sample metadata object
-    scan - scan metadata object
-    **kwargs - dictionary that will be passed through to the run-engine metadata
-    '''
-    scan.md.update({'xp_isprun':True})
-    light_cnt_time = scan.md['sc_params']['exposure']
-    expire_time = glbl.dk_window
-    dark_field_uid = validate_dark(light_cnt_time, expire_time)
-    if not dark_field_uid: dark_field_uid = 'can not find a qualified dark uid'
-    scan.md['sc_params'].update({'dk_field_uid': dark_field_uid})
-    scan.md['sc_params'].update({'dk_window':expire_time})
-    return scan.md
-
-def ideal_prun(sample, scanplan, **kwargs):
-    ''' a note to remind myself '''
-    scan = Scan(samplm, scanplan)
-    scan.md.update({'sc_isprun':True})
-    _executes_scan(scan)
-    return
 
 class NewScanTest(unittest.TestCase):
     def setUp(self):
@@ -208,3 +179,30 @@ class NewScanTest(unittest.TestCase):
         self.assertFalse('sc_calibration_file_name' in glbl.xpdRE.call_args_list[-1][1])
         # is  ScanPlan.md remain unchanged after scan?
         self.assertFalse('sc_iscalibration' in self.sp.md)
+
+    def test_dryrun(self):
+        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
+        self.sc = Scan(self.sa, self.sp)
+        self.assertEqual(self.sc.sp, self.sp)
+        md_copy = dict(self.sc.md)
+        dryrun(self.sa, self.sp)
+        # is scan_md remain the same?
+        self.assertTrue(md_copy == self.sc.md)
+    
+    def test_background(self):
+        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
+        self.sc = Scan(self.sa, self.sp)
+        self.assertEqual(self.sc.sp, self.sp)
+        background(self.sa, self.sp)
+        # is xpdRE used?
+        self.assertTrue(glbl.xpdRE.called)
+        # is md updated?
+        self.assertFalse(glbl.xpdRE.call_args_list[-1][1] == self.sc.md)
+        # is md labeled correctly?
+        self.assertTrue('sc_isbackground' in glbl.xpdRE.call_args_list[-1][1])
+        # is auto_dark executed?
+        self.assertTrue('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
+        # is calibration loaded? -> No
+        self.assertFalse('sc_calibration_file_name' in glbl.xpdRE.call_args_list[-1][1])
+        # is  ScanPlan.md remain unchanged after scan?
+        self.assertFalse('sc_iscalibration' in self.sp.md) 

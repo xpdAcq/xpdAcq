@@ -112,7 +112,7 @@ def _parse_calibration_file(config_file_name):
                 config_dict[option] = None
     return config_dict
 
-def _unpack_and_run(scan, **kwargs):
+def _unpack_and_run(scan, dryrun, **kwargs):
     if not scan.md['bt_wavelength']:
         print('WARNING: There is no wavelength information in your sample acquire object')
     parms = scan.md['sp_params']
@@ -126,11 +126,11 @@ def _unpack_and_run(scan, **kwargs):
             subs.update({'stop':verify_files_saved})
 
     if scan.md['sp_type'] == 'ct':
-        get_light_images(scan, parms['exposure'], area_det, subs,**kwargs)
+        get_light_images(scan, parms['exposure'], area_det, subs, dryrun)
     elif scan.md['sp_type'] == 'tseries':
-        collect_time_series(scan, parms['exposure'], parms['delay'], parms['num'], area_det, subs, **kwargs)
+        collect_time_series(scan, parms['exposure'], parms['delay'], parms['num'], area_det, subs, dryrun)
     elif scan.md['sp_type'] == 'Tramp':
-        collect_Temp_series(scan, parms['startingT'], parms['endingT'], parms['Tstep'], parms['exposure'], area_det, subs, **kwargs)
+        collect_Temp_series(scan, parms['startingT'], parms['endingT'], parms['Tstep'], parms['exposure'], area_det, subs, dryrun)
     else:
         print('unrecognized scan type.  Please rerun with a different scan object')
         return
@@ -164,7 +164,7 @@ def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun
             scan.md.update(auto_load_calibration_dict)
     if light_frame and scan.sp.shutter:
         _open_shutter()
-    _unpack_and_run(scan, **kwargs)
+    _unpack_and_run(scan, dryrun, **kwargs)
     # always close a shutter after scan, if shutter is in control
     if scan.sp.shutter:
         _close_shutter()
@@ -216,7 +216,7 @@ def _auto_load_calibration_file():
     config_md_dict = {'sc_calibration_parameters':config_dict, 'sc_calibration_file_name': os.path.basename(config_in_use), 'sc_calibration_file_timestamp':config_time}
     return config_md_dict
 
-def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
+def prun(sample, scanplan, auto_dark = None, **kwargs):
     ''' on this sample run this scanplan
 
     Parameters
@@ -228,16 +228,18 @@ def prun(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
         object carries metadata of ScanPlan object
 
     auto_dark : bool
-        option of automated dark collection. Set to true to allow collect dark automatically during scans
+        option of automated dark collection. Default is True to allow collect dark automatically during scans
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_isprun':True})
+    if not auto_dark:
+        auto_dark = glbl.auto_dark
     _execute_scans(scan, auto_dark, auto_calibration = True, light_frame = True, dryrun = False)
     return
 
-def calibration(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
-    ''' on this calibration sample(calibrant) run this scanplan
+def calibration(sample, scanplan, auto_dark = None, **kwargs):
+    ''' on this calibration sample (calibrant) run this scanplan
 
     Parameters
     ----------
@@ -248,12 +250,60 @@ def calibration(sample, scanplan, auto_dark = glbl.auto_dark, **kwargs):
         object carries metadata of ScanPlan object
 
     auto_dark : bool
-        option of automated dark collection. Set to true to allow collect dark automatically during scans
+        option of automated dark collection. Default is True to allow collect dark automatically during scans
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_iscalibration':True})
     # only auto_dark is exposed to user
+    if not auto_dark:
+        auto_dark = glbl.auto_dark
+    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
+    return
+
+def background(sample, scanplan, auto_dark = None, **kwargs):
+    ''' on this sample (kepton tube) run this scanplan
+
+    Parameters
+    ----------
+    sample : xpdAcq.beamtime.Sample object
+        object carries metadata of Sample object
+
+    scanplan : xpdAcq.beamtime.ScanPlan object
+        object carries metadata of ScanPlan object
+
+    auto_dark : bool
+        option of automated dark collection. Default is True to allow collect dark automatically during scans
+    '''
+    scan = Scan(sample, scanplan)
+    scan.md.update({'sc_usermd':kwargs})
+    scan.md.update({'sc_isbackground':True})
+    # only auto_dark is exposed to user
+    if not auto_dark:
+        auto_dark = glbl.auto_dark
+    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
+    return
+
+def setupscan(sample, scanplan, auto_dark = None, **kwargs):
+    ''' on this sample run this scanplan as a setupscan
+
+    Parameters
+    ----------
+    sample : xpdAcq.beamtime.Sample object
+        object carries metadata of Sample object
+
+    scanplan : xpdAcq.beamtime.ScanPlan object
+        object carries metadata of ScanPlan object
+
+    auto_dark : bool
+        option of automated dark collection. Default is True to allow collect dark automatically during scans
+    '''
+    scan = Scan(sample, scanplan)
+    scan.md.update({'sc_usermd':kwargs})
+    scan.md.update({'sc_issetupscan':True})
+    # only auto_dark is exposed to user
+    if not auto_dark:
+        auto_dark = glbl.auto_dark
     _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
     return
 
@@ -287,56 +337,23 @@ def dark(sample, scanplan, **kwargs):
     _yamify_dark(dark_def)
     return dark_uid
 
-def dryrun(sample,scan,**kwargs):
-    '''same as run but scans are not executed.
+def dryrun(sample, scanplan, **kwargs):
+    ''' on this sample run this scanplan in dryrun mode (only metadata will be printed)
 
-    for testing.
-    currently supported scans are "ct","tseries","Tramp"
-    where "ct"=count, "tseries=time series (series of counts)",
-    and "Tramp"=Temperature ramp.
+    Parameters
+    ----------
+    sample : xpdAcq.beamtime.Sample object
+        object carries metadata of Sample object
 
+    scanplan : xpdAcq.beamtime.ScanPlan object
+        object carries metadata of ScanPlan object
     '''
-    cmdo = Union(sample,scan)
-    #area_det = _get_obj('pe1c')
-    parms = scan.md['sc_params']
-    subs={}
-    if 'subs' in parms:
-        subsc = parms['subs']
-    for i in subsc:
-        if i == 'livetable':
-            subs.update({'all':LiveTable([area_det, temp_controller])})
-        elif i == 'verify_write':
-            subs.update({'stop':verify_files_saved})
+    scan = Scan(sample, scanplan)
+    scan.md.update({'sc_usermd':kwargs})
+    _execute_scans(scan, auto_dark = False, auto_calibration = False, light_frame = False, dryrun = True)
+    return
 
-    if scan.scan == 'ct':
-       get_light_images_dryrun(cmdo,parms['exposure'],area_det, parms['subs'],**kwargs)
-    elif scan.scan == 'tseries':
-       collect_time_series_dryrun(scan,parms[0],area_det, **kwargs)
-    elif scan.scan == 'Tramp':
-        pass
-    else:
-       print('unrecognized scan type.  Please rerun with a different scan object')
-       return
-
-def setupscan(sample,scan,**kwargs):
-    '''used for setup scans NOT production scans
-
-    Scans run this way will get tagged with "setup_scan=True".  They
-    will be saved for later retrieval but will be harder to search for
-    in the database.
-    Use prun() for production scans
-
-    Arguments:
-    sample - sample metadata object
-    scan - scan metadata object
-    **kwargs - dictionary that will be passed through to the run-engine metadata
-    '''
-    if scan.shutter: _open_shutter()
-    scan.md.update({'xp_isprun':False})
-    _unpack_and_run(sample,scan,**kwargs)
-    if scan.shutter: _close_shutter()
-
-def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}):
+def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}, dryrun = False):
     '''the main xpdAcq function for getting an exposure
 
     Parameters
@@ -373,11 +390,28 @@ def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}):
     md_dict = scan.md
 
     plan = Count([area_det])
-    xpdRE(plan, subs_dict, **md_dict)
-    if xpdRE.state == 'paused':
-        _RE_state_wrapper(xpdRE)
+    if dryrun:
+        _get_light_image_dryrun(md_dict)
+    else:    
+        xpdRE(plan, subs_dict, **md_dict)
+        if xpdRE.state == 'paused':
+            _RE_state_wrapper(xpdRE)
 
-def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det, subs_dict={}):
+def _get_light_image_dryrun(md_dict):
+    acq_time = md_dict['sp_time_per_frame']
+    num_frame = md_dict['sp_num_frames']
+    print(' === dryrun mode ===')
+    print('this will execute a single bluesky Count type scan')
+    print('Sample metadata: Sample name = {}'.format(md_dict['sa_name'])) # enrich it later
+    print('using the "pe1c" detector (Perkin-Elmer in continuous acquisition mode)')
+    print('in the form of {} frames of {} s summed into a single event'.format(num_frame, acq_time))
+    print('(i.e. accessible as a single tiff file)')
+    print('')
+    print('The metadata saved with the scan will be:')
+    print(md_dict) # make it prettier later
+
+
+def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det, subs_dict={}, dryrun = False):
     '''the main xpdAcq function for getting an exposure
 
     Parameters
@@ -413,18 +447,43 @@ def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_de
     scan.md.update({'sp_requested_exposure':exposure,'sp_computed_exposure':computed_exposure})
     scan.md.update({'sp_time_per_frame':acq_time,'sp_num_frames':num_frame})
 
-    Nsteps = _nstep(Tstart, Tstop, Tstep) # computed steps
+    Nsteps = _nstep(Tstart, Tstop, Tstep)[0] # computed steps
+    computed_step_size = _nstep(Tstart, Tstop, Tstep)[1] # computed step size
     scan.md.update({'sp_startingT':Tstart,'sp_endingT':Tstop,'sp_requested_Tstep':Tstep})
-    scan.md.update({'sp_Nsteps':Nsteps})
+    scan.md.update({'sp_Nsteps':Nsteps, 'sp_computed_Tstep':computed_step_size})
 
     area_det.images_per_set.put(num_frame)
     md_dict = scan.md
-
+    
     plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
-    xpdRE(plan,subs_dict, **md_dict)
-    if xpdRE.state == 'paused':
-        _RE_state_wrapper(xpdRE) 
-    print('End of collect_Tramp_scans....')
+    if dryrun:
+        _collect_Temp_series_dryrun(md_dict, Tstep, computed_step_size)
+    else:
+        xpdRE(plan,subs_dict, **md_dict)
+        if xpdRE.state == 'paused':
+            _RE_state_wrapper(xpdRE) 
+
+def _collect_Temp_series_dryrun(md_dict, Tstep, computed_step_size):
+    num_frame = md_dict['sp_num_frames']
+    acq_time = md_dict['sp_time_per_frame']
+    Tstart = md_dict['sp_startingT']
+    Tstop = md_dict['sp_endingT']
+    Tstep = md_dict['sp_requested_Tstep']
+    Nsteps = md_dict['sp_Nsteps']
+    print(' === dryrun mode ===')
+    print('this will execute a temperature series scan with bluesky AbsScanPlan on temperature controller {}'.format(temp_controller.name))
+    print('Sample metadata: Sample name = {}'.format(md_dict['sa_name'])) # enrich it later
+    print('using the "pe1c" detector (Perkin-Elmer in continuous acquisition mode)')
+    print('in the form of {} frames of {} s summed into a single event'.format(num_frame, acq_time))
+    print('(i.e. accessible as a single tiff file)')
+    print('')
+    print('starting temperature is {} and ending temperature is {}'.format(Tstart, Tstop))
+    print('requested step size is {} and computed step size is {}'.format(Tstep, computed_step_size))
+    print('that will be summed into a single event (e.g. accessible as a single tiff file)')
+    print('')
+    print('The metadata saved with the scan will be:')
+    print(md_dict) # make it pretty print later
+    return md_dict
 
 def _nstep(start, stop, step_size):
     ''' return (start, stop, nsteps)'''
@@ -434,9 +493,9 @@ def _nstep(start, stop, step_size):
     computed_step_list = np.linspace(start, stop, computed_nsteps)
     computed_step_size = computed_step_list[1]- computed_step_list[0]
     print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',abs(computed_step_size))
-    return computed_nsteps
+    return (computed_nsteps, computed_step_size)
 
-def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs_dict={}):
+def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs_dict={}, dryrun = False):
     '''the main xpdAcq function for getting a time series scan
 
     Parameters
@@ -467,14 +526,17 @@ def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs
     md = dict(scan.md)
     area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = area_det.cam.acquire_time.get()
-
     # compute how many frames to collect
     num_frame = max(int(exposure / acq_time), 1)
     computed_exposure = num_frame * acq_time
     num_sets = 1
-
+    print('INFO: requested exposure time = {}s -> computed exposure time = {}s '.format(exposure,computed_exposure))
     real_delay = max(0, delay - computed_exposure)
+    
     period = max(computed_exposure, real_delay + computed_exposure)
+    print('INFO: requested delay = {}s  -> computed delay = {}s'.format(delay, real_delay))
+    print('INFO: nominal period (neglecting readout overheads) of {} s'.format(period))
+
     # set how many frames to average
     area_det.images_per_set.put(num_frame)
     area_det.number_of_sets.put(num_sets)
@@ -488,11 +550,46 @@ def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs
 
     md_dict = scan.md
     plan = Count([area_det], num=num, delay=real_delay)
-    xpdRE(plan, subs_dict, **md_dict)
-    if xpdRE.state == 'paused':
-        _RE_state_wrapper(RE_obj)
-    print('End of time series scan ....')
+    if dryrun:
+        _collect_time_series_dryrun(md_dict, real_delay, delay, num)
+    else:
+        xpdRE(plan, subs_dict, **md_dict)
+        if xpdRE.state == 'paused':
+            _RE_state_wrapper(RE_obj)
 
+def _collect_time_series_dryrun(md_dict, real_delay, delay, num):
+    print(' === dryrun mode ===')
+    num_frame = md_dict['sp_num_frames']
+    acq_time = md_dict['sp_time_per_frame']
+    period = md_dict['sp_period']
+    #num_sets = md_dict['sp_number_of_sets']
+    est_writeout_ohead = 2 # this might vary
+    scan_length_s = period*num
+    m, s = divmod(scan_length_s, 60)
+    h, m = divmod(m, 60)
+    scan_length = str("%d:%02d:%02d" % (h, m, s))
+    est_real_scan_length_s = (period+est_writeout_ohead)*num
+    m, s = divmod(est_real_scan_length_s, 60)
+    h, m = divmod(m, 60)
+    est_real_scan_length = str("%d:%02d:%02d" % (h, m, s))
+    
+    print('this will execute a series of {} bluesky Count type scans'.format(num))
+    print('Sample metadata will be: Sample name = {}'.format(md_dict['sa_name'])) # enrich it later
+    print('using the "pe1c" detector (Perkin-Elmer in continuous acquisition mode)')
+    print('in the form of {} frames of {} s summed into a single event'.format(num_frame, acq_time))
+    print('(i.e. accessible as a single tiff file)')
+    print('')
+    print('There will be a delay of {}s between scans (compared to the requested delay of {} s)'.format(real_delay, delay))
+    print('This will result in a nominal period (neglecting readout overheads) of {} s'.format(period))
+    print('Using an estimated write-out overhead of {}s'.format(est_writeout_ohead))
+    print('Which results in a total scan time of {}s'.format(est_real_scan_length_s))
+    print('Estimated total scan length = {}'.format(est_real_scan_length))
+    print('Real outcomes may vary!')
+    print('that will be summed into a single event (e.g. accessible as a single tiff file)')
+    print('')
+    print('The metadata saved with the scan will be:')
+    print(md_dict)
+    return md_dict
 
 def get_bluesky_run(mdo, plan, det = area_det, subs_dict={}, **kwargs):
     '''An xpdAcq function for executing a custom (user defined) bluesky plan
