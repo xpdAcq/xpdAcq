@@ -85,8 +85,6 @@ class NewBeamtimeTest(unittest.TestCase):
         yml_dir = os.path.join(self.home_dir,usrconfig_dir,'yml')
         dirs = _make_clean_env()
         self.assertTrue(dirs == glbl.allfolders)
-        #self.assertEqual(dirs,[home_dir, conf_dir, tiff_dir, yml_dir,
-            #usrconfig_dir, userscripts_dir, import_dir, userysis_dir])
 
     def test_bt_creation(self):
         _make_clean_env()
