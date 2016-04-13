@@ -11,7 +11,7 @@ import copy
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample, Scan
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
-from xpdacq.xpdacq import prun, calibration, dark, _auto_dark_collection, _auto_load_calibration_file
+from xpdacq.xpdacq import prun, calibration, dark, dryrun, background, _auto_dark_collection, _auto_load_calibration_file
 from xpdacq.control import _open_shutter, _close_shutter
 
 class NewScanTest(unittest.TestCase):
@@ -184,16 +184,25 @@ class NewScanTest(unittest.TestCase):
         self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
-        calibration(self.sa, self.sp)
+        md_copy = dict(self.sc.md)
+        dryrun(self.sa, self.sp)
+        # is scan_md remain the same?
+        self.assertTrue(md_copy == self.sc.md)
+    
+    def test_background(self):
+        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
+        self.sc = Scan(self.sa, self.sp)
+        self.assertEqual(self.sc.sp, self.sp)
+        background(self.sa, self.sp)
         # is xpdRE used?
         self.assertTrue(glbl.xpdRE.called)
         # is md updated?
         self.assertFalse(glbl.xpdRE.call_args_list[-1][1] == self.sc.md)
-        # is calibration labeled eventually?
-        self.assertTrue('sc_iscalibration' in glbl.xpdRE.call_args_list[-1][1])
+        # is md labeled correctly?
+        self.assertTrue('sc_isbackground' in glbl.xpdRE.call_args_list[-1][1])
         # is auto_dark executed?
         self.assertTrue('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
         # is calibration loaded? -> No
         self.assertFalse('sc_calibration_file_name' in glbl.xpdRE.call_args_list[-1][1])
         # is  ScanPlan.md remain unchanged after scan?
-        self.assertFalse('sc_iscalibration' in self.sp.md)
+        self.assertFalse('sc_iscalibration' in self.sp.md) 

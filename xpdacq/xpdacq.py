@@ -345,8 +345,7 @@ def dryrun(sample, scanplan, **kwargs):
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
-    scan.md.update({'sc_isdryrun':True})
-    _execute_scans(scan, auto_dark = False, auto_calibration = False, light_frame = True, dryrun = True)
+    _execute_scans(scan, auto_dark = False, auto_calibration = False, light_frame = False, dryrun = True)
     return
 
 def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}, dryrun = False):
@@ -387,7 +386,7 @@ def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}, dryrun = 
 
     plan = Count([area_det])
     if dryrun:
-       _get_light_image_dryrun(md_dict) 
+        _get_light_image_dryrun(md_dict)
     else:    
         xpdRE(plan, subs_dict, **md_dict)
         if xpdRE.state == 'paused':
@@ -404,8 +403,7 @@ def _get_light_image_dryrun(md_dict):
     print('(i.e. accessible as a single tiff file)')
     print('')
     print('The metadata saved with the scan will be:')
-    print(md_dict) # make it prettier
-    return md_dict
+    print(md_dict) # make it prettier later
 
 
 def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det, subs_dict={}, dryrun = False):
