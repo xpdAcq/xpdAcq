@@ -1,17 +1,12 @@
 # go over collection functionalities
 
-try:
-    print('end a beam time if it has not been done yet')
-    end_beamtime()
-except:
-    pass
 print('start beamtime ....')
 bt = _start_beamtime('123')
     
 print('bt list method ....')
 bt.list()
 print('define acquire objects...')
-ex = Experiemnt('xpdAcq_test', bt)
+ex = Experiment('xpdAcq_test', bt)
 sa = Sample('xpdAcq_test_Sample', ex)
 print('define "ct" scanplan: exp = 0.5')
 ct = ScanPlan('xpdAcq_test_ct','ct',{'exposure':0.5})
@@ -22,7 +17,7 @@ print('define "time series" scanplan: exp = 0.5, num=10, delay = 2')
 tseries = ScanPlan('xpdAcq_test_tseries', 'tseries', {'exposure':0.5, 'num':5, 'delay':2})
 
 scan_list_up = [ct, TrampUp, tseries]
-scan_list_down = [ct, TramDown, tseries]
+scan_list_down = [ct, TrampDown, tseries]
 
 print('prun with different ScanPlans...')
 for el in scan_list_up:
