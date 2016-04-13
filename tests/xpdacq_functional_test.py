@@ -47,3 +47,4 @@ for el in scan_list_up:
     dryrun(sa, el)
 
 print('=== end of collection functionalities test ===')
+_end_beamtime()
