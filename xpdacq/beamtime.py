@@ -144,7 +144,6 @@ class XPD:
         yaml.dump(hidden_list, fo)
         return hidden_list
 
-    # test at XPD
     def _init_dark_scan_list(self):
         dark_scan_list = []
         with open(glbl.dk_yaml,'w') as f:
