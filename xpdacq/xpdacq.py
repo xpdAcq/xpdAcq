@@ -22,6 +22,7 @@ import numpy as np
 import copy
 import sys
 import uuid
+import warning
 from configparser import ConfigParser
 from xpdacq.utils import _graceful_exit, _RE_state_wrapper
 from xpdacq.glbl import glbl
@@ -173,10 +174,13 @@ def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun
 def _auto_dark_collection(scan):
     ''' function to cover automated dark collection logic '''
     light_cnt_time = scan.md['sp_params']['exposure']
-    if 'dk_window' in scan.md['sp_params']:
-        expire_time = scan.md['sp_params']['dk_window']
-    else:
-        expire_time = glbl.dk_window
+    try:
+        expire_time = scan.md['sp_dk_window']
+    except KeyError:
+        # protection, shouldn't happen
+        warnings.warn("It seems your ScanPlan object wasn't instantiated properly."
+                        "This scan will keep going but please check your package after this scan")
+        expire_time = 0
     dark_field_uid = validate_dark(light_cnt_time, expire_time)
     if not dark_field_uid:
         print('''INFO: auto_dark didn't detect a valid dark, so is collecting a new dark frame.

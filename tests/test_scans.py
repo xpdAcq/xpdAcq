@@ -95,7 +95,7 @@ class NewScanTest(unittest.TestCase):
         self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_parameters']['Others']['avgmask'], 'False')
 
     def test_new_prun_with_auto_dark_and_auto_calibration(self):
-        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1, 'dk_window':32767}, shutter = False)
+        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1, 'dk_window':32767}, dk_window = 32767, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
         cfg_f_name = 'srxconfig.cfg'
@@ -112,7 +112,7 @@ class NewScanTest(unittest.TestCase):
         # is auto_dark executed?
         self.assertTrue('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
         # is dk_window changed as ScanPlan object changed??
-        self.assertEqual(glbl.xpdRE.call_args_list[-1][1]['sc_dk_window'], 32767)
+        self.assertEqual(glbl.xpdRE.call_args_list[-1][1]['sp_dk_window'], 32767)
         # is calibration loaded?
         self.assertEqual(glbl.xpdRE.call_args_list[-1][1]['sc_calibration_file_name'], cfg_f_name)
         # is  ScanPlan.md remain unchanged after scan?
