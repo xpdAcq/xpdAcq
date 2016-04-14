@@ -113,9 +113,9 @@ class XPD:
             iter = 0
             for i in olist:
                 iter += 1
-                myuid = i._get_obj_uid(i.name,i.type)
+                #myuid = i._get_obj_uid(i.name,i.type)
                 if iter-1 not in hlist:
-                    print(i.type+' object '+str(i.name)+' has list index ', iter-1,'and uid',myuid[:6])
+                    print(i.type+' object '+str(i.name)+' has list index ', iter-1)#'and uid',myuid[:6])
         else:
             iter = 0
             for i in olist:
