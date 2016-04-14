@@ -42,7 +42,7 @@ class NewScanTest(unittest.TestCase):
             shutil.rmtree(os.path.join(glbl.base,'xpdConfig'))
 
     def test_auto_dark_collection(self):
-        self.sp_set_dk_window = ScanPlan('unittest_count','ct', {'exposure': 0.1, 'dk_window':25575}, shutter = False)
+        self.sp_set_dk_window = ScanPlan('unittest_count','ct', {'exposure': 0.1}, dk_window = 25575, shutter = False)
         self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
         self.sc_set_dk_window = Scan(self.sa, self.sp_set_dk_window)
         self.sc = Scan(self.sa, self.sp)
@@ -51,8 +51,8 @@ class NewScanTest(unittest.TestCase):
         # test if md is updated
         self.assertTrue('sc_dk_field_uid' in auto_dark_md_dict_set_dk_window and 'sc_dk_field_uid' in auto_dark_md_dict)
         # test if dk_window is overwrittten
-        self.assertEqual(glbl.dk_window, auto_dark_md_dict['sc_dk_window'])
-        self.assertEqual(25575, auto_dark_md_dict_set_dk_window['sc_dk_window'])
+        self.assertEqual(glbl.dk_window, self.sp.md['sp_dk_window'])
+        self.assertEqual(25575, self.sp_set_dk_window.md['sp_dk_window'])
 
     def test_auto_load_calibration(self):
         self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)

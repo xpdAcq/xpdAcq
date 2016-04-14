@@ -22,7 +22,7 @@ import numpy as np
 import copy
 import sys
 import uuid
-import warning
+import warnings
 from configparser import ConfigParser
 from xpdacq.utils import _graceful_exit, _RE_state_wrapper
 from xpdacq.glbl import glbl
@@ -193,8 +193,7 @@ See documentation at http://xpdacq.github.io for more information about controll
             auto_dark_scanplan = ScanPlan('auto_dark_scan',
                 'ct',{'exposure':light_cnt_time}, shutter=False)
         dark_field_uid = dark(scan.sa, auto_dark_scanplan)
-    auto_dark_md_dict = {'sc_dk_field_uid': dark_field_uid,
-                        'sc_dk_window': expire_time}
+    auto_dark_md_dict = {'sc_dk_field_uid': dark_field_uid}
     return auto_dark_md_dict
 
 def _auto_load_calibration_file():
@@ -237,7 +236,7 @@ def prun(sample, scanplan, auto_dark = None, **kwargs):
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_isprun':True})
-    if not auto_dark:
+    if auto_dark == None:
         auto_dark = glbl.auto_dark
     _execute_scans(scan, auto_dark, auto_calibration = True, light_frame = True, dryrun = False)
     return
@@ -260,7 +259,7 @@ def calibration(sample, scanplan, auto_dark = None, **kwargs):
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_iscalibration':True})
     # only auto_dark is exposed to user
-    if not auto_dark:
+    if auto_dark == None:
         auto_dark = glbl.auto_dark
     _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
     return
@@ -283,7 +282,7 @@ def background(sample, scanplan, auto_dark = None, **kwargs):
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_isbackground':True})
     # only auto_dark is exposed to user
-    if not auto_dark:
+    if auto_dark == None:
         auto_dark = glbl.auto_dark
     _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
     return
@@ -306,7 +305,7 @@ def setupscan(sample, scanplan, auto_dark = None, **kwargs):
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_issetupscan':True})
     # only auto_dark is exposed to user
-    if not auto_dark:
+    if auto_dark == None:
         auto_dark = glbl.auto_dark
     _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
     return
