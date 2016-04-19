@@ -26,7 +26,7 @@ import matplotlib as plt
 from xpdacq.glbl import glbl
 import warnings
 
-# top definition for minial impacts on the code. Can be changed later
+# top definition for minimal impacts on the code 
 db = glbl.db
 get_events = glbl.get_events
 get_images = glbl.get_images
@@ -90,8 +90,10 @@ def save_last_tiff(dark_subtraction=True, max_count_num=None):
     Parameters
     ----------
     dark_subtraction : bool, optional
-        If background / dark subtraction should be done before saving
-        each image.
+        Default is True, which allows dark/background subtraction to 
+        be done before saving each image. If header doesn't contain
+        necessary information to perform dark subtraction, uncorrected
+        image will be saved.
 
     max_count : int, optional
         The maximum number of events to process per-run.  This can be
@@ -113,8 +115,10 @@ def save_tiff(headers, dark_subtraction=True, *, max_count=None):
         a list of header objects obtained from a query to dataBroker
 
     dark_subtraction : bool, optional
-        If background / dark subtraction should be done before saving
-        each image.
+        Default is True, which allows dark/background subtraction to 
+        be done before saving each image. If header doesn't contain
+        necessary information to perform dark subtraction, uncorrected
+        image will be saved.
 
     max_count : int, optional
         The maximum number of events to process per-run.  This can be
@@ -159,7 +163,7 @@ def save_tiff(headers, dark_subtraction=True, *, max_count=None):
                 print(e)  # protection. Should not happen
                 warnings.warn("Requested to do dark correction, but "
                               "extracting the dark image failed.  Proceeding "
-                              "with out correction.")
+                              "without correction.")
         for ev in get_events(header):
             img = ev['data'][img_field]
             ind = ev['seq_num']
@@ -202,7 +206,7 @@ def plot_images(header):
     Parameters
     ----------
         header : databroker header object
-            header pulled out from central file system
+            header objects obtained from a query to dataBroker
     '''
     # prepare header
     if type(list(headers)[1]) == str:
@@ -226,12 +230,6 @@ def plot_images(header):
                 plt.show()
             except:
                 pass # allow matplotlib to crash without stopping other function
-
-def plot_last_scan():
-    ''' function to plot images from last header
-    '''
-    plot_images(db[-1])
-
 
 def _identify_image_field(header):
     ''' small function to identify image filed key words in header
