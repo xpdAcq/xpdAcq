@@ -179,7 +179,7 @@ def _auto_dark_collection(scan):
     except KeyError:
         # protection, shouldn't happen
         warnings.warn("It seems your ScanPlan object wasn't instantiated properly."
-                        "This scan will keep going but please check your package after this scan")
+                        "This scan will keep going but please contact instrument scientist immediately")
         expire_time = 0
     dark_field_uid = validate_dark(light_cnt_time, expire_time)
     if not dark_field_uid:
