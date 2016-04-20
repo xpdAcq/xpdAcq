@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+from shutil import ReadError
 import tarfile as tar
 from time import strftime
 
@@ -112,14 +113,15 @@ def import_userScriptEtc():
     for f in f_list:
         try:
             # shutil should handle all compressed cases
-            shutil.unpack_archive(src_full_path, src_dir)
+            tar_full_path = os.path.join(src_dir, f)
+            shutil.unpack_archive(tar_full_path, src_dir)
         except ReadError:
             pass
     f_list = os.listdir(src_dir) # new f_list, after unpack
     moved_list = []
     failure_list = []
     for f_name in f_list:
-        if os.path.isfile(f_name):
+        if os.path.isfile(os.path.join(src_dir, f_name)):
             src_full_path = os.path.join(src_dir, f_name)
             (root, ext) = os.path.splitext(f_name)
             if ext == '.yml':
@@ -134,6 +136,8 @@ def import_userScriptEtc():
                 dst_dir = glbl.config_base
                 npy_dst_name = _copy_and_delete(f_name, src_full_path, dst_dir) 
                 moved_list.append(npy_dst_name)
+            elif ext in ('.tar', '.zip', '.gztar'):
+                pass
             else:
                 print('{} is not a supported format'.format(f_name))
                 failure_list.append(f_name)
@@ -143,7 +147,8 @@ def import_userScriptEtc():
             print('Expect a file but get a directory {}. Did you properly archive it?'.format(f_name))
             failure_list.append(f_name)
             pass
-    print('Finished importing. Failed to move {} but they will leave in Import/'.format(failure_list))
+    if failure_list:
+        print('Finished importing. Failed to move {} but they will leave in Import/'.format(failure_list))
     return moved_list
 
 def _copy_and_delete(f_name, src_full_path, dst_dir):
@@ -151,9 +156,9 @@ def _copy_and_delete(f_name, src_full_path, dst_dir):
     dst_name = os.path.join(dst_dir, f_name) 
     if os.path.isfile(dst_name):
         print('{} has been successfully moved to {}'.format(f_name, dst_dir))
-        os.remove(full_path)
+        os.remove(src_full_path)
         return dst_name
     else:
-        print('We have problem moving {}. It will still leave at xpdUser/Import/'.format(f_name))
+        print('We have problem moving {} it will still leave at xpdUser/Import/'.format(f_name))
         return
 
