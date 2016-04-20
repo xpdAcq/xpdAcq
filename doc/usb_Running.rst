@@ -4,12 +4,12 @@ Running scans
 -------------
 
 The hard work of the experimental setup is now done.  It involved creating all the 
-rich metadata container and scan objects, but with this in the past it makes 
+rich metadata container and ScanPlan objects, but with this in the past it makes 
 it easy and low overhead to run the scans, allowing the experimenter to concentrate
 on the science and not the experimental process.  
 
 To run scans there are just a few xpdAcq
-run engines that you need.  To run a scan you simply pick the run engine you want
+run engines(functions) that you need.  To run a scan you simply pick the run engine you want
 and give it a predefined Sample object and
 a predefined ScanPlan object, then hit return and sit back, your scan will be carried out.
 
@@ -17,14 +17,17 @@ The allowed scan types are:
 
 .. code-block:: python
 
-  >>> prun(sample,scanplan)
-  >>> dark(sample,scanplan)
-  >>> setupscan(sample,scanplan)
-  >>> dryrun(sample,scanplan)
+  >>> prun(sample, scanplan)
+  >>> dark(sample, scanplan)
+  >>> background(sample, scanplan)
+  >>> calibration(sample, scanplan)
+  >>> setupscan(sample, scanplan)
+  >>> dryrun(sample, scanplan)
   
 ``prun`` stands for "production run" which is a normal run.  ``dark`` collects dark frames.
 Strictly speaking the sample is irrelevant here because the shutter is closed, but
-it is left in the definition for consistency.  ``setupscan`` is for testing things
+it is left in the definition for consistency and in general ``dark`` is not necessary as automated dark subtraction collect dark images for you. ``calibration`` is specifically designed to collect image on your calibrants.
+``setupscan`` is for testing things
 before you are ready to get production data, such as trying out different exposures
 on a sample to find the best exposure time.  ``dryrun`` does not execute any scan
 but tells you what is going to be run when you give the same Sample and Scan objects
