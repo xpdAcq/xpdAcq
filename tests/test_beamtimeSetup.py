@@ -203,12 +203,12 @@ class NewBeamtimeTest(unittest.TestCase):
         yaml_name = 'touched.yml'
         py_name = 'touched.py'
         npy_name = 'mask.npy'
-        untared_list = [yaml_name, py_name, npy_name]
+        exception_name = 'yaml.pdf'
+        untared_list = [yaml_name, py_name, npy_name, exception_name]
         tar_yaml_name = 'tar.yml'
         tar_py_name = 'tar.py'
         tar_npy_name = 'tar.npy'
         tared_list = [tar_yaml_name, tar_py_name, tar_npy_name]
-        exception_name = 'yaml.pdf'
         # create archive file
         for el in tared_list:
             f_path = os.path.join(src, el)
@@ -219,24 +219,31 @@ class NewBeamtimeTest(unittest.TestCase):
         shutil.make_archive(tar_name,'tar') # now data should be in xpdUser/Import/
         full_tar_name = os.path.join(src, tar_name + '.tar')
         os.chdir(cwd)
-        print(os.listdir(src))
         moved_list_1 = import_userScriptEtc()
         for el in tared_list:
             self.assertTrue(el in list(map(lambda x: os.path.basename(x), moved_list_1)))
         # is tar file still there?
-        print(os.listdir(src))
-        print('full tar name = {}'.format(full_tar_name))
         self.assertTrue(os.path.isfile(full_tar_name))
-        # case 3 : both tared file and individual files appear in Import/
+        # case 3 : tared file, individual files and unexcepted file/dir appear in Import/
         for el in untared_list:
             f_path = os.path.join(src, el)
             open(f_path,'a').close()
+        exception_dir_name = os.path.join(src,'touched')
+        os.makedirs(exception_dir_name, exist_ok = True) 
         moved_list_2 = import_userScriptEtc()
-        tared_list.extend(untared_list)
-        for el in tared_list:
+        # grouping file list
+        final_list = list(tared_list)
+        final_list.extend(untared_list)
+        final_list.remove(exception_name)
+        for el in final_list:
             self.assertTrue(el in list(map(lambda x: os.path.basename(x), moved_list_2)))
         # is tar file still there?
         self.assertTrue(os.path.isfile(full_tar_name))
+        # is .pdf file still there?
+        self.assertTrue(os.path.isfile(os.path.join(src, exception_name)))
+        # is directory still there?
+        self.assertTrue(os.path.isdir(exception_dir_name))
+
 
     def test_export_userScriptEtc(self):
         os.makedirs(glbl.usrScript_dir, exist_ok = True)
