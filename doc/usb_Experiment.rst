@@ -1,3 +1,4 @@
+.. _usb_experiment:
 
 Setting up your XPD acuisition objects
 --------------------------------------
