@@ -7,7 +7,7 @@ from xpdacq.glbl import glbl
 import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment,_load_bt, _execute_end_beamtime, _delete_home_dir_tree
 from xpdacq.beamtime import Beamtime,_get_yaml_list
-from xpdacq.utils import export_userScriptEtc, import_userScriptEtc
+from xpdacq.utils import export_userScriptsEtc, import_userScriptsEtc
 
 class NewBeamtimeTest(unittest.TestCase): 
 
@@ -198,7 +198,7 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(glbl.yaml_dir))
         self.assertTrue(os.path.isdir(glbl.usrScript_dir))
         # case1 : no files in import_dir, should return nothing
-        self.assertEqual(import_userScriptEtc(), None)
+        self.assertEqual(import_userScriptsEtc(), None)
         # case2 : a tar file with three kind of files, test if it is successfully moved and unpacked
         yaml_name = 'touched.yml'
         py_name = 'touched.py'
@@ -219,7 +219,7 @@ class NewBeamtimeTest(unittest.TestCase):
         shutil.make_archive(tar_name,'tar') # now data should be in xpdUser/Import/
         full_tar_name = os.path.join(src, tar_name + '.tar')
         os.chdir(cwd)
-        moved_list_1 = import_userScriptEtc()
+        moved_list_1 = import_userScriptsEtc()
         for el in tared_list:
             self.assertTrue(el in list(map(lambda x: os.path.basename(x), moved_list_1)))
         # is tar file still there?
@@ -230,7 +230,7 @@ class NewBeamtimeTest(unittest.TestCase):
             open(f_path,'a').close()
         exception_dir_name = os.path.join(src,'touched')
         os.makedirs(exception_dir_name, exist_ok = True) 
-        moved_list_2 = import_userScriptEtc()
+        moved_list_2 = import_userScriptsEtc()
         # grouping file list
         final_list = list(tared_list)
         final_list.extend(untared_list)
@@ -245,14 +245,14 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(exception_dir_name))
 
 
-    def test_export_userScriptEtc(self):
+    def test_export_userScriptsEtc(self):
         os.makedirs(glbl.usrScript_dir, exist_ok = True)
         os.makedirs(glbl.yaml_dir, exist_ok = True)
         new_script = os.path.join(glbl.usrScript_dir, 'script.py')
         open(new_script, 'a').close()
         new_yaml = os.path.join(glbl.yaml_dir, 'touched.yml')
         open(new_yaml, 'a').close()
-        tar_f_path = export_userScriptEtc()
+        tar_f_path = export_userScriptsEtc()
         shutil.unpack_archive(tar_f_path,glbl.home)
         
         userScript_dir_tail = os.path.split(glbl.usrScript_dir)[1]

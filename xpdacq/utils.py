@@ -68,7 +68,7 @@ def _RE_state_wrapper(RE_obj):
         else:
             print('please renter your input')
 
-def export_userScriptEtc():
+def export_userScriptsEtc():
     """ function that exports user defined objects/scripts stored under config_base and userScript
         
         it will create a uncompressed tarball inside xpdUser/Export
@@ -81,7 +81,7 @@ def export_userScriptEtc():
     F_EXT = '.tar'
     root_dir = glbl.home
     os.chdir(root_dir)
-    f_name = strftime('userScriptEtc_%Y-%m-%dT%H%M') + F_EXT
+    f_name = strftime('userScriptsEtc_%Y-%m-%dT%H%M') + F_EXT
     # extra work to avoid comple directory structure in tarball
     tar_f_name = os.path.join(glbl.home, f_name)
     export_dir_list = list(map(lambda x: os.path.basename(x), glbl._export_tar_dir))
@@ -93,21 +93,28 @@ def export_userScriptEtc():
         return archive_path
     else:
         _graceful_exit('Did you accidentally change write privilege to {}'.format(glbl.home))
-        print('Please check your setting and try `export_userScriptEtc()` again at command prompt')
+        print('Please check your setting and try `export_userScriptsEtc()` again at command prompt')
         return
 
-def import_userScriptEtc():
-    '''
-    import beamtime control files predefined by users from xpdUser/Import
+def import_userScriptsEtc():
+    '''Import user files that have been placed in xpdUser/Import for use by xpdAcq
 
-    Files could be archived files or indivisual script(.py), mask(.npy) or yaml(.yml) files.
-    Once files are imported, they will be deleted but user can use `export_userScriptEtc` to revert them.
+    Allowed files are python user-script files (extension .py), detector-image mask files (.npy) or files containing xpdAcq objects (extension .yml).
+    Files created by running export_userScriptsEtc() are also allowed.  Unallowed files (anything not in the previous list) will be ignored. 
+
+    After import, all files in the xpdUser/import directory will be deleted
+    The user can run `export_userScriptsEtc` to revert them.
+
+    Return
+    ------
+        moved_list : list
+        a list of file names that have been moved successfully
     '''
     _f_ext_dst_dict = ['py', 'npy', 'yml']
     src_dir = glbl.import_dir
     f_list = os.listdir(src_dir)
     if len(f_list) == 0:
-        print('INFO: There is no pre-defined user objects in {}'.format(src_dir))
+        print('INFO: There is no predefined user objects in {}'.format(src_dir))
         return 
     # unpack every archived file in Import/
     for f in f_list:
@@ -143,7 +150,7 @@ def import_userScriptEtc():
                 failure_list.append(f_name)
                 pass
         else:
-            # don't expect user to see have directory
+            # don't expect user to have directory
             print('Expect a file but get a directory {}. Did you properly archive it?'.format(f_name))
             failure_list.append(f_name)
             pass
