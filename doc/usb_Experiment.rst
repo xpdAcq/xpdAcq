@@ -1,4 +1,3 @@
-.. _usb_experiment:
 
 Setting up your XPD acuisition objects
 --------------------------------------
@@ -10,7 +9,7 @@ The basic workflow is
 
  #. Set up xpdAcq `experiment-sample` objects. These contain information about the samples and experimental conditions.
  #. Set up xpdAcq `scan` objects.  These contain information used to run the scan, and metadata about the scan.
- #. Run scans by passing one ``sample`` and one ``scan`` object to the various available `run` functions. Data will be measured and saved to the NSLS-II file-store with all the metadata in the objects saved with it.
+ #. Run scans by passing one ``Sample`` and one ``ScanPlan`` object to the various available `run` functions. Data will be measured and saved to the NSLS-II file-store with all the metadata in the objects saved with it.
  #. Extract scans and data that you want from the data-store by searching on the metadata, selecting the data you want and extracting it in the form you want it (e.g., tiff files)
  #. Analyze the data, by integrating images to 1D diffraction patterns, F(Q), and PDFs, subtracting backgrounds, plotting and fitting models
  #. Export all the data, both raw tiffs and analyzed data, that you want.
@@ -36,7 +35,21 @@ ipython will remind you of what the arguments are for that function.
 
    >>> e = Experiment?
    Init signature: Experiment(self, expname, beamtime)
-   Docstring:      <no docstring>
+   Docstring:
+
+    class that holds experiment information 
+    
+    Parameters
+    ----------
+    expname : str
+        name to this experiment
+    
+    beamtime : xpdAcq.beamtime.Beamtime object
+        object to current beamtime
+    
+    **kwargs : dict
+        optional. a dictionary for user-supplied information.
+
    File:           c:\users\billinge\documents\github\xpdacq\xpdacq\beamtime.py
    Type:           type
 
