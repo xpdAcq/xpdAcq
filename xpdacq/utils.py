@@ -95,36 +95,65 @@ def export_userScriptEtc():
         print('Please check your setting and try `export_userScriptEtc()` again at command prompt')
         return
 
-def import_yaml():
+def import_userScriptEtc():
     '''
-    import user pre-defined files from ~/xpdUser/Import
+    import beamtime control files predefined by users from xpdUser/Import
 
-    Files can be compreesed or .yml, once imported, bt.list() should show updated acquire object list
+    Files could be archived files or indivisual script(.py), mask(.npy) or yaml(.yml) files.
+    Once files are imported, they will be deleted but user can use `export_userScriptEtc` to revert them.
     '''
+    _f_ext_dst_dict = ['py', 'npy', 'yml']
     src_dir = glbl.import_dir
-    dst_dir = glbl.yaml_dir
     f_list = os.listdir(src_dir)
     if len(f_list) == 0:
         print('INFO: There is no pre-defined user objects in {}'.format(src_dir))
         return 
-    # two possibilites: .yml or compressed files; shutil should handle all compressed cases
-    moved_f_list = []
+    # unpack every archived file in Import/
     for f in f_list:
-        full_path = os.path.join(src_dir, f)
-        (root, ext) = os.path.splitext(f)
-        if ext == '.yml':
-            shutil.copy(full_path, dst_dir)
-            moved_f_list.append(f)
-            # FIXME - do we want user confirmation?
-            os.remove(full_path)
-        else:
-            try:
-                shutil.unpack_archive(full_path, dst_dir)
-                moved_f_list.append(f)
-                # FIXME - do we want user confirmation?
-                os.remove(full_path)
-            except ReadError:
-                print('Unrecongnized file type {} is found inside {}'.format(f, src_dir))
+        try:
+            # shutil should handle all compressed cases
+            shutil.unpack_archive(src_full_path, src_dir)
+        except ReadError:
+            pass
+    f_list = os.listdir(src_dir) # new f_list, after unpack
+    moved_list = []
+    failure_list = []
+    for f_name in f_list:
+        if os.path.isfile(f_name):
+            src_full_path = os.path.join(src_dir, f_name)
+            (root, ext) = os.path.splitext(f_name)
+            if ext == '.yml':
+                dst_dir = glbl.yaml_dir
+                yml_dst_name = _copy_and_delete(f_name, src_full_path, dst_dir)
+                moved_list.append(yml_dst_name)
+            elif ext == '.py':
+                dst_dir = glbl.usrScript_dir
+                py_dst_name = _copy_and_delete(f_name, src_full_path, dst_dir) 
+                moved_list.append(py_dst_name)
+            elif ext == '.npy':
+                dst_dir = glbl.config_base
+                npy_dst_name = _copy_and_delete(f_name, src_full_path, dst_dir) 
+                moved_list.append(npy_dst_name)
+            else:
+                print('{} is not a supported format'.format(f_name))
+                failure_list.append(f_name)
                 pass
-    return moved_f_list
+        else:
+            # don't expect user to see have directory
+            print('Expect a file but get a directory {}. Did you properly archive it?'.format(f_name))
+            failure_list.append(f_name)
+            pass
+    print('Finished importing. Failed to move {} but they will leave in Import/'.format(failure_list))
+    return moved_list
+
+def _copy_and_delete(f_name, src_full_path, dst_dir):
+    shutil.copy(src_full_path, dst_dir)
+    dst_name = os.path.join(dst_dir, f_name) 
+    if os.path.isfile(dst_name):
+        print('{} has been successfully moved to {}'.format(f_name, dst_dir))
+        os.remove(full_path)
+        return dst_name
+    else:
+        print('We have problem moving {}. It will still leave at xpdUser/Import/'.format(f_name))
+        return
 
