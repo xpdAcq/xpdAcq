@@ -26,7 +26,7 @@ and all things it contains (but not their values) will be listed.
   bt.export    bt.list        bt.md     bt.type
   bt.get       bt.loadyamls   bt.name
   
-To see what those things contain, type ``bt.thing`` and hit return. For example, in our case:
+To see what those things contain, type ``bt.<thing>`` and hit return. For example, in our case:
    
 .. code-block:: python
   
