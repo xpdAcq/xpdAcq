@@ -66,7 +66,13 @@ Let's try a dryrun to make sure everything is ok.
 .. code-block:: python
 
   >>> dryrun(bt.get(3),bt.get(11))
-  [Fixme] output here
+  INFO: requested exposure time =  2.0  -> computed exposure time: 2.0
+  === dryrun mode ===
+  this will execute a single bluesky Count type scan
+  Sample metadata: Sample name = GaAs
+  using the "pe1c" detector (Perkin-Elmer in continuous acquisition mode)
+  in the form of 20 frames of 0.1 s summed into a single event
+  (i.e. accessible as a single tiff file)
 
 OK, it seems to work, lets do some testing to see how much intensity we need.
 We will do three setup scans with 1.5 second, 2 seconds and 100.5 seconds exposure 
