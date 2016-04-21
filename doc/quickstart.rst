@@ -32,7 +32,7 @@ The basic way to collect data is to carry out a "scan", by typing the kind of sc
    1. Type ``save_last_tiff()`` to get the most recent scan you ran.  A dark-subtracted tiff file will appear in the directory ``~/xpdUser/tiff_base`` with prefix ``sub_`` in file name.
    2. ``save_tiff(db[-2])`` gets you the second to last scan that was collected, ``save_tiff(db[-10:])`` gets you the last 10 scans, (the syntax is Pythonic but it means "the items in the list from 10 ago up to the end of the list, i.e., now".  You can do all kinds of slicing and dicing, for example ``db[-10:-8,-2]`` would return the scans that were tenth, ninth and eighth ago, and also the last but one.) and so on.
    3. The tiff file appears in the directory ``~/xpdUser/tiff_base`` with a reasonably recognizable automatically generated name and you can do pretty much what you like with it. For example, copy it to an external drive.  However, there are handy tools on the XPD computer for analyzing your data.  As long as you save all your work in the ``xpdUser`` directory tree (make as many directories as you like under there) your work will be archived in a remote location at the end of your beamtime, and then completely deleted from the local XPD computer so that the next user has their own fresh environment to work in but your work is safe.
-   4. To use data analysis tools on the XPD computer, in a new terminal window,
+   4. To use data analysis tools on the XPD computer, **in a new terminal window**,
      1.Type ``getxgui``
      2 Click on the green ``SrXplanar`` icon [Soham or someone, can you put instructions here for using ``SrXplanar``]
 
@@ -58,8 +58,8 @@ Types of scan available.  They all take as arguments ``<sample-object>,<scanplan
 
 You should try and set up some of your own scanplan objects:
   1. let's say you want to do a count scan for 1.5 minutes.
-    1. type ``bt.list('sc')``  to see the current list of scan objects
-    2. type ``ScanPlan('<scan name>','ct',{'exposure':90})``.  This creates a ``'ct'`` or count-type scan with an exposure of 90 s or 1.5 minutes, calling it whatever you typed for ``<scan name>``.  Pro tip: use ``'ct90s'`` or ``'ct1.5m'`` for the scan name.
+    1. type ``bt.list('sp')``  to see the current list of scan objects
+    2. type ``ScanPlan('<scanplan name>','ct',{'exposure':90})``.  This creates a ``'ct'`` or count-type scan with an exposure of 90 s or 1.5 minutes, calling it whatever you typed for ``<scanplan name>``.  Pro tip: use ``'ct90s'`` or ``'ct1.5m'`` for the scanplan name.
     3. type ``bt.list()`` again.  You should see your new scanplan object at the end of the list.  Run it using ``prun(bt.get(2),bt.get(11))`` or giving a different number to the second ``get`` if it has a different number in the list.
 
 Types of ScanPlan available in current version:
