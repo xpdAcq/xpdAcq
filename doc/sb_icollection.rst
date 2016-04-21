@@ -4,11 +4,11 @@
 Overview of the icollection+xpdacq environment
 ----------------------------------------------
 
-All data collection at NSLS-II is carried out through a powerful 
+All data collection at NSLS-II is carried out through a powerful
 Python-software-language based interface which runs in an ipython interactive
 session. By typing ``icollection`` at the unix prompt (command line) in a terminal
 window at the XPD computer you begin an ipython session and preload an ipython
-profile (called ``collection``) that contains all the software to run the NSLS-II 
+profile (called ``collection``) that contains all the software to run the NSLS-II
 data collection software.  You can tell when you are in the ``collection`` environment
 because you will see ``(collection)`` at the beginning of the command-line.  When
 you are not in the environment you won't see that.
@@ -24,7 +24,7 @@ that you use the xpdacq functions as much as possible.
 NSLS-II data philosophy
 +++++++++++++++++++++++
 
-NSLS-II is committed to archiving all raw data, and making it available to 
+NSLS-II is committed to archiving all raw data, and making it available to
 authorized users.  For this to succeed it is important to be able to find the
 data when it is desired.  The basic philosophy at NSLS-II is therefore to
 tag every dataset with unique-ID tags, and to save rich metadata with each saved
@@ -46,15 +46,15 @@ hierarchy for saving with the data.
 
 The hierarch is as follows:
  * Beamtime
- 
+
     * Experiment
-    
+
        * Sample
-       
+
           * ScanPlan
-          
+
              * Scan
-     
+
 where it is assumed that a `Beamtime` may consist of one or more `Experiments`
 (such as "temperature and doping dependence of In1-xGaxA"). Each experiment
 will make measurements on one or more `Samples` (in the example case the samples
@@ -71,11 +71,11 @@ with each scan.  The philosophy of the xpdAcq software is to accomplish this.
 The way this is done is that we associate metadata with each level of the hierarchy
 and levels that are lower in the hierarchy inherit the data from the higher levels.
 Two required pieces of data at the Beamtime level are ``PIlastName`` and ``SAF#``,
-the last name of the PI in charge of the beamtime and the number of the safety 
+the last name of the PI in charge of the beamtime and the number of the safety
 approval form for the experiment.  This information will be typed once, but saved
-with every dataset during that beamtime.  You can create multiple `instances` 
-of each metadata level and these will be saved for later use. So at the 
-beginning of the beamtime (or at home before you arrive using the xpdSim package)
+with every dataset during that beamtime.  You can create multiple `instances`
+of each metadata level and these will be saved for later use. So at the
+beginning of the beamtime (or at home before you arrive using simulation mode)
 you can create a ``myGaAs`` object, an ``myIn25Ga75As``, and so on.  When you create
 a scanplan you just have tell it that the sample is ``myGaAs`` and all the metadata
 in myGaAs will automatically be saved with every scan in that scanplan.  In ``xpdAcq``
@@ -84,6 +84,6 @@ future, a GUI is planned to facilitate this even further.
 
 With this information in mind, please go ahead and start the step-by-step process
 of setting up your beamtime in :ref:`usb_Beamtime`
-  
+
 
 return to :ref:`xpdu`
