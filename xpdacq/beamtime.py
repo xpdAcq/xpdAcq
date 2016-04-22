@@ -21,6 +21,7 @@ import datetime
 from time import strftime
 import sys
 import socket
+import copy
 from xpdacq.glbl import glbl
 from xpdacq.utils import _graceful_exit
 
@@ -363,10 +364,43 @@ class Scan(XPD):
     ''' a scan class that is the joint unit of Sample and ScanPlan objects'''
     def __init__(self,sample, scanplan):
         self.type = 'sc'
-        self.sp = scanplan
-        self.sa = sample
-        self.md = dict(self.sp.md) # create a new dict copy.
+        _sa = self._object_parser(sample, 'sa')
+        _sp = self._object_parser(scanplan, 'sp')
+        self.sa = _sa 
+        self.sp = _sp 
+        # create a new dict copy.
+        self.md = dict(self.sp.md)
         self.md.update(self.sa.md)
+
+    def _object_parser(self, input_obj, obj_type):
+        '''a priviate parser for arbitrary object input
+        ''' 
+        FEXT = '.yml'
+        e = '''We can not find your {} object {}. Please do bt.list() to make sure you type right name'''.format(obj_type, input_obj)
+        if isinstance(input_obj, str):
+            yml_list = _get_yaml_list()
+            try:
+                while yml_list:
+                    el = yml_list.pop()
+                    (yml_type, name) = el.split('_', maxsplit=1)
+                    print('({}, {})'.format(yml_type, name))
+                    print('type = ({})'.format(type(yml_type), type(name)))
+                    if yml_type == obj_type and name == input_obj+FEXT:
+                        f_name = os.path.join(glbl.yaml_dir, el)
+                        with open(f_name, 'r') as fout:
+                            output_obj = yaml.load(fout)
+                        return output_obj
+            finally:
+                    # exit out if we can't find proper object
+                    _graceful_exit(e)
+        elif isinstance(input_obj, int):
+            try:
+                return self.get(input_obj)
+            except IndexError:
+                _graceful_exit('''We can not find object with index {}. Please do bt.list() to make sure you type correct index'''.format(input_obj))
+        else:
+            #FIXME
+            return input_obj
 
 def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
     """Create a tarball of all of the data in the user folders.

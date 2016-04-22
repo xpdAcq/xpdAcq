@@ -164,6 +164,8 @@ def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun
             scan.md.update(auto_load_calibration_dict)
     if light_frame and scan.sp.shutter:
         _open_shutter()
+    print('LIGHT FRAME CALLED')
+    print('scan.md before light frame'.format(scan.md))
     _unpack_and_run(scan, dryrun, **kwargs)
     # always close a shutter after scan, if shutter is in control
     if scan.sp.shutter:
@@ -171,6 +173,7 @@ def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun
     return
 
 def _auto_dark_collection(scan):
+    print('CALLED AUTO DARK')
     ''' function to cover automated dark collection logic '''
     light_cnt_time = scan.md['sp_params']['exposure']
     if 'dk_window' in scan.md['sp_params']:
@@ -231,11 +234,14 @@ def prun(sample, scanplan, auto_dark = None, **kwargs):
         option of automated dark collection. Default is True to allow collect dark automatically during scans
     '''
     scan = Scan(sample, scanplan)
-    scan.md.update({'sc_usermd':kwargs})
-    scan.md.update({'sc_isprun':True})
-    if not auto_dark:
-        auto_dark = glbl.auto_dark
-    _execute_scans(scan, auto_dark, auto_calibration = True, light_frame = True, dryrun = False)
+    if scan:
+        scan.md.update({'sc_usermd':kwargs})
+        scan.md.update({'sc_isprun':True})
+        if not auto_dark:
+            auto_dark = glbl.auto_dark
+        _execute_scans(scan, auto_dark, auto_calibration = True, light_frame = True, dryrun = False)
+    else:
+        _graceful_exit('Scan object did not instantiate properly')
     return
 
 def calibration(sample, scanplan, auto_dark = None, **kwargs):
