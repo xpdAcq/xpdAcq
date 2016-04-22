@@ -359,44 +359,53 @@ class Scan(XPD):
     ''' a scan class that is the joint unit of Sample and ScanPlan objects'''
     def __init__(self,sample, scanplan):
         self.type = 'sc'
-        _sa = self._object_parser(sample, 'sa')
-        _sp = self._object_parser(scanplan, 'sp')
+        _sa = self._object_parser(sample, 'sa', Sample)
+        _sp = self._object_parser(scanplan, 'sp', ScanPlan)
         self.sa = _sa 
         self.sp = _sp 
         # create a new dict copy.
         self.md = dict(self.sp.md)
         self.md.update(self.sa.md)
 
-    def _object_parser(self, input_obj, obj_type):
+    def _object_parser(self, input_obj, expect_type, expect_class):
         '''a priviate parser for arbitrary object input
         ''' 
         FEXT = '.yml'
-        e_msg_str_type = '''We can not find your "{} object {}". Please do bt.list() to make sure you type right name'''.format(obj_type, input_obj)
-        e_msg_ind_type = '''We can not find object with index {}. Please do bt.list() to make sure you type correct index'''.format(input_obj)
+        e_msg_str_type = '''Can't find your "{} object {}". Please do bt.list() to make sure you type right name'''.format(expect_type, input_obj)
+        e_msg_ind_type = '''Can't find object with index {}. Please do bt.list() to make sure you type correct index'''.format(input_obj)
+        e_msg_acq_type = '''Incorrect object assignment. Remember xpdAcq like to think "run this Sample(sa) with this ScanPlan(sp)"
+Please do bt.list() to make sure you are handing correct object type'''
         if isinstance(input_obj, str):
             yml_list = _get_yaml_list()
             output_obj = None
             while yml_list:
                 el = yml_list.pop()
                 (yml_type, name) = el.split('_', maxsplit=1)
-                if yml_type == obj_type and name == input_obj + FEXT:
+                if yml_type == expect_type and name == input_obj + FEXT:
                     f_name = os.path.join(glbl.yaml_dir, el)
                     with open(f_name, 'r') as fout:
                         output_obj = yaml.load(fout)
                     return output_obj
-            # if still can't find it after going over entire list
             if not output_obj:
+                # if still can't find it after going over entire list
                 _graceful_exit(e_msg_str_type)
         elif isinstance(input_obj, int):
             try:
-                return self.get(input_obj)
+                output_obj = self.get(input_obj)
+                if not isinstance(output_obj, expect_class):
+                    raise TypeError
+                return output_obj
             except IndexError:
                 _graceful_exit(e_msg_ind_type)
+            except TypeError:
+                _graceful_exit(e_msg_acq_type)
+        elif isinstance(input_obj, expect_class):
+            output_obj = input_obj
+            return output_obj
         else:
-            #FIXME define xpdacq.beamtime.<class> type
-            return input_obj
+            _graceful_exit(e_msg_acq_type) 
 
-def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
+def export_data(root_dir=None, ar_format='gztar', end_beamtime=False)
     """Create a tarball of all of the data in the user folders.
 
     This assumes that the root directory is laid out prescribed by DataPath.
