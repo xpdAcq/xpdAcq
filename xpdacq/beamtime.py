@@ -25,7 +25,6 @@ import copy
 from xpdacq.glbl import glbl
 from xpdacq.utils import _graceful_exit
 
-#datapath = glbl.dp()
 home_dir = glbl.home
 yaml_dir = glbl.yaml_dir
 
@@ -144,8 +143,7 @@ class XPD:
         fo = open(hname, 'w')
         yaml.dump(hidden_list, fo)
         return hidden_list
-
-    # test at XPD
+    
     def _init_dark_scan_list(self):
         dark_scan_list = []
         with open(glbl.dk_yaml,'w') as f:
@@ -295,9 +293,6 @@ class ScanPlan(XPD):
             self.md.update({'sp_uid': self._getuid()})
         self._yamify()
     
-    
-
-    #FIXME - make validator clean later
     def _plan_validator(self):
         ''' Validator for ScanPlan object
         
@@ -376,30 +371,29 @@ class Scan(XPD):
         '''a priviate parser for arbitrary object input
         ''' 
         FEXT = '.yml'
-        e = '''We can not find your {} object {}. Please do bt.list() to make sure you type right name'''.format(obj_type, input_obj)
+        e_msg_str_type = '''We can not find your "{} object {}". Please do bt.list() to make sure you type right name'''.format(obj_type, input_obj)
+        e_msg_ind_type = '''We can not find object with index {}. Please do bt.list() to make sure you type correct index'''.format(input_obj)
         if isinstance(input_obj, str):
             yml_list = _get_yaml_list()
-            try:
-                while yml_list:
-                    el = yml_list.pop()
-                    (yml_type, name) = el.split('_', maxsplit=1)
-                    print('({}, {})'.format(yml_type, name))
-                    print('type = ({})'.format(type(yml_type), type(name)))
-                    if yml_type == obj_type and name == input_obj+FEXT:
-                        f_name = os.path.join(glbl.yaml_dir, el)
-                        with open(f_name, 'r') as fout:
-                            output_obj = yaml.load(fout)
-                        return output_obj
-            finally:
-                    # exit out if we can't find proper object
-                    _graceful_exit(e)
+            output_obj = None
+            while yml_list:
+                el = yml_list.pop()
+                (yml_type, name) = el.split('_', maxsplit=1)
+                if yml_type == obj_type and name == input_obj + FEXT:
+                    f_name = os.path.join(glbl.yaml_dir, el)
+                    with open(f_name, 'r') as fout:
+                        output_obj = yaml.load(fout)
+                    return output_obj
+            # if still can't find it after going over entire list
+            if not output_obj:
+                _graceful_exit(e_msg_str_type)
         elif isinstance(input_obj, int):
             try:
                 return self.get(input_obj)
             except IndexError:
-                _graceful_exit('''We can not find object with index {}. Please do bt.list() to make sure you type correct index'''.format(input_obj))
+                _graceful_exit(e_msg_ind_type)
         else:
-            #FIXME
+            #FIXME define xpdacq.beamtime.<class> type
             return input_obj
 
 def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
