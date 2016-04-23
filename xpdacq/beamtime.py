@@ -359,53 +359,56 @@ class Scan(XPD):
     ''' a scan class that is the joint unit of Sample and ScanPlan objects'''
     def __init__(self,sample, scanplan):
         self.type = 'sc'
-        _sa = self._object_parser(sample, 'sa', Sample)
-        _sp = self._object_parser(scanplan, 'sp', ScanPlan)
+        _sa = self._execute_obj_validator(sample, 'sa', Sample)
+        _sp = self._execute_obj_validator(scanplan, 'sp', ScanPlan)  
         self.sa = _sa 
         self.sp = _sp 
         # create a new dict copy.
         self.md = dict(self.sp.md)
         self.md.update(self.sa.md)
 
-    def _object_parser(self, input_obj, expect_type, expect_class):
+    def _execute_obj_validator(self, input_obj, expect_yml_type, expect_class):
+        parsed_obj = self._object_parser(input_obj, expect_yml_type)
+        output_obj = self._acq_object_validator(parsed_obj, expect_class)
+        return output_obj
+    
+    def _object_parser(self, input_obj, expect_yml_type):
         '''a priviate parser for arbitrary object input
-        ''' 
+        '''
         FEXT = '.yml'
-        e_msg_str_type = '''Can't find your "{} object {}". Please do bt.list() to make sure you type right name'''.format(expect_type, input_obj)
+        e_msg_str_type = '''Can't find your "{} object {}". Please do bt.list() to make sure you type right name'''.format(expect_yml_type, input_obj)
         e_msg_ind_type = '''Can't find object with index {}. Please do bt.list() to make sure you type correct index'''.format(input_obj)
-        e_msg_acq_type = '''Incorrect object assignment. Remember xpdAcq like to think "run this Sample(sa) with this ScanPlan(sp)"
-Please do bt.list() to make sure you are handing correct object type'''
+        
         if isinstance(input_obj, str):
             yml_list = _get_yaml_list()
-            output_obj = None
-            while yml_list:
-                el = yml_list.pop()
-                (yml_type, name) = el.split('_', maxsplit=1)
-                if yml_type == expect_type and name == input_obj + FEXT:
-                    f_name = os.path.join(glbl.yaml_dir, el)
-                    with open(f_name, 'r') as fout:
-                        output_obj = yaml.load(fout)
-                    return output_obj
+            # note: el.split('_', maxsplit=1) = (yml_type, yml_name)  
+            output_obj = [el for el in yml_list if el.split('_', maxsplit=1)[0] == expect_yml_type and el.split('_', maxsplit=1)[1] == input_obj+FEXT]
             if not output_obj:
                 # if still can't find it after going over entire list
                 _graceful_exit(e_msg_str_type)
         elif isinstance(input_obj, int):
             try:
                 output_obj = self.get(input_obj)
-                if not isinstance(output_obj, expect_class):
-                    raise TypeError
                 return output_obj
             except IndexError:
                 _graceful_exit(e_msg_ind_type)
-            except TypeError:
-                _graceful_exit(e_msg_acq_type)
-        elif isinstance(input_obj, expect_class):
-            output_obj = input_obj
-            return output_obj
         else:
-            _graceful_exit(e_msg_acq_type) 
+            # let xpdAcq object validator deal with other casesy
+            pass
+    
+    def _acq_object_validator(self, input_obj, expect_class):
+        ''' filter of object class to Scan
+        '''
+        if isinstance(input_obj, expect_class):
+            return input_obj
+        else:
+            # necessary for now, using _graceful_exit will burry useful error message
+            # comforting message comes after this 
+            raise TypeError('''Incorrect {} object assignment.
+Remember xpdAcq like to think "run this Sample(sa) with this ScanPlan(sp)"
+Please do bt.list() to make sure you are handing correct object type'''.format(expect_class))
 
-def export_data(root_dir=None, ar_format='gztar', end_beamtime=False)
+def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
     """Create a tarball of all of the data in the user folders.
 
     This assumes that the root directory is laid out prescribed by DataPath.
