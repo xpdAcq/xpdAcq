@@ -356,7 +356,22 @@ class Union(XPD):
  #       self._yamify()    # no need to yamify this
 
 class Scan(XPD):
-    ''' a scan class that is the joint unit of Sample and ScanPlan objects'''
+    ''' a scan class that is the joint unit of Sample and ScanPlan objects
+    
+    Scan class supports following ways of assigning Sample, ScanPlan objects:
+    1) bt.get(<object_index>), eg. Scan(bt.get(2), bt.get(5))
+    2) name of acquire object, eg. Scan('my_experiment', 'ct1s')
+    3) index to acquire object, eg. Scan(2,5)
+    All of above assigning methods can be used in a mix way
+
+    Parameters:
+    -----------
+    sample: xpdacq.beamtime.Sample
+        instance of Sample class that holds sample related metadata
+    
+    scanplan: xpdacq.beamtime.ScanPlan
+        instance of ScanPlan calss that hold scanplan related metadata
+    '''
     def __init__(self,sample, scanplan):
         self.type = 'sc'
         _sa = self._execute_obj_validator(sample, 'sa', Sample)
@@ -378,14 +393,17 @@ class Scan(XPD):
         FEXT = '.yml'
         e_msg_str_type = '''Can't find your "{} object {}". Please do bt.list() to make sure you type right name'''.format(expect_yml_type, input_obj)
         e_msg_ind_type = '''Can't find object with index {}. Please do bt.list() to make sure you type correct index'''.format(input_obj)
-        
         if isinstance(input_obj, str):
             yml_list = _get_yaml_list()
-            # note: el.split('_', maxsplit=1) = (yml_type, yml_name)  
-            output_obj = [el for el in yml_list if el.split('_', maxsplit=1)[0] == expect_yml_type and el.split('_', maxsplit=1)[1] == input_obj+FEXT]
-            if not output_obj:
+            # note: el.split('_', maxsplit=1) = (yml_type, yml_name)
+            yml_name_found = [el for el in yml_list if el.split('_', maxsplit=1)[0] == expect_yml_type
+                            and el.split('_', maxsplit=1)[1] == input_obj+FEXT]
+            if not yml_name_found:
                 # if still can't find it after going over entire list
                 _graceful_exit(e_msg_str_type)
+            with open(os.path.join(glbl.yaml_dir, yml_name_found[-1]), 'r') as f_out:
+                output_obj = yaml.load(f_out)
+            return output_obj
         elif isinstance(input_obj, int):
             try:
                 output_obj = self.get(input_obj)
@@ -393,7 +411,7 @@ class Scan(XPD):
             except IndexError:
                 _graceful_exit(e_msg_ind_type)
         else:
-            # let xpdAcq object validator deal with other casesy
+            # let xpdAcq object validator deal with other cases
             pass
     
     def _acq_object_validator(self, input_obj, expect_class):
@@ -402,9 +420,9 @@ class Scan(XPD):
         if isinstance(input_obj, expect_class):
             return input_obj
         else:
-            # necessary for now, using _graceful_exit will burry useful error message
-            # comforting message comes after this 
-            raise TypeError('''Incorrect {} object assignment.
+            # necessary. using _graceful_exit will burry useful error message
+            # comforting message comes after this TypeError
+            raise TypeError('''Incorrect object assignment on {}.
 Remember xpdAcq like to think "run this Sample(sa) with this ScanPlan(sp)"
 Please do bt.list() to make sure you are handing correct object type'''.format(expect_class))
 
