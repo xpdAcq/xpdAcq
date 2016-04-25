@@ -53,6 +53,6 @@ Table of directories and their uses:
 |               |end for them to take home.                                  |
 +---------------+------------------------------------------------------------+
 
-return to :ref:`xpdu`
+For detailed information, proceed to :ref:`xpdu`
 
-return to :ref:`bls`
+For a simple instruction, proceed to :ref:`bls`

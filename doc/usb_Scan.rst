@@ -9,7 +9,7 @@ of creating (*instantiating* ) and retrieving (``bt.get()`` ) acquire objects in
 the information :ref:`here <usb_experiment>` and :ref:`here <usb_where>` , respectively.
 
 Firstly, what is a scanplan?  A scanplan is a grouped set of detector exposures.  The set may
-contain just one exposure (we call that a count scan, ``'ct'`` ).  Or it may be a series of exposures 
+contain just one exposure (we call that a count scan, ``'ct'`` ).  Or it may be a series of exposures
 taken one after the other, possibly with a delay between.  We
 call that a time-series (or ``'tseries'`` ).  Another popular one that is supported is the
 a temperature series, or temperature ramp, ``'Tramp'``.  More are also on the way, but
@@ -39,7 +39,7 @@ so a good naming scheme would be ``'T<startT>.<stopT>.<Tstep>'``, e.g., ``'T300.
 Setting up ScanPlans
 """"""""""""""""""""
 
-Typing ``s = ScanPlan?`` returns 
+Typing ``s = ScanPlan?`` returns
 
 .. code-block:: python
 
@@ -47,43 +47,43 @@ Typing ``s = ScanPlan?`` returns
   Init signature: ScanPlan(self, scanname, scan_type, scan_params, shutter=True, livetable=True, verify_write=False)
   Docstring:
 
-  ScanPlan class  that defines scan plan to run.  
-    
+  ScanPlan class  that defines scan plan to run.
+
   To run them: prun(Sample,ScanPlan)
   Parameters
   ----------
   scanoplanname : string
       scanplan name.  Important as new scanplans will overwrite older ones with the same name.
-   
+
   scan_type : string
-      type of scanplan. Currently allowed values are 'ct','tseries', 'Tramp' 
+      type of scanplan. Currently allowed values are 'ct','tseries', 'Tramp'
       where  ct=count, tseries=time series (series of counts), and Tramp=Temperature ramp.
-    
+
   scan_params : dict
       contains all scan parameters that will be passed and used at run-time
       Don't make typos in the dictionary keywords or your scans won't work.
       Entire list of allowed keywords is in the documentation on https://xpdacq.github.io/
-        
+
       Here is are examples of properly instatiated ScanPlan object:
       ct_sp = ('<ct name>', 'ct',  {'exposure': <exposure time in S>})
       tseries_sp = ('<tseries name>', 'tseries', {'exposure':'<exposure time in S>, 'num':<total count>, 'delay':<delay between count in S>})
       Tramp_sp = ('<Tramp name>', 'Tramp', {'exposure':'<exposure time in S>, 'sartingT':<in K>, 'endinT':<in K>, 'Tstep':<in K>})
-    
+
   shutter : bool
       default is True. If True, in-hutch fast shutter will be opened before a scan and closed afterwards.
       Otherwise control of the shutter is left external. Set to False if you want to control the shutter by hand.
-    
+
   livetable : bool
       default is True. It gives LiveTable output when True, not otherwise
-    
+
   verify_write : bool
       default is False. This verifies that tiff files have been written for each event.
-      It introduces a significant overhead so mostly used for testing. 
+      It introduces a significant overhead so mostly used for testing.
 
   File:           c:\users\billinge\documents\github\xpdacq\xpdacq\beamtime.py
   Type:           type
-  
-telling what (at the time of writing) the ScanPlan object needs.  
+
+telling what (at the time of writing) the ScanPlan object needs.
 The ``Init signature`` has exactly the required and optional arguments
 that we have to give ``Scan`` (optional arguments have a default value indicated
 by the ``=`` sign.  If that argument is not specified it will take the default
@@ -94,8 +94,8 @@ write good Docstrings!).  The ``Init signature`` is absolutely accurate and
 up to date, so if they are not 100% in agreement, go with the signature.
 
 The argument types are given in the Docstring. ``self`` is always ignored, so
-the first given argument is ``scanname`` and is a string (make sure to enclose strings in 
-single or double quotes when you give it, i.e., ``'myscan'`` or ``"myscan"`` will 
+the first given argument is ``scanname`` and is a string (make sure to enclose strings in
+single or double quotes when you give it, i.e., ``'myscan'`` or ``"myscan"`` will
 work but ``myscan`` will not).  The second argument is a string that denotes the scan type. At the time
 or writing the only ones available are ``'ct'``, ``'tseries'`` and ``'Tramp'``.  If you give
 any other string values the ScanPlan will be created no problem, but it

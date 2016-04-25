@@ -10,13 +10,32 @@ The instrument scientist (IS) should have set up your beamtime hardware and soft
 for you.  Let's check if it is the case.
  1. Activate the xpd data acquisition environment:
    1. In a terminal look to see if it is already activated.  If it is, you should see ``(collection)`` at the beginning of the line.
-   2. If you don't see it, type ``icollection`` at the command prompt then check again.
- 1. OK, you are in.  Make sure that that the instrument scientist has initiated your beamtime. type ``bt.md`` and hit return. You should see the beamtime (``bt``) metadata (``md``) that has been pre-stored by the IS, and it should contain things like the last name of the PI on the proposal and the SAF number for the beamtime.  If not, please seek out the IS to get your session initialized.
- 2. Check that the wavelength has been set.  Does the correct x-ray wavelength appear in ``bt.md`` ``['bt_wavelength']`` field, or does it say ``None``.  If the latter, you can still collect scans but automated data reduction may not work, so best to grab the IS again.
- 3. Check that the Perkin Elmer detector is correctly set up.
-   1. Look at the Perkin Elmer screen on the CSS and make sure that it is already in ``Acquire`` mode.
-   2. Type ``glbl.area_det`` and return.  It should return ``'pe1c'`` unless the IS tells you otherwise.
- 4. There are other setups that you can do to make your experiment run smoothly, but you seem to be set up ok, so let's go and collect some data.
+
+   .. code-block:: python
+
+     (collection)xf28id1@xf28id1-ws2:~$
+
+   If you don't see it, type ``icollection`` at the command prompt then check again.
+ 2. OK, you are in.  Make sure that that the instrument scientist has initiated your beamtime. type ``bt.md`` and hit return. You should see the beamtime (``bt``) metadata (``md``) that has been pre-stored by the IS, and it should contain things like the last name of the PI on the proposal and the SAF number for the beamtime.  If not, please seek out the IS to get your session initialized.
+ 3. Check that the wavelength has been set.  Does the correct x-ray wavelength appear in ``bt.md`` ``['bt_wavelength']`` field, or does it say ``None``.  If the latter, you can still collect scans but automated data reduction may not work, so best to grab the IS again.
+ 4. Has a calibration already been carried out?  [FIXME]
+ 5. Check that the Perkin Elmer detector is correctly set up.
+   1. Look at the Perkin Elmer screen on the CSS and make sure that ``Acquire`` mode has been enabled.
+   If Acquire mode is enabled, it should show system information ``Collecting`` in yellow color. If it hasn't been activated, please click 'start' button.
+
+   .. image:: /cropped_pe1c_ioc.png
+    :width: 300px
+    :align: center
+    :height: 200px
+
+   2. Type ``glbl.area_det`` and return.  It should return:
+
+   .. code-block:: python
+
+     In [5]: glbl.area_det
+     Out[5]: PerkinElmerContinuous(prefix='XF:28IDC-ES:1{Det:PE1}', name='pe1', read_attrs=['tiff', 'stats1'], configuration_attrs=['images_per_set', 'number_of_sets'], monitor_attrs=[])
+
+There are other setups that you can do to make your experiment run smoothly,  but you seem to be set up ok, so let's go and collect some data.
 
 Collecting Data Quickstart
 ++++++++++++++++++++++++++
@@ -34,21 +53,22 @@ The basic way to collect data is to carry out a "scan", by typing the kind of sc
    3. The tiff file appears in the directory ``~/xpdUser/tiff_base`` with a reasonably recognizable automatically generated name and you can do pretty much what you like with it. For example, copy it to an external drive.  However, there are handy tools on the XPD computer for analyzing your data.  As long as you save all your work in the ``xpdUser`` directory tree (make as many directories as you like under there) your work will be archived in a remote location at the end of your beamtime, and then completely deleted from the local XPD computer so that the next user has their own fresh environment to work in but your work is safe.
    4. To use data analysis tools on the XPD computer, **in a new terminal window**,
      1.Type ``getxgui``
-     2 Click on the green ``SrXplanar`` icon [Soham or someone, can you put instructions here for using ``SrXplanar``]
+     2 Click on the green ``SrXplanar`` icon [FIXME Soham or someone, can you put instructions here for using ``SrXplanar``]
 
 Remember!
 +++++++++
    1. ``bt.list()`` to see what objects are available
    2. ``prun(bt.get(<sampleIndex>)bt.get(<scanplanIndex>))`` to run the scan
    3. ``save_tiff(db[list_of_scans])`` to get the data back as a tiff file
-   4. ``xPDFsuite`` to visualize it, integrate it to 1D and process to get a diffraction pattern or PDF.
+   4. ``getxgui`` (xPDFsuite) to visualize it, integrate it to 1D and process to get a diffraction pattern or PDF.
 
 Next Steps
 ++++++++++
 
-So you have collected some data, and looked at it.  It is probably time to set up some more extensive data-objects so that you will be able to search easily for your data later and do more sophisticated scans.  Please take the time to read the full documentation from :ref: `xpdu` onwards to get the most out of your data.  But for now, here is a quick summary.
+So you have collected some data, and looked at it.  It is probably time to set up some more extensive data-objects so that you will be able to search easily for your data later and do more sophisticated scans.
+Please take the time to read the full documentation from :ref:`xpdu` onwards to get the most out of your data.  But for now, here is a quick summary.
 
-Types of scan available.  They all take as arguments ``<sample-object>,<scanplan-object>`` in that order.:
+Types of scan available.  They all take as arguments ``(<sample-object>, <scanplan-object>)`` in that order.:
   1. ``prun()`` - the one you will use the most.  It stands for "production run"
   2. ``setupscan()`` - it is just the same as ``prun()`` but the data are tagged as being test/setup data, helping you to keep track of what is what later.
   3. ``dryrun()`` - it doesn't execute anything, only prints out metadata
@@ -77,18 +97,35 @@ ScanPlan    Syntax
 ``Tramp``   ``ScanPlan('T200K_500K_5K_1s','Tramp',{'startingT':200, 'endingT':500, 'Tstep':5, 'exposure':1})``
 =========== ==================================================================================================
 
+Tiff naming schema:
+  The tiff file will be saved with the name:
+
+  .. code-block:: none
+
+    <sample_name>_<scanplan_name>_<time_stamp>_<uid>_<something_else>_<sequence_number>.tif
+
+  All the information in the ``scanplan`` and ``sample`` objects will be saved to metadata and searchable and usable for processing later.
+  ``<uid>`` is the unique identifier to this ``scanplan``. You can use it to search specific scan later.
+  ``<something-else>`` depends on the ``scanplan`` type, for example, for a ``Tramp`` it is the actual temperature read from the temperature controller when the data-collection was initiated for that point.
+  ``<sequence number>`` will be in ``0001, 0002, ...`` format, which tells you the sequence index of ``scan`` from a``scanplan``.
+
 Experiment and sample objects:
-  1. The tiff file will be saved with the name ``<sample-name>_<scanplan-name>_<time-stamp>_<something-else>.tiff``, and all the information in the ``scanplan`` and ``sample`` objects will be saved to metadata and searchable and usable for processing later.  The <something-else> depends on the ``scanplan`` type, for example, for a ``Tramp`` it is the actual temperature read from the temperature controller when the data-collection was initiated for that point.  It is time well spent to set up all your experiment and sample objects accurately. It is possible to download xpdAcq and run it on your own computer to set up the ``sample`` and ``scanplan`` objects you think you will need at the beamtime, so when you are at XPD you can concentrate on collecting data and not typing metadata.  It is strongly recommended.  See the full documentation for more details.
-  2. To set up a sample you have to give it an experiment object, so ``Sample('Li battery electrode',bt.get(96))`` uses the object in ``bt.list(96)`` which must be an ``ex`` type object, for example I may have made it with ``Experiment('cycled and uncycled batteries',bt)``.  The ``bt`` is the beamtime object.  For more info on why it is set up this way, see the docs!
+  1. It is time well spent to set up all your experiment and sample objects accurately.
+  To set up a sample you have to give it an experiment object, so ``Sample('Li battery electrode',bt.get(96))`` uses the object in ``bt.list(96)`` which must be an ``ex`` type object, for example I #may have made# it with ``Experiment('cycled and uncycled batteries',bt)``.
+  The ``bt`` is the beamtime object. For complete documentation, please see :ref:`usb_experiment`
+
+  2. It is also possible to download xpdAcq `from here <https://github.com/xpdAcq/xpdAcq>`_ and run it on your own computer to set up the ``sample`` and ``scanplan`` objects you think you will need at the beamtime.
+  So when you are at XPD you can concentrate on collecting data and not typing metadata.
+  Simulation at home is strongly recommended. See the full documentation for more details at here [FIXME doc needed]
 
 User scripts:
   Your ``scanplan`` objects can be sequenced into scripts, executing one after the other as you desire.  To set this up, write a sequence of commands into a text file, save it with the extension ``.py`` in the ``userScripts`` directory with a memorable name, like ``myNightShiftScript.py``.  Double and triple check your script, then when you are ready to execute it, in ``ipython`` session type:
-.. code-block:: python
 
-   %run -i ~/xpdUser/userScripts/myNightShiftScript.py
+  .. code-block:: python
+
+    %run -i ~/xpdUser/userScripts/myNightShiftScript.py
 
 Stay there for a while to make sure everything is running as expected and go to bed!
 
-There is much more to the xpdAcq software that will give you superpowers in rapid and flexible data collection, data retrieval and processing.  This was just the quick start, but much more information is in the full documentation.
-
-Move on :ref:`xpdu`
+There is much more to the ``xpdAcq`` software that will give you superpowers in rapid and flexible data collection, data retrieval and processing.
+This was just the quick start, but much more information is in the full documentation :ref:`xpdu`.
