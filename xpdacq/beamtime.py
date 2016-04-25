@@ -362,7 +362,7 @@ class Scan(XPD):
     1) bt.get(<object_index>), eg. Scan(bt.get(2), bt.get(5))
     2) name of acquire object, eg. Scan('my_experiment', 'ct1s')
     3) index to acquire object, eg. Scan(2,5)
-    All of above assigning methods can be used in a mix way
+    All of above assigning methods can be used in a mix way.
 
     Parameters:
     -----------
@@ -398,21 +398,22 @@ class Scan(XPD):
             # note: el.split('_', maxsplit=1) = (yml_type, yml_name)
             yml_name_found = [el for el in yml_list if el.split('_', maxsplit=1)[0] == expect_yml_type
                             and el.split('_', maxsplit=1)[1] == input_obj+FEXT]
-            if not yml_name_found:
+            if yml_name_found:
+                with open(os.path.join(glbl.yaml_dir, yml_name_found[-1]), 'r') as f_out:
+                    output_obj = yaml.load(f_out)
+                return output_obj
+            else:
                 # if still can't find it after going over entire list
-                _graceful_exit(e_msg_str_type)
-            with open(os.path.join(glbl.yaml_dir, yml_name_found[-1]), 'r') as f_out:
-                output_obj = yaml.load(f_out)
-            return output_obj
+                sys.exit(_graceful_exit(e_msg_str_type))
         elif isinstance(input_obj, int):
             try:
                 output_obj = self.get(input_obj)
                 return output_obj
             except IndexError:
-                _graceful_exit(e_msg_ind_type)
+                sys.exit(_graceful_exit(e_msg_ind_type))
         else:
             # let xpdAcq object validator deal with other cases
-            pass
+            return input_obj
     
     def _acq_object_validator(self, input_obj, expect_class):
         ''' filter of object class to Scan
