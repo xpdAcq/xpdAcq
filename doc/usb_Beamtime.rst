@@ -26,7 +26,7 @@ and all things it contains (but not their values) will be listed.
   bt.export    bt.list        bt.md     bt.type
   bt.get       bt.loadyamls   bt.name
   
-To see what those things contain, type ``bt.thing`` and hit return. For example, in our case:
+To see what those things contain, type ``bt.<thing>`` and hit return. For example, in our case:
    
 .. code-block:: python
   
@@ -41,7 +41,7 @@ is the metadata it contains:
 .. code-block:: python
   
   >>> bt.md
- {'bt_experimenters': {('Chia-Hao', 'Liu'), ('Simon', 'Billinge')},
+ {'bt_experimenters': [('Chia-Hao', 'Liu'), ('Simon', 'Billinge')],
  'bt_piLast': 'Billinge',
  'bt_safN': 300256,
  'bt_uid': '9b0c5878-cba4-11e5-8984-28b2bd4521c0',
@@ -95,7 +95,7 @@ environment setup that need to be fixed, but if you ever do have to create
 
 .. code-block:: python
  
-  >>> bt = Beamtime('Billinge',300256,0.1818,{('Simon','Billinge'),('Chia-Hao','Liu')})
+  >>> bt = Beamtime('Billinge',300256,0.1818,[('Simon','Billinge'),('Chia-Hao','Liu')])
 
 We will assume that ``bt`` exists.  Now we move on to the next step, :ref:`usb_experiment` within our beamtime. 
 
