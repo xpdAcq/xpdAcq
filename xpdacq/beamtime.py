@@ -21,10 +21,10 @@ import datetime
 from time import strftime
 import sys
 import socket
+import copy
 from xpdacq.glbl import glbl
 from xpdacq.utils import _graceful_exit
 
-#datapath = glbl.dp()
 home_dir = glbl.home
 yaml_dir = glbl.yaml_dir
 
@@ -360,13 +360,76 @@ class Union(XPD):
  #       self._yamify()    # no need to yamify this
 
 class Scan(XPD):
-    ''' a scan class that is the joint unit of Sample and ScanPlan objects'''
+    ''' a scan class that is the joint unit of Sample and ScanPlan objects
+    
+    Scan class supports following ways of assigning Sample, ScanPlan objects:
+    1) bt.get(<object_index>), eg. Scan(bt.get(2), bt.get(5))
+    2) name of acquire object, eg. Scan('my_experiment', 'ct1s')
+    3) index to acquire object, eg. Scan(2,5)
+    All of above assigning methods can be used in a mix way.
+
+    Parameters:
+    -----------
+    sample: xpdacq.beamtime.Sample
+        instance of Sample class that holds sample related metadata
+    
+    scanplan: xpdacq.beamtime.ScanPlan
+        instance of ScanPlan calss that hold scanplan related metadata
+    '''
     def __init__(self,sample, scanplan):
         self.type = 'sc'
-        self.sp = scanplan
-        self.sa = sample
-        self.md = dict(self.sp.md) # create a new dict copy.
+        _sa = self._execute_obj_validator(sample, 'sa', Sample)
+        _sp = self._execute_obj_validator(scanplan, 'sp', ScanPlan)  
+        self.sa = _sa 
+        self.sp = _sp 
+        # create a new dict copy.
+        self.md = dict(self.sp.md)
         self.md.update(self.sa.md)
+    
+    def _execute_obj_validator(self, input_obj, expect_yml_type, expect_class):
+        parsed_obj = self._object_parser(input_obj, expect_yml_type)
+        output_obj = self._acq_object_validator(parsed_obj, expect_class)
+        return output_obj
+    
+    def _object_parser(self, input_obj, expect_yml_type):
+        '''a priviate parser for arbitrary object input
+        '''
+        FEXT = '.yml'
+        e_msg_str_type = '''Can't find your "{} object {}". Please do bt.list() to make sure you type right name'''.format(expect_yml_type, input_obj)
+        e_msg_ind_type = '''Can't find object with index {}. Please do bt.list() to make sure you type correct index'''.format(input_obj)
+        if isinstance(input_obj, str):
+            yml_list = _get_yaml_list()
+            # note: el.split('_', maxsplit=1) = (yml_type, yml_name)
+            yml_name_found = [el for el in yml_list if el.split('_', maxsplit=1)[0] == expect_yml_type
+                            and el.split('_', maxsplit=1)[1] == input_obj+FEXT]
+            if yml_name_found:
+                with open(os.path.join(glbl.yaml_dir, yml_name_found[-1]), 'r') as f_out:
+                    output_obj = yaml.load(f_out)
+                return output_obj
+            else:
+                # if still can't find it after going over entire list
+                sys.exit(_graceful_exit(e_msg_str_type))
+        elif isinstance(input_obj, int):
+            try:
+                output_obj = self.get(input_obj)
+                return output_obj
+            except IndexError:
+                sys.exit(_graceful_exit(e_msg_ind_type))
+        else:
+            # let xpdAcq object validator deal with other cases
+            return input_obj
+    
+    def _acq_object_validator(self, input_obj, expect_class):
+        ''' filter of object class to Scan
+        '''
+        if isinstance(input_obj, expect_class):
+            return input_obj
+        else:
+            # necessary. using _graceful_exit will burry useful error message
+            # comforting message comes after this TypeError
+            raise TypeError('''Incorrect object assignment on {}.
+Remember xpdAcq like to think "run this Sample(sa) with this ScanPlan(sp)"
+Please do bt.list() to make sure you are handing correct object type'''.format(expect_class))
 
 def _clean_name(name,max_length=25):
     '''strips a string, but also removes internal whitespace

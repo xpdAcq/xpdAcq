@@ -219,4 +219,20 @@ class NewExptTest(unittest.TestCase):
         self.assertEqual(self.bt.md['bt_wavelength'],wavelength)
         self.assertEqual(self.bt.name,'bt')
         self.assertEqual(self.bt.md['bt_piLast'],'test')
-        
+       
+    def test_Scan_validator(self):
+        #########################################################
+        # Note: bt.list() so far is populated with l-user list
+        #       bt.get(2) -> sa,'l-user' ; bt.get(5) -> sp, 'ct1s'
+        #       bt.list() goes to 8
+        ##########################################################
+        # incorrect assignments -> str
+        self.assertRaises(SystemExit, lambda: Scan._object_parser(Scan,'blahblah','sa'))
+        self.assertRaises(SystemExit, lambda: Scan._object_parser(Scan,'ct157s','sp'))
+        # incorrect assignments -> ind
+        self.assertRaises(SystemExit, lambda: Scan._object_parser(Scan,100,'sp'))
+        self.assertRaises(SystemExit, lambda: Scan._object_parser(Scan,250,'sa'))
+        # incorrect object type from 3 kind of assignments
+        self.assertRaises(TypeError, lambda: Scan(self.bt.get(1), self.bt.get(5))) # give Beamtime but not Sample
+        self.assertRaises(TypeError, lambda: Scan(1, 'ct10s')) # give Beamtime but not Sample
+        self.assertRaises(TypeError, lambda: Scan(8, 5)) # give two ScanPlan
