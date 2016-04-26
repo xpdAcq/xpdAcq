@@ -168,6 +168,8 @@ def _copy_and_delete(f_name, src_full_path, dst_dir):
         os.remove(src_full_path)
         return dst_name
     else:
-        print('We had a problem moving {}. Most likely it is not a supported file type (e.g., .yml, .py, .npy, .tar, .gz). It will not be available for use in xpdAcq, but it will be left in the xpdUser/Import/ directory'.format(f_name))
+        print('''We had a problem moving {}.
+                Most likely it is not a supported file type (e.g., .yml, .py, .npy, .tar, .gz).
+                It will not be available for use in xpdAcq, but it will be left in the xpdUser/Import/ directory'''.            format(f_name))
         return
 
