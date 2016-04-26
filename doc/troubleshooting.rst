@@ -1,6 +1,6 @@
 .. _troubleshooting:
 
-Quick quesitons
+Quick questions
 ===============
 
 Q: **Why does my scan halt for no reason? I followed your guide and no error message popped.**
@@ -9,14 +9,14 @@ Q: **Why does my scan halt for no reason? I followed your guide and no error mes
     Don't worry, just make sure **there is only one XPD control running on this computer.**.
     ``XPD control`` can be launched from the shortcut in desktop:
 
-    .. image:: /xpd_control.png
+    .. image:: ./xpd_control.png
      :width: 60px
      :align: center
      :height: 80px
 
     After launched it, a window similar to this should pop out:
 
-    .. image:: /pe1c_ioc.png
+    .. image:: ./pe1c_ioc.png
      :width: 400px
      :align: center
      :height: 300px
