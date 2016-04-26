@@ -151,7 +151,9 @@ def import_userScriptsEtc():
                 pass
         else:
             # don't expect user to have directory
-            print('Expect a file but get a directory {}. Did you properly archive it?'.format(f_name))
+            print('''I can only import files, not directories. Please place in the import directory either:
+                (1) all your files such as scripts, masks and xpdAcq object yaml files or 
+                (2) a tar or zipped-tar archive file containing those files.'''.format(f_name))
             failure_list.append(f_name)
             pass
     if failure_list:
@@ -166,6 +168,6 @@ def _copy_and_delete(f_name, src_full_path, dst_dir):
         os.remove(src_full_path)
         return dst_name
     else:
-        print('We have problem moving {} it will still leave at xpdUser/Import/'.format(f_name))
+        print('We had a problem moving {}. Most likely it is not a supported file type (e.g., .yml, .py, .npy, .tar, .gz). It will not be available for use in xpdAcq, but it will be left in the xpdUser/Import/ directory'.format(f_name))
         return
 
