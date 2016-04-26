@@ -257,23 +257,26 @@ class ScanPlan(XPD):
                    for each event.  It introduces a significant overhead so mostly used for
                    testing.
     '''
-    def __init__(self,name, scanplan_type, scanplan_params, dk_window = None, shutter=True, livetable=True, verify_write=False, **kwargs):
-        self.name = _clean_md_input(name)
+    def __init__(self, name, scanplan_type = '', scanplan_params = {}, dk_window = None, shutter=True, livetable=True, verify_write=False, **kwargs):
+        _sp_name = name.strip()
+        _control_params = '' # str represents control options. Only recored non-default ones
+        if not scanplan_type and not scanplan_params:
+            (scanplan_type, scanplan_params) = self._scanplan_name_parser(_sp_name)
         self.type = 'sp'
         self.scanplan = _clean_md_input(scanplan_type)
-        self.sp_params = scanplan_params # sc_parms is a dictionary
-        
+        self.sp_params = scanplan_params # sp_parms is a dictionary
         self._plan_validator()
         
         self.shutter = shutter
         self.md = {}
-        self.md.update({'sp_name': _clean_md_input(self.name)})
+        
         self.md.update({'sp_type': _clean_md_input(self.scanplan)})
         self.md.update({'sp_usermd':_clean_md_input(kwargs)})
-        if self.shutter: 
+        if self.shutter:
             self.md.update({'sp_shutter_control':'in-scan'})
         else:
             self.md.update({'sp_shutter_control':'external'})
+            _control_params += 'nS'
         
         if not dk_window:
             dk_window = glbl.dk_window
@@ -282,11 +285,23 @@ class ScanPlan(XPD):
         subs=[]
         if livetable:
             subs.append('livetable')
+        else:
+            _control_params += 'nLT'
         if verify_write:
             subs.append('verify_write')
+            _control_params += 'vw'
         if len(subs) > 0:
             scanplan_params.update({'subs':_clean_md_input(subs)}) 
         self.md.update({'sp_params': _clean_md_input(scanplan_params)})
+        
+        # scanplan name should include options in sub_dict, generate it at the last moment
+        if _control_params:
+            sp_name = '_'.join([_sp_name, _control_params])
+        else:
+            sp_name = _sp_name
+        self.name = sp_name
+        self.md.update({'sp_name': _clean_md_input(self.name)})
+
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
         # get objlist from yaml file
@@ -297,6 +312,52 @@ class ScanPlan(XPD):
             self.md.update({'sp_uid': self._getuid()})
         self._yamify()
     
+    def _scanplan_name_parser(self, sp_name):
+        ''' function to parse name of ScanPlan object into parameters fed into ScanPlan
+        
+        expected format for each type is following:
+        1) 'ct_10' means Count scan with 10s exposure time in total
+        2) 'Tramp_10_300_200_5' means temperature ramp from 300k to 200k with 5k step and 10s exposure time each
+        3) 'tseries_10_60_5' means time series scan of 10s exposure time each time 
+            and run for 5 times with 60s delay between them. 
+        '''
+        _ct_required_params = ['exposure']
+        _tseries_required_params = ['exposure', 'delay', 'num']
+        _Tramp_required_params = ['exposure', 'startingT', 'endingT', 'Tstep']
+       
+        _ct_optional_params = ['det','subs_dict']
+        _Tramp_optional_params = ['det', 'subs_dict']
+        _tseries_optional_params = ['det', 'subs_dict']
+         
+        parsed_object = sp_name.split('_', maxsplit = 4)
+        scanplan_type = parsed_object[0]
+        # turn parameters into floats
+        _sp_params = []
+        for i in range(1, len(parsed_object)):
+            _sp_params.append(float(parsed_object[i]))
+        # assgin exposure as it is common
+        exposure = _sp_params[0]
+        sp_params = {'exposure':exposure}
+        if scanplan_type not in glbl._allowed_scanplan_type:
+            sys.exit(_graceful_exit('''{} is not a supported ScanPlan type under current version of xpdAcq.
+                                    Current supported type are {}.
+                                    Please go to http://xpdacq.github.io for more information or request
+                                    '''.format(scanplan_type, glbl._allowed_scanplan_type)))
+        if scanplan_type == 'ct' and len(_sp_params) == 1: # exposure
+            return (scanplan_type, sp_params)
+        elif scanplan_type == 'Tramp' and len(_sp_params) == 4: # exposure, startingT, endingT, Tstep
+            sp_params.update({'startingT': _sp_params[1], 'endingT': _sp_params[2], 'Tstep': _sp_params[3]})
+            return (scanplan_type, sp_params)
+        elif scanplan_type == 'tseries' and len(_sp_params) == 3: # exposure, delay, num
+            sp_params.update({'delay': _sp_params[1], 'num': _sp_params[2]})
+            return (scanplan_type, sp_params)
+        else:
+            sys.exit(_graceful_exit('''I can't parse your scanplan name {} into corresponding parameters.
+                                    Please do ``ScanPlan?`` to find out currently supported conventions.
+                                    or you can define your scanplan parameter dictionary explicitly.
+                                    For more information, go to http://xpdacq.github.io
+                                    '''))
+
     def _plan_validator(self):
         ''' Validator for ScanPlan object
         
