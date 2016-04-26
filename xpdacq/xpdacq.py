@@ -22,6 +22,7 @@ import numpy as np
 import copy
 import sys
 import uuid
+import warnings
 from configparser import ConfigParser
 from xpdacq.utils import _graceful_exit, _RE_state_wrapper
 from xpdacq.glbl import glbl
@@ -173,10 +174,14 @@ def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun
 def _auto_dark_collection(scan):
     ''' function to cover automated dark collection logic '''
     light_cnt_time = scan.md['sp_params']['exposure']
-    if 'dk_window' in scan.md['sp_params']:
-        expire_time = scan.md['sp_params']['dk_window']
-    else:
-        expire_time = glbl.dk_window
+    try:
+        expire_time = scan.md['sp_dk_window']
+    except KeyError:
+        # protection, shouldn't happen
+        warnings.warn('''It seems your ScanPlan object wasn't instantiated properly.
+                        This may indicate a problem with the current version of the code."
+                        Current scan will keep going but please notify the instrument scientist who can post a bug report''')
+        expire_time = 0
     dark_field_uid = validate_dark(light_cnt_time, expire_time)
     if not dark_field_uid:
         print('''INFO: auto_dark didn't detect a valid dark, so is collecting a new dark frame.
@@ -189,8 +194,7 @@ See documentation at http://xpdacq.github.io for more information about controll
             auto_dark_scanplan = ScanPlan('auto_dark_scan',
                 'ct',{'exposure':light_cnt_time}, shutter=False)
         dark_field_uid = dark(scan.sa, auto_dark_scanplan)
-    auto_dark_md_dict = {'sc_dk_field_uid': dark_field_uid,
-                        'sc_dk_window': expire_time}
+    auto_dark_md_dict = {'sc_dk_field_uid': dark_field_uid}
     return auto_dark_md_dict
 
 def _auto_load_calibration_file():
@@ -231,14 +235,11 @@ def prun(sample, scanplan, auto_dark = None, **kwargs):
         option of automated dark collection. Default is True to allow collect dark automatically during scans
     '''
     scan = Scan(sample, scanplan)
-    if scan:
-        scan.md.update({'sc_usermd':kwargs})
-        scan.md.update({'sc_isprun':True})
-        if not auto_dark:
-            auto_dark = glbl.auto_dark
-        _execute_scans(scan, auto_dark, auto_calibration = True, light_frame = True, dryrun = False)
-    else:
-        _graceful_exit('Scan object did not instantiate properly')
+    scan.md.update({'sc_usermd':kwargs})
+    scan.md.update({'sc_isprun':True})
+    if auto_dark == None:
+        auto_dark = glbl.auto_dark
+    _execute_scans(scan, auto_dark, auto_calibration = True, light_frame = True, dryrun = False)
     return
 
 def calibration(sample, scanplan, auto_dark = None, **kwargs):
@@ -259,7 +260,7 @@ def calibration(sample, scanplan, auto_dark = None, **kwargs):
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_iscalibration':True})
     # only auto_dark is exposed to user
-    if not auto_dark:
+    if auto_dark == None:
         auto_dark = glbl.auto_dark
     _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
     return
@@ -282,7 +283,7 @@ def background(sample, scanplan, auto_dark = None, **kwargs):
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_isbackground':True})
     # only auto_dark is exposed to user
-    if not auto_dark:
+    if auto_dark == None:
         auto_dark = glbl.auto_dark
     _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
     return
@@ -305,7 +306,7 @@ def setupscan(sample, scanplan, auto_dark = None, **kwargs):
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_issetupscan':True})
     # only auto_dark is exposed to user
-    if not auto_dark:
+    if auto_dark == None:
         auto_dark = glbl.auto_dark
     _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
     return

@@ -143,7 +143,7 @@ class XPD:
         fo = open(hname, 'w')
         yaml.dump(hidden_list, fo)
         return hidden_list
-    
+
     def _init_dark_scan_list(self):
         dark_scan_list = []
         with open(glbl.dk_yaml,'w') as f:
@@ -257,7 +257,7 @@ class ScanPlan(XPD):
                    for each event.  It introduces a significant overhead so mostly used for
                    testing.
     '''
-    def __init__(self,name, scanplan_type, scanplan_params, shutter=True, livetable=True, verify_write=False, **kwargs):
+    def __init__(self,name, scanplan_type, scanplan_params, dk_window = None, shutter=True, livetable=True, verify_write=False, **kwargs):
         self.name = _clean_md_input(name)
         self.type = 'sp'
         self.scanplan = _clean_md_input(scanplan_type)
@@ -275,6 +275,10 @@ class ScanPlan(XPD):
         else:
             self.md.update({'sp_shutter_control':'external'})
         
+        if not dk_window:
+            dk_window = glbl.dk_window
+        self.md.update({'sp_dk_window': dk_window})
+
         subs=[]
         if livetable:
             subs.append('livetable')
@@ -381,7 +385,7 @@ class Scan(XPD):
         # create a new dict copy.
         self.md = dict(self.sp.md)
         self.md.update(self.sa.md)
-
+    
     def _execute_obj_validator(self, input_obj, expect_yml_type, expect_class):
         parsed_obj = self._object_parser(input_obj, expect_yml_type)
         output_obj = self._acq_object_validator(parsed_obj, expect_class)
@@ -427,41 +431,6 @@ class Scan(XPD):
 Remember xpdAcq like to think "run this Sample(sa) with this ScanPlan(sp)"
 Please do bt.list() to make sure you are handing correct object type'''.format(expect_class))
 
-def export_data(root_dir=None, ar_format='gztar', end_beamtime=False):
-    """Create a tarball of all of the data in the user folders.
-
-    This assumes that the root directory is laid out prescribed by DataPath.
-
-    This function will:
-
-      - remove any existing tarball
-      - create a new (timestamped) tarball
-
-    """
-    # FIXME - test purpose
-    if root_dir is None:
-        root_dir = glbl.base
-    #dp = DataPath(root_dir)
-    # remove any existing exports
-    if os.path.isdir(glbl.export_dir):
-        shutil.rmtree(glbl.export_dir)
-    f_name = strftime('data4export_%Y-%m-%dT%H%M')
-    os.makedirs(glbl.export_dir, exist_ok=True)
-    cur_path = os.getcwd()
-    try:
-        os.chdir(glbl.base)
-        print('Compressing your data now. That may take several minutes, please be patient :)' )
-        tar_return = shutil.make_archive(f_name, ar_format, root_dir=glbl.base,
-                base_dir='xpdUser', verbose=1, dry_run=False)
-        shutil.move(tar_return, glbl.export_dir)
-    finally:
-        os.chdir(cur_path)
-    out_file = os.path.join(glbl.export_dir, os.path.basename(tar_return))
-    if not end_beamtime:
-        print('New archive file with name '+out_file+' written.')
-        print('Please copy this to your local computer or external hard-drive')
-    return out_file
-    
 def _clean_name(name,max_length=25):
     '''strips a string, but also removes internal whitespace
     '''

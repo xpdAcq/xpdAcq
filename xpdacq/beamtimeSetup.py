@@ -21,7 +21,7 @@ import yaml
 from time import strftime
 from xpdacq.utils import _graceful_exit
 from xpdacq.beamtime import Beamtime, XPD, Experiment, Sample, ScanPlan
-from xpdacq.beamtime import export_data, _clean_md_input, _get_hidden_list
+from xpdacq.beamtime import _clean_md_input, _get_hidden_list
 from xpdacq.glbl import glbl
 from shutil import ReadError
 
