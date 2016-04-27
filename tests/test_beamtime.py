@@ -236,3 +236,27 @@ class NewExptTest(unittest.TestCase):
         self.assertRaises(TypeError, lambda: Scan(self.bt.get(1), self.bt.get(5))) # give Beamtime but not Sample
         self.assertRaises(TypeError, lambda: Scan(1, 'ct10s')) # give Beamtime but not Sample
         self.assertRaises(TypeError, lambda: Scan(8, 5)) # give two ScanPlan
+
+    def test_auto_naming_ScanPlan(self):
+        # wrong ScanPlan type
+        self.assertRaises(SystemExit, lambda: ScanPlan('MRI_5_300_200_5'))
+        # wrong positional arguments
+        ''' doc string from ScanPlan
+        expected format for each type is following:
+        1) 'ct_10' means Count scan with 10s exposure time in total
+        2) 'Tramp_10_300_200_5' means temperature ramp from 300k to 200k with 5k step and 10s exposure time each
+        3) 'tseries_10_60_5' means time series scan of 10s exposure time each time 
+            and run for 5 times with 60s delay between them. 
+        '''
+        self.assertRaises(SystemExit, lambda: ScanPlan('ct_5_25575_32767')) # extra argument
+        self.assertRaises(SystemExit, lambda: ScanPlan('Tramp_5_300_200')) # incomplete arguments
+        self.assertRaises(SystemExit, lambda: ScanPlan('Tramp_5_300_200_5_1111')) # extra argument
+        self.assertRaises(SystemExit, lambda: ScanPlan('tseries_5_60')) # incomplete arguments
+        self.assertRaises(SystemExit, lambda: ScanPlan('tseries_5_60_10_1111')) # extra argument
+        # naming after not using default option on sub_dict
+        sp = ScanPlan('ct_5', shutter=False, livetable=False, verify_write=True)
+        self.assertEqual(sp.name, 'ct_5_nSnLTvw')
+        sp = ScanPlan('ct_5', shutter=False, livetable=False)
+        self.assertEqual(sp.name, 'ct_5_nSnLT')
+        sp = ScanPlan('ct_5', shutter=False)
+        self.assertEqual(sp.name, 'ct_5_nS')

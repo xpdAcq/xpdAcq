@@ -260,7 +260,7 @@ class ScanPlan(XPD):
     def __init__(self, name, scanplan_type = '', scanplan_params = {}, dk_window = None, shutter=True, livetable=True, verify_write=False, **kwargs):
         _sp_name = name.strip()
         _control_params = '' # str represents control options. Only recored non-default ones
-        if not scanplan_type and not scanplan_params:
+        if not scanplan_type or not scanplan_params:
             (scanplan_type, scanplan_params) = self._scanplan_name_parser(_sp_name)
         self.type = 'sp'
         self.scanplan = _clean_md_input(scanplan_type)
@@ -329,7 +329,7 @@ class ScanPlan(XPD):
         _Tramp_optional_params = ['det', 'subs_dict']
         _tseries_optional_params = ['det', 'subs_dict']
          
-        parsed_object = sp_name.split('_', maxsplit = 4)
+        parsed_object = sp_name.split('_', maxsplit = 4+3) # 3 is error tolerance
         scanplan_type = parsed_object[0]
         # turn parameters into floats
         _sp_params = []
@@ -356,7 +356,7 @@ class ScanPlan(XPD):
                                     Please do ``ScanPlan?`` to find out currently supported conventions.
                                     or you can define your scanplan parameter dictionary explicitly.
                                     For more information, go to http://xpdacq.github.io
-                                    '''))
+                                    '''.format(sp_name)))
 
     def _plan_validator(self):
         ''' Validator for ScanPlan object
