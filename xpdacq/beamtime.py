@@ -318,8 +318,8 @@ class ScanPlan(XPD):
         expected format for each type is following:
         1) 'ct_10' means Count scan with 10s exposure time in total
         2) 'Tramp_10_300_200_5' means temperature ramp from 300k to 200k with 5k step and 10s exposure time each
-        3) 'tseries_10_60_5' means time series scan of 10s exposure time each time 
-            and run for 5 times with 60s delay between them. 
+        3) 'tseries_10_60_5' means time series scan of 10s exposure time each scan 
+            and run for 5 scans with 60s delay between them. 
         '''
         _ct_required_params = ['exposure']
         _tseries_required_params = ['exposure', 'delay', 'num']
