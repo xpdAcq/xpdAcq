@@ -12,10 +12,41 @@ Contents:
    :maxdepth: 3
 
    beamlinestaff
-   quickstart
-   xpdusers
-   troubleshooting
+   sb_endBeamtime
+   sb_icollection
+   sb_newBeamtime
+   sb_overview
 
+.. toctree::
+   :maxdepth: 3
+
+   xpdusers
+   sb_overview
+   usb_Beamtime
+   usb_Experiment
+   usb_Where
+   usb_Scan
+   usb_Running
+   usb_QuickAssess
+
+
+.. toctree::
+   :maxdepth: 3
+
+   quickstart
+
+
+
+.. toctree::
+   :maxdepth: 3
+
+   troubleshooting
+   usb_Where
+
+.. toctree::
+    api
+    installation
+    functionality
 
 Indices and tables
 ==================
@@ -24,4 +55,3 @@ Not ready yet
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
