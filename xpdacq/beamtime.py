@@ -20,7 +20,7 @@ import shutil
 import datetime
 from time import strftime
 import sys
-import socket
+from collections import OrderedDict
 import copy
 from xpdacq.glbl import glbl
 from xpdacq.utils import _graceful_exit
@@ -258,6 +258,14 @@ class ScanPlan(XPD):
                    testing.
     '''
     def __init__(self, name, scanplan_type = '', scanplan_params = {}, dk_window = None, shutter=True, livetable=True, verify_write=False, **kwargs):
+        _ct_required_params = ['exposure']
+        _tseries_required_params = ['exposure', 'delay', 'num']
+        _Tramp_required_params = ['exposure', 'startingT', 'endingT', 'Tstep']
+        # extra efforts to keep print order later
+        _ordered_sp_params = _ct_required_params.copy()
+        _ordered_sp_params.extend(_tseries_required_params)
+        _ordered_sp_params.extend(_Tramp_required_params)
+        _sp_params_list = list(OrderedDict.fromkeys(_ordered_sp_params))
         _sp_name = name.strip()
         _control_params = '' # str represents control options. Only recored non-default ones
         if not scanplan_type or not scanplan_params:
@@ -276,7 +284,7 @@ class ScanPlan(XPD):
             self.md.update({'sp_shutter_control':'in-scan'})
         else:
             self.md.update({'sp_shutter_control':'external'})
-            _control_params += 'nS'
+            _control_params += 'nS' # only wirte down non-default behavior
         
         if not dk_window:
             dk_window = glbl.dk_window
@@ -286,10 +294,10 @@ class ScanPlan(XPD):
         if livetable:
             subs.append('livetable')
         else:
-            _control_params += 'nLT'
+            _control_params += 'nLT' # only wirte down non-default behavior
         if verify_write:
             subs.append('verify_write')
-            _control_params += 'vw'
+            _control_params += 'vw' # only wirte down non-default behavior
         if len(subs) > 0:
             scanplan_params.update({'subs':_clean_md_input(subs)}) 
         self.md.update({'sp_params': _clean_md_input(scanplan_params)})
@@ -301,7 +309,17 @@ class ScanPlan(XPD):
             sp_name = _sp_name
         self.name = sp_name
         self.md.update({'sp_name': _clean_md_input(self.name)})
-
+        print('You have created a "{}" type ScanPlan with name = "{}"'.format(scanplan_type, sp_name))
+        print('Corresponding scan parameters are:')
+        # extra efforts to keep printing order
+        for i in range(len(_sp_params_list)):
+            el = _sp_params_list[i]
+            try:
+                print('{} = {}'.format(el, self.md['sp_params'][el]))
+            except KeyError:
+                # all errors should be handled before this step
+                pass
+        print('with fast-shutter control = {} and subscribing dictionary = {}'.format(self.shutter, subs))
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
         # get objlist from yaml file
@@ -311,7 +329,11 @@ class ScanPlan(XPD):
         else:
             self.md.update({'sp_uid': self._getuid()})
         self._yamify()
-    
+
+    def _print_sp_params(self, scanplan_type, sp_params):
+        ''' extra efforts to maintain print order '''
+        
+        
     def _scanplan_name_parser(self, sp_name):
         ''' function to parse name of ScanPlan object into parameters fed into ScanPlan
         
