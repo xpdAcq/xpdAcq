@@ -1,6 +1,6 @@
-.. _bls:
+.. _qs:
 
-Quick Start
+Quick start
 -----------
 
 Checklist
@@ -8,27 +8,30 @@ Checklist
 
 The instrument scientist (IS) should have set up your beamtime hardware and software
 for you.  Let's check if it is the case.
- 1. Activate the xpd data acquisition environment:
-   1. In a terminal look to see if it is already activated.  If it is, you should see ``(collection)`` at the beginning of the line.
 
-   .. code-block:: python
+1. Activate the xpd data acquisition environment:
 
-     (collection)xf28id1@xf28id1-ws2:~$
+  * In a terminal look to see if it is already activated.  If it is, you should see ``(collection)`` at the beginning of the line.
 
-   If you don't see it, type ``icollection`` at the command prompt then check again.
- 2. OK, you are in.  Make sure that that the instrument scientist has initiated your beamtime. type ``bt.md`` and hit return. You should see the beamtime (``bt``) metadata (``md``) that has been pre-stored by the IS, and it should contain things like the last name of the PI on the proposal and the SAF number for the beamtime.  If not, please seek out the IS to get your session initialized.
- 3. Check that the wavelength has been set.  Does the correct x-ray wavelength appear in ``bt.md`` ``['bt_wavelength']`` field, or does it say ``None``.  If the latter, you can still collect scans but automated data reduction may not work, so best to grab the IS again.
- 4. Has a calibration already been carried out?  [FIXME]
- 5. Check that the Perkin Elmer detector is correctly set up.
-   1. Look at the Perkin Elmer screen on the CSS and make sure that ``Acquire`` mode has been enabled.
-   If Acquire mode is enabled, it should show system information ``Collecting`` in yellow color. If it hasn't been activated, please click 'start' button.
+  .. code-block:: none
 
-   .. image:: /cropped_pe1c_ioc.png
+    (collection)xf28id1@xf28id1-ws2:~$
+
+  * If you don't see it, type ``icollection`` at the command prompt then check again.
+
+2. OK, you are in.  Make sure that that the instrument scientist has initiated your beamtime. type ``bt.md`` and hit return. You should see the beamtime (``bt``) metadata (``md``) that has been pre-stored by the IS, and it should contain things like the last name of the PI on the proposal and the SAF number for the beamtime.  If not, please seek out the IS to get your session initialized.
+3. Check that the wavelength has been set.  Does the correct x-ray wavelength appear in ``bt.md`` ``['bt_wavelength']`` field, or does it say ``None``.  If the latter, you can still collect scans but automated data reduction may not work, so best to grab the IS again.
+4. Has a calibration already been carried out?  [FIXME]
+5. Check that the Perkin Elmer detector is correctly set up.
+
+  * Look at the Perkin Elmer screen on the CSS and make sure that ``Acquire`` mode has been enabled. If Acquire mode is enabled, it should show system information ``Collecting`` in yellow color. If it hasn't been activated, please click 'start' button.
+
+  .. image:: /cropped_pe1c_ioc.png
     :width: 300px
     :align: center
     :height: 200px
 
-   2. Type ``glbl.area_det`` and return.  It should return:
+  * Type ``glbl.area_det`` and return.  It should return:
 
    .. code-block:: python
 
@@ -44,16 +47,20 @@ The basic way to collect data is to carry out a "scan", by typing the kind of sc
 
  1. Type ``bt.list()`` and return.  You should see a list of objects and their index, or the number they sit in the list.
  2. To run a scan you type ``prun(<sample-object>,<scanplan-object>)``, replacing those words in angle brackets with pointers to real objects. e.g.,
+
    1. ``prun(bt.get(2),bt.get(5))`` will do a scan on the dummy sample (``'sa'``) called ``'l-user'``--(for lazy user!) which is in position (index) ``2`` in the ``bt.list()`` list--for 1 second (the name of that object in the list at position ``5`` is ``'ct1s'`` which stands for "count 1 second").
    2. ``prun(bt.get(2),bt.get(7))`` will do a scan for 10 s on the same sample.
    3. ``setupscan(bt.get(2),bt.get(7))`` will do a setupscan on that sample for 10 seconds.  A setupscan is like a prun ("production run") except it is tagged in metadata as a setupscan so you can separate later which were production runs and which were setup-scans.
+
  3. to see the data you have to extract it from the NSLS-ii database.
+
    1. Type ``save_last_tiff()`` to get the most recent scan you ran.  A dark-subtracted tiff file will appear in the directory ``~/xpdUser/tiff_base`` with prefix ``sub_`` in file name.
    2. ``save_tiff(db[-2])`` gets you the second to last scan that was collected, ``save_tiff(db[-10:])`` gets you the last 10 scans, (the syntax is Pythonic but it means "the items in the list from 10 ago up to the end of the list, i.e., now".  You can do all kinds of slicing and dicing, for example ``db[-10:-8,-2]`` would return the scans that were tenth, ninth and eighth ago, and also the last but one.) and so on.
    3. The tiff file appears in the directory ``~/xpdUser/tiff_base`` with a reasonably recognizable automatically generated name and you can do pretty much what you like with it. For example, copy it to an external drive.  However, there are handy tools on the XPD computer for analyzing your data.  As long as you save all your work in the ``xpdUser`` directory tree (make as many directories as you like under there) your work will be archived in a remote location at the end of your beamtime, and then completely deleted from the local XPD computer so that the next user has their own fresh environment to work in but your work is safe.
-   4. To use data analysis tools on the XPD computer, **in a new terminal window**,
-     1.Type ``getxgui``
-     2 Click on the green ``SrXplanar`` icon [FIXME Soham or someone, can you put instructions here for using ``SrXplanar``]
+   4. To use data analysis tools on the XPD computer, **in a new terminal window**
+
+     * Type ``getxgui``
+     * Click on the green ``SrXplanar`` icon [FIXME Soham or someone, can you put instructions here for using ``SrXplanar``]
 
 Remember!
 +++++++++
@@ -66,9 +73,11 @@ Next Steps
 ++++++++++
 
 So you have collected some data, and looked at it.  It is probably time to set up some more extensive data-objects so that you will be able to search easily for your data later and do more sophisticated scans.
-Please take the time to read the full documentation from :ref:`xpdu` onwards to get the most out of your data.  But for now, here is a quick summary.
+Please take the time to read the full documentation from **XPD user** section to get the most out of your data.  But for now, here is a quick summary.
 
-Types of scan available.  They all take as arguments ``(<sample-object>, <scanplan-object>)`` in that order.:
+Types of scan available.
+  They all take as arguments ``(<sample-object>, <scanplan-object>)`` in that order:
+
   1. ``prun()`` - the one you will use the most.  It stands for "production run"
   2. ``setupscan()`` - it is just the same as ``prun()`` but the data are tagged as being test/setup data, helping you to keep track of what is what later.
   3. ``dryrun()`` - it doesn't execute anything, only prints out metadata
@@ -77,15 +86,16 @@ Types of scan available.  They all take as arguments ``(<sample-object>, <scanpl
   6. ``calibration()`` - Similary to ``prun()`` and above scans, but your data will be labeled with as a calibration scan so that you can easily trace back what calibrants you have used and when were those calibration scans collected.
 
 You should try and set up some of your own scanplan objects:
-  1. let's say you want to do a count scan for 1.5 minutes.
+  * let's say you want to do a count scan for 1.5 minutes.
+
     1. type ``bt.list('sp')``  to see the current list of scan objects
     2. type ``ScanPlan('<scanplan name>','ct',{'exposure':90})``.  This creates a ``'ct'`` or count-type scan with an exposure of 90 s or 1.5 minutes, calling it whatever you typed for ``<scanplan name>``.  Pro tip: use ``'ct90s'`` or ``'ct1.5m'`` for the scanplan name.
     3. type ``bt.list()`` again.  You should see your new scanplan object at the end of the list.  Run it using ``prun(bt.get(2),bt.get(11))`` or giving a different number to the second ``get`` if it has a different number in the list.
 
 Types of ScanPlan available in current version:
-  1. ``'ct'`` just exposes the the detector for a number of seconds. e.g.,  ``ScanPlan('ct17.5s','ct',{'exposure':17.5})``
-  2. ``'tseries'`` executes a series of ``'num'`` counts of exposure time ``'exposure'`` seconds with  a delay of ``'delay'`` seconds between them.  e.g., ``ScanPlan('t50_e1s_d59s','tseries',{'num':50,'exposure':1,'delay':59})`` will measure 50 scans of 1 second with a delay of 59 seconds in between each of them.
-  3. ``'Tramp'`` executes a temperature ramp from ``'startingT'`` to ``'endingT'`` in temperature steps of ``'Tstep'`` with exposure time of ``'exposure'``.  e.g., ``ScanPlan('T200K_500K_5K_1s','Tramp',{'startingT':200, 'endingT':500, 'Tstep':5, 'exposure':1})`` will automatically change the temperature, starting at 200 K and ending at 500 K, measuring a scan of 1 s at every 5 K step.  The temperature controller will hold at each temperature until the temperature stabilizes before starting the measurement.
+  * ``'ct'`` just exposes the the detector for a number of seconds. e.g.,  ``ScanPlan('ct17.5s','ct',{'exposure':17.5})``
+  * ``'tseries'`` executes a series of ``'num'`` counts of exposure time ``'exposure'`` seconds with  a delay of ``'delay'`` seconds between them.  e.g., ``ScanPlan('t50_e1s_d59s','tseries',{'num':50,'exposure':1,'delay':59})`` will measure 50 scans of 1 second with a delay of 59 seconds in between each of them.
+  * ``'Tramp'`` executes a temperature ramp from ``'startingT'`` to ``'endingT'`` in temperature steps of ``'Tstep'`` with exposure time of ``'exposure'``.  e.g., ``ScanPlan('T200K_500K_5K_1s','Tramp',{'startingT':200, 'endingT':500, 'Tstep':5, 'exposure':1})`` will automatically change the temperature, starting at 200 K and ending at 500 K, measuring a scan of 1 s at every 5 K step.  The temperature controller will hold at each temperature until the temperature stabilizes before starting the measurement.
 
 Here is a summary table:
 
@@ -128,4 +138,58 @@ User scripts:
 Stay there for a while to make sure everything is running as expected and go to bed!
 
 There is much more to the ``xpdAcq`` software that will give you superpowers in rapid and flexible data collection, data retrieval and processing.
-This was just the quick start, but much more information is in the full documentation :ref:`xpdu`.
+This was just the quick start, but much more information is in the full documentation at **XPD user** section
+
+Code Sample
++++++++++++
+
+Here is a sample code covering entire process from defining ``Experiment``,
+``Sample`` and ``ScanPlan`` objects to running ``ScanPlans`` with different kinds of runs.
+
+**Tip**: copy-and-paste is *always* your good friend
+
+.. code-block:: python
+
+
+  # bt list method to see objects we have
+  bt.list()
+
+  # define acquire objects
+  ex = Experiment('xpdAcq_test', bt)
+  sa = Sample('xpdAcq_test_Sample', ex)
+
+  # define "ct" scanplan with exp = 0.5
+  ct = ScanPlan('xpdAcq_test_ct','ct',{'exposure':0.5})
+
+  # define "TrampUp" scanplan with exp = 0.5, startingT = 300, endingT = 310, Tstep = 2
+  # define "TrampDown" scanplan with exp = 0.5, startingT = 310, endingT = 300, Tstep = 2
+  TrampUp = ScanPlan('xpdAcq_test_Tramp','Tramp',{'exposure':0.5, 'startingT': 300, 'endingT': 310, 'Tstep':2})
+  TrampDown = ScanPlan('xpdAcq_test_Tramp','Tramp',{'exposure':0.5, 'startingT': 310, 'endingT': 300, 'Tstep':2})
+
+  # define "time series" scanplan with exp = 0.5, num=10, delay = 2
+  tseries = ScanPlan('xpdAcq_test_tseries', 'tseries', {'exposure':0.5, 'num':5, 'delay':2})
+
+  scan_list_up = [ct, TrampUp, tseries]
+  scan_list_down = [ct, TrampDown, tseries]
+
+  # prun with different ScanPlans and save the tiffs
+  for el in scan_list_up:
+    prun(sa, el)
+    save_last_tiff()
+
+  # setupscan with different ScanPlans and save the tiffs
+  for el in scan_list_down:
+    setupscan(sa, el)
+    save_last_tiff()
+
+  # background with ct ScanPlans and save the last tiff
+  setupscan(sa, ct)
+  save_last_tiff()
+
+  # calibration with ct ScanPlans and save the last tiff
+  calibration(sa, ct)
+  save_last_tiff()
+
+  # dryrun with different ScanPlans
+  for el in scan_list_up:
+    dryrun(sa, el)

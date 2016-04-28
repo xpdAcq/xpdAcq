@@ -1,55 +1,15 @@
 .. _xpdu:
 
 XPD Users
----------
+*********
 
- * :ref:`sb_overview`
- * :ref:`sb_icollection`
+.. toctree::
+   :maxdepth: 2
 
-Set up beamtime
-+++++++++++++++
- 
- * :ref:`usb_beamtime`
-
-Set up Experiment and Sample objects
-++++++++++++++++++++++++++++++++++++
-
- * :ref:`usb_experiment`
-
-Where did my Sample and Scan Objects go????
-+++++++++++++++++++++++++++++++++++++++++++
-
- * :ref:`usb_where`
-
-Set up Scan objects
-+++++++++++++++++++++++++
-
- * :ref:`usb_scan`
-
-Run scans
-+++++++++
-
- * :ref:`usb_running`
- * :ref:`usb_quickassess`
-
-
-View data
-+++++++++
-
-*Comming soon*
-
-Data Analysis
-+++++++++++++
-
-*Coming soon*
-
-Export your data and your work
-++++++++++++++++++++++++++++++
-
-*Comming soon*
-
-Calibration etc.
-++++++++++++++++
-
-*Coming soon*
-
+   sb_overview
+   sb_icollection
+   usb_Beamtime
+   usb_Experiment
+   usb_Where
+   usb_Scan
+   usb_Running
