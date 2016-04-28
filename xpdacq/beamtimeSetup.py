@@ -122,13 +122,6 @@ def _execute_end_beamtime(piname, safn, btuid, base_dir):
     Function takes all the user-generated tifs and config files, etc.,
     and archives them to a directory in the remote file-store with
     filename B_DIR/useriD
-
-    This function does three things:
-
-      1. runs export_data to get all of the current data
-      2. copies the tarball off to an archive location
-      3. removes all the un-tarred data
-
     '''
     os.makedirs(glbl.archive_dir, exist_ok=True)
     archive_name = '_'.join([piname.strip().replace(' ', ''),

@@ -46,7 +46,20 @@ Collecting Data Quickstart
 The basic way to collect data is to carry out a "scan", by typing the kind of scan and giving it as arguments a ``sample-object`` and a ``scanplan-object``.  These objects just contain information that will either be used to run the scan, and/or just saved as metadata with the data, allowing you to find the data later and process it. You will make your own objects later, but for now you can do a quick scan just to collect some data with some predefined objects.
 
  1. Type ``bt.list()`` and return.  You should see a list of objects and their index, or the number they sit in the list.
- 2. To run a scan you type ``prun(<sample-object>,<scanplan-object>)``, replacing those words in angle brackets with pointers to real objects. e.g.,
+ 2. To run a scan you type ``prun(<sample-object>,<scanplan-object>)``:
+
+   ``prun`` supports different ways of assigning objects. You can either assign objects with object index, name of acquire object or ``bt.get()`` methods.
+   Following expressions are all equivalent.
+
+   .. code-block:: python
+
+     prun(bt.get(2), bt.get(5))
+     prun('l-user', bt.get(5))
+     prun(bt.get(2), 'ct1s')
+     prun(2,5)
+     prun('l-user','ct1s')
+
+   Replace those words in angle brackets with pointers to real objects, eg.:
 
    1. ``prun(bt.get(2),bt.get(5))`` will do a scan on the dummy sample (``'sa'``) called ``'l-user'``--(for lazy user!) which is in position (index) ``2`` in the ``bt.list()`` list--for 1 second (the name of that object in the list at position ``5`` is ``'ct1s'`` which stands for "count 1 second").
    2. ``prun(bt.get(2),bt.get(7))`` will do a scan for 10 s on the same sample.
@@ -60,7 +73,7 @@ The basic way to collect data is to carry out a "scan", by typing the kind of sc
    4. To use data analysis tools on the XPD computer, **in a new terminal window**
 
      * Type ``getxgui``
-     * Click on the green ``SrXplanar`` icon [FIXME Soham or someone, can you put instructions here for using ``SrXplanar``]
+     * proceed to :ref:`xPDFsuite_manual`
 
 Remember!
 +++++++++
@@ -88,23 +101,34 @@ Types of scan available.
 You should try and set up some of your own scanplan objects:
   * let's say you want to do a count scan for 1.5 minutes.
 
-    1. type ``bt.list('sp')``  to see the current list of scan objects
-    2. type ``ScanPlan('<scanplan name>','ct',{'exposure':90})``.  This creates a ``'ct'`` or count-type scan with an exposure of 90 s or 1.5 minutes, calling it whatever you typed for ``<scanplan name>``.  Pro tip: use ``'ct90s'`` or ``'ct1.5m'`` for the scanplan name.
-    3. type ``bt.list()`` again.  You should see your new scanplan object at the end of the list.  Run it using ``prun(bt.get(2),bt.get(11))`` or giving a different number to the second ``get`` if it has a different number in the list.
+    1. type ``bt.list('sp')``  to see the current list of scanplan objects
+    2. scan parameters to ``ScanPlan`` can be assigned explicitly by giving a dictionary
+     or be interpreted by auto-naming scheme. Here is the example:
+
+      .. code-block:: python
+
+        sp1 = ScanPlan('ct_90','ct',{'exposure':90})
+        sp2 = ScanPlan('ct_90')
+
+      ``sp1`` and ``sp2`` are equivalent. They both creates a ``'ct'`` or count-type scan with an exposure of 90 s or 1.5 minutes.
+      To find more on auto-naming scheme, please see :ref:`usb_Scan`
+
+    3. type ``bt.list('sp')`` again.  You should see your new scanplan object at the end of the list.  Run it using ``prun(bt.get(2),bt.get(11))`` or giving a different number to the second ``get`` if it has a different number in the list.
 
 Types of ScanPlan available in current version:
   * ``'ct'`` just exposes the the detector for a number of seconds. e.g.,  ``ScanPlan('ct17.5s','ct',{'exposure':17.5})``
-  * ``'tseries'`` executes a series of ``'num'`` counts of exposure time ``'exposure'`` seconds with  a delay of ``'delay'`` seconds between them.  e.g., ``ScanPlan('t50_e1s_d59s','tseries',{'num':50,'exposure':1,'delay':59})`` will measure 50 scans of 1 second with a delay of 59 seconds in between each of them.
-  * ``'Tramp'`` executes a temperature ramp from ``'startingT'`` to ``'endingT'`` in temperature steps of ``'Tstep'`` with exposure time of ``'exposure'``.  e.g., ``ScanPlan('T200K_500K_5K_1s','Tramp',{'startingT':200, 'endingT':500, 'Tstep':5, 'exposure':1})`` will automatically change the temperature, starting at 200 K and ending at 500 K, measuring a scan of 1 s at every 5 K step.  The temperature controller will hold at each temperature until the temperature stabilizes before starting the measurement.
+  * ``'tseries'`` executes a series of ``'num'`` counts of exposure time ``'exposure'`` seconds with  a delay of ``'delay'`` seconds between them.  e.g., ``ScanPlan('tseries_1_59_50','tseries',{'num':50,'exposure':1,'delay':59})`` will measure 50 scans of 1 second with a delay of 59 seconds in between each of them.
+  * ``'Tramp'`` executes a temperature ramp from ``'startingT'`` to ``'endingT'`` in temperature steps of ``'Tstep'`` with exposure time of ``'exposure'``.  e.g., ``ScanPlan('Tramp_1_200_500_5','Tramp',{'startingT':200, 'endingT':500, 'Tstep':5, 'exposure':1})`` will automatically change the temperature,
+    starting at 200 K and ending at 500 K, measuring a scan of 1 s at every 5 K step. The temperature controller will hold at each temperature until the temperature stabilizes before starting the measurement.
 
 Here is a summary table:
 
 =========== ==================================================================================================
 ScanPlan    Syntax
 =========== ==================================================================================================
-``ct``      ``ScanPlan('ct17.5s','ct',{'exposure':17.5})``
-``tseries`` ``ScanPlan('t50_e1s_d59s','tseries',{'num':50,'exposure':1,'delay':59})``
-``Tramp``   ``ScanPlan('T200K_500K_5K_1s','Tramp',{'startingT':200, 'endingT':500, 'Tstep':5, 'exposure':1})``
+``ct``      ``ScanPlan('ct17.5','ct',{'exposure':17.5})``
+``tseries`` ``ScanPlan('tseries_1_59_50','tseries',{'num':50,'exposure':1,'delay':59})``
+``Tramp``   ``ScanPlan('Tramp_1_200_500_5','Tramp',{'startingT':200, 'endingT':500, 'Tstep':5, 'exposure':1})``
 =========== ==================================================================================================
 
 Tiff naming schema:
@@ -135,7 +159,7 @@ User scripts:
 
     %run -i ~/xpdUser/userScripts/myNightShiftScript.py
 
-Stay there for a while to make sure everything is running as expected and go to bed!
+  Stay there for a while to make sure everything is running as expected and go to bed!
 
 There is much more to the ``xpdAcq`` software that will give you superpowers in rapid and flexible data collection, data retrieval and processing.
 This was just the quick start, but much more information is in the full documentation at **XPD user** section
@@ -144,7 +168,8 @@ Code Sample
 +++++++++++
 
 Here is a sample code covering entire process from defining ``Experiment``,
-``Sample`` and ``ScanPlan`` objects to running ``ScanPlans`` with different kinds of runs.
+``Sample`` and ``ScanPlan`` objects to running ``ScanPlans`` with different kinds of ``run``.
+Please replace the name and parameters in each function depending your need.
 
 **Tip**: copy-and-paste is *always* your good friend
 
@@ -169,27 +194,22 @@ Here is a sample code covering entire process from defining ``Experiment``,
   # define "time series" scanplan with exp = 0.5, num=10, delay = 2
   tseries = ScanPlan('xpdAcq_test_tseries', 'tseries', {'exposure':0.5, 'num':5, 'delay':2})
 
-  scan_list_up = [ct, TrampUp, tseries]
-  scan_list_down = [ct, TrampDown, tseries]
 
-  # prun with different ScanPlans and save the tiffs
-  for el in scan_list_up:
-    prun(sa, el)
-    save_last_tiff()
+  # Frist, let use dryrun with different ScanPlans to have a preview on scan metadata
+  dryrun(sa, ct)
 
-  # setupscan with different ScanPlans and save the tiffs
-  for el in scan_list_down:
-    setupscan(sa, el)
-    save_last_tiff()
-
-  # background with ct ScanPlans and save the last tiff
-  setupscan(sa, ct)
-  save_last_tiff()
-
-  # calibration with ct ScanPlans and save the last tiff
+  # Then let's do calibration run and save the image in order to open it in calibration software
   calibration(sa, ct)
   save_last_tiff()
 
-  # dryrun with different ScanPlans
-  for el in scan_list_up:
-    dryrun(sa, el)
+  # Use setupscan to check image quality under current scan parameters
+  setupscan(sa, ct)
+  save_last_tiff()
+
+  # Everything looks right. Let's do prun with different ScanPlans and save the tiffs
+  prun(sa, ct)
+  save_last_tiff() # save tiffs from last scan
+  prun(sa, TrampUp)
+  prun(sa, TrampDow)
+  prun(sa, tseries)
+  save_tiff(db[-3:]) # save tiffs from last three scans
