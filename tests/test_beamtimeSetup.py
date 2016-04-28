@@ -5,9 +5,9 @@ import yaml
 from time import strftime
 from xpdacq.glbl import glbl
 import xpdacq.beamtimeSetup as bts
-from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment, import_yaml, _load_bt, _execute_end_beamtime, _delete_home_dir_tree
+from xpdacq.beamtimeSetup import _make_clean_env,_start_beamtime,_end_beamtime,_execute_start_beamtime,_check_empty_environment,_load_bt, _execute_end_beamtime, _delete_home_dir_tree
 from xpdacq.beamtime import Beamtime,_get_yaml_list
-from xpdacq.utils import export_userScriptEtc
+from xpdacq.utils import export_userScriptsEtc, import_userScriptsEtc
 
 class NewBeamtimeTest(unittest.TestCase): 
 
@@ -188,49 +188,71 @@ class NewBeamtimeTest(unittest.TestCase):
         # program places the file in Export directory
         # program gives friendly informational statement to user to email the file to Instr. Scientist.
 
-    def test_import_yaml(self):
+    def test_import_userScript_Etc(self):
         src = glbl.import_dir
-        dst = glbl.yaml_dir
+        dst = [glbl.yaml_dir, glbl.usrScript_dir]
         os.makedirs(src, exist_ok = True)
-        os.makedirs(dst, exist_ok = True)
+        for el in dst:
+            os.makedirs(el, exist_ok = True)
+        self.assertTrue(os.path.isdir(glbl.config_base))
+        self.assertTrue(os.path.isdir(glbl.yaml_dir))
+        self.assertTrue(os.path.isdir(glbl.usrScript_dir))
         # case1 : no files in import_dir, should return nothing
-        self.assertEqual(import_yaml(), None)
-        # case2 : all three kinds of files together, test if they are successfully move and unpackedsuccesfully
+        self.assertEqual(import_userScriptsEtc(), None)
+        # case2 : a tar file with three kind of files, test if it is successfully moved and unpacked
         yaml_name = 'touched.yml'
-        tar_name = 'tar_yaml.tar'
-        tar_yaml_name = 'tar.yml'
+        py_name = 'touched.py'
+        npy_name = 'mask.npy'
         exception_name = 'yaml.pdf'
-        new_yaml = os.path.join(src, yaml_name)
-        open(new_yaml, 'a').close()
-        new_tar_yaml = os.path.join(src, tar_yaml_name)
-        open(new_tar_yaml, 'a').close()
-        exception_f = os.path.join(src, exception_name)
-        open(exception_f, 'a').close()
+        untared_list = [yaml_name, py_name, npy_name, exception_name]
+        tar_yaml_name = 'tar.yml'
+        tar_py_name = 'tar.py'
+        tar_npy_name = 'tar.npy'
+        tared_list = [tar_yaml_name, tar_py_name, tar_npy_name]
+        # create archive file
+        for el in tared_list:
+            f_path = os.path.join(src, el)
+            open(f_path,'a').close()
         cwd = os.getcwd()
         os.chdir(src) # inevitable step for compression
-        (root, ext) = os.path.splitext(tar_name)
-        shutil.make_archive(root,'tar') # now data should be in xpdUser/Import/
+        tar_name = 'HappyMeal'
+        shutil.make_archive(tar_name,'tar') # now data should be in xpdUser/Import/
+        full_tar_name = os.path.join(src, tar_name + '.tar')
         os.chdir(cwd)
-        os.remove(new_tar_yaml)
-        self.assertEqual(import_yaml(), [tar_name, yaml_name])
-        import_yaml()
-        # confirm valied files are successfully moved and original copy is flushed
-        self.assertTrue(yaml_name in os.listdir(dst))
-        self.assertTrue(tar_yaml_name in os.listdir(dst))
-        self.assertFalse(os.path.isfile(new_yaml))
-        self.assertFalse(os.path.isfile(new_tar_yaml))
-        # confirm unrecongnized file is left in import dir
-        self.assertTrue(os.path.isfile(exception_f))
+        moved_list_1 = import_userScriptsEtc()
+        for el in tared_list:
+            self.assertTrue(el in list(map(lambda x: os.path.basename(x), moved_list_1)))
+        # is tar file still there?
+        self.assertTrue(os.path.isfile(full_tar_name))
+        # case 3 : tared file, individual files and unexcepted file/dir appear in Import/
+        for el in untared_list:
+            f_path = os.path.join(src, el)
+            open(f_path,'a').close()
+        exception_dir_name = os.path.join(src,'touched')
+        os.makedirs(exception_dir_name, exist_ok = True) 
+        moved_list_2 = import_userScriptsEtc()
+        # grouping file list
+        final_list = list(tared_list)
+        final_list.extend(untared_list)
+        final_list.remove(exception_name)
+        for el in final_list:
+            self.assertTrue(el in list(map(lambda x: os.path.basename(x), moved_list_2)))
+        # is tar file still there?
+        self.assertTrue(os.path.isfile(full_tar_name))
+        # is .pdf file still there?
+        self.assertTrue(os.path.isfile(os.path.join(src, exception_name)))
+        # is directory still there?
+        self.assertTrue(os.path.isdir(exception_dir_name))
 
 
-    def test_export_userScriptEtc(self):
+    def test_export_userScriptsEtc(self):
         os.makedirs(glbl.usrScript_dir, exist_ok = True)
         os.makedirs(glbl.yaml_dir, exist_ok = True)
         new_script = os.path.join(glbl.usrScript_dir, 'script.py')
         open(new_script, 'a').close()
         new_yaml = os.path.join(glbl.yaml_dir, 'touched.yml')
         open(new_yaml, 'a').close()
-        tar_f_path = export_userScriptEtc()
+        tar_f_path = export_userScriptsEtc()
         shutil.unpack_archive(tar_f_path,glbl.home)
         
         userScript_dir_tail = os.path.split(glbl.usrScript_dir)[1]
