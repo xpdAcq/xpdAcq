@@ -1,7 +1,7 @@
 .. _usb_scan:
 
-Setting up your ScanPlan objects
-----------------------------
+ScanPlan objects
+----------------
 
 ScanPlan objects (of type ``'sp'`` ) are created just like :ref:`Experiment and Sample <usb_experiment>` objects,
 but they serve a slightly different purpose and so we deal with them separately here. To review the syntax
@@ -41,47 +41,7 @@ Setting up ScanPlans
 
 Typing ``s = ScanPlan?`` returns
 
-.. code-block:: python
-
-  >>> s = ScanPlan?
-  Init signature: ScanPlan(self, scanname, scan_type, scan_params, shutter=True, livetable=True, verify_write=False)
-  Docstring:
-
-  ScanPlan class  that defines scan plan to run.
-
-  To run them: prun(Sample,ScanPlan)
-  Parameters
-  ----------
-  scanoplanname : string
-      scanplan name.  Important as new scanplans will overwrite older ones with the same name.
-
-  scan_type : string
-      type of scanplan. Currently allowed values are 'ct','tseries', 'Tramp'
-      where  ct=count, tseries=time series (series of counts), and Tramp=Temperature ramp.
-
-  scan_params : dict
-      contains all scan parameters that will be passed and used at run-time
-      Don't make typos in the dictionary keywords or your scans won't work.
-      Entire list of allowed keywords is in the documentation on https://xpdacq.github.io/
-
-      Here is are examples of properly instatiated ScanPlan object:
-      ct_sp = ('<ct name>', 'ct',  {'exposure': <exposure time in S>})
-      tseries_sp = ('<tseries name>', 'tseries', {'exposure':'<exposure time in S>, 'num':<total count>, 'delay':<delay between count in S>})
-      Tramp_sp = ('<Tramp name>', 'Tramp', {'exposure':'<exposure time in S>, 'sartingT':<in K>, 'endinT':<in K>, 'Tstep':<in K>})
-
-  shutter : bool
-      default is True. If True, in-hutch fast shutter will be opened before a scan and closed afterwards.
-      Otherwise control of the shutter is left external. Set to False if you want to control the shutter by hand.
-
-  livetable : bool
-      default is True. It gives LiveTable output when True, not otherwise
-
-  verify_write : bool
-      default is False. This verifies that tiff files have been written for each event.
-      It introduces a significant overhead so mostly used for testing.
-
-  File:           c:\users\billinge\documents\github\xpdacq\xpdacq\beamtime.py
-  Type:           type
+.. autofunction:: xpdacq.beamtime.ScanPlan
 
 telling what (at the time of writing) the ScanPlan object needs.
 The ``Init signature`` has exactly the required and optional arguments
@@ -111,12 +71,12 @@ Here are some examples of valid count-type ScanPlan definitions:
 
 .. code-block:: python
 
-  >>> sc = ScanPlan('ct1.5','ct',{'exposure':1.5})                      # the simplest count scan definition
-  >>> sc = ScanPlan('ct1.5_nosh','ct',{'exposure':1.5},shutter=False)   # same scan as before but let's do the shutter by hand (be careful!)
-  >>> sc = ScanPlan('ct100.5_nolt','ct',{'exposure':100.5},livetable=False)    # nice long scan but we don't want to clutter our terminal with the table showing the counts
-  >>> sc = ScanPlan('ct2_vw','ct',{'exposure':2},verify_write=True)     # we want to be sure the tiff was written in pe1_data, but pay a price of a ~ 1 second overhead.
-  >>> sc = ScanPlan('ct2_vw_nosh','ct',{'exposure':2},verify_write=True,shutter=False) # hopefully you are getting the idea.
-  >>> ScanPlan('ct2','ct',{'exposure':2})                               # this will also work in xpdAcq because we can reference this object with bt.list() and bt.get()
+  >>> sc = ScanPlan('ct_1.5','ct',{'exposure':1.5})                      # the simplest count scan definition
+  >>> sc = ScanPlan('ct_1.5','ct',{'exposure':1.5},shutter=False)   # same scan as before but let's do the shutter by hand (be careful!)
+  >>> sc = ScanPlan('ct_100.5','ct',{'exposure':100.5},livetable=False)    # nice long scan but we don't want to clutter our terminal with the table showing the counts
+  >>> sc = ScanPlan('ct_2','ct',{'exposure':2},verify_write=True)     # we want to be sure the tiff was written in pe1_data, but pay a price of a ~ 1 second overhead.
+  >>> sc = ScanPlan('ct_2','ct',{'exposure':2},verify_write=True,shutter=False) # hopefully you are getting the idea.
+  >>> ScanPlan('ct_2','ct',{'exposure':2})                               # this will also work in xpdAcq because we can reference this object with bt.list() and bt.get()
 
 A few things to note:
 
@@ -126,5 +86,3 @@ A few things to note:
  * The scan_params syntax is a bit clunky and delicate.  Please just be careful for now.  Later we will give helper functions and maybe a GUI (if we can get funding for a summer student).  Let's all pray to the funding gods!
 
 OK, it is time to :ref:`run our scans <usb_running>`
-
-return to :ref:`xpdu`

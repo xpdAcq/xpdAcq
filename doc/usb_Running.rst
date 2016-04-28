@@ -33,10 +33,16 @@ The allowed scan types are:
 ``dark`` collects dark frames.Strictly speaking the sample is irrelevant here because the shutter is closed, but
 it is left in the definition for consistency and in general ``dark`` is not necessary as automated dark subtraction collect dark images for you.
 
+.. autofunction:: xpdacq.xpdacq.calibration
+
 ``calibration`` is specifically designed to collect image on your calibrants.
+
+.. autofunction:: xpdacq.xpdacq.setupscan
 
 ``setupscan`` is for testing things before you are ready to get production data, such as trying out different exposures
 on a sample to find the best exposure time.
+
+.. autofunction:: xpdacq.xpdacq.dryrun
 
 ``dryrun`` does not execute any scan but tells you what is going to be run when you give the same Sample and Scan objects
 to any of the other runs. It may be used for validating your scan objects, and also for estimating how long a ``tseries`` or ``Tramp`` might take.
@@ -134,5 +140,3 @@ to get the first data-set.
   Count ['e7adbd'] (scan num: 2)
 
 Let's :ref:`take a quick look at our data <usb_quickassess>`
-
-return to :ref:`xpdu`

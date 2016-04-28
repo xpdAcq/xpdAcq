@@ -103,7 +103,7 @@ You should try and set up some of your own scanplan objects:
 
     1. type ``bt.list('sp')``  to see the current list of scanplan objects
     2. scan parameters to ``ScanPlan`` can be assigned explicitly by giving a dictionary
-     or be interpreted by auto-naming scheme. Here is the example:
+      or be interpreted by auto-naming scheme. Here is the example:
 
       .. code-block:: python
 

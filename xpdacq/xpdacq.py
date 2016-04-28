@@ -221,7 +221,15 @@ def _auto_load_calibration_file():
     return config_md_dict
 
 def prun(sample, scanplan, auto_dark = None, **kwargs):
-    ''' on this sample run this scanplan
+    """ on this sample run this scanplan
+    
+    Sample, ScanPlan objects inside can be assigned in following way:
+    
+    1) bt.get(<object_index>), eg. prun(bt.get(2), bt.get(5))
+    2) name of acquire object, eg. prun('my_experiment', 'ct1s')
+    3) index to acquire object, eg. prun(2,5)
+    
+    All of above assigning methods can be used in a mix way.
 
     Parameters
     ----------
@@ -233,7 +241,7 @@ def prun(sample, scanplan, auto_dark = None, **kwargs):
 
     auto_dark : bool
         option of automated dark collection. Default is True to allow collect dark automatically during scans
-    '''
+    """
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_isprun':True})
@@ -243,8 +251,16 @@ def prun(sample, scanplan, auto_dark = None, **kwargs):
     return
 
 def calibration(sample, scanplan, auto_dark = None, **kwargs):
-    ''' on this calibration sample (calibrant) run this scanplan
+    """ on this calibration sample (calibrant) run this scanplan
 
+    Sample, ScanPlan objects inside can be assigned in following way:
+    
+    1) bt.get(<object_index>), eg. calibration(bt.get(2), bt.get(5))
+    2) name of acquire object, eg. calibration('my_experiment', 'ct1s')
+    3) index to acquire object, eg. calibration(2,5)
+    
+    All of above assigning methods can be used in a mix way.
+    
     Parameters
     ----------
     sample : xpdAcq.beamtime.Sample object
@@ -255,7 +271,7 @@ def calibration(sample, scanplan, auto_dark = None, **kwargs):
 
     auto_dark : bool
         option of automated dark collection. Default is True to allow collect dark automatically during scans
-    '''
+    """
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_iscalibration':True})
@@ -268,6 +284,14 @@ def calibration(sample, scanplan, auto_dark = None, **kwargs):
 def background(sample, scanplan, auto_dark = None, **kwargs):
     ''' on this sample (kepton tube) run this scanplan
 
+    Sample, ScanPlan objects inside can be assigned in following way:
+    
+    1) bt.get(<object_index>), eg. background(bt.get(2), bt.get(5))
+    2) name of acquire object, eg. background('my_experiment', 'ct1s')
+    3) index to acquire object, eg. background(2,5)
+    
+    All of above assigning methods can be used in a mix way.
+    
     Parameters
     ----------
     sample : xpdAcq.beamtime.Sample object
@@ -290,6 +314,14 @@ def background(sample, scanplan, auto_dark = None, **kwargs):
 
 def setupscan(sample, scanplan, auto_dark = None, **kwargs):
     ''' on this sample run this scanplan as a setupscan
+    
+    Sample, ScanPlan objects inside can be assigned in following way:
+    
+    1) bt.get(<object_index>), eg. setupscan(bt.get(2), bt.get(5))
+    2) name of acquire object, eg. setupscan('my_experiment', 'ct1s')
+    3) index to acquire object, eg. setupscan(2,5)
+    
+    All of above assigning methods can be used in a mix way.
 
     Parameters
     ----------
@@ -314,6 +346,14 @@ def setupscan(sample, scanplan, auto_dark = None, **kwargs):
 def dark(sample, scanplan, **kwargs):
     '''on this sample, collect dark images
 
+    Sample, ScanPlan objects inside can be assigned in following way:
+    
+    1) bt.get(<object_index>), eg. dark(bt.get(2), bt.get(5))
+    2) name of acquire object, eg. dark('my_experiment', 'ct1s')
+    3) index to acquire object, eg. dark(2,5)
+    
+    All of above assigning methods can be used in a mix way.
+    
     Parameters
     ----------
     sample : xpdAcq.beamtime.Sample object
@@ -344,6 +384,14 @@ def dark(sample, scanplan, **kwargs):
 def dryrun(sample, scanplan, **kwargs):
     ''' on this sample run this scanplan in dryrun mode (only metadata will be printed)
 
+    Sample, ScanPlan objects inside can be assigned in following way:
+    
+    1) bt.get(<object_index>), eg. dryrun(bt.get(2), bt.get(5))
+    2) name of acquire object, eg. dryrun('my_experiment', 'ct1s')
+    3) index to acquire object, eg. dryrun(2,5)
+    
+    All of above assigning methods can be used in a mix way.
+        
     Parameters
     ----------
     sample : xpdAcq.beamtime.Sample object
