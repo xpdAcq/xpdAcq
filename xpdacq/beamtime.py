@@ -159,6 +159,25 @@ class XPD:
         self._yamify()
 
 class Beamtime(XPD):
+    ''' Class that holds basic information to current beamtime 
+    
+    Parameters
+    ----------
+    pi_last : str
+        last name of PI to this beamtime
+    
+    safn : str
+        SAF number to this beamtime
+    
+    wavelength : float
+        optional but it is strongly recommended to enter. x-ray wavelength to this beamtime, it will be used during data deduction
+    
+    experimenters : list
+        optional. a list of tuples that are made of (last_name, first_name, id) of each experimenter involved.
+    
+    **kwargs : dict
+        optional. a dictionary for user-supplied information.
+    ''' 
     def __init__(self, pi_last, safn, wavelength=None, experimenters=[], **kwargs):
         self.name = 'bt'
         self.type = 'bt'
@@ -196,13 +215,26 @@ class Beamtime(XPD):
         self._yamify()
 
 class Experiment(XPD):
+    ''' class that holds experiment information 
+    
+    Parameters
+    ----------
+    expname : str
+        name to this experiment
+    
+    beamtime : xpdAcq.beamtime.Beamtime object
+        object to current beamtime
+    
+    **kwargs : dict
+        optional. a dictionary for user-supplied information.
+    ''' 
     def __init__(self, expname, beamtime, **kwargs):
         self.bt = beamtime
         self.name = _clean_md_input(expname)
         self.type = 'ex'
         self.md = self.bt.md
         self.md.update({'ex_name': self.name})
-#        self.md.update({'ex_uid': self._getuid()})
+        self.md.update({'ex_uid': self._getuid()})
         self.md.update({'ex_usermd':_clean_md_input(kwargs)})
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
@@ -215,13 +247,26 @@ class Experiment(XPD):
         self._yamify()
 
 class Sample(XPD):
+    ''' class that holds sample information 
+    
+    Parameters
+    ----------
+    samname : str
+        name to this sample
+    
+    experiment : xpdAcq.beamtime.Experiment object
+        object that contains information of experiment
+    
+    **kwargs : dict
+        optional. a dictionary for user-supplied information.
+    '''
     def __init__(self, samname, experiment, **kwargs):
         self.name = _clean_md_input(samname)
         self.type = 'sa'
         self.ex = experiment
         self.md = self.ex.md
         self.md.update({'sa_name': self.name})
-#        self.md.update({'sa_uid': self._getuid()})
+        self.md.update({'sa_uid': self._getuid()})
         self.md.update({'sa_usermd': _clean_md_input(kwargs)})
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
@@ -234,29 +279,40 @@ class Sample(XPD):
         self._yamify()
 
 class ScanPlan(XPD):
-    '''ScanPlan object that defines scans to run.  To run them: prun(Sample,ScanPlan)
+    '''ScanPlan class  that defines scan plan to run.  
     
-    Arguments:
-    scanname - string - scan name.  Important as new scans will overwrite older
-           scans with the same name.
-    scan_type - string - type of scan. allowed values are 'ct','tseries', 'Tramp' 
-           where  ct=count, tseries=time series (series of counts),
-           and Tramp=Temperature ramp.
-    scan_params - dictionary - contains all scan parameters that will be passed
-           and used at run-time.  Don't make typos in the dictionary keywords
-           or your scans won't work.  The list of allowed keywords is in the 
-           documentation, but 'exposure' sets exposure time and is all that is needed
-           for a simple count. 'num' and 'delay' are the number of images and the
-           delay time between exposures in a tseries. In Tramps as well as 'exposure' 
-           the required keys are 'Tstart', 'Tstop', 'Tstep'.
-    shutter - bool - default=True.  If True, in-hutch fast shutter will be opened before a scan and
-                closed afterwards.  Otherwise control of the shutter is left external. Set to False
-                if you want to control the shutter by hand.
-    livetable - bool - default=True. gives LiveTable output when True, not otherwise
-    verify_write - bool - default=False.  This verifies that tiff files have been written
-                   for each event.  It introduces a significant overhead so mostly used for
-                   testing.
+    To run them: prun(Sample,ScanPlan)
+    Parameters
+    ----------
+    scanoplanname : string
+        scanplan name.  Important as new scanplans will overwrite older ones with the same name.
+   
+    scan_type : string
+        type of scanplan. Currently allowed values are 'ct','tseries', 'Tramp' 
+        where  ct=count, tseries=time series (series of counts), and Tramp=Temperature ramp.
+    
+    scan_params : dict
+        contains all scan parameters that will be passed and used at run-time
+        Don't make typos in the dictionary keywords or your scans won't work.
+        Entire list of allowed keywords is in the documentation on https://xpdacq.github.io/
+        
+        Here is are examples of properly instatiated ScanPlan object:
+        ct_sp = ('<ct name>', 'ct',  {'exposure': <exposure time in S>})
+        tseries_sp = ('<tseries name>', 'tseries', {'exposure':'<exposure time in S>, 'num':<total count>, 'delay':<delay between count in S>})
+        Tramp_sp = ('<Tramp name>', 'Tramp', {'exposure':'<exposure time in S>, 'sartingT':<in K>, 'endinT':<in K>, 'Tstep':<in K>})
+    
+    shutter : bool
+        default is True. If True, in-hutch fast shutter will be opened before a scan and closed afterwards.
+        Otherwise control of the shutter is left external. Set to False if you want to control the shutter by hand.
+    
+    livetable : bool
+        default is True. It gives LiveTable output when True, not otherwise
+    
+    verify_write : bool
+        default is False. This verifies that tiff files have been written for each event.
+        It introduces a significant overhead so mostly used for testing.
     '''
+
     def __init__(self,name, scanplan_type, scanplan_params, dk_window = None, shutter=True, livetable=True, verify_write=False, **kwargs):
         self.name = _clean_md_input(name)
         self.type = 'sp'
@@ -350,7 +406,7 @@ class ScanPlan(XPD):
             print('Please use uparrow to edit and retry making your ScanPlan object')
             sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
-class Union(XPD):
+class _Union(XPD):
     def __init__(self,sample,scan):
         self.type = 'cmdo'
         self.sc = scan
@@ -375,6 +431,7 @@ class Scan(XPD):
     
     scanplan: xpdacq.beamtime.ScanPlan
         instance of ScanPlan calss that hold scanplan related metadata
+
     '''
     def __init__(self,sample, scanplan):
         self.type = 'sc'

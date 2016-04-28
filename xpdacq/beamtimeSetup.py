@@ -175,6 +175,21 @@ def _init_dark_yaml():
         yaml.dump(dark_scan_list, f)
 
 def _start_beamtime(safn,home_dir=None):
+    ''' priviate function for beamline scientist
+    
+    This function will start a beamtime for user 
+    It does following:
+    1) checks if previous beamtime is properly ended.
+    2) create default directories
+    3) instantiate a bt object with information encoded in saf<saf_num>.yml file 
+    4) instantiate lazy user Sample, ScanPlan objects
+    
+    Parameters:
+    -----------
+    safn : str
+        string to saf number of current beamtime. 
+        This function requires to have a `saf<saf_num>.yml' in xpdUser/config_base
+    '''
     if home_dir is None:
         home_dir = glbl.home
     if not os.path.exists(home_dir):
@@ -214,6 +229,38 @@ def _execute_start_beamtime(piname,safn,explist,wavelength=None,home_dir=None):
     sc10 = ScanPlan('ct10s','ct',{'exposure':10.0})
     sc30 = ScanPlan('ct30s','ct',{'exposure':30.0})
     return bt
+
+#FIXME this function should be revisited later
+def import_yaml():
+    '''
+    import user pre-defined files from ~/xpdUser/Import
+
+    Files can be compreesed or .yml, once imported, bt.list() should show updated acquire object list
+    '''
+    src_dir = glbl.import_dir
+    dst_dir = glbl.yaml_dir
+    f_list = os.listdir(src_dir)
+    if len(f_list) == 0:
+        print('INFO: There is no pre-defined user objects in {}'.format(src_dir))
+        return 
+    # two possibilites: .yml or compressed files; shutil should handle all compressed cases
+    moved_f_list = []
+    for f in f_list:
+        full_path = os.path.join(src_dir, f)
+        (root, ext) = os.path.splitext(f)
+        if ext == '.yml':
+            shutil.copy(full_path, dst_dir)
+            moved_f_list.append(f)
+            os.remove(full_path)
+        else:
+            try:
+                shutil.unpack_archive(full_path, dst_dir)
+                moved_f_list.append(f)
+                os.remove(full_path)
+            except ReadError:
+                print('Unrecongnized file type {} is found inside {}'.format(f, src_dir))
+                pass
+    return moved_f_list
 
 if __name__ == '__main__':
     print(glbl.home)
