@@ -43,9 +43,8 @@ Future releases will focus more on analysis functionalities.
 Additional scan types will be added in future releases.
 
 However, it does support :
-
 * automated dark subtraction
-* automated calibration capture
+* automated calibration capture**.
 
 This version is fully documented and extensively tested
 
@@ -69,16 +68,7 @@ This version is fully documented and extensively tested
    troubleshooting
 
 .. toctree::
-    :maxdepth: 3
-    :hidden:
-
-    api
-    installation
-    functionality
-
-.. toctree::
    :maxdepth: 3
-   :caption: Beamline Staff
    :hidden:
 
    beamlinestaff

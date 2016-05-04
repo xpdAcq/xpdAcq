@@ -1,4 +1,4 @@
 .. _xPDFsuite_manual:
 
-Contents
+Manuals
 ========

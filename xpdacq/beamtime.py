@@ -281,13 +281,14 @@ class Sample(XPD):
 class ScanPlan(XPD):
     '''ScanPlan class  that defines scan plan to run.  
     
-    To run them: prun(Sample,ScanPlan)
+    To run it ``prun(Sample,ScanPlan)``
+    
     Parameters
     ----------
-    scanoplanname : string
+    scanoplanname : str
         scanplan name.  Important as new scanplans will overwrite older ones with the same name.
    
-    scan_type : string
+    scan_type : str
         type of scanplan. Currently allowed values are 'ct','tseries', 'Tramp' 
         where  ct=count, tseries=time series (series of counts), and Tramp=Temperature ramp.
     
@@ -295,11 +296,10 @@ class ScanPlan(XPD):
         contains all scan parameters that will be passed and used at run-time
         Don't make typos in the dictionary keywords or your scans won't work.
         Entire list of allowed keywords is in the documentation on https://xpdacq.github.io/
-        
         Here is are examples of properly instatiated ScanPlan object:
-        ct_sp = ('<ct name>', 'ct',  {'exposure': <exposure time in S>})
-        tseries_sp = ('<tseries name>', 'tseries', {'exposure':'<exposure time in S>, 'num':<total count>, 'delay':<delay between count in S>})
-        Tramp_sp = ('<Tramp name>', 'Tramp', {'exposure':'<exposure time in S>, 'sartingT':<in K>, 'endinT':<in K>, 'Tstep':<in K>})
+          * ct_sp = ('<ct name>', 'ct',  {'exposure': <exposure time in S>})
+          * tseries_sp = ('<tseries name>', 'tseries', {'exposure':'<exposure time in S>, 'num':<total count>, 'delay':<delay between count in S>})
+          * Tramp_sp = ('<Tramp name>', 'Tramp', {'exposure':'<exposure time in S>, 'sartingT':<in K>, 'endinT':<in K>, 'Tstep':<in K>})
     
     shutter : bool
         default is True. If True, in-hutch fast shutter will be opened before a scan and closed afterwards.
