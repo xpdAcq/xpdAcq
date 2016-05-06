@@ -105,6 +105,7 @@ You should try and set up some of your own scanplan objects:
     2. scan parameters to ``ScanPlan`` can be assigned explicitly by giving a dictionary
       or be interpreted by auto-naming scheme. Here is the example:
 
+
       .. code-block:: python
 
         sp1 = ScanPlan('ct_90','ct',{'exposure':90})
