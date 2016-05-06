@@ -13,3 +13,5 @@ XPD Users
    usb_Where
    usb_Scan
    usb_Running
+   usb_QuickAssess
+   usb_functionality

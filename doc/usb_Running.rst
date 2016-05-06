@@ -139,4 +139,40 @@ to get the first data-set.
   +-----------+------------+------------------+
   Count ['e7adbd'] (scan num: 2)
 
+.. _auto_dark_collect:
+
+Automated dark frame collection
+""""""""""""""""""""""""""""""""
+
+So far, you might have found something weird from the output shown above.
+We only requested *one* ``prun`` but program runs *two* scans. So what happen?
+
+That is actually a wonderful feature called auto-dark subtraction of ``xpdAcq``.
+When you are running your experiment, ``xpdAcq`` actually checks if you have
+collected a **fresh** dark frame every time it collects a scan.
+The definition of **fresh** is:
+
+.. code-block:: none
+
+  Given a certain period T (called dark window), there is a dark frame
+  with the same exposure time as the light frame we are about collect.
+
+Automated dark collection is enabled by default and it can be turned off
+by either of these ways:
+
+.. code-block:: python
+
+  >>> glbl.auto_dark = False # turn it off for all scans measured afterwards
+  >>> prun(bt.get(3),bt.get(11), auto_dark = False) # only turn it off for this scan
+
+And period of dark window can be modified by:
+
+.. code-block:: python
+
+  >>> glbl.dk_window = 200 # in minutes. default is 3000 minutes
+
+Having ``auto_dark`` set to ``True`` is strongly recommended as this enables
+``xpdAcq`` to do automated dark frame subtraction when you pull out data from
+centralized **NSLSL-II** server.
+
 Let's :ref:`take a quick look at our data <usb_quickassess>`

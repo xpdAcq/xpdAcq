@@ -9,7 +9,7 @@ Checklist
 The instrument scientist (IS) should have set up your beamtime hardware and software
 for you.  Let's check if it is the case.
 
-1. Activate the xpd data acquisition environment:
+1. Activate the XPD data acquisition environment:
 
   * In a terminal look to see if it is already activated.  If it is, you should see ``(collection)`` at the beginning of the line.
 
