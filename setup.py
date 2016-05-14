@@ -6,7 +6,7 @@ setup(
     version = '0.0.3',
     packages = find_packages(),
     description = 'acquisition module',
-    zip_safe = False,
+    zip_safe = True,
     url = 'http:/github.com/xpdAcq/xpdacq',
     install_requires = [
                     'numpy >= 1.11',
