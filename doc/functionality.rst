@@ -1,5 +1,0 @@
-xpdAcq Functionalities
-========================
-
-section
-++++++++++

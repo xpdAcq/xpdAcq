@@ -1,16 +1,12 @@
 .. _bls:
 
-Beamline Staff Only
--------------------
+Beamline Staff
+**************
 
-Start Beamtime
-++++++++++++++
+.. toctree::
+   :maxdepth: 2
 
- * :ref:`sb_overview` 
- * :ref:`sb_newBeamtime`
-
-
-End Beamtime
-++++++++++++
-
-*contents*
+   sb_overview
+   sb_icollection
+   sb_newBeamtime
+   sb_endBeamtime
