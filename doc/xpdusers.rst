@@ -15,3 +15,4 @@ XPD Users
    usb_Running
    usb_QuickAssess
    usb_functionality
+   xPDFsuite_manual

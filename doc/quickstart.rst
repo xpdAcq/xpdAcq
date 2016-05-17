@@ -21,7 +21,12 @@ for you.  Let's check if it is the case.
 
 2. OK, you are in.  Make sure that that the instrument scientist has initiated your beamtime. type ``bt.md`` and hit return. You should see the beamtime (``bt``) metadata (``md``) that has been pre-stored by the IS, and it should contain things like the last name of the PI on the proposal and the SAF number for the beamtime.  If not, please seek out the IS to get your session initialized.
 3. Check that the wavelength has been set.  Does the correct x-ray wavelength appear in ``bt.md`` ``['bt_wavelength']`` field, or does it say ``None``.  If the latter, you can still collect scans but automated data reduction may not work, so best to grab the IS again.
-4. Has a calibration already been carried out?  [FIXME]
+4. Has a calibration already been carried out?
+
+  * If yes, make sure desired file is properly located in /home/xf28id1/xpdUser/config_base``
+  * If not, collect an image on calibrant with ``calibration(<Sample>, <ScanPlan>)``,
+    save image with ``save_last_tiff()`` and go to :ref:`xPDFsuite_manual`
+
 5. Check that the Perkin Elmer detector is correctly set up.
 
   * Look at the Perkin Elmer screen on the CSS and make sure that ``Acquire`` mode has been enabled. If Acquire mode is enabled, it should show system information ``Collecting`` in yellow color. If it hasn't been activated, please click 'start' button.
@@ -72,7 +77,7 @@ The basic way to collect data is to carry out a "scan", by typing the kind of sc
    3. The tiff file appears in the directory ``~/xpdUser/tiff_base`` with a reasonably recognizable automatically generated name and you can do pretty much what you like with it. For example, copy it to an external drive.  However, there are handy tools on the XPD computer for analyzing your data.  As long as you save all your work in the ``xpdUser`` directory tree (make as many directories as you like under there) your work will be archived in a remote location at the end of your beamtime, and then completely deleted from the local XPD computer so that the next user has their own fresh environment to work in but your work is safe.
    4. To use data analysis tools on the XPD computer, **in a new terminal window**
 
-     * Type ``getxgui``
+     * Type ``xPDFsuite`` or ``xpdfsuite`` to open program
      * proceed to :ref:`xPDFsuite_manual`
 
 Remember!
@@ -105,13 +110,16 @@ You should try and set up some of your own scanplan objects:
     2. scan parameters to ``ScanPlan`` can be assigned explicitly by giving a dictionary
       or be interpreted by auto-naming scheme. Here is the example:
 
+
       .. code-block:: python
 
         sp1 = ScanPlan('ct_90','ct',{'exposure':90})
         sp2 = ScanPlan('ct_90')
 
-      ``sp1`` and ``sp2`` are equivalent. They both creates a ``'ct'`` or count-type scan with an exposure of 90 s or 1.5 minutes.
-      To find more on auto-naming scheme, please see :ref:`usb_Scan`
+      ``sp1`` and ``sp2`` are equivalent. They both create a ``'ct'`` or count-type scan with an exposure of 90 s or 1.5 minutes.
+      To find more on auto-naming scheme, please see :ref:`usb_Scan`. Note, if
+      two ScanPlans wit the same name, they will be **overwritten!** That also
+      makes senses since you basically created the same functionality.  
 
     3. type ``bt.list('sp')`` again.  You should see your new scanplan object at the end of the list.  Run it using ``prun(bt.get(2),bt.get(11))`` or giving a different number to the second ``get`` if it has a different number in the list.
 

@@ -175,4 +175,17 @@ Having ``auto_dark`` set to ``True`` is strongly recommended as this enables
 ``xpdAcq`` to do automated dark frame subtraction when you pull out data from
 centralized **NSLSL-II** server.
 
+
+.. _auto_calib:
+
+Automated calibration loading
+"""""""""""""""""""""""""""""
+
+Often times, keeping track with which calibration file is associated with
+certain scan is very tiring. ``xpdAcq`` makes this easier for you. Before every
+scan is being collected, program goes to grab the most recent calibration
+parameters in ``/home/xf28id1/xpdUser/config_base`` and load them as part of
+metadata so that you can reference them whenever you want and make in-situ data
+reduction possible!
+
 Let's :ref:`take a quick look at our data <usb_quickassess>`
