@@ -117,7 +117,9 @@ You should try and set up some of your own scanplan objects:
         sp2 = ScanPlan('ct_90')
 
       ``sp1`` and ``sp2`` are equivalent. They both create a ``'ct'`` or count-type scan with an exposure of 90 s or 1.5 minutes.
-      To find more on auto-naming scheme, please see :ref:`usb_Scan`
+      To find more on auto-naming scheme, please see :ref:`usb_Scan`. Note, if
+      two ScanPlans wit the same name, they will be **overwritten!** That also
+      makes senses since you basically created the same functionality.  
 
     3. type ``bt.list('sp')`` again.  You should see your new scanplan object at the end of the list.  Run it using ``prun(bt.get(2),bt.get(11))`` or giving a different number to the second ``get`` if it has a different number in the list.
 
