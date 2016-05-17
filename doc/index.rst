@@ -43,8 +43,8 @@ Future releases will focus more on analysis functionalities.
 Additional scan types will be added in future releases.
 
 However, it does support :
-* automated dark subtraction
-* automated calibration capture**.
+  * :ref:`automated dark frame collection <auto_dark_collect>`
+  * :ref:`automated calibration capture <auto_calib>`
 
 This version is fully documented and extensively tested
 
