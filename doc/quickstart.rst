@@ -25,7 +25,7 @@ for you.  Let's check if it is the case.
 
   * If yes, make sure desired file is properly located in /home/xf28id1/xpdUser/config_base``
   * If not, collect an image on calibrant with ``calibration(<Sample>, <ScanPlan>)``,
-    save image with ``save_last_tiff()`` and go to :ref:`xPDFsuite_manual` 
+    save image with ``save_last_tiff()`` and go to :ref:`xPDFsuite_manual`
 
 5. Check that the Perkin Elmer detector is correctly set up.
 
@@ -116,7 +116,7 @@ You should try and set up some of your own scanplan objects:
         sp1 = ScanPlan('ct_90','ct',{'exposure':90})
         sp2 = ScanPlan('ct_90')
 
-      ``sp1`` and ``sp2`` are equivalent. They both creates a ``'ct'`` or count-type scan with an exposure of 90 s or 1.5 minutes.
+      ``sp1`` and ``sp2`` are equivalent. They both create a ``'ct'`` or count-type scan with an exposure of 90 s or 1.5 minutes.
       To find more on auto-naming scheme, please see :ref:`usb_Scan`
 
     3. type ``bt.list('sp')`` again.  You should see your new scanplan object at the end of the list.  Run it using ``prun(bt.get(2),bt.get(11))`` or giving a different number to the second ``get`` if it has a different number in the list.
