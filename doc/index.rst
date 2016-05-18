@@ -9,15 +9,13 @@ xpdAcq documentation
 Introduction
 ++++++++++++
 
-``xpdAcq`` is a Python package that helps data collection at XPD beamlime.
-It is built on top of and augments the NSLS-II data acquisition Python 
-package `bluesky <http://nsls-ii.github.io/bluesky/>`_ .  XPD may be operated
-directly by bluesky, or using xpdAcq.
+``xpdAcq`` is a Python package that helps data collection behavior at XPD beamlime.
+It is built on an *awesome* NSLS-II Python package `bluesky <http://nsls-ii.github.io/bluesky/>`_
 
-The goal of the ``xpdAcq`` package is to simplify your collection and analysis workflow during beamtime,
-so that you can focus more on science aspects. ``xpdAcq`` provides an interface for user who don't
+The goal of ``xpdAcq`` package is to simplify your collection and analysis workflow during beamtime,
+so that you can focus more on science aspects. ``xpdAcq`` provides an interface for user who doesn't
 have extensive Python coding background. Every syntax started from psychological motivation,
-like the most important one behind running a "production" scan, ``prun``:
+like the most important behind ``prun``:
 
 .. code-block:: none
 
@@ -32,8 +30,7 @@ current version : ``v0.3``
 """""""""""""""""""""""""""
 
 This is the first full, stable, release, of xpdAcq software.
-It offers functionality to acquire data at XPD but with very limited
-tools yet to analyze it.
+It offers functionality to acquire data at XPD but not to analyze it.
 Future releases will focus more on analysis functionalities.
 ``v0.3`` is still a limited functionality release in that it only supports three kinds of scans:
 
@@ -45,11 +42,11 @@ Future releases will focus more on analysis functionalities.
 
 Additional scan types will be added in future releases.
 
-However, it does support:
- * automated dark subtraction
- * automated calibration capture.
+However, it does support :
+* automated dark subtraction
+* automated calibration capture**.
 
-This version is fully documented and extensively tested.
+This version is fully documented and extensively tested
 
 
 .. toctree::
