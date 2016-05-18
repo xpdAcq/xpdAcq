@@ -433,15 +433,29 @@ class Scan(XPD):
         instance of ScanPlan calss that hold scanplan related metadata
 
     '''
-    def __init__(self,sample, scanplan):
+    def __init__(self, sample, scanplan, *, bsky_plan = False):
         self.type = 'sc'
         _sa = self._execute_obj_validator(sample, 'sa', Sample)
-        _sp = self._execute_obj_validator(scanplan, 'sp', ScanPlan)  
-        self.sa = _sa 
-        self.sp = _sp 
+        if bsky_plan:
+            _sp = scanplan
+            _sp.shutter = True # give a shutter control for all
+            try:
+                # when user use Scan class
+                _sp_md = _sp.md
+                dict(_sp_md)
+            except (AttributeError, TypeError):
+                # user uses generator or not setting md. He should be
+                # responsible in either case
+                _sp_md = {}
+                
+        else:
+            _sp = self._execute_obj_validator(scanplan, 'sp', ScanPlan)
+            _sp_md = scanplan.md
+        self.sa = _sa
+        self.sp = _sp
         # create a new dict copy.
-        self.md = dict(self.sp.md)
-        self.md.update(self.sa.md)
+        self.md = dict(self.sa.md)
+        self.md.update(_sp_md)
     
     def _execute_obj_validator(self, input_obj, expect_yml_type, expect_class):
         parsed_obj = self._object_parser(input_obj, expect_yml_type)
