@@ -25,6 +25,8 @@ import copy
 from xpdacq.glbl import glbl
 from xpdacq.utils import _graceful_exit
 
+from bluesky.plans import Plan
+
 home_dir = glbl.home
 yaml_dir = glbl.yaml_dir
 
@@ -279,19 +281,19 @@ class Sample(XPD):
         self._yamify()
 
 class ScanPlan(XPD):
-    '''ScanPlan class  that defines scan plan to run.  
-    
+    '''ScanPlan class  that defines scan plan to run.
+
     To run it ``prun(Sample,ScanPlan)``
-    
+
     Parameters
     ----------
     scanoplanname : str
         scanplan name.  Important as new scanplans will overwrite older ones with the same name.
-   
+
     scan_type : str
         type of scanplan. Currently allowed values are 'ct','tseries', 'Tramp' 
         where  ct=count, tseries=time series (series of counts), and Tramp=Temperature ramp.
-    
+
     scan_params : dict
         contains all scan parameters that will be passed and used at run-time
         Don't make typos in the dictionary keywords or your scans won't work.
@@ -300,37 +302,42 @@ class ScanPlan(XPD):
           * ct_sp = ('<ct name>', 'ct',  {'exposure': <exposure time in S>})
           * tseries_sp = ('<tseries name>', 'tseries', {'exposure':'<exposure time in S>, 'num':<total count>, 'delay':<delay between count in S>})
           * Tramp_sp = ('<Tramp name>', 'Tramp', {'exposure':'<exposure time in S>, 'sartingT':<in K>, 'endinT':<in K>, 'Tstep':<in K>})
-    
+
     shutter : bool
         default is True. If True, in-hutch fast shutter will be opened before a scan and closed afterwards.
         Otherwise control of the shutter is left external. Set to False if you want to control the shutter by hand.
-    
+
     livetable : bool
         default is True. It gives LiveTable output when True, not otherwise
-    
+
     verify_write : bool
         default is False. This verifies that tiff files have been written for each event.
         It introduces a significant overhead so mostly used for testing.
     '''
 
-    def __init__(self,name, scanplan_type, scanplan_params, dk_window = None, shutter=True, livetable=True, verify_write=False, **kwargs):
+    def __init__(self,name, scanplan_type, scanplan_params = {},
+            dk_window = None, shutter=True, livetable=True,
+            verify_write=False, *args, **kwargs):
         self.name = _clean_md_input(name)
         self.type = 'sp'
+        self._is_bs = False
         self.scanplan = _clean_md_input(scanplan_type)
         self.sp_params = scanplan_params # sc_parms is a dictionary
-        
+        if args:
+            self._bs_plan = args # priviate attribute
+            self._is_bs = True
         self._plan_validator()
-        
+
         self.shutter = shutter
         self.md = {}
         self.md.update({'sp_name': _clean_md_input(self.name)})
         self.md.update({'sp_type': _clean_md_input(self.scanplan)})
         self.md.update({'sp_usermd':_clean_md_input(kwargs)})
-        if self.shutter: 
+        if self.shutter:
             self.md.update({'sp_shutter_control':'in-scan'})
         else:
             self.md.update({'sp_shutter_control':'external'})
-        
+
         if not dk_window:
             dk_window = glbl.dk_window
         self.md.update({'sp_dk_window': dk_window})
@@ -341,6 +348,9 @@ class ScanPlan(XPD):
         if verify_write:
             subs.append('verify_write')
         if len(subs) > 0:
+            print('type of scanplan params = {}'.
+                    format(type(scanplan_params)))
+            print ('scanplan_params = {}'.format(scanplan_params))
             scanplan_params.update({'subs':_clean_md_input(subs)}) 
         self.md.update({'sp_params': _clean_md_input(scanplan_params)})
         fname = self._name_for_obj_yaml_file(self.name,self.type)
@@ -352,10 +362,10 @@ class ScanPlan(XPD):
         else:
             self.md.update({'sp_uid': self._getuid()})
         self._yamify()
-    
+
     def _plan_validator(self):
         ''' Validator for ScanPlan object
-        
+
         It validates if required scan parameters for certain scan type are properly defined in object
 
         Parameters
@@ -368,13 +378,10 @@ class ScanPlan(XPD):
         _Tramp_optional_params = ['det', 'subs_dict']
 
         _ct_required_params = ['exposure']
-        _ct_optional_params = ['det','subs_dict'] 
-        # leave optional parameter list here, in case we need to use them in the future
-        
-        
-        # params in tseries is not completely finalized
+        _ct_optional_params = ['det','subs_dict']
+
         _tseries_required_params = ['exposure', 'delay', 'num']
-        
+
         if self.scanplan == 'ct':
             for el in _ct_required_params:
                 try:
@@ -392,7 +399,7 @@ class ScanPlan(XPD):
                    print('It seems you are using a temperature ramp scan but the scan_params dictionary does not contain {} which is needed.'.format(el))
                    print('Please use uparrow to edit and retry making your ScanPlan object')
                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
-        
+
         elif self.scanplan == 'tseries':
            for el in _tseries_required_params:
                try:
@@ -401,6 +408,11 @@ class ScanPlan(XPD):
                    print('It seems you are using a tseries scan but the scan_params dictionary does not contain {} which is needed.'.format(el))
                    print('Please use uparrow to edit and retry making your ScanPlan object')
                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+
+        elif self.scanplan == 'bluesky':
+                print('''You are handing a "bluesky" type scan. Please go to
+                https://nsls-ii.github.io/bluesky/plans.html to have full
+                information''')
         else:
             print('It seems you are defining an unknown scan')
             print('Please use uparrow to edit and retry making your ScanPlan object')
@@ -436,12 +448,15 @@ class Scan(XPD):
     def __init__(self,sample, scanplan):
         self.type = 'sc'
         _sa = self._execute_obj_validator(sample, 'sa', Sample)
-        _sp = self._execute_obj_validator(scanplan, 'sp', ScanPlan)  
         self.sa = _sa 
-        self.sp = _sp 
+        self.md = dict(self.sa.md)
+        if not scanplan._is_bs:
+            _sp = self._execute_obj_validator(scanplan, 'sp', ScanPlan)
+        else:
+            _sp = scanplan
+        self.sp = _sp
         # create a new dict copy.
-        self.md = dict(self.sp.md)
-        self.md.update(self.sa.md)
+        self.md.update(self.sp.md)
     
     def _execute_obj_validator(self, input_obj, expect_yml_type, expect_class):
         parsed_obj = self._object_parser(input_obj, expect_yml_type)

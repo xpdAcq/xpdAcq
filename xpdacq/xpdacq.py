@@ -132,6 +132,10 @@ def _unpack_and_run(scan, dryrun, **kwargs):
         collect_time_series(scan, parms['exposure'], parms['delay'], parms['num'], area_det, subs, dryrun)
     elif scan.md['sp_type'] == 'Tramp':
         collect_Temp_series(scan, parms['startingT'], parms['endingT'], parms['Tstep'], parms['exposure'], area_det, subs, dryrun)
+    elif scan.md['sp_type'] == 'bluesky':
+        plan = scan._bs_plan
+        md_dict = dict(scan.md)
+        xpdRE(plan, **md_dict)
     else:
         print('unrecognized scan type.  Please rerun with a different scan object')
         return
@@ -156,7 +160,7 @@ def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun
     dryrun : bool
         optional. Default is False. If option is set to True, scan won't be executed but corresponding metadata as if executing real scans will be printed
     '''
-    if auto_dark:
+    if auto_dark and not scan.sp._is_bs:
         auto_dark_md_dict = _auto_dark_collection(scan)
         scan.md.update(auto_dark_md_dict)
     if auto_calibration:
