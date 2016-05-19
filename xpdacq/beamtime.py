@@ -315,16 +315,16 @@ class ScanPlan(XPD):
         It introduces a significant overhead so mostly used for testing.
     '''
 
-    def __init__(self,name, scanplan_type, scanplan_params = {},
-            dk_window = None, shutter=True, livetable=True,
-            verify_write=False, *args, **kwargs):
+    def __init__(self,name, scanplan_type, *, bsky_plan = None,
+            scanplan_params = {}, dk_window = None, shutter=True,
+            livetable=True, verify_write=False, **kwargs):
         self.name = _clean_md_input(name)
         self.type = 'sp'
         self._is_bs = False
         self.scanplan = _clean_md_input(scanplan_type)
         self.sp_params = scanplan_params # sc_parms is a dictionary
-        if args:
-            self._bs_plan = args # priviate attribute
+        if bsky_plan:
+            self._bs_plan = bsky_plan # priviate attribute
             self._is_bs = True
         self._plan_validator()
 
@@ -351,7 +351,7 @@ class ScanPlan(XPD):
             print('type of scanplan params = {}'.
                     format(type(scanplan_params)))
             print ('scanplan_params = {}'.format(scanplan_params))
-            scanplan_params.update({'subs':_clean_md_input(subs)}) 
+            scanplan_params.update({'subs':_clean_md_input(subs)})
         self.md.update({'sp_params': _clean_md_input(scanplan_params)})
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
@@ -429,7 +429,7 @@ class _Union(XPD):
 
 class Scan(XPD):
     ''' a scan class that is the joint unit of Sample and ScanPlan objects
-    
+
     Scan class supports following ways of assigning Sample, ScanPlan objects:
     1) bt.get(<object_index>), eg. Scan(bt.get(2), bt.get(5))
     2) name of acquire object, eg. Scan('my_experiment', 'ct1s')
@@ -440,7 +440,7 @@ class Scan(XPD):
     -----------
     sample: xpdacq.beamtime.Sample
         instance of Sample class that holds sample related metadata
-    
+
     scanplan: xpdacq.beamtime.ScanPlan
         instance of ScanPlan calss that hold scanplan related metadata
 
@@ -448,21 +448,22 @@ class Scan(XPD):
     def __init__(self,sample, scanplan):
         self.type = 'sc'
         _sa = self._execute_obj_validator(sample, 'sa', Sample)
-        self.sa = _sa 
+        self.sa = _sa
         self.md = dict(self.sa.md)
-        if not scanplan._is_bs:
-            _sp = self._execute_obj_validator(scanplan, 'sp', ScanPlan)
-        else:
-            _sp = scanplan
+        _sp = self._execute_obj_validator(scanplan, 'sp', ScanPlan)
         self.sp = _sp
+        try:
+            sp_md = self.sp.md
+        except:
+            sp_md = {}
         # create a new dict copy.
-        self.md.update(self.sp.md)
-    
+        self.md.update(sp_md)
+
     def _execute_obj_validator(self, input_obj, expect_yml_type, expect_class):
         parsed_obj = self._object_parser(input_obj, expect_yml_type)
         output_obj = self._acq_object_validator(parsed_obj, expect_class)
         return output_obj
-    
+
     def _object_parser(self, input_obj, expect_yml_type):
         '''a priviate parser for arbitrary object input
         '''
