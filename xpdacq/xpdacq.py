@@ -215,6 +215,14 @@ def _auto_load_calibration_file():
     config_md_dict = {'sc_calibration_parameters':config_dict, 'sc_calibration_file_name': os.path.basename(config_in_use), 'sc_calibration_file_timestamp':config_time}
     return config_md_dict
 
+def _subs_dict_gen(livetable, verify_write):
+    subs = {}
+    if livetable:
+        subs.update({'all':LiveTable([area_det, temp_controller])})
+    if verify_write:
+        subs.update({'stop':verify_files_saved})
+    return subs
+
 def prun(sample, scanplan, auto_dark = None, livetable = True,
         verify_write = False, **kwargs):
     ''' on this sample run this scanplan
@@ -228,22 +236,29 @@ def prun(sample, scanplan, auto_dark = None, livetable = True,
         object carries metadata of ScanPlan object
 
     auto_dark : bool
-        option of automated dark collection. Default is True to allow collect dark automatically during scans
+        option of automated dark collection. Default is True to allow collect
+        dark automatically during scans
+
+    livetable : bool
+        optional. option to turn on/off LiveTable subscribes on this scan.
+        default is True
+
+    verify_write : bool
+        optional. option to turn on/off verify_files_saved subscribe on this
+        scan. This functionality will introduce ~2s delay each scan. default
+        is False
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_isprun':True})
     if auto_dark == None:
         auto_dark = glbl.auto_dark
-    subs = {}
-    if livetable:
-        subs.update({'all':LiveTable([area_det, temp_controller])})
-    if verify_write:
-        subs.update({'stop':verify_files_saved})
+    subs = _subs_dict_gen(livetable, verify_write)
     _execute_scans(scan, auto_dark, subs, auto_calibration = True, light_frame = True, dryrun = False)
     return
 
-def calibration(sample, scanplan, auto_dark = None, **kwargs):
+def calibration(sample, scanplan, auto_dark = None, livetable = True,
+        verify_write = False, **kwargs):
     ''' on this calibration sample (calibrant) run this scanplan
 
     Parameters
@@ -256,6 +271,15 @@ def calibration(sample, scanplan, auto_dark = None, **kwargs):
 
     auto_dark : bool
         option of automated dark collection. Default is True to allow collect dark automatically during scans
+
+    livetable : bool
+        optional. option to turn on/off LiveTable subscribes on this scan.
+        default is True
+
+    verify_write : bool
+        optional. option to turn on/off verify_files_saved subscribe on this
+        scan. This functionality will introduce ~2s delay each scan. default
+        is False
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
@@ -263,11 +287,13 @@ def calibration(sample, scanplan, auto_dark = None, **kwargs):
     # only auto_dark is exposed to user
     if auto_dark == None:
         auto_dark = glbl.auto_dark
-    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
+    subs = _subs_dict_gen(livetable, verify_write)
+    _execute_scans(scan, auto_dark, subs, auto_calibration = False, light_frame = True, dryrun = False)
     return
 
-def background(sample, scanplan, auto_dark = None, **kwargs):
-    ''' on this sample (kepton tube) run this scanplan
+def background(sample, scanplan, auto_dark = None, livetable = True,
+        verify_write = False, **kwargs):
+    ''' on this sample (kepton tube or other background) run this scanplan
 
     Parameters
     ----------
@@ -279,6 +305,15 @@ def background(sample, scanplan, auto_dark = None, **kwargs):
 
     auto_dark : bool
         option of automated dark collection. Default is True to allow collect dark automatically during scans
+
+    livetable : bool
+        optional. option to turn on/off LiveTable subscribes on this scan.
+        default is True
+
+    verify_write : bool
+        optional. option to turn on/off verify_files_saved subscribe on this
+        scan. This functionality will introduce ~2s delay each scan. default
+        is False
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
@@ -286,10 +321,12 @@ def background(sample, scanplan, auto_dark = None, **kwargs):
     # only auto_dark is exposed to user
     if auto_dark == None:
         auto_dark = glbl.auto_dark
-    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
+    subs = _subs_dict_gen(livetable, verify_write)
+    _execute_scans(scan, auto_dark, subs, auto_calibration = False, light_frame = True, dryrun = False)
     return
 
-def setupscan(sample, scanplan, auto_dark = None, **kwargs):
+def setupscan(sample, scanplan, auto_dark = None, livetable = True,
+        verify_write = False, **kwargs):
     ''' on this sample run this scanplan as a setupscan
 
     Parameters
@@ -302,6 +339,16 @@ def setupscan(sample, scanplan, auto_dark = None, **kwargs):
 
     auto_dark : bool
         option of automated dark collection. Default is True to allow collect dark automatically during scans
+
+    livetable : bool
+        optional. option to turn on/off LiveTable subscribes on this scan.
+        default is True
+
+    verify_write : bool
+        optional. option to turn on/off verify_files_saved subscribe on this
+        scan. This functionality will introduce ~2s delay each scan. default
+        is False
+
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
@@ -309,10 +356,11 @@ def setupscan(sample, scanplan, auto_dark = None, **kwargs):
     # only auto_dark is exposed to user
     if auto_dark == None:
         auto_dark = glbl.auto_dark
-    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
+    subs = _subs_dict_gen(livetable, verify_write)
+    _execute_scans(scan, auto_dark, subs, auto_calibration = False, light_frame = True, dryrun = False)
     return
 
-def dark(sample, scanplan, subs, **kwargs):
+def dark(sample, scanplan, subs = {}, **kwargs):
     '''on this sample, collect dark images
 
     Parameters
@@ -358,7 +406,8 @@ def dryrun(sample, scanplan, **kwargs):
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
-    _execute_scans(scan, auto_dark = False, auto_calibration = False, light_frame = False, dryrun = True)
+    subs = {} # dryrun doesn't call RE at all
+    _execute_scans(scan, False, subs, auto_calibration = False, light_frame = False, dryrun = True)
     return
 
 def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}, dryrun = False):
