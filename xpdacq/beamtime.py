@@ -235,7 +235,7 @@ class Sample(XPD):
 
 class ScanPlan(XPD):
     '''ScanPlan object that defines scans to run.  To run them: prun(Sample,ScanPlan)
-    
+
     Arguments:
     scanname - string - scan name.  Important as new scans will overwrite older
            scans with the same name.
@@ -244,7 +244,7 @@ class ScanPlan(XPD):
            and Tramp=Temperature ramp.
     scan_params - dictionary - contains all scan parameters that will be passed
            and used at run-time.  Don't make typos in the dictionary keywords
-           or your scans won't work.  The list of allowed keywords is in the 
+           or your scans won't work.  The list of allowed keywords is in the
            documentation, but 'exposure' sets exposure time and is all that is needed
            for a simple count. 'num' and 'delay' are the number of images and the
            delay time between exposures in a tseries. In Tramps as well as 'exposure' 
@@ -252,12 +252,10 @@ class ScanPlan(XPD):
     shutter - bool - default=True.  If True, in-hutch fast shutter will be opened before a scan and
                 closed afterwards.  Otherwise control of the shutter is left external. Set to False
                 if you want to control the shutter by hand.
-    livetable - bool - default=True. gives LiveTable output when True, not otherwise
-    verify_write - bool - default=False.  This verifies that tiff files have been written
-                   for each event.  It introduces a significant overhead so mostly used for
-                   testing.
     '''
-    def __init__(self, name, scanplan_type = '', scanplan_params = {}, dk_window = None, shutter=True, livetable=True, verify_write=False, **kwargs):
+    def __init__(self, name, scanplan_type = '', scanplan_params = {},
+            dk_window = None, shutter=True, **kwargs):
+
         _ct_required_params = ['exposure']
         _tseries_required_params = ['exposure', 'delay', 'num']
         _Tramp_required_params = ['exposure', 'startingT', 'endingT', 'Tstep']
@@ -267,17 +265,18 @@ class ScanPlan(XPD):
         _ordered_sp_params.extend(_Tramp_required_params)
         _sp_params_list = list(OrderedDict.fromkeys(_ordered_sp_params))
         _sp_name = name.strip()
-        _control_params = '' # str represents control options. Only recored non-default ones
+        _control_params = '' # str represents control options.
         if not scanplan_type or not scanplan_params:
             (scanplan_type, scanplan_params) = self._scanplan_name_parser(_sp_name)
         self.type = 'sp'
         self.scanplan = _clean_md_input(scanplan_type)
         self.sp_params = scanplan_params # sp_parms is a dictionary
         self._plan_validator()
-        
+
         self.shutter = shutter
         self.md = {}
-        
+
+        self.md.update({'sp_params': scanplan_params})
         self.md.update({'sp_type': _clean_md_input(self.scanplan)})
         self.md.update({'sp_usermd':_clean_md_input(kwargs)})
         if self.shutter:
@@ -285,23 +284,11 @@ class ScanPlan(XPD):
         else:
             self.md.update({'sp_shutter_control':'external'})
             _control_params += 'nS' # only wirte down non-default behavior
-        
+
         if not dk_window:
             dk_window = glbl.dk_window
         self.md.update({'sp_dk_window': dk_window})
 
-        subs=[]
-        if livetable:
-            subs.append('livetable')
-        else:
-            _control_params += 'nLT' # only wirte down non-default behavior
-        if verify_write:
-            subs.append('verify_write')
-            _control_params += 'vw' # only wirte down non-default behavior
-        if len(subs) > 0:
-            scanplan_params.update({'subs':_clean_md_input(subs)}) 
-        self.md.update({'sp_params': _clean_md_input(scanplan_params)})
-        
         # scanplan name should include options in sub_dict, generate it at the last moment
         if _control_params:
             sp_name = '_'.join([_sp_name, _control_params])
@@ -319,7 +306,7 @@ class ScanPlan(XPD):
             except KeyError:
                 # all errors should be handled before this step
                 pass
-        print('with fast-shutter control = {} and subscribing dictionary = {}'.format(self.shutter, subs))
+        print('with fast-shutter control = {}'.format(self.shutter))
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
         # get objlist from yaml file
@@ -330,18 +317,14 @@ class ScanPlan(XPD):
             self.md.update({'sp_uid': self._getuid()})
         self._yamify()
 
-    def _print_sp_params(self, scanplan_type, sp_params):
-        ''' extra efforts to maintain print order '''
-        
-        
     def _scanplan_name_parser(self, sp_name):
         ''' function to parse name of ScanPlan object into parameters fed into ScanPlan
-        
+
         expected format for each type is following:
         1) 'ct_10' means Count scan with 10s exposure time in total
         2) 'Tramp_10_300_200_5' means temperature ramp from 300k to 200k with 5k step and 10s exposure time each
         3) 'tseries_10_60_5' means time series scan of 10s exposure time each scan 
-            and run for 5 scans with 60s delay between them. 
+            and run for 5 scans with 60s delay between them.
         '''
         _ct_required_params = ['exposure']
         _tseries_required_params = ['exposure', 'delay', 'num']
@@ -371,7 +354,7 @@ class ScanPlan(XPD):
             sp_params.update({'startingT': _sp_params[1], 'endingT': _sp_params[2], 'Tstep': _sp_params[3]})
             return (scanplan_type, sp_params)
         elif scanplan_type == 'tseries' and len(_sp_params) == 3: # exposure, delay, num
-            sp_params.update({'delay': _sp_params[1], 'num': _sp_params[2]})
+            sp_params.update({'delay': _sp_params[1], 'num': int(_sp_params[2])})
             return (scanplan_type, sp_params)
         else:
             sys.exit(_graceful_exit('''I can't parse your scanplan name {} into corresponding parameters.
@@ -382,7 +365,7 @@ class ScanPlan(XPD):
 
     def _plan_validator(self):
         ''' Validator for ScanPlan object
-        
+
         It validates if required scan parameters for certain scan type are properly defined in object
 
         Parameters
