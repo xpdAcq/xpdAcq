@@ -315,16 +315,14 @@ class ScanPlan(XPD):
         It introduces a significant overhead so mostly used for testing.
     '''
 
-    def __init__(self,name, scanplan_type, *, bsky_plan = None,
+    def __init__(self,name, scanplan_type,
             scanplan_params = {}, dk_window = None, shutter=True,
             livetable=True, verify_write=False, **kwargs):
         self.name = _clean_md_input(name)
         self.type = 'sp'
-        self._is_bs = False
         self.scanplan = _clean_md_input(scanplan_type)
         self.sp_params = scanplan_params # sc_parms is a dictionary
-        if bsky_plan:
-            self._bs_plan = bsky_plan # priviate attribute
+        if 'bluesky_plan' in self.sp_params:
             self._is_bs = True
         self._plan_validator()
 
@@ -348,8 +346,6 @@ class ScanPlan(XPD):
         if verify_write:
             subs.append('verify_write')
         if len(subs) > 0:
-            print('type of scanplan params = {}'.
-                    format(type(scanplan_params)))
             print ('scanplan_params = {}'.format(scanplan_params))
             scanplan_params.update({'subs':_clean_md_input(subs)})
         self.md.update({'sp_params': _clean_md_input(scanplan_params)})
@@ -410,9 +406,10 @@ class ScanPlan(XPD):
                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
         elif self.scanplan == 'bluesky':
-                print('''You are handing a "bluesky" type scan. Please go to
-                https://nsls-ii.github.io/bluesky/plans.html to have full
-                information''')
+            print('''INFO: You are handing a "bluesky" type scan.
+Please go to https://nsls-ii.github.io/bluesky/plans.html
+for complete guideon on how to define a plan.''')
+            print('INFO: This ScanPlan does not support auto-dark subtraction')
         else:
             print('It seems you are defining an unknown scan')
             print('Please use uparrow to edit and retry making your ScanPlan object')

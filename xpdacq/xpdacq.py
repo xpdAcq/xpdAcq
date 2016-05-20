@@ -133,7 +133,7 @@ def _unpack_and_run(scan, dryrun, **kwargs):
     elif scan.md['sp_type'] == 'Tramp':
         collect_Temp_series(scan, parms['startingT'], parms['endingT'], parms['Tstep'], parms['exposure'], area_det, subs, dryrun)
     elif scan.md['sp_type'] == 'bluesky':
-        plan = scan.sp._bs_plan
+        plan =  parms['bluesky_plan']
         md_dict = dict(scan.md)
         xpdRE(plan, **md_dict)
     else:
