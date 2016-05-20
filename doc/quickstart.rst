@@ -65,10 +65,10 @@ The basic way to collect data is to carry out a "scan", by typing the kind of sc
      equivalent:'''
 
      prun(bt.get(2), bt.get(5))  
-     prun('l-user', bt.get(5))
-     prun(bt.get(2), 'ct1s')
+     prun('l-user', bt.get(5))  # where 'l-user' is the name of bt Sample object at index 2
+     prun(bt.get(2), 'ct_1')    # where 'ct_1' is the name of bt ScanPlan object at index 5
      prun(2,5)
-     prun('l-user','ct1s')
+     prun('l-user','ct_1')
 
 
  3. to see the data you have to extract it from the NSLS-ii database.
@@ -87,7 +87,7 @@ Remember!
    2. ``setupscan(<index-of-Sample-object>,<index-of-ScanPlan-object>)``  to run setup scans until you are ready for production runs, then
    3. ``prun(<index-of-Sample-object>),<index-of-ScanPlan-object>)``
    4. ``save_tiff(db[list_of_scans])`` to get the data back as a tiff file
-   5. ``getxgui`` (xPDFsuite) to visualize it, integrate it to 1D and process to get a diffraction pattern or PDF.
+   5. ``xpdfsuite`` (xPDFsuite) to visualize it, integrate it to 1D and process to get a diffraction pattern or PDF.
 
 Next Steps
 ++++++++++
@@ -134,13 +134,14 @@ Types of Sample objects available:
     
 Here is a summary table:
 
-=========== =================================================================================================== =================================
-ScanPlan    Syntax                                                                                              Short Form
-=========== =================================================================================================== =================================
-``ct``      ``ScanPlan('ct17.5','ct',{'exposure':17.5})``                                                       ``ScanPlan('ct_17.5')``
+=========== =================================================================================================== ==================================
+Scan Type   Syntax                                                                                              Short Form
+=========== =================================================================================================== ==================================
+overview    ``ScanPlan('<name>','<scan-type>',{<dictionary-of-scan-attributes>})``                              ``ScanPlan('<name-in-std-form>')``
+``ct``      ``ScanPlan('ct_17.5','ct',{'exposure':17.5})``                                                      ``ScanPlan('ct_17.5')``
 ``tseries`` ``ScanPlan('tseries_1_59_50','tseries',{'num':50,'exposure':1,'delay':59})``                        ``ScanPlan('tseries_1_59_50')``
 ``Tramp``   ``ScanPlan('Tramp_1_200_500_5','Tramp',{'startingT':200, 'endingT':500, 'Tstep':5, 'exposure':1})`` ``ScanPlan('Tramp_1_200_500_5')``
-=========== =================================================================================================== =================================
+=========== =================================================================================================== ==================================
 
 Abort!
 ++++++
@@ -152,7 +153,8 @@ Abort!
         >>> CTL-C
         
   will interrupt your scan and allow you to choose whether to abort it, or restart it.  
-  * If you abort it the system is reset to where it was before the scan started.
+  
+  If you abort it the system is reset to where it was before the scan started.
 
 Experiment and sample objects:
   1. It is time well spent to set up all your experiment and sample objects accurately.
@@ -161,10 +163,10 @@ Experiment and sample objects:
 
   2. It is also possible to download xpdAcq `from here <https://github.com/xpdAcq/xpdAcq>`_ and run it on your own computer to set up the ``sample`` and ``scanplan`` objects you think you will need at the beamtime.
   So when you are at XPD you can concentrate on collecting data and not typing metadata.
-  Simulation at home is strongly recommended. See the full documentation for more details at here [FIXME doc needed]
+  Simulation at home is strongly recommended. See the full documentation for more details here [FIXME doc needed]
 
-User scripts:
-+++++++++++++
+User scripts
+++++++++++++
 
   Your ``scanplan`` objects can be sequenced into scripts, executing one after the other as you desire.  To set this up, write a sequence of commands into a text file, save it with the extension ``.py`` in the ``userScripts`` directory with a memorable name, like ``myNightShiftScript.py``.  Double and triple check your script, then when you are ready to execute it, in ``ipython`` session type:
 
@@ -172,57 +174,115 @@ User scripts:
 
     %run -i ~/xpdUser/userScripts/myNightShiftScript.py
 
-  Stay there for a while to make sure everything is running as expected and go to bed!
+  Stay there for a while to make sure everything is running as expected and then go to bed!
 
 There is much more to the ``xpdAcq`` software that will give you superpowers in rapid and flexible data collection, data retrieval and processing.
-This was just the quick start, but much more information is in the full documentation at **XPD user** section
+This was just the quick start, but much more information is in the full documentation in the **XPD user** section of the documentation
 
-Code Sample
-+++++++++++
+Code Samples
+++++++++++++
 
 Here is a sample code covering the entire process from defining ``Experiment``,
-``Sample`` and ``ScanPlan`` objects to running ``ScanPlans`` with different kinds of ``run``.
-Please replace the name and parameters in each function depending your need.
+``Sample`` and ``ScanPlan`` objects to running ``ScanPlans`` with different kinds of run.
+Please replace the name and parameters in each function depending your needs.  To
+understand the logic in greater detail see the full user documentation.
 
-**Tip**: copy-and-paste is *always* your good friend
+**Pro Tip**: copy-and-paste is your good friend
 
 .. code-block:: python
 
-
-  # bt list method to see objects we have
+  # bt list method to see all objects we have available for data collection
   bt.list()
+  
+  # bt list of all the Sample objects but no other object types
+  bt.list('sa')
+  
+  # bt list of all the ScanPlan objects but no other object types
+  bt.list('sp')
 
-  # define acquire objects
-  ex = Experiment('xpdAcq_test', bt)
-  sa = Sample('xpdAcq_test_Sample', ex)
+  # define addtional acquire objects
+  Experiment('myExperiment', 
+             bt, 
+             {'<mynewkeys>':'<mynewvalues>',
+              'examples':'follow',
+              'students':['sbanerjee','mterban'],
+              'collaborators':['Sample Maker','Sam Student']
+             }
+            )  
+  bt.list()    # returns 'myExperiment' object at position (index) 11 in the list 
+  Sample('myLazySample', bt.get(11))    # it will inherit all metadata in the bt and 'myExperiment' objects but we were lazy, we didn't save any sample info!
+
+  # here is a more useful sample description.  Ideally, make these at home before you come, 
+  # then export them as yaml files ('export_user_metadata' [FIXME]), bring them to the beamtime on a flash drive
+  # then import them when your experiment is set up ('import')
+  Sample('NaCl_0.1', 
+         bt.get(11),
+         {'phases':[{'composition':'NaCl',
+                     'mass_fraction':0.1,
+                     'cif':'NACL.cif',
+                     'ICSD-ID':'2439d-13'
+                     'form':'powder'
+                    },
+                    {'composition':'CaCO4.H2O',
+                     'mass_fraction':0.9,
+                     'cif':'hydratedCalciumCarbonate.cif',
+                     'form':'nanopowder'
+                    }
+                   ],
+          'holder':{'shape':'capillary','ID':'1 mm','madeOf':'kapton'},
+          'notes':['looked kinda green','dropped on the floor during loading'],
+          '<anythingElseIwant>':'<description>',
+          '<andSoOn>':'<etc>'
+         }  # this one will be much more useful later!
+
+.. code-block:: python
 
   # define "ct" scanplan with exp = 0.5
-  ct = ScanPlan('xpdAcq_test_ct','ct',{'exposure':0.5})
+  ScanPlan('ct_0.5','ct',{'exposure':0.5})
 
-  # define "TrampUp" scanplan with exp = 0.5, startingT = 300, endingT = 310, Tstep = 2
-  # define "TrampDown" scanplan with exp = 0.5, startingT = 310, endingT = 300, Tstep = 2
-  TrampUp = ScanPlan('xpdAcq_test_Tramp','Tramp',{'exposure':0.5, 'startingT': 300, 'endingT': 310, 'Tstep':2})
-  TrampDown = ScanPlan('xpdAcq_test_Tramp','Tramp',{'exposure':0.5, 'startingT': 310, 'endingT': 300, 'Tstep':2})
+  # define "Tramp" scanplan with exp = 0.5, startingT = 300, endingT = 310, Tstep = 2
+  # define "Tramp" scanplan with exp = 0.5, startingT = 310, endingT = 300, Tstep = 2
+  ScanPlan('Tramp_0.5_300_310_2','Tramp',{'exposure':0.5, 'startingT': 300, 'endingT': 310, 'Tstep':2})
+  ScanPlan('Tramp_0.5_310_300_2','Tramp',{'exposure':0.5, 'startingT': 310, 'endingT': 300, 'Tstep':2})
+  
+  # or use the short-form
+  ScanPlan('Tramp_0.5_300_310_2') # which builds the scan parameters from the name itself (but don't get them in the wrong order!)
 
-  # define "time series" scanplan with exp = 0.5, num=10, delay = 2
-  tseries = ScanPlan('xpdAcq_test_tseries', 'tseries', {'exposure':0.5, 'num':5, 'delay':2})
+  # define a "time series" scanplan with exp = 0.5, num=10, delay = 2
+  ScanPlan('tseries_0.5_2_5', 'tseries', {'exposure':0.5, 'num':5, 'delay':2})
+  # or
+  ScanPlan('tseries_0.5_2_5')
 
+  # do a dry-run to see what the program will do, and what metadata it will save
+  dryrun('NaCl_0.1', 'ct_0.5')
 
-  # Frist, let use dryrun with different ScanPlans to have a preview on scan metadata
-  dryrun(sa, ct)
-
-  # Then let's do calibration run and save the image in order to open it in calibration software
-  calibration(sa, ct)
+  # Then let's do a calibration run and save the image in order to open it in calibration software
+  calibration([FIXME])
   save_last_tiff()
 
   # Use setupscan to check image quality under current scan parameters
-  setupscan(sa, ct)
+  setupscan([FIXME])
   save_last_tiff()
 
   # Everything looks right. Let's do prun with different ScanPlans and save the tiffs
-  prun(sa, ct)
+  prun('NaCl_0.1','ct_0.5')
+  # or
+  bt.list() # returns the 'NaCl_0.1' sample object at position 17 and the 'ct_0.5' ScanPlan object at position 20
+  prun(17,20)
+  
+  # the data are saved into the NSLS-II database (don't worry) but we want to get the image so
+  # type:
   save_last_tiff() # save tiffs from last scan
-  prun(sa, TrampUp)
-  prun(sa, TrampDow)
-  prun(sa, tseries)
+  
+  # now we have everything set up, it is super-easy to sequence lots of interesting scans
+  # this does a series of different scans on the same sample
+  prun(17,21)   # or prun(17,'Tramp_0.5_300_310_5'), whichever you are more comfortable with.
+  prun(17,22)   # or prun('NaCl_0.1','Tramp_0.5_310_300_5'), or whatever
+  prun(17,23)
+  save_tiff(db[-3:]) # save tiffs from last three scans
+
+  # this does the same scan on a series of samples
+  prun(17,21)   # or prun('NaCl_0.1,'Tramp_0.5_300_310_5'), whichever you are more comfortable with.
+  prun(18,21)   # or prun('NaCl_0.2','Tramp_0.5_300_310_5'), or whatever,
+  prun(19,21)   # or prun('NaCl_0.3',21),
   save_tiff(db[-3:]) # save tiffs from last three scans
