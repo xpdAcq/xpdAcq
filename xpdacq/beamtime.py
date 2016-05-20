@@ -159,6 +159,25 @@ class XPD:
         self._yamify()
 
 class Beamtime(XPD):
+    ''' Class that holds basic information to current beamtime 
+    
+    Parameters
+    ----------
+    pi_last : str
+        last name of PI to this beamtime
+    
+    safn : str
+        SAF number to this beamtime
+    
+    wavelength : float
+        optional but it is strongly recommended to enter. x-ray wavelength to this beamtime, it will be used during data deduction
+    
+    experimenters : list
+        optional. a list of tuples that are made of (last_name, first_name, id) of each experimenter involved.
+    
+    **kwargs : dict
+        optional. a dictionary for user-supplied information.
+    ''' 
     def __init__(self, pi_last, safn, wavelength=None, experimenters=[], **kwargs):
         self.name = 'bt'
         self.type = 'bt'
@@ -196,13 +215,26 @@ class Beamtime(XPD):
         self._yamify()
 
 class Experiment(XPD):
+    ''' class that holds experiment information 
+    
+    Parameters
+    ----------
+    expname : str
+        name to this experiment
+    
+    beamtime : xpdAcq.beamtime.Beamtime object
+        object to current beamtime
+    
+    **kwargs : dict
+        optional. a dictionary for user-supplied information.
+    ''' 
     def __init__(self, expname, beamtime, **kwargs):
         self.bt = beamtime
         self.name = _clean_md_input(expname)
         self.type = 'ex'
         self.md = self.bt.md
         self.md.update({'ex_name': self.name})
-#        self.md.update({'ex_uid': self._getuid()})
+        self.md.update({'ex_uid': self._getuid()})
         self.md.update({'ex_usermd':_clean_md_input(kwargs)})
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
@@ -215,13 +247,26 @@ class Experiment(XPD):
         self._yamify()
 
 class Sample(XPD):
+    ''' class that holds sample information 
+    
+    Parameters
+    ----------
+    samname : str
+        name to this sample
+    
+    experiment : xpdAcq.beamtime.Experiment object
+        object that contains information of experiment
+    
+    **kwargs : dict
+        optional. a dictionary for user-supplied information.
+    '''
     def __init__(self, samname, experiment, **kwargs):
         self.name = _clean_md_input(samname)
         self.type = 'sa'
         self.ex = experiment
         self.md = self.ex.md
         self.md.update({'sa_name': self.name})
-#        self.md.update({'sa_uid': self._getuid()})
+        self.md.update({'sa_uid': self._getuid()})
         self.md.update({'sa_usermd': _clean_md_input(kwargs)})
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
@@ -416,7 +461,7 @@ class ScanPlan(XPD):
             print('Please use uparrow to edit and retry making your ScanPlan object')
             sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
-class Union(XPD):
+class _Union(XPD):
     def __init__(self,sample,scan):
         self.type = 'cmdo'
         self.sc = scan
@@ -441,6 +486,7 @@ class Scan(XPD):
     
     scanplan: xpdacq.beamtime.ScanPlan
         instance of ScanPlan calss that hold scanplan related metadata
+
     '''
     def __init__(self,sample, scanplan):
         self.type = 'sc'

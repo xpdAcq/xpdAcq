@@ -26,7 +26,7 @@ import warnings
 from configparser import ConfigParser
 from xpdacq.utils import _graceful_exit, _RE_state_wrapper
 from xpdacq.glbl import glbl
-from xpdacq.beamtime import Union, ScanPlan, Scan
+from xpdacq.beamtime import ScanPlan, Scan
 from xpdacq.control import _close_shutter, _open_shutter
 
 print('Before you start, make sure the area detector IOC is in "Acquire mode"')
@@ -226,7 +226,6 @@ def _subs_dict_gen(livetable, verify_write):
 def prun(sample, scanplan, auto_dark = None, livetable = True,
         verify_write = False, **kwargs):
     ''' on this sample run this scanplan
-
     Parameters
     ----------
     sample : xpdAcq.beamtime.Sample object
@@ -261,6 +260,14 @@ def calibration(sample, scanplan, auto_dark = None, livetable = True,
         verify_write = False, **kwargs):
     ''' on this calibration sample (calibrant) run this scanplan
 
+    Sample, ScanPlan objects inside can be assigned in following way:
+    
+    1) bt.get(<object_index>), eg. calibration(bt.get(2), bt.get(5))
+    2) name of acquire object, eg. calibration('my_experiment', 'ct1s')
+    3) index to acquire object, eg. calibration(2,5)
+    
+    All of above assigning methods can be used in a mix way.
+    
     Parameters
     ----------
     sample : xpdAcq.beamtime.Sample object
@@ -294,7 +301,17 @@ def calibration(sample, scanplan, auto_dark = None, livetable = True,
 def background(sample, scanplan, auto_dark = None, livetable = True,
         verify_write = False, **kwargs):
     ''' on this sample (kepton tube or other background) run this scanplan
+        
+    This scan will be labeled as background in metadata.
 
+    Sample, ScanPlan objects inside can be assigned in following way:
+    
+    1) bt.get(<object_index>), eg. background(bt.get(2), bt.get(5))
+    2) name of acquire object, eg. background('my_experiment', 'ct1s')
+    3) index to acquire object, eg. background(2,5)
+    
+    All of above assigning methods can be used in a mix way.
+    
     Parameters
     ----------
     sample : xpdAcq.beamtime.Sample object
@@ -314,6 +331,9 @@ def background(sample, scanplan, auto_dark = None, livetable = True,
         optional. option to turn on/off verify_files_saved subscribe on this
         scan. This functionality will introduce ~2s delay each scan. default
         is False
+    
+    **kwargs : dict
+        dictionary that will be passed through to the run-engine metadata
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
@@ -328,7 +348,15 @@ def background(sample, scanplan, auto_dark = None, livetable = True,
 def setupscan(sample, scanplan, auto_dark = None, livetable = True,
         verify_write = False, **kwargs):
     ''' on this sample run this scanplan as a setupscan
-
+    
+    Sample, ScanPlan objects inside can be assigned in following way:
+    
+    1) bt.get(<object_index>), eg. setupscan(bt.get(2), bt.get(5))
+    2) name of acquire object, eg. setupscan('my_experiment', 'ct1s')
+    3) index to acquire object, eg. setupscan(2,5)
+    
+    All of above assigning methods can be used in a mix way.
+    
     Parameters
     ----------
     sample : xpdAcq.beamtime.Sample object
@@ -348,7 +376,9 @@ def setupscan(sample, scanplan, auto_dark = None, livetable = True,
         optional. option to turn on/off verify_files_saved subscribe on this
         scan. This functionality will introduce ~2s delay each scan. default
         is False
-
+    
+    **kwargs : dict
+        dictionary that will be passed through to the run-engine metadata
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
@@ -363,6 +393,15 @@ def setupscan(sample, scanplan, auto_dark = None, livetable = True,
 def dark(sample, scanplan, subs = {}, **kwargs):
     '''on this sample, collect dark images
 
+    Usually user don't have to collect if you enable automated dark subtraction. However user can specifically collect it if you wish to.
+    Sample, ScanPlan objects inside can be assigned in following way:
+    
+    1) bt.get(<object_index>), eg. dark(bt.get(2), bt.get(5))
+    2) name of acquire object, eg. dark('my_experiment', 'ct1s')
+    3) index to acquire object, eg. dark(2,5)
+    
+    All of above assigning methods can be used in a mix way.
+    
     Parameters
     ----------
     sample : xpdAcq.beamtime.Sample object
@@ -394,8 +433,18 @@ def dark(sample, scanplan, subs = {}, **kwargs):
     return dark_uid
 
 def dryrun(sample, scanplan, **kwargs):
-    ''' on this sample run this scanplan in dryrun mode (only metadata will be printed)
+    ''' on this sample run this scanplan in dryrun mode 
+    
+    with dryrun mode, only metadata will be printed. No real experimental apparatus will be triggered.
 
+    Sample, ScanPlan objects inside can be assigned in following way:
+    
+    1) bt.get(<object_index>), eg. dryrun(bt.get(2), bt.get(5))
+    2) name of acquire object, eg. dryrun('my_experiment', 'ct1s')
+    3) index to acquire object, eg. dryrun(2,5)
+    
+    All of above assigning methods can be used in a mix way.
+        
     Parameters
     ----------
     sample : xpdAcq.beamtime.Sample object
@@ -403,6 +452,9 @@ def dryrun(sample, scanplan, **kwargs):
 
     scanplan : xpdAcq.beamtime.ScanPlan object
         object carries metadata of ScanPlan object
+    
+    **kwargs : dict
+        dictionary that will be passed through to the run-engine metadata
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
@@ -411,22 +463,25 @@ def dryrun(sample, scanplan, **kwargs):
     return
 
 def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}, dryrun = False):
-    '''the main xpdAcq function for getting an exposure
+    '''the main xpdAcq function for getting an exposure with Count scan
 
     Parameters
     ----------
     scan : xpdacq.beamtime.Scan object
         an object carries all metadata of your experiment
+    
     exposure : float
-        optional. total exposure time in seconds
+        optional. total exposure time in seconds.
+    
     det : Ophyd object
         optional. the instance of the detector you are using. by default area_det defined when xpdacq is loaded.
+    
     subs_dict : dict
-        optional. dictionary specifies live feedback options during scans
+        optional. dictionary specifies live feedback options during scans.
+    
+    dryrun : bool
+        optional. option to specify if a real measurement will be running or not. Default is set to False.
 
-    Returns
-    -------
-      None
     '''
 
     # setting up detector
@@ -469,28 +524,33 @@ def _get_light_image_dryrun(md_dict):
 
 
 def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_det, subs_dict={}, dryrun = False):
-    '''the main xpdAcq function for getting an exposure
+    '''the xpdAcq function for getting an temperature scan
 
     Parameters
     ----------
     scan : xpdacq.beamtime.Scan object
         an object carries all metadata of your experiment
+
     Tstart : float
         starting point of temperature ramp
+
     Tstop : float
         ending point of temperature ramp
+
     Tstep : float
         requested step size of temperature ramp
+
     exposure : float
         optional. total exposure time in seconds
+
     det : Ophyd object
         optional. the instance of the detector you are using. by default area_det defined when xpdacq is loaded.
+    
     subs_dict : dict
         optional. dictionary specifies live feedback options during scans
-
-    Returns
-    -------
-    None
+    
+    dryrun : bool
+        optional. option to specify if a real measurement will be running or not. Default is set to False.
     '''
     area_det.number_of_sets.put(1)
     area_det.cam.acquire_time.put(glbl.frame_acq_time)
@@ -573,10 +633,9 @@ def collect_time_series(scan, exposure=1.0, delay=0., num=1, det= area_det, subs
 
     subs_dict : dict
         optional. dictionary specifies live feedback options during scans
-
-    Returns
-    -------
-    None
+    
+    dryrun : bool
+        optional. option to specify if a real measurement will be running or not. Default is set to False.
     '''
     # get a local copy of md to update
     md = dict(scan.md)
@@ -647,7 +706,8 @@ def _collect_time_series_dryrun(md_dict, real_delay, delay, num):
     print(md_dict)
     return md_dict
 
-def get_bluesky_run(mdo, plan, det = area_det, subs_dict={}, **kwargs):
+# FIXME - not finished yet
+def _get_bluesky_run(mdo, plan, det = area_det, subs_dict={}, **kwargs):
     '''An xpdAcq function for executing a custom (user defined) bluesky plan
 
     Arguments:
@@ -681,127 +741,6 @@ def get_bluesky_run(mdo, plan, det = area_det, subs_dict={}, **kwargs):
 
     xpdRE(plan,subs_dict,**md_dict)
 
-
-
-##########################################################
-#    Dry Run thingys
-######################################################
-def get_light_images_dryrun(mdo, exposure = 1.0, det= area_det, subs_dict={}, **kwargs):
-    '''the main xpdAcq function for getting an exposure
-
-    Arguments:
-      mdo - xpdacq.beamtime.Scan metadata object - generated by beamtime metadata setup sequence
-      area_det - bluesky detector object - the instance of the detector you are using.
-                   by default area_det defined when xpdacq is loaded
-      exposure - float - exposure time in seconds
-
-    Returns:
-      nothing
-    '''
-
-    # default setting for pe1c
-#    area_det = _get_obj('pe1c')
-#    area_det.number_of_sets.put(1)
-
-    exp = Xposure(mdo)
-#    acq_time = area_det.cam.acquire_time.get()
-    acq_time = 0.1
-
-    # compute number of frames and save metadata
-    num_frame = int(exposure/acq_time )
-    if num_frame == 0: num_frame = 1
-    computed_exposure = num_frame*acq_time
-    exp.md.update({'xp_requested_exposure':exposure,'xp_computed_exposure':computed_exposure})
-    exp.md.update({'xp_time_per_frame':acq_time,'xp_num_frames':num_frame})
-
-#    area_det.image_per_set.put(num_frame)
-    md_dict = exp.md
-    md_dict.update(kwargs)
-
-    print('this will execute a single bluesky Count type scan')
-    print('Sample: '+str(md_dict['sa_name']))
-    print('[FIXME] more sample info here')
-    print('using the "pe1c" detector (Perkin-Elmer in continuous acquisition mode)')
-    print('The requested exposure time = ',exposure,' -> computed exposure time:',computed_exposure)
-    print('in the form of '+str(num_frame)+' frames of '+str(acq_time)+' s summed into a single event')
-    print('(i.e. accessible as a single tiff file)')
-    print('')
-    print('The metadata saved with the scan will be:')
-    print(md_dict)
-
-def collect_time_series_dryrun(metadata_object, num, exposure=1.0, delay=0.,  **kwargs):
-    """Collect a time series
-
-    Any extra keywords are passed through to RE() as metadata
-
-    Parameters
-    ----------
-    metadata_object : XPD
-        Object to carry around the metadata
-    num : int
-        The number of points in the time series
-
-    delay : float
-        Time between starts of time points in [s].  If less than exposure, the
-        exposure time will be maintained and this time will be increased.
-
-    exposure : float, optional
-        Total integration time per data point in [s]
-    """
-    # get a local copy of md to update
-    md = dict(metadata_object.md)
-
-    # grab the area detector
-    #area_det = _get_obj('pe1c')
-
-    acq_time = area_det.cam.acquire_time.get()
-
-    # compute how many frames to collect
-    num_frame = max(int(exposure / acq_time), 1)
-    computed_exposure = num_frame * acq_time
-    num_sets = 1
-
-    est_writeout_ohead = 1.0
-    real_delay = max(0, delay - computed_exposure)
-    period = max(computed_exposure, real_delay + computed_exposure)
-    # set how many frames to average
-    area_det.image_per_set.put(num_frame)
-    area_det.number_of_sets.put(num_sets)
-    scan_length_s = period*num_sets
-    m, s = divmod(scan_length_s, 60)
-    h, m = divmod(m, 60)
-    scan_length = str("%d:%02d:%02d" % (h, m, s))
-    est_real_scan_length_s = (period+est_writeout_ohead)*num_sets
-    m, s = divmod(est_real_scan_length_s, 60)
-    h, m = divmod(m, 60)
-    est_real_scan_length = str("%d:%02d:%02d" % (h, m, s))
-
-    md.update({'requested_exposure': exposure,
-               'computed_exposure': computed_exposure,
-               'period': period})
-    md.update({'time_per_frame': acq_time,
-               'num_frames': num_frame,
-               'number_of_sets': num_sets})
-    md.update(kwargs)
-
-
-    print('this will execute a series of'+str(num)+' bluesky Count type scans')
-    print('Sample: '+md['sa_name'])
-    print('[FIXME] more sample info here')
-    print('using the "pe1c" detector (Perkin-Elmer in continuous acquisition mode)')
-    print('The requested exposure time = ',exposure,' -> computed exposure time:',computed_exposure)
-    print('in the form of '+str(num_frame)+' frames of '+str(acq_time)+' s summed into a single event')
-    print('(i.e. accessible as a single tiff file)')
-    print('')
-    print('There will be a delay of '+str(real_delay)+' (compared to the requested delay of '+str(delay)+') s')
-    print('This will result in a nominal period (neglecting readout overheads) of '+str(period)+' s')
-    print('Which results in a total scan time of '+str(scan_length))
-    print('Using an estimated write-out overhead of '+str(est_writeout_ohead)+' this gives and estimated total scan length of '+str(est_real_scan_length))
-    print('Real outcomes may vary!')
-    print('that will be summed into a single event (e.g. accessible as a single tiff file)')
-    print('')
-    print('The metadata saved with the scan will be:')
-    print(md_dict)
 ################# hold place ###########################
 '''
 def SPEC_Tseries_plan(detector, motor, start, stop, steps):
