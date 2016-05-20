@@ -166,7 +166,7 @@ def _execute_scans(scan, auto_dark, subs, auto_calibration,
         _close_shutter()
     return
 
-def _auto_dark_collection(scan, subs):
+def _auto_dark_collection(scan, subs={}):
     ''' function to cover automated dark collection logic '''
     light_cnt_time = scan.md['sp_params']['exposure']
     try:

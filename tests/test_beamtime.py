@@ -165,7 +165,7 @@ class NewExptTest(unittest.TestCase):
     def test_make_scanPlan(self):
         self.sp = ScanPlan('myScan','ct',{'exposure':1.0})
         self.assertIsInstance(self.sp,ScanPlan)
-        self.assertEqual(self.sp.md['sp_params'],{'exposure':1.0,'subs':['livetable']})
+        self.assertEqual(self.sp.md['sp_params'],{'exposure':1.0})
         uid1 = self.sp.md['sp_uid']
         newobjlist = _get_yaml_list()
         self.assertEqual(newobjlist,self.stbt_list+['sp_myScan.yml'])
@@ -246,17 +246,14 @@ class NewExptTest(unittest.TestCase):
         1) 'ct_10' means Count scan with 10s exposure time in total
         2) 'Tramp_10_300_200_5' means temperature ramp from 300k to 200k with 5k step and 10s exposure time each
         3) 'tseries_10_60_5' means time series scan of 10s exposure time each time 
-            and run for 5 times with 60s delay between them. 
+            and run for 5 times with 60s delay between them.
         '''
         self.assertRaises(SystemExit, lambda: ScanPlan('ct_5_25575_32767')) # extra argument
         self.assertRaises(SystemExit, lambda: ScanPlan('Tramp_5_300_200')) # incomplete arguments
         self.assertRaises(SystemExit, lambda: ScanPlan('Tramp_5_300_200_5_1111')) # extra argument
         self.assertRaises(SystemExit, lambda: ScanPlan('tseries_5_60')) # incomplete arguments
         self.assertRaises(SystemExit, lambda: ScanPlan('tseries_5_60_10_1111')) # extra argument
-        # naming after not using default option on sub_dict
-        sp = ScanPlan('ct_5', shutter=False, livetable=False, verify_write=True)
-        self.assertEqual(sp.name, 'ct_5_nSnLTvw')
-        sp = ScanPlan('ct_5', shutter=False, livetable=False)
-        self.assertEqual(sp.name, 'ct_5_nSnLT')
         sp = ScanPlan('ct_5', shutter=False)
         self.assertEqual(sp.name, 'ct_5_nS')
+        sp = ScanPlan('ct_5', shutter=True)
+        self.assertEqual(sp.name, 'ct_5')
