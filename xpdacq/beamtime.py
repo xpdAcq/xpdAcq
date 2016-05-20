@@ -322,6 +322,7 @@ class ScanPlan(XPD):
         self.type = 'sp'
         self.scanplan = _clean_md_input(scanplan_type)
         self.sp_params = scanplan_params # sc_parms is a dictionary
+        self._is_bs = False # priviate attribute
         if 'bluesky_plan' in self.sp_params:
             self._is_bs = True
         self._plan_validator()

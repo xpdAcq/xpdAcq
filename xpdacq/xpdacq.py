@@ -186,7 +186,7 @@ def _auto_dark_collection(scan):
                         This may indicate a problem with the current version of the code."
                         Current scan will keep going but please notify the instrument scientist who can post a bug report''')
         expire_time = 0
-    dark_field_uid = validate_dark(light_cnt_time, expire_time)
+    dark_field_uid = _validate_dark(light_cnt_time, expire_time)
     if not dark_field_uid:
         print('''INFO: auto_dark didn't detect a valid dark, so is collecting a new dark frame.
 See documentation at http://xpdacq.github.io for more information about controlling this behavior''')

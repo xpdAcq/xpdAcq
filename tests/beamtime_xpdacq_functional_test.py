@@ -2,7 +2,7 @@
 
 print('start beamtime ....')
 bt = _start_beamtime('123')
-    
+
 print('bt list method ....')
 bt.list()
 print('define acquire objects...')
