@@ -253,6 +253,10 @@ class NewExptTest(unittest.TestCase):
         self.assertRaises(SystemExit, lambda: ScanPlan('Tramp_5_300_200_5_1111')) # extra argument
         self.assertRaises(SystemExit, lambda: ScanPlan('tseries_5_60')) # incomplete arguments
         self.assertRaises(SystemExit, lambda: ScanPlan('tseries_5_60_10_1111')) # extra argument
+        # additional unit
+        self.assertRaises(SystemExit, lambda: ScanPlan('ct_5s'))
+        self.assertRaises(SystemExit, lambda: ScanPlan('Tramp_5s_300k_200_5'))
+        # test on optional argument
         sp = ScanPlan('ct_5', shutter=False)
         self.assertEqual(sp.name, 'ct_5_nS')
         sp = ScanPlan('ct_5', shutter=True)

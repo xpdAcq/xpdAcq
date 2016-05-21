@@ -319,7 +319,7 @@ class ScanPlan(XPD):
         _ct_required_params = ['exposure']
         _tseries_required_params = ['exposure', 'delay', 'num']
         _Tramp_required_params = ['exposure', 'startingT', 'endingT', 'Tstep']
-        # extra efforts to keep print order later
+        # extra efforts to keep print statement in order later
         _ordered_sp_params = _ct_required_params.copy()
         _ordered_sp_params.extend(_tseries_required_params)
         _ordered_sp_params.extend(_Tramp_required_params)
@@ -368,6 +368,7 @@ class ScanPlan(XPD):
                 print('{} = {}'.format(el, self.md['sp_params'][el]))
             except KeyError:
                 # all errors should be handled before this step
+                # except for bluesky plan
                 pass
         print('with fast-shutter control = {}'.format(self.shutter))
         fname = self._name_for_obj_yaml_file(self.name,self.type)
@@ -405,17 +406,16 @@ class ScanPlan(XPD):
             try:
                 _sp_params.append(float(parsed_object[i]))
             except ValueError:
-                print('''INFO: xpdAcq can not parse your positional
-                argument {}.
-                we use SI units across package. So "5s" or "10k" is not
-                necessary. For more information, please go to
-                http://xpdacq.github.io.'''.format(parsed_object[i]))
+                sys.exit(_graceful_exit('''xpdAcq can not parse your positional argument "{}".
+                We use SI units across package, so "5s" or "10k" is not necessary.
+                For more information, please go to
+                http://xpdacq.github.io.\n'''.format(parsed_object[i])))
                 return
         # assgin exposure as it is common parameter
         exposure = _sp_params[0]
         sp_params = {'exposure':exposure}
         if scanplan_type not in glbl._allowed_scanplan_type:
-            sys.exit(_graceful_exit('''INFO: {} is not a supported ScanPlan type under current version of xpdAcq.
+            sys.exit(_graceful_exit('''{} is not a supported ScanPlan type under current version of xpdAcq.
                                     Current supported type are {}.
                                     Please go to http://xpdacq.github.io for more information or request
                                     '''.format(scanplan_type, glbl._allowed_scanplan_type)))

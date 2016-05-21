@@ -155,7 +155,7 @@ def _execute_scans(scan, auto_dark, subs, auto_calibration,
     dryrun : bool
         optional. Default is False. If option is set to True, scan won't be executed but corresponding metadata as if executing real scans will be printed
     '''
-    if auto_dark and not scan.sp.is_bs:
+    if auto_dark and not scan.sp._is_bs:
         auto_dark_md_dict = _auto_dark_collection(scan, subs)
         scan.md.update(auto_dark_md_dict)
     if auto_calibration:
