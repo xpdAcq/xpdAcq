@@ -474,8 +474,8 @@ class ScanPlan(XPD):
 
         elif self.scanplan == 'bluesky':
             print('''INFO: You are handing a "bluesky" type scan.
-Please go to https://nsls-ii.github.io/bluesky/plans.html
-for complete guideon on how to define a plan.''')
+            Please go to https://nsls-ii.github.io/bluesky/plans.html
+            for complete guide on how to define a plan.''')
             print('INFO: This ScanPlan does not support auto-dark subtraction')
         else:
             print('It seems you are defining an unknown scan')
