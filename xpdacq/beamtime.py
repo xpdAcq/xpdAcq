@@ -25,6 +25,8 @@ import copy
 from xpdacq.glbl import glbl
 from xpdacq.utils import _graceful_exit
 
+from bluesky.plans import Plan
+
 home_dir = glbl.home
 yaml_dir = glbl.yaml_dir
 
@@ -279,28 +281,41 @@ class Sample(XPD):
         self._yamify()
 
 class ScanPlan(XPD):
-    '''ScanPlan object that defines scans to run.  To run them: prun(Sample,ScanPlan)
+    '''ScanPlan class  that defines scan plan to run.
 
-    Arguments:
-    scanname - string - scan name.  Important as new scans will overwrite older
-           scans with the same name.
-    scan_type - string - type of scan. allowed values are 'ct','tseries', 'Tramp' 
-           where  ct=count, tseries=time series (series of counts),
-           and Tramp=Temperature ramp.
-    scan_params - dictionary - contains all scan parameters that will be passed
-           and used at run-time.  Don't make typos in the dictionary keywords
-           or your scans won't work.  The list of allowed keywords is in the
-           documentation, but 'exposure' sets exposure time and is all that is needed
-           for a simple count. 'num' and 'delay' are the number of images and the
-           delay time between exposures in a tseries. In Tramps as well as 'exposure' 
-           the required keys are 'Tstart', 'Tstop', 'Tstep'.
-    shutter - bool - default=True.  If True, in-hutch fast shutter will be opened before a scan and
-                closed afterwards.  Otherwise control of the shutter is left external. Set to False
-                if you want to control the shutter by hand.
+    To run it ``prun(Sample,ScanPlan)``
+
+    Parameters
+    ----------
+    scanoplanname : str
+        scanplan name.  Important as new scanplans will overwrite older ones with the same name.
+
+    scan_type : str
+        type of scanplan. Currently allowed values are 'ct','tseries', 'Tramp' 
+        where  ct=count, tseries=time series (series of counts), and Tramp=Temperature ramp.
+
+    scan_params : dict
+        contains all scan parameters that will be passed and used at run-time
+        Don't make typos in the dictionary keywords or your scans won't work.
+        Entire list of allowed keywords is in the documentation on https://xpdacq.github.io/
+        Here is are examples of properly instatiated ScanPlan object:
+          * ct_sp = ('<ct name>', 'ct',  {'exposure': <exposure time in S>})
+          * tseries_sp = ('<tseries name>', 'tseries', {'exposure':'<exposure time in S>, 'num':<total count>, 'delay':<delay between count in S>})
+          * Tramp_sp = ('<Tramp name>', 'Tramp', {'exposure':'<exposure time in S>, 'sartingT':<in K>, 'endinT':<in K>, 'Tstep':<in K>})
+
+    shutter : bool
+        default is True. If True, in-hutch fast shutter will be opened before a scan and closed afterwards.
+        Otherwise control of the shutter is left external. Set to False if you want to control the shutter by hand.
+
+    livetable : bool
+        default is True. It gives LiveTable output when True, not otherwise
+
+    verify_write : bool
+        default is False. This verifies that tiff files have been written for each event.
+        It introduces a significant overhead so mostly used for testing.
     '''
     def __init__(self, name, scanplan_type = '', scanplan_params = {},
             dk_window = None, shutter=True, **kwargs):
-
         _ct_required_params = ['exposure']
         _tseries_required_params = ['exposure', 'delay', 'num']
         _Tramp_required_params = ['exposure', 'startingT', 'endingT', 'Tstep']
@@ -316,6 +331,9 @@ class ScanPlan(XPD):
         self.type = 'sp'
         self.scanplan = _clean_md_input(scanplan_type)
         self.sp_params = scanplan_params # sp_parms is a dictionary
+        self._is_bs = False # priviate attribute
+        if 'bluesky_plan' in self.sp_params:
+            self._is_bs = True
         self._plan_validator()
 
         self.shutter = shutter
@@ -423,13 +441,10 @@ class ScanPlan(XPD):
         _Tramp_optional_params = ['det', 'subs_dict']
 
         _ct_required_params = ['exposure']
-        _ct_optional_params = ['det','subs_dict'] 
-        # leave optional parameter list here, in case we need to use them in the future
-        
-        
-        # params in tseries is not completely finalized
+        _ct_optional_params = ['det','subs_dict']
+
         _tseries_required_params = ['exposure', 'delay', 'num']
-        
+
         if self.scanplan == 'ct':
             for el in _ct_required_params:
                 try:
@@ -447,7 +462,7 @@ class ScanPlan(XPD):
                    print('It seems you are using a temperature ramp scan but the scan_params dictionary does not contain {} which is needed.'.format(el))
                    print('Please use uparrow to edit and retry making your ScanPlan object')
                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
-        
+
         elif self.scanplan == 'tseries':
            for el in _tseries_required_params:
                try:
@@ -456,6 +471,12 @@ class ScanPlan(XPD):
                    print('It seems you are using a tseries scan but the scan_params dictionary does not contain {} which is needed.'.format(el))
                    print('Please use uparrow to edit and retry making your ScanPlan object')
                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+
+        elif self.scanplan == 'bluesky':
+            print('''INFO: You are handing a "bluesky" type scan.
+Please go to https://nsls-ii.github.io/bluesky/plans.html
+for complete guideon on how to define a plan.''')
+            print('INFO: This ScanPlan does not support auto-dark subtraction')
         else:
             print('It seems you are defining an unknown scan')
             print('Please use uparrow to edit and retry making your ScanPlan object')
@@ -472,7 +493,7 @@ class _Union(XPD):
 
 class Scan(XPD):
     ''' a scan class that is the joint unit of Sample and ScanPlan objects
-    
+
     Scan class supports following ways of assigning Sample, ScanPlan objects:
     1) bt.get(<object_index>), eg. Scan(bt.get(2), bt.get(5))
     2) name of acquire object, eg. Scan('my_experiment', 'ct1s')
@@ -483,7 +504,7 @@ class Scan(XPD):
     -----------
     sample: xpdacq.beamtime.Sample
         instance of Sample class that holds sample related metadata
-    
+
     scanplan: xpdacq.beamtime.ScanPlan
         instance of ScanPlan calss that hold scanplan related metadata
 
@@ -491,18 +512,22 @@ class Scan(XPD):
     def __init__(self,sample, scanplan):
         self.type = 'sc'
         _sa = self._execute_obj_validator(sample, 'sa', Sample)
-        _sp = self._execute_obj_validator(scanplan, 'sp', ScanPlan)  
-        self.sa = _sa 
-        self.sp = _sp 
+        self.sa = _sa
+        self.md = dict(self.sa.md)
+        _sp = self._execute_obj_validator(scanplan, 'sp', ScanPlan)
+        self.sp = _sp
+        try:
+            sp_md = self.sp.md
+        except:
+            sp_md = {}
         # create a new dict copy.
-        self.md = dict(self.sp.md)
-        self.md.update(self.sa.md)
-    
+        self.md.update(sp_md)
+
     def _execute_obj_validator(self, input_obj, expect_yml_type, expect_class):
         parsed_obj = self._object_parser(input_obj, expect_yml_type)
         output_obj = self._acq_object_validator(parsed_obj, expect_class)
         return output_obj
-    
+
     def _object_parser(self, input_obj, expect_yml_type):
         '''a priviate parser for arbitrary object input
         '''
