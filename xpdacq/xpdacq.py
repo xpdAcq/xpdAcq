@@ -132,6 +132,10 @@ def _unpack_and_run(scan, dryrun, **kwargs):
         collect_time_series(scan, parms['exposure'], parms['delay'], parms['num'], area_det, subs, dryrun)
     elif scan.md['sp_type'] == 'Tramp':
         collect_Temp_series(scan, parms['startingT'], parms['endingT'], parms['Tstep'], parms['exposure'], area_det, subs, dryrun)
+    elif scan.md['sp_type'] == 'bluesky':
+        plan =  parms['bluesky_plan']
+        md_dict = dict(scan.md)
+        xpdRE(plan, **md_dict)
     else:
         print('unrecognized scan type.  Please rerun with a different scan object')
         return
@@ -156,7 +160,7 @@ def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun
     dryrun : bool
         optional. Default is False. If option is set to True, scan won't be executed but corresponding metadata as if executing real scans will be printed
     '''
-    if auto_dark:
+    if auto_dark and not scan.sp._is_bs:
         auto_dark_md_dict = _auto_dark_collection(scan)
         scan.md.update(auto_dark_md_dict)
     if auto_calibration:
@@ -182,7 +186,7 @@ def _auto_dark_collection(scan):
                         This may indicate a problem with the current version of the code."
                         Current scan will keep going but please notify the instrument scientist who can post a bug report''')
         expire_time = 0
-    dark_field_uid = validate_dark(light_cnt_time, expire_time)
+    dark_field_uid = _validate_dark(light_cnt_time, expire_time)
     if not dark_field_uid:
         print('''INFO: auto_dark didn't detect a valid dark, so is collecting a new dark frame.
 See documentation at http://xpdacq.github.io for more information about controlling this behavior''')
@@ -222,13 +226,13 @@ def _auto_load_calibration_file():
 
 def prun(sample, scanplan, auto_dark = None, **kwargs):
     """ on this sample run this scanplan
-    
+
     Sample, ScanPlan objects inside can be assigned in following way:
-    
+
     1) bt.get(<object_index>), eg. prun(bt.get(2), bt.get(5))
     2) name of acquire object, eg. prun('my_experiment', 'ct1s')
     3) index to acquire object, eg. prun(2,5)
-    
+
     All of above assigning methods can be used in a mix way.
 
     This scan will be labeled as prun in metadata.
@@ -257,13 +261,13 @@ def calibration(sample, scanplan, auto_dark = None, **kwargs):
     """ on this calibration sample (calibrant) run this scanplan
 
     Sample, ScanPlan objects inside can be assigned in following way:
-    
+
     1) bt.get(<object_index>), eg. calibration(bt.get(2), bt.get(5))
     2) name of acquire object, eg. calibration('my_experiment', 'ct1s')
     3) index to acquire object, eg. calibration(2,5)
-    
+
     All of above assigning methods can be used in a mix way.
-    
+
     Parameters
     ----------
     sample : xpdAcq.beamtime.Sample object
@@ -286,17 +290,17 @@ def calibration(sample, scanplan, auto_dark = None, **kwargs):
 
 def background(sample, scanplan, auto_dark = None, **kwargs):
     ''' on this background (usually is kepton tube) run this scanplan
-        
+
     This scan will be labeled as background in metadata.
 
     Sample, ScanPlan objects inside can be assigned in following way:
-    
+
     1) bt.get(<object_index>), eg. background(bt.get(2), bt.get(5))
     2) name of acquire object, eg. background('my_experiment', 'ct1s')
     3) index to acquire object, eg. background(2,5)
-    
+
     All of above assigning methods can be used in a mix way.
-    
+
     Parameters
     ----------
     sample : xpdAcq.beamtime.Sample object

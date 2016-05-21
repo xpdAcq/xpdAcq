@@ -14,6 +14,9 @@ from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
 from xpdacq.xpdacq import prun, calibration, dark, dryrun, background, _auto_dark_collection, _auto_load_calibration_file
 from xpdacq.control import _open_shutter, _close_shutter
 
+from bluesky.plans import Count
+from bluesky.examples import det, motor
+
 class NewScanTest(unittest.TestCase):
     def setUp(self):
         self.base_dir = glbl.base
@@ -137,6 +140,33 @@ class NewScanTest(unittest.TestCase):
         self.assertFalse('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
         # is calibration loaded?
         self.assertTrue(cfg_f_name in glbl.xpdRE.call_args_list[-1][1]['sc_calibration_file_name'])
+        # is  ScanPlan.md remain unchanged after scan?
+        self.assertFalse('sc_isprun' in self.sp.md)
+
+    def test_prun_with_bleusky_plan(self):
+        cc = Count([det], 2)
+        self.sp = ScanPlan('unittest_bs','bluesky', {'bluesky_plan':cc},
+                shutter = False)
+        self.sc = Scan(self.sa, self.sp)
+        self.assertEqual(self.sc.sp, self.sp)
+        cfg_f_name = 'srxconfig.cfg'
+        cfg_src = os.path.join(os.path.dirname(__file__), cfg_f_name) # __file__ gives relative path
+        cfg_dst = os.path.join(glbl.config_base, cfg_f_name)
+        shutil.copy(cfg_src, cfg_dst)
+        prun(self.sa, self.sp)
+        # is xpdRE used?
+        self.assertTrue(glbl.xpdRE.called)
+        # is md updated?
+        self.assertFalse(glbl.xpdRE.call_args_list[-1][1] == self.sc.md)
+        # is prun passed eventually?
+        self.assertTrue('sc_isprun' in glbl.xpdRE.call_args_list[-1][1])
+        # is auto_dark executed? -> No as we don't support
+        self.assertFalse('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
+        # is calibration loaded?
+        self.assertTrue(cfg_f_name in glbl.xpdRE.call_args_list[-1][1]['sc_calibration_file_name'])
+        # is 'blusky_plan' appears in sp_params ?
+        self.assertTrue('bluesky_plan' in
+                glbl.xpdRE.call_args_list[-1][1]['sp_params'])
         # is  ScanPlan.md remain unchanged after scan?
         self.assertFalse('sc_isprun' in self.sp.md)
 
