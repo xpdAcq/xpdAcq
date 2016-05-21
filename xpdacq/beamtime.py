@@ -392,22 +392,30 @@ class ScanPlan(XPD):
         _ct_required_params = ['exposure']
         _tseries_required_params = ['exposure', 'delay', 'num']
         _Tramp_required_params = ['exposure', 'startingT', 'endingT', 'Tstep']
-       
+
         _ct_optional_params = ['det','subs_dict']
         _Tramp_optional_params = ['det', 'subs_dict']
         _tseries_optional_params = ['det', 'subs_dict']
-         
-        parsed_object = sp_name.split('_', maxsplit = 4+3) # 3 is error tolerance
+
+        parsed_object = sp_name.split('_') # it will split recursively
         scanplan_type = parsed_object[0]
         # turn parameters into floats
         _sp_params = []
         for i in range(1, len(parsed_object)):
-            _sp_params.append(float(parsed_object[i]))
-        # assgin exposure as it is common
+            try:
+                _sp_params.append(float(parsed_object[i]))
+            except ValueError:
+                print('''INFO: xpdAcq can not parse your positional
+                argument {}.
+                we use SI units across package. So "5s" or "10k" is not
+                necessary. For more information, please go to
+                http://xpdacq.github.io.'''.format(parsed_object[i]))
+                return
+        # assgin exposure as it is common parameter
         exposure = _sp_params[0]
         sp_params = {'exposure':exposure}
         if scanplan_type not in glbl._allowed_scanplan_type:
-            sys.exit(_graceful_exit('''{} is not a supported ScanPlan type under current version of xpdAcq.
+            sys.exit(_graceful_exit('''INFO: {} is not a supported ScanPlan type under current version of xpdAcq.
                                     Current supported type are {}.
                                     Please go to http://xpdacq.github.io for more information or request
                                     '''.format(scanplan_type, glbl._allowed_scanplan_type)))
@@ -419,8 +427,11 @@ class ScanPlan(XPD):
         elif scanplan_type == 'tseries' and len(_sp_params) == 3: # exposure, delay, num
             sp_params.update({'delay': _sp_params[1], 'num': int(_sp_params[2])})
             return (scanplan_type, sp_params)
+        elif scanplan_type == 'bluesky':
+            # leave a hook for future bluesky plan autonaming
+            pass
         else:
-            sys.exit(_graceful_exit('''I can't parse your scanplan name {} into corresponding parameters.
+            sys.exit(_graceful_exit('''xpdAcq can't parse your scanplan name {} into corresponding parameters.
                                     Please do ``ScanPlan?`` to find out currently supported conventions.
                                     or you can define your scanplan parameter dictionary explicitly.
                                     For more information, go to http://xpdacq.github.io
