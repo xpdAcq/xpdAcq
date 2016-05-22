@@ -388,8 +388,10 @@ class ScanPlan(XPD):
             sp_name = '_'.join([_sp_name, _control_params])
         else:
             sp_name = _sp_name
+
         self.name = sp_name
         self.md.update({'sp_name': _clean_md_input(self.name)})
+
         print('You have created a "{}" type ScanPlan with name = "{}"'.format(scanplan_type, sp_name))
         print('Corresponding scan parameters are:')
         # extra efforts to keep printing order
@@ -411,13 +413,15 @@ class ScanPlan(XPD):
         else:
             self.md.update({'sp_uid': self._getuid()})
         self._yamify()
-    
-    def _sp_param_to_name(self, sp_params):
-        # first confirm type
+
+    def _sp_param_auto_name(self, sp_type, sp_params, _sp_param_list):
+        # confirm type
         if not isinstance(sp_params, dict):
-            print('opps')
+            print("WARNING: scanplan parameter must be a dictionary like {'key':'value'}")
             return
         # loop through params
+        sp_name = [sp_type] # init
+
 
     def _scanplan_name_parser(self, sp_name):
         ''' function to parse name of ScanPlan object into parameters fed into ScanPlan
@@ -474,16 +478,11 @@ class ScanPlan(XPD):
                                     or you can define your scanplan parameter dictionary explicitly.
                                     For more information, go to http://xpdacq.github.io
                                     '''.format(sp_name)))
-
     def _plan_validator(self):
         ''' Validator for ScanPlan object
 
         It validates if required scan parameters for certain scan type are properly defined in object
 
-        Parameters
-        ----------
-            scan_type : str
-                scan tyoe of XPD Scan object
         '''
         # based on structures in xpdacq.xpdacq.py
         _Tramp_required_params = ['startingT', 'endingT', 'Tstep', 'exposure']
@@ -495,31 +494,56 @@ class ScanPlan(XPD):
         _tseries_required_params = ['exposure', 'delay', 'num']
 
         if self.scanplan == 'ct':
-            for el in _ct_required_params:
-                try:
-                    self.sp_params[el]
-                except KeyError:
-                    print('It seems you are using a Count scan but the scan_params dictionary does not contain "{}"which is needed.'.format(el))
-                    print('Please use uparrow to edit and retry making your ScanPlan object')
-                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
-
+            # check missed keys
+            missed_keys = [ el for el in _ct_required_params if el not in self.sp_params]
+            if missed_keys:
+                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but you missed required parameters:
+                {}'''.format(sefl.scanplan, missed_keys)))
+            # check value types
+            wrong_type_dict = {}
+            for k,v in sp_params.items():
+                if not isinstance(v,(int,float)):
+                    wrong_type_dict.update({k:v})
+            if wrong_type_dict:
+                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but following key-value pairs are in correct type(s):
+                {}
+                Please go to http://xpdacq.github.io for more information\n'''.
+                format(self.scanplan, wrong_type_dict)))
         elif self.scanplan == 'Tramp':
-            for el in _Tramp_required_params:
-                try:
-                   self.sp_params[el]
-                except KeyError:
-                   print('It seems you are using a temperature ramp scan but the scan_params dictionary does not contain {} which is needed.'.format(el))
-                   print('Please use uparrow to edit and retry making your ScanPlan object')
-                   sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
-
+            # check missed keys
+            missed_keys = [ el for el in _Tramp_required_params if el not in self.sp_params]
+            if missed_keys:
+                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but you missed required parameters:
+                {}'''.format(sefl.scanplan, missed_keys)))
+            # check value types
+            wrong_type_dict = {}
+            for k,v in sp_params.items():
+                if not isinstance(v,(int,float)):
+                    wrong_type_dict.update({k:v})
+            if wrong_type_dict:
+                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but following key-value pairs are in correct type(s):
+                {}
+                Please go to http://xpdacq.github.io for more information\n'''.
+                format(self.scanplan, wrong_type_dict)))
         elif self.scanplan == 'tseries':
-           for el in _tseries_required_params:
-               try:
-                   self.sp_params[el]
-               except KeyError:
-                   print('It seems you are using a tseries scan but the scan_params dictionary does not contain {} which is needed.'.format(el))
-                   print('Please use uparrow to edit and retry making your ScanPlan object')
-                   sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+            # check missed keys
+            missed_keys = [ el for el in _tseries_required_params if el not in self.sp_params]
+            if missed_keys:
+                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but you missed required parameters:
+                {}'''.format(sefl.scanplan, missed_keys)))
+            # check value types
+            wrong_type_dict = {}
+            for k,v in sp_params.items():
+                if not isinstance(v,(int,float)):
+                    wrong_type_dict.update({k:v})
+            # num needs to be int
+            if not isinstance(self.sp_params['num'], int):
+                wrong_type_dict.update({'num': self.sp_params.get('num')})
+            if wrong_type_dict:
+                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but following key-value pairs are in correct type(s):
+                {}
+                Please go to http://xpdacq.github.io for more information\n'''.
+                format(self.scanplan, wrong_type_dict)))
 
         elif self.scanplan == 'bluesky':
             print('''INFO: You are handing a "bluesky" type scan.
