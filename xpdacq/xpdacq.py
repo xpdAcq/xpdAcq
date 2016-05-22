@@ -113,19 +113,10 @@ def _parse_calibration_file(config_file_name):
                 config_dict[option] = None
     return config_dict
 
-def _unpack_and_run(scan, dryrun, **kwargs):
+def _unpack_and_run(scan, dryrun, subs, **kwargs):
     if not scan.md['bt_wavelength']:
         print('WARNING: There is no wavelength information in your sample acquire object')
     parms = scan.md['sp_params']
-    subs={}
-    if 'subs' in parms:
-        subsc = parms['subs']
-    for i in subsc:
-        if i == 'livetable':
-            subs.update({'all':LiveTable([area_det, temp_controller])})
-        elif i == 'verify_write':
-            subs.update({'stop':verify_files_saved})
-
     if scan.md['sp_type'] == 'ct':
         get_light_images(scan, parms['exposure'], area_det, subs, dryrun)
     elif scan.md['sp_type'] == 'tseries':
@@ -140,7 +131,8 @@ def _unpack_and_run(scan, dryrun, **kwargs):
         print('unrecognized scan type.  Please rerun with a different scan object')
         return
 
-def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun = False, **kwargs):
+def _execute_scans(scan, auto_dark, subs, auto_calibration,
+        light_frame = True, dryrun = False, **kwargs):
     '''execute this scan'
 
     Parameters:
@@ -150,6 +142,9 @@ def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun
 
     auto_dark : bool
         option of automated dark collection. Set to true to allow collect dark automatically during scans
+
+    subs : dict
+        a dictionary of subscribes to scans
 
     auto_calibration : bool
         option of loading calibration parameter from SrXplanar config file. If True, the most recent calibration file in xpdUser/config_base will be loaded
@@ -161,7 +156,7 @@ def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun
         optional. Default is False. If option is set to True, scan won't be executed but corresponding metadata as if executing real scans will be printed
     '''
     if auto_dark and not scan.sp._is_bs:
-        auto_dark_md_dict = _auto_dark_collection(scan)
+        auto_dark_md_dict = _auto_dark_collection(scan, subs)
         scan.md.update(auto_dark_md_dict)
     if auto_calibration:
         auto_load_calibration_dict = _auto_load_calibration_file()
@@ -169,13 +164,13 @@ def _execute_scans(scan, auto_dark, auto_calibration, light_frame = True, dryrun
             scan.md.update(auto_load_calibration_dict)
     if light_frame and scan.sp.shutter:
         _open_shutter()
-    _unpack_and_run(scan, dryrun, **kwargs)
+    _unpack_and_run(scan, dryrun, subs, **kwargs)
     # always close a shutter after scan, if shutter is in control
     if scan.sp.shutter:
         _close_shutter()
     return
 
-def _auto_dark_collection(scan):
+def _auto_dark_collection(scan, subs={}):
     ''' function to cover automated dark collection logic '''
     light_cnt_time = scan.md['sp_params']['exposure']
     try:
@@ -197,7 +192,7 @@ See documentation at http://xpdacq.github.io for more information about controll
         else:
             auto_dark_scanplan = ScanPlan('auto_dark_scan',
                 'ct',{'exposure':light_cnt_time}, shutter=False)
-        dark_field_uid = dark(scan.sa, auto_dark_scanplan)
+        dark_field_uid = dark(scan.sa, auto_dark_scanplan, subs)
     auto_dark_md_dict = {'sc_dk_field_uid': dark_field_uid}
     return auto_dark_md_dict
 
@@ -224,8 +219,17 @@ def _auto_load_calibration_file():
     config_md_dict = {'sc_calibration_parameters':config_dict, 'sc_calibration_file_name': os.path.basename(config_in_use), 'sc_calibration_file_timestamp':config_time}
     return config_md_dict
 
-def prun(sample, scanplan, auto_dark = None, **kwargs):
-    """ on this sample run this scanplan
+def _subs_dict_gen(livetable, verify_write):
+    subs = {}
+    if livetable:
+        subs.update({'all':LiveTable([area_det, temp_controller])})
+    if verify_write:
+        subs.update({'stop':verify_files_saved})
+    return subs
+
+def prun(sample, scanplan, auto_dark = None, livetable = True,
+        verify_write = False, **kwargs):
+    ''' on this sample run this scanplan
 
     Sample, ScanPlan objects inside can be assigned in following way:
 
@@ -246,19 +250,30 @@ def prun(sample, scanplan, auto_dark = None, **kwargs):
         object carries metadata of ScanPlan object
 
     auto_dark : bool
-        option of automated dark collection. Default is True to allow collect dark automatically during scans
-    """
+        option of automated dark collection. Default is True to allow collect
+        dark automatically during scans
+
+    livetable : bool
+        optional. option to turn on/off LiveTable subscribes on this scan.
+        default is True
+
+    verify_write : bool
+        optional. option to turn on/off verify_files_saved subscribe on this
+        scan. This functionality will introduce ~2s delay each scan. default
+        is False
+    '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_isprun':True})
     if auto_dark == None:
         auto_dark = glbl.auto_dark
-    _execute_scans(scan, auto_dark, auto_calibration = True, light_frame = True, dryrun = False)
+    subs = _subs_dict_gen(livetable, verify_write)
+    _execute_scans(scan, auto_dark, subs, auto_calibration = True, light_frame = True, dryrun = False)
     return
 
-def calibration(sample, scanplan, auto_dark = None, **kwargs):
-
-    """ on this calibration sample (calibrant) run this scanplan
+def calibration(sample, scanplan, auto_dark = None, livetable = True,
+        verify_write = False, **kwargs):
+    ''' on this calibration sample (calibrant) run this scanplan
 
     Sample, ScanPlan objects inside can be assigned in following way:
 
@@ -278,18 +293,29 @@ def calibration(sample, scanplan, auto_dark = None, **kwargs):
 
     auto_dark : bool
         option of automated dark collection. Default is True to allow collect dark automatically during scans
-    """
+
+    livetable : bool
+        optional. option to turn on/off LiveTable subscribes on this scan.
+        default is True
+
+    verify_write : bool
+        optional. option to turn on/off verify_files_saved subscribe on this
+        scan. This functionality will introduce ~2s delay each scan. default
+        is False
+    '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
     scan.md.update({'sc_iscalibration':True})
     # only auto_dark is exposed to user
     if auto_dark == None:
         auto_dark = glbl.auto_dark
-    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
+    subs = _subs_dict_gen(livetable, verify_write)
+    _execute_scans(scan, auto_dark, subs, auto_calibration = False, light_frame = True, dryrun = False)
     return
 
-def background(sample, scanplan, auto_dark = None, **kwargs):
-    ''' on this background (usually is kepton tube) run this scanplan
+def background(sample, scanplan, auto_dark = None, livetable = True,
+        verify_write = False, **kwargs):
+    ''' on this sample (kepton tube or other background) run this scanplan
 
     This scan will be labeled as background in metadata.
 
@@ -309,9 +335,18 @@ def background(sample, scanplan, auto_dark = None, **kwargs):
     scanplan : xpdAcq.beamtime.ScanPlan object
         object carries metadata of ScanPlan object
 
-    auto_dark :
-        option of automated dark collection. Default is None so that dark frame will be collected automatically during scans
-    
+    auto_dark : bool
+        option of automated dark collection. Default is True to allow collect dark automatically during scans
+
+    livetable : bool
+        optional. option to turn on/off LiveTable subscribes on this scan.
+        default is True
+
+    verify_write : bool
+        optional. option to turn on/off verify_files_saved subscribe on this
+        scan. This functionality will introduce ~2s delay each scan. default
+        is False
+
     **kwargs : dict
         dictionary that will be passed through to the run-engine metadata
     '''
@@ -321,10 +356,12 @@ def background(sample, scanplan, auto_dark = None, **kwargs):
     # only auto_dark is exposed to user
     if auto_dark == None:
         auto_dark = glbl.auto_dark
-    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
+    subs = _subs_dict_gen(livetable, verify_write)
+    _execute_scans(scan, auto_dark, subs, auto_calibration = False, light_frame = True, dryrun = False)
     return
 
-def setupscan(sample, scanplan, auto_dark = None, **kwargs):
+def setupscan(sample, scanplan, auto_dark = None, livetable = True,
+        verify_write = False, **kwargs):
     ''' on this sample run this scanplan as a setupscan
     
     Sample, ScanPlan objects inside can be assigned in following way:
@@ -342,9 +379,18 @@ def setupscan(sample, scanplan, auto_dark = None, **kwargs):
 
     scanplan : xpdAcq.beamtime.ScanPlan object
         object carries metadata of ScanPlan object
-    
-    auto_dark :
-        option of automated dark collection. Default is None so that dark frame will be collected automatically during scans
+
+    auto_dark : bool
+        option of automated dark collection. Default is True to allow collect dark automatically during scans
+
+    livetable : bool
+        optional. option to turn on/off LiveTable subscribes on this scan.
+        default is True
+
+    verify_write : bool
+        optional. option to turn on/off verify_files_saved subscribe on this
+        scan. This functionality will introduce ~2s delay each scan. default
+        is False
     
     **kwargs : dict
         dictionary that will be passed through to the run-engine metadata
@@ -355,12 +401,13 @@ def setupscan(sample, scanplan, auto_dark = None, **kwargs):
     # only auto_dark is exposed to user
     if auto_dark == None:
         auto_dark = glbl.auto_dark
-    _execute_scans(scan, auto_dark, auto_calibration = False, light_frame = True, dryrun = False)
+    subs = _subs_dict_gen(livetable, verify_write)
+    _execute_scans(scan, auto_dark, subs, auto_calibration = False, light_frame = True, dryrun = False)
     return
 
-def dark(sample, scanplan, **kwargs):
-    '''on this sample, collect dark images. 
-    
+def dark(sample, scanplan, subs = {}, **kwargs):
+    '''on this sample, collect dark images
+
     Usually user don't have to collect if you enable automated dark subtraction. However user can specifically collect it if you wish to.
     Sample, ScanPlan objects inside can be assigned in following way:
     
@@ -378,6 +425,9 @@ def dark(sample, scanplan, **kwargs):
     scanplan : xpdAcq.beamtime.ScanPlan object
         object carries metadata of ScanPlan object
 
+    subs : dict
+        a dictionary that specifies subscribes to RunEngine
+
     **kwargs : dict
         dictionary that will be passed through to the run-engine metadata
 
@@ -392,7 +442,7 @@ def dark(sample, scanplan, **kwargs):
     scan.md.update({'sc_dark_uid': dark_uid})
     scan.md.update({'sc_usermd': kwargs})
     # label arguments passed to _execute_scans explicitly for reference
-    _execute_scans(scan, auto_dark = False, auto_calibration = False, light_frame = False, dryrun = False)
+    _execute_scans(scan, False, subs, auto_calibration = False, light_frame = False, dryrun = False)
     dark_def = _generate_dark_def(scan, dark_uid)
     _yamify_dark(dark_def)
     return dark_uid
@@ -423,7 +473,8 @@ def dryrun(sample, scanplan, **kwargs):
     '''
     scan = Scan(sample, scanplan)
     scan.md.update({'sc_usermd':kwargs})
-    _execute_scans(scan, auto_dark = False, auto_calibration = False, light_frame = False, dryrun = True)
+    subs = {} # dryrun doesn't call RE at all
+    _execute_scans(scan, False, subs, auto_calibration = False, light_frame = False, dryrun = True)
     return
 
 def get_light_images(scan, exposure = 1.0, det=area_det, subs_dict={}, dryrun = False):
@@ -528,21 +579,20 @@ def collect_Temp_series(scan, Tstart, Tstop, Tstep, exposure = 1.0, det= area_de
     scan.md.update({'sp_requested_exposure':exposure,'sp_computed_exposure':computed_exposure})
     scan.md.update({'sp_time_per_frame':acq_time,'sp_num_frames':num_frame})
 
-    Nsteps = _nstep(Tstart, Tstop, Tstep)[0] # computed steps
-    computed_step_size = _nstep(Tstart, Tstop, Tstep)[1] # computed step size
+    (Nsteps, computed_step_size) = _nstep(Tstart, Tstop, Tstep) # computed steps
     scan.md.update({'sp_startingT':Tstart,'sp_endingT':Tstop,'sp_requested_Tstep':Tstep})
     scan.md.update({'sp_Nsteps':Nsteps, 'sp_computed_Tstep':computed_step_size})
 
     area_det.images_per_set.put(num_frame)
     md_dict = scan.md
-    
+
     plan = AbsScanPlan([area_det], temp_controller, Tstart, Tstop, Nsteps)
     if dryrun:
         _collect_Temp_series_dryrun(md_dict, Tstep, computed_step_size)
     else:
         xpdRE(plan,subs_dict, **md_dict)
         if xpdRE.state == 'paused':
-            _RE_state_wrapper(xpdRE) 
+            _RE_state_wrapper(xpdRE)
 
 def _collect_Temp_series_dryrun(md_dict, Tstep, computed_step_size):
     num_frame = md_dict['sp_num_frames']

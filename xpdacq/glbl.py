@@ -39,6 +39,7 @@ CONFIG_BASE = os.path.join(HOME_DIR, 'config_base')
 IMPORT_DIR = os.path.join(HOME_DIR, 'Import')
 USERSCRIPT_DIR = os.path.join(HOME_DIR, 'userScripts')
 TIFF_BASE = os.path.join(HOME_DIR, 'tiff_base')
+ALLOWED_SCANPLAN_TYPE =['ct', 'Tramp', 'tseries']
 
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 ALL_FOLDERS = [
@@ -85,6 +86,7 @@ class glbl():
     owner = OWNER
     beamline_id = BEAMLINE_ID
     group = GROUP
+    _allowed_scanplan_type = ALLOWED_SCANPLAN_TYPE
 
     # logic to assign correct objects depends on simulation or real experiment
     if not simulation:
