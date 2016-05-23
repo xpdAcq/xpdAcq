@@ -341,7 +341,7 @@ class ScanPlan(XPD):
 
     ScanPlan objects from two sets of examples are equivalent.
     '''
-    def __init__(self, scanplan_meta = '', scanplan_params = {},
+    def __init__(self, scanplan_meta, scanplan_params = {},
             dk_window = None, shutter=True, **kwargs):
         _sp_input = scanplan_meta.strip()
         _std_param_list = self._std_param_list_gen()
@@ -354,7 +354,7 @@ class ScanPlan(XPD):
         elif scanplan_params:
             _sp_name = self._scanplan_auto_name(_sp_input, scanplan_params, _std_param_list)
             self.scanplan = _clean_md_input(_sp_input)
-        # unsupported situation
+        # unsupported situation (won't happen in this version, for future use)
         else:
             print('ScanPlan only takes auto-naming or explicit naming scheme. Please do " ScanPlan? " for more information')
             return

@@ -18,7 +18,7 @@ class NewExptTest(unittest.TestCase):
         if os.path.isdir(self.home_dir):
             shutil.rmtree(self.home_dir)
         if os.path.isdir(self.config_dir):
-            shutil.rmtree(self.config_dir)   
+            shutil.rmtree(self.config_dir)
         os.makedirs(self.config_dir, exist_ok=True)
         self.PI_name = 'Billinge '
         self.saf_num = 234
@@ -261,3 +261,25 @@ class NewExptTest(unittest.TestCase):
         self.assertEqual(sp.name, 'ct_5_nS')
         sp = ScanPlan('ct_5', shutter=True)
         self.assertEqual(sp.name, 'ct_5')
+
+    def test_ScanPlan_longform(self):
+        # test creation
+        self.assertRaises(TypeError, lambda: ScanPlan())
+        # test sp_name
+        sp1 = ScanPlan('ct',{'exposure':0.5})
+        self.assertEqual(sp1.name, 'ct_0.5')
+        sp2 = ScanPlan('tseries',{'exposure':0.5, 'num':5, 'delay':2.5})
+        self.assertEqual(sp2.name, 'tseries_0.5_2.5_5')
+        sp3 = ScanPlan('Tramp',{'exposure':0.5, 'endingT':200, 'startingT':300, 'Tstep':2})
+        self.assertEqual(sp3.name, 'Tramp_5_300_200_2')
+        # test sp_params values
+        self.assertEqual(0.5, sp1.sp_params['exposure'])
+
+        self.assertEqual(0.5, sp2.sp_params['exposure'])
+        self.assertEqual(5, sp2.sp_params['num'])
+        self.assertEqual(2.5, sp2.sp_params['delay'])
+
+        self.assertEqual(0.5, sp3.sp_params['exposure'])
+        self.assertEqual(200, sp3.sp_params['endingT'])
+        self.assertEqual(300, sp3.sp_params['startingT'])
+        self.assertEqual(2, sp3.sp_params['Tstep'])
