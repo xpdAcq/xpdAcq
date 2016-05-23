@@ -430,7 +430,7 @@ class ScanPlan(XPD):
         for i in range(len(_std_param_list)):
             param = sp_params.get(_std_param_list[i])
             if param: # has element
-                sp_naming_list.append(str(param))
+                sp_naming_list.append('{:.2g}'.format(param))
         return '_'.join(sp_naming_list)
 
     def _scanplan_name_parser(self, sp_name):
