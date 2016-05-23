@@ -29,7 +29,7 @@ class NewExptTest(unittest.TestCase):
         loadinfo = {'saf number':self.saf_num,'PI last name':self.PI_name,'experimenter list':self.experimenters}
         with open(self.saffile, 'w') as fo:
             yaml.dump(loadinfo,fo)
-        self.bt = _start_beamtime(self.saf_num,home_dir=self.home_dir)     
+        self.bt = _start_beamtime(self.saf_num,home_dir=self.home_dir)
         self.stbt_list = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sp_ct_0.1.yml','sp_ct_0.5.yml','sp_ct_1.yml','sp_ct_5.yml','sp_ct_10.yml','sp_ct_30.yml']
 
     def tearDown(self):
@@ -37,7 +37,7 @@ class NewExptTest(unittest.TestCase):
         if os.path.isdir(self.home_dir):
             shutil.rmtree(self.home_dir)
         if os.path.isdir(os.path.join(self.base_dir,'xpdConfig')):
-            shutil.rmtree(os.path.join(self.base_dir,'xpdConfig'))        
+            shutil.rmtree(os.path.join(self.base_dir,'xpdConfig'))
 
     def test_clean_name(self):
     	# make sure yaml dir and bt object exists
@@ -163,20 +163,20 @@ class NewExptTest(unittest.TestCase):
         self.assertEqual(newobjlist,self.stbt_list+['ex_myexp.yml','sa_mysample.yml','sa_yoursample.yml'])
 
     def test_make_scanPlan(self):
-        self.sp = ScanPlan('ct',{'exposure':1.0})
+        self.sp = ScanPlan('ct',{'exposure':0.7})
         self.assertIsInstance(self.sp,ScanPlan)
-        self.assertEqual(self.sp.md['sp_params'],{'exposure':1.0})
+        self.assertEqual(self.sp.md['sp_params'],{'exposure':0.7})
         uid1 = self.sp.md['sp_uid']
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,self.stbt_list+['sp_ct_1.yml'])
+        self.assertEqual(newobjlist,self.stbt_list+['sp_ct_0.7.yml'])
         self.sp2 = ScanPlan('ct',{'exposure':1.5})
         self.assertEqual(self.sp2.md['sp_name'],'ct_1.5')
         uid2 = self.sp2.md['sp_uid']
         self.assertNotEqual(uid1,uid2)
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,self.stbt_list+['sp_ct_1.yml','sp_ct_1.5.yml'])
-        self.sp3 = ScanPlan('ct',{'exposure':2.0})
-        self.assertEqual(self.sp3.md['sp_name'],'ct_2')
+        self.assertEqual(newobjlist,self.stbt_list+['sp_ct_0.7.yml','sp_ct_1.5.yml'])
+        self.sp3 = ScanPlan('ct',{'exposure':1.5})
+        self.assertEqual(self.sp3.md['sp_name'],'ct_1.5')
         uid3 = self.sp3.md['sp_uid']
         self.assertEqual(uid2,uid3)
         # and one that fails the validator
@@ -266,20 +266,20 @@ class NewExptTest(unittest.TestCase):
         # test creation
         self.assertRaises(TypeError, lambda: ScanPlan())
         # test sp_name
-        sp1 = ScanPlan('ct',{'exposure':0.5})
-        self.assertEqual(sp1.name, 'ct_0.5')
-        sp2 = ScanPlan('tseries',{'exposure':0.5, 'num':5, 'delay':2.5})
-        self.assertEqual(sp2.name, 'tseries_0.5_2.5_5')
-        sp3 = ScanPlan('Tramp',{'exposure':0.5, 'endingT':200, 'startingT':300, 'Tstep':2})
-        self.assertEqual(sp3.name, 'Tramp_5_300_200_2')
+        self.sp1 = ScanPlan('ct',{'exposure':0.5})
+        self.assertEqual(self.sp1.name, 'ct_0.5')
+        self.sp2 = ScanPlan('tseries',{'exposure':0.5, 'num':5, 'delay':2.5})
+        self.assertEqual(self.sp2.name, 'tseries_0.5_2.5_5')
+        self.sp3 = ScanPlan('Tramp',{'exposure':0.8, 'endingT':200, 'startingT':300, 'Tstep':2})
+        self.assertEqual(self.sp3.name, 'Tramp_0.8_300_200_2')
         # test sp_params values
-        self.assertEqual(0.5, sp1.sp_params['exposure'])
+        self.assertEqual(0.5, self.sp1.sp_params['exposure'])
 
-        self.assertEqual(0.5, sp2.sp_params['exposure'])
-        self.assertEqual(5, sp2.sp_params['num'])
-        self.assertEqual(2.5, sp2.sp_params['delay'])
+        self.assertEqual(0.5, self.sp2.sp_params['exposure'])
+        self.assertEqual(5, self.sp2.sp_params['num'])
+        self.assertEqual(2.5, self.sp2.sp_params['delay'])
 
-        self.assertEqual(0.5, sp3.sp_params['exposure'])
-        self.assertEqual(200, sp3.sp_params['endingT'])
-        self.assertEqual(300, sp3.sp_params['startingT'])
-        self.assertEqual(2, sp3.sp_params['Tstep'])
+        self.assertEqual(0.8, self.sp3.sp_params['exposure'])
+        self.assertEqual(200, self.sp3.sp_params['endingT'])
+        self.assertEqual(300, self.sp3.sp_params['startingT'])
+        self.assertEqual(2, self.sp3.sp_params['Tstep'])

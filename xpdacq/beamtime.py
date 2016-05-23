@@ -514,7 +514,7 @@ class ScanPlan(XPD):
             missed_keys = [ el for el in _ct_required_params if el not in self.sp_params]
             if missed_keys:
                 sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but you missed required parameters:
-                {}'''.format(sefl.scanplan, missed_keys)))
+                {}'''.format(self.scanplan, missed_keys)))
             # check value types
             wrong_type_dict = {}
             for k,v in self.sp_params.items():
@@ -530,7 +530,7 @@ class ScanPlan(XPD):
             missed_keys = [ el for el in _Tramp_required_params if el not in self.sp_params]
             if missed_keys:
                 sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but you missed required parameters:
-                {}'''.format(sefl.scanplan, missed_keys)))
+                {}'''.format(self.scanplan, missed_keys)))
             # check value types
             wrong_type_dict = {}
             for k,v in self.sp_params.items():
@@ -546,7 +546,7 @@ class ScanPlan(XPD):
             missed_keys = [ el for el in _tseries_required_params if el not in self.sp_params]
             if missed_keys:
                 sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but you missed required parameters:
-                {}'''.format(sefl.scanplan, missed_keys)))
+                {}'''.format(self.scanplan, missed_keys)))
             # check value types
             wrong_type_dict = {}
             for k,v in self.sp_params.items():
