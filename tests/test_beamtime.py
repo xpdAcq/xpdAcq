@@ -30,7 +30,7 @@ class NewExptTest(unittest.TestCase):
         with open(self.saffile, 'w') as fo:
             yaml.dump(loadinfo,fo)
         self.bt = _start_beamtime(self.saf_num,home_dir=self.home_dir)     
-        self.stbt_list = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sp_ct.1s.yml','sp_ct.5s.yml','sp_ct1s.yml','sp_ct5s.yml','sp_ct10s.yml','sp_ct30s.yml']
+        self.stbt_list = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sp_ct_0.1.yml','sp_ct_0.5.yml','sp_ct_1.yml','sp_ct_5.yml','sp_ct_10.yml','sp_ct_30.yml']
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -163,24 +163,24 @@ class NewExptTest(unittest.TestCase):
         self.assertEqual(newobjlist,self.stbt_list+['ex_myexp.yml','sa_mysample.yml','sa_yoursample.yml'])
 
     def test_make_scanPlan(self):
-        self.sp = ScanPlan('myScan','ct',{'exposure':1.0})
+        self.sp = ScanPlan('ct',{'exposure':1.0})
         self.assertIsInstance(self.sp,ScanPlan)
         self.assertEqual(self.sp.md['sp_params'],{'exposure':1.0})
         uid1 = self.sp.md['sp_uid']
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,self.stbt_list+['sp_myScan.yml'])
-        self.sp2 = ScanPlan(' your scan','ct',{'exposure':1.0})
-        self.assertEqual(self.sp2.md['sp_name'],'your scan')
+        self.assertEqual(newobjlist,self.stbt_list+['sp_ct_1.yml'])
+        self.sp2 = ScanPlan('ct',{'exposure':1.5})
+        self.assertEqual(self.sp2.md['sp_name'],'ct_1.5')
         uid2 = self.sp2.md['sp_uid']
         self.assertNotEqual(uid1,uid2)
         newobjlist = _get_yaml_list()
-        self.assertEqual(newobjlist,self.stbt_list+['sp_myScan.yml','sp_yourscan.yml'])
-        self.sp3 = ScanPlan(' your scan','ct',{'exposure':1.0})
-        self.assertEqual(self.sp3.md['sp_name'],'your scan')
+        self.assertEqual(newobjlist,self.stbt_list+['sp_ct_1.yml','sp_ct_1.5.yml'])
+        self.sp3 = ScanPlan('ct',{'exposure':2.0})
+        self.assertEqual(self.sp3.md['sp_name'],'ct_2')
         uid3 = self.sp3.md['sp_uid']
         self.assertEqual(uid2,uid3)
         # and one that fails the validator
-        self.assertRaises(SystemExit,lambda: ScanPlan(' your scan','ct',{'exposur':1.0}))
+        self.assertRaises(SystemExit,lambda: ScanPlan('ct',{'exposur':1.0}))
 
 
     def test_hide(self):
