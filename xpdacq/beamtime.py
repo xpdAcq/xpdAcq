@@ -291,7 +291,7 @@ class ScanPlan(XPD):
         An important postional argument that serves two purpose:
 
         *. If you wish to use auto-naming functionality.
-          Please supply this field with a string following allowed scheme, xpdAcq will parse your argument.
+          Please supply this field with a string following allowed scheme, xpdAcq will parse your arguments.
           Currently allowed scheme is like following:
 
           1. 'ct_10' means Count scan with 10s exposure time in total
@@ -304,7 +304,7 @@ class ScanPlan(XPD):
             If you don't want any delay, give it an 0.
 
         *. If you wish to specify parameters explicitly.
-          This field will be "ScanPlan type". Currently allowed values are:
+          This field will be "ScanPlan type". Currently allowed types are:
 
           1. 'ct': which means a count scanplan with exposure time given
 
@@ -328,6 +328,7 @@ class ScanPlan(XPD):
     auto_dark_plan : bool
         argument reserved for auto_dark collection functionality.
         Ususally user doesn't have to specify
+
     Examples
     --------
     Here are examples of instantiating ScanPlan objects with explicit form.
@@ -336,7 +337,7 @@ class ScanPlan(XPD):
     >>> ScanPlan('tseries', {'exposure': 2.5, 'delay': 60,'num':5})
     >>> ScanPlan('Tramp', {'exposure': 2.5, 'sartingT': 300, 'endinT':200, 'Tstep':5})
 
-    Here are examples of instantiating ScanPlan objects with auto namin scheme.
+    Here are examples of instantiating ScanPlan objects with auto naming scheme.
 
     >>> ScanPlan('ct_2.5')
     >>> ScanPlan('tseries_2.5_60_5')
