@@ -325,6 +325,9 @@ class ScanPlan(XPD):
         default is True. If True, in-hutch fast shutter will be opened before a scan and closed afterwards.
         Otherwise control of the shutter is left external. Set to False if you want to control the shutter by hand.
 
+    auto_dark_plan : bool
+        argument reserved for auto_dark collection functionality.
+        Ususally user doesn't have to specify
     Examples
     --------
     Here are examples of instantiating ScanPlan objects with explicit form.
@@ -342,7 +345,7 @@ class ScanPlan(XPD):
     ScanPlan objects from two sets of examples are equivalent.
     '''
     def __init__(self, scanplan_meta, scanplan_params = {},
-            dk_window = None, shutter=True, **kwargs):
+            dk_window = None, shutter=True, *, auto_dark_plan = False, **kwargs):
         _sp_input = scanplan_meta.strip()
         _std_param_list = self._std_param_list_gen()
         # auto naming, parsed parameters
@@ -385,6 +388,9 @@ class ScanPlan(XPD):
             sp_name = '_'.join([_sp_name, _control_params])
         else:
             sp_name = _sp_name
+        if auto_dark_plan:
+            sp_name = '_'.join(['auto_dark',sp_name])
+            # when auto_dark collection is called. Avoid overwritting ct
         self.name = sp_name
         self.md.update({'sp_name': _clean_md_input(self.name)})
         # summary of scanplan created
@@ -430,7 +436,7 @@ class ScanPlan(XPD):
         for i in range(len(_std_param_list)):
             param = sp_params.get(_std_param_list[i])
             if param: # has element
-                sp_naming_list.append('{:.2g}'.format(param))
+                sp_naming_list.append('{:.8g}'.format(param))
         return '_'.join(sp_naming_list)
 
     def _scanplan_name_parser(self, sp_name):

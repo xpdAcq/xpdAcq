@@ -187,11 +187,11 @@ def _auto_dark_collection(scan, subs={}):
 See documentation at http://xpdacq.github.io for more information about controlling this behavior''')
         # create a count plan with the same light_cnt_time
         if scan.sp.shutter:
-            auto_dark_scanplan = ScanPlan('auto_dark_scan',
-                'ct',{'exposure':light_cnt_time})
+            auto_dark_scanplan = ScanPlan('ct',{'exposure':light_cnt_time},
+                                        auto_dark_plan = True)
         else:
-            auto_dark_scanplan = ScanPlan('auto_dark_scan',
-                'ct',{'exposure':light_cnt_time}, shutter=False)
+            auto_dark_scanplan = ScanPlan('ct',{'exposure':light_cnt_time},
+                                        shutter=False, auto_dark_plan = True)
         dark_field_uid = dark(scan.sa, auto_dark_scanplan, subs)
     auto_dark_md_dict = {'sc_dk_field_uid': dark_field_uid}
     return auto_dark_md_dict
