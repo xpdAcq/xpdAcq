@@ -343,60 +343,55 @@ class ScanPlan(XPD):
     '''
     def __init__(self, scanplan_meta = '', scanplan_params = {},
             dk_window = None, shutter=True, **kwargs):
-        _ct_required_params = ['exposure']
-        _tseries_required_params = ['exposure', 'delay', 'num']
-        _Tramp_required_params = ['exposure', 'startingT', 'endingT', 'Tstep']
-        # extra efforts to keep print statement in order later
-        _ordered_sp_params = _ct_required_params.copy()
-        _ordered_sp_params.extend(_tseries_required_params)
-        _ordered_sp_params.extend(_Tramp_required_params)
-        _sp_params_list = list(OrderedDict.fromkeys(_ordered_sp_params))
-
         _sp_input = scanplan_meta.strip()
-
-        _control_params = '' # str represents control options.
-        # auto naming
+        _std_param_list = self._std_param_list_gen()
+        # auto naming, parsed parameters
         if not scanplan_params:
             (scanplan_type, scanplan_params) = self._scanplan_name_parser(_sp_input)
-
+            _sp_name = _sp_input
+            self.scanplan = _clean_md_input(scanplan_type)
+        # long-form, generate name
+        elif scanplan_params:
+            _sp_name = self._scanplan_auto_name(_sp_input, scanplan_params, _std_param_list)
+            self.scanplan = _clean_md_input(_sp_input)
+        # unsupported situation
+        else:
+            print('ScanPlan only takes auto-naming or explicit naming scheme. Please do " ScanPlan? " for more information')
+            return
+        # setting up main attributes
         self.type = 'sp'
-        self.scanplan = _clean_md_input(scanplan_type)
         self.sp_params = scanplan_params # sp_parms is a dictionary
         self._is_bs = False # priviate attribute
         if 'bluesky_plan' in self.sp_params:
             self._is_bs = True
         self._plan_validator()
-
         self.shutter = shutter
         self.md = {}
-
         self.md.update({'sp_params': scanplan_params})
         self.md.update({'sp_type': _clean_md_input(self.scanplan)})
         self.md.update({'sp_usermd':_clean_md_input(kwargs)})
+        # setting up optional attributes
         if self.shutter:
             self.md.update({'sp_shutter_control':'in-scan'})
         else:
             self.md.update({'sp_shutter_control':'external'})
             _control_params += 'nS' # only wirte down non-default behavior
-
         if not dk_window:
             dk_window = glbl.dk_window
         self.md.update({'sp_dk_window': dk_window})
-
-        # scanplan name should include options in sub_dict, generate it at the last moment
+        # scanplan name should include options, generate it at the last moment
+        _control_params = ''
         if _control_params:
             sp_name = '_'.join([_sp_name, _control_params])
         else:
             sp_name = _sp_name
-
         self.name = sp_name
         self.md.update({'sp_name': _clean_md_input(self.name)})
-
-        print('You have created a "{}" type ScanPlan with name = "{}"'.format(scanplan_type, sp_name))
+        # summary of scanplan created
+        print('You have created a "{}" type ScanPlan with name = "{}"'.format(self.scanplan, self.name))
         print('Corresponding scan parameters are:')
-        # extra efforts to keep printing order
-        for i in range(len(_sp_params_list)):
-            el = _sp_params_list[i]
+        for i in range(len(_std_param_list)):
+            el = _std_param_list[i]
             try:
                 print('{} = {}'.format(el, self.md['sp_params'][el]))
             except KeyError:
@@ -404,9 +399,9 @@ class ScanPlan(XPD):
                 # except for bluesky plan
                 pass
         print('with fast-shutter control = {}'.format(self.shutter))
+        # yamify ScanPlan
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
-        # get objlist from yaml file
         if fname in objlist:
             olduid = self._get_obj_uid(self.name,self.type)
             self.md.update({'sp_uid': olduid})
@@ -414,14 +409,29 @@ class ScanPlan(XPD):
             self.md.update({'sp_uid': self._getuid()})
         self._yamify()
 
-    def _sp_param_auto_name(self, sp_type, sp_params, _sp_param_list):
+    def _std_param_list_gen(self):
+        _ct_required_params = ['exposure']
+        _tseries_required_params = ['exposure', 'delay', 'num']
+        _Tramp_required_params = ['exposure', 'startingT', 'endingT', 'Tstep']
+        # extra efforts to keep print statement in order later
+        _ordered_sp_params = _ct_required_params.copy()
+        _ordered_sp_params.extend(_tseries_required_params)
+        _ordered_sp_params.extend(_Tramp_required_params)
+        _std_params_list = list(OrderedDict.fromkeys(_ordered_sp_params))
+        return _std_params_list
+
+    def _scanplan_auto_name(self, sp_type, sp_params, _std_param_list):
         # confirm type
         if not isinstance(sp_params, dict):
             print("WARNING: scanplan parameter must be a dictionary like {'key':'value'}")
             return
         # loop through params
-        sp_name = [sp_type] # init
-
+        sp_naming_list = [sp_type] # initiate list
+        for i in range(len(_std_param_list)):
+            param = sp_params.get(_std_param_list[i])
+            if param: # has element
+                sp_naming_list.append(str(param))
+        return '_'.join(sp_naming_list)
 
     def _scanplan_name_parser(self, sp_name):
         ''' function to parse name of ScanPlan object into parameters fed into ScanPlan
@@ -501,7 +511,7 @@ class ScanPlan(XPD):
                 {}'''.format(sefl.scanplan, missed_keys)))
             # check value types
             wrong_type_dict = {}
-            for k,v in sp_params.items():
+            for k,v in self.sp_params.items():
                 if not isinstance(v,(int,float)):
                     wrong_type_dict.update({k:v})
             if wrong_type_dict:
@@ -517,7 +527,7 @@ class ScanPlan(XPD):
                 {}'''.format(sefl.scanplan, missed_keys)))
             # check value types
             wrong_type_dict = {}
-            for k,v in sp_params.items():
+            for k,v in self.sp_params.items():
                 if not isinstance(v,(int,float)):
                     wrong_type_dict.update({k:v})
             if wrong_type_dict:
@@ -533,7 +543,7 @@ class ScanPlan(XPD):
                 {}'''.format(sefl.scanplan, missed_keys)))
             # check value types
             wrong_type_dict = {}
-            for k,v in sp_params.items():
+            for k,v in self.sp_params.items():
                 if not isinstance(v,(int,float)):
                     wrong_type_dict.update({k:v})
             # num needs to be int
