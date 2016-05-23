@@ -374,6 +374,7 @@ class ScanPlan(XPD):
         self.md.update({'sp_type': _clean_md_input(self.scanplan)})
         self.md.update({'sp_usermd':_clean_md_input(kwargs)})
         # setting up optional attributes
+        _control_params = ''
         if self.shutter:
             self.md.update({'sp_shutter_control':'in-scan'})
         else:
@@ -383,7 +384,6 @@ class ScanPlan(XPD):
             dk_window = glbl.dk_window
         self.md.update({'sp_dk_window': dk_window})
         # scanplan name should include options, generate it at the last moment
-        _control_params = ''
         if _control_params:
             sp_name = '_'.join([_sp_name, _control_params])
         else:
