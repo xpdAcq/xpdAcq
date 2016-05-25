@@ -390,7 +390,7 @@ class ScanPlan(XPD):
         else:
             sp_name = _sp_name
         if auto_dark_plan:
-            sp_name = '_'.join(['auto_dark',sp_name])
+            sp_name = 'auto_dark'
             # when auto_dark collection is called. Avoid overwritting ct
         self.name = sp_name
         self.md.update({'sp_name': _clean_md_input(self.name)})
