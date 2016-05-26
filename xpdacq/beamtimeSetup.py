@@ -222,12 +222,12 @@ def _execute_start_beamtime(piname,safn,explist,wavelength=None,home_dir=None):
     # now populate the database with some lazy-user objects
     ex = Experiment('l-user',bt)
     sa = Sample('l-user',ex)
-    sc01 = ScanPlan('ct.1s','ct',{'exposure':0.1})
-    sc05 = ScanPlan('ct.5s','ct',{'exposure':0.5})
-    sc1 = ScanPlan('ct1s','ct',{'exposure':1.0})
-    sc5 = ScanPlan('ct5s','ct',{'exposure':5.0})
-    sc10 = ScanPlan('ct10s','ct',{'exposure':10.0})
-    sc30 = ScanPlan('ct30s','ct',{'exposure':30.0})
+    sc01 = ScanPlan('ct',{'exposure':0.1})
+    sc05 = ScanPlan('ct',{'exposure':0.5})
+    sc1 = ScanPlan('ct',{'exposure':1.0})
+    sc5 = ScanPlan('ct',{'exposure':5.0})
+    sc10 = ScanPlan('ct',{'exposure':10.0})
+    sc30 = ScanPlan('ct',{'exposure':30.0})
     return bt
 
 #FIXME this function should be revisited later

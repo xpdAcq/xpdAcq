@@ -87,7 +87,7 @@ class findRightDarkTest(unittest.TestCase):
             yaml.dump(dark_scan_list, f)
         test_list = _read_dark_yaml()
         self.assertEqual(test_list,dark_scan_list)
-        scanplan = ScanPlan('ctTest', 'ct', {'exposure':light_cnt_time}, shutter=False)
+        scanplan = ScanPlan('ct', {'exposure':light_cnt_time}, shutter=False)
         prun(self.sa, scanplan)
         self.assertTrue('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
         self.assertTrue(glbl.xpdRE.call_args_list[-1][1]['sc_dk_field_uid'] == dark_uid)
@@ -107,17 +107,17 @@ class findRightDarkTest(unittest.TestCase):
         test_list = _read_dark_yaml()
         self.assertEqual(test_list,dark_scan_list)
         # none with the right exposure
-        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.01}, shutter=False)
+        scanplan = ScanPlan('ct', {'exposure':0.01}, shutter=False)
         prun(self.sa, scanplan)
         self.assertTrue('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
         self.assertFalse(glbl.xpdRE.call_args_list[-1][1]['sc_dk_field_uid'] == dark_uid2)
         # Second one has the right exposure time but expires
         glbl.dk_window = 1.
-        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.1}, shutter=False)
+        scanplan = ScanPlan('ct', {'exposure':0.1}, shutter=False)
         prun(self.sa, scanplan)
         self.assertTrue('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
         self.assertFalse(glbl.xpdRE.call_args_list[-1][1]['sc_dk_field_uid'] == dark_uid2)
-        
+
     def test_read_dark_yaml(self):
         # test if _read_dark_yaml captures exception as we hope
         self.assertTrue(os.path.isfile(glbl.dk_yaml)) # make sure it exit after _start_beamtime()
