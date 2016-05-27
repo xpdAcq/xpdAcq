@@ -10,7 +10,7 @@ import copy
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import Beamtime, Experiment, ScanPlan, Sample
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
-from xpdacq.xpdacq import validate_dark, _yamify_dark, prun, _read_dark_yaml
+from xpdacq.xpdacq import _validate_dark, _yamify_dark, prun, _read_dark_yaml
 
 class findRightDarkTest(unittest.TestCase): 
     def setUp(self):
@@ -41,7 +41,7 @@ class findRightDarkTest(unittest.TestCase):
     def test_validate_dark_varying_exposure_and_expire_time(self):
         # extend case of test_qualified_dark. Iterate over different exposure_time and expire_time directly
         dark_scan_list, expire_time = [], 11.
-        self.assertEqual(validate_dark(0.1, expire_time,dark_scan_list), None)
+        self.assertEqual(_validate_dark(0.1, expire_time,dark_scan_list), None)
         time_now = time.time()
         dark_scan_list = []
         self.assertTrue(os.path.isfile(glbl.dk_yaml))
@@ -51,19 +51,19 @@ class findRightDarkTest(unittest.TestCase):
         # should return None if no valid items are found
         expire_time = 0.
         light_cnt_time = 0.1
-        self.assertEqual(validate_dark(light_cnt_time, expire_time,dark_scan_list), None)
+        self.assertEqual(_validate_dark(light_cnt_time, expire_time,dark_scan_list), None)
         expire_time = 1000.
         light_cnt_time = 3.
-        self.assertEqual(validate_dark(light_cnt_time, expire_time,dark_scan_list), None)
+        self.assertEqual(_validate_dark(light_cnt_time, expire_time,dark_scan_list), None)
         # find the most recent one
         dark_uid = dark_scan_list[-1][0]
         light_cnt_time = 0.1
         expire_time = 11.
-        self.assertEqual(validate_dark(light_cnt_time, expire_time,dark_scan_list), dark_uid)
+        self.assertEqual(_validate_dark(light_cnt_time, expire_time,dark_scan_list), dark_uid)
         # should still find the most recent one, even though there is more than one valid one
         dark_uid = dark_scan_list[-1][0]
         expire_time = 22.
-        self.assertEqual(validate_dark(light_cnt_time, expire_time,dark_scan_list), dark_uid)
+        self.assertEqual(_validate_dark(light_cnt_time, expire_time,dark_scan_list), dark_uid)
         # now find one that is in time but lower down the list because it has a different count time
         for i in range(3):
             dark_def = (str(uuid.uuid1()), 0.1*(i+1), time_now-1200+600*(i))
@@ -72,7 +72,7 @@ class findRightDarkTest(unittest.TestCase):
         dark_uid = dark_scan_list[-2][0]
         expire_time = 22.
         light_cnt_time = 0.2
-        self.assertEqual(validate_dark(light_cnt_time, expire_time,dark_scan_list), dark_uid)
+        self.assertEqual(_validate_dark(light_cnt_time, expire_time,dark_scan_list), dark_uid)
 
     def test_dark_in_prun_can_find_a_valid_dark(self):
         # case 1: find a qualified dark and test if md got updated
@@ -87,7 +87,7 @@ class findRightDarkTest(unittest.TestCase):
             yaml.dump(dark_scan_list, f)
         test_list = _read_dark_yaml()
         self.assertEqual(test_list,dark_scan_list)
-        scanplan = ScanPlan('ctTest', 'ct', {'exposure':light_cnt_time}, shutter=False)
+        scanplan = ScanPlan('ct', {'exposure':light_cnt_time}, shutter=False)
         prun(self.sa, scanplan)
         self.assertTrue('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
         self.assertTrue(glbl.xpdRE.call_args_list[-1][1]['sc_dk_field_uid'] == dark_uid)
@@ -107,17 +107,17 @@ class findRightDarkTest(unittest.TestCase):
         test_list = _read_dark_yaml()
         self.assertEqual(test_list,dark_scan_list)
         # none with the right exposure
-        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.01}, shutter=False)
+        scanplan = ScanPlan('ct', {'exposure':0.01}, shutter=False)
         prun(self.sa, scanplan)
         self.assertTrue('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
         self.assertFalse(glbl.xpdRE.call_args_list[-1][1]['sc_dk_field_uid'] == dark_uid2)
         # Second one has the right exposure time but expires
         glbl.dk_window = 1.
-        scanplan = ScanPlan('ctTest', 'ct', {'exposure':0.1}, shutter=False)
+        scanplan = ScanPlan('ct', {'exposure':0.1}, shutter=False)
         prun(self.sa, scanplan)
         self.assertTrue('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
         self.assertFalse(glbl.xpdRE.call_args_list[-1][1]['sc_dk_field_uid'] == dark_uid2)
-        
+
     def test_read_dark_yaml(self):
         # test if _read_dark_yaml captures exception as we hope
         self.assertTrue(os.path.isfile(glbl.dk_yaml)) # make sure it exit after _start_beamtime()

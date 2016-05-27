@@ -20,10 +20,12 @@ import shutil
 import datetime
 from time import strftime
 import sys
-import socket
+from collections import OrderedDict
 import copy
 from xpdacq.glbl import glbl
 from xpdacq.utils import _graceful_exit
+
+from bluesky.plans import Plan
 
 home_dir = glbl.home
 yaml_dir = glbl.yaml_dir
@@ -159,6 +161,25 @@ class XPD:
         self._yamify()
 
 class Beamtime(XPD):
+    ''' Class that holds basic information to current beamtime 
+    
+    Parameters
+    ----------
+    pi_last : str
+        last name of PI to this beamtime
+    
+    safn : str
+        SAF number to this beamtime
+    
+    wavelength : float
+        optional but it is strongly recommended to enter. x-ray wavelength to this beamtime, it will be used during data deduction
+    
+    experimenters : list
+        optional. a list of tuples that are made of (last_name, first_name, id) of each experimenter involved.
+    
+    **kwargs : dict
+        optional. a dictionary for user-supplied information.
+    ''' 
     def __init__(self, pi_last, safn, wavelength=None, experimenters=[], **kwargs):
         self.name = 'bt'
         self.type = 'bt'
@@ -196,13 +217,26 @@ class Beamtime(XPD):
         self._yamify()
 
 class Experiment(XPD):
+    ''' class that holds experiment information 
+    
+    Parameters
+    ----------
+    expname : str
+        name to this experiment
+    
+    beamtime : xpdAcq.beamtime.Beamtime object
+        object to current beamtime
+    
+    **kwargs : dict
+        optional. a dictionary for user-supplied information.
+    ''' 
     def __init__(self, expname, beamtime, **kwargs):
         self.bt = beamtime
         self.name = _clean_md_input(expname)
         self.type = 'ex'
         self.md = self.bt.md
         self.md.update({'ex_name': self.name})
-#        self.md.update({'ex_uid': self._getuid()})
+        self.md.update({'ex_uid': self._getuid()})
         self.md.update({'ex_usermd':_clean_md_input(kwargs)})
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
@@ -215,13 +249,26 @@ class Experiment(XPD):
         self._yamify()
 
 class Sample(XPD):
+    ''' class that holds sample information 
+    
+    Parameters
+    ----------
+    samname : str
+        name to this sample
+    
+    experiment : xpdAcq.beamtime.Experiment object
+        object that contains information of experiment
+    
+    **kwargs : dict
+        optional. a dictionary for user-supplied information.
+    '''
     def __init__(self, samname, experiment, **kwargs):
         self.name = _clean_md_input(samname)
         self.type = 'sa'
         self.ex = experiment
         self.md = self.ex.md
         self.md.update({'sa_name': self.name})
-#        self.md.update({'sa_uid': self._getuid()})
+        self.md.update({'sa_uid': self._getuid()})
         self.md.update({'sa_usermd': _clean_md_input(kwargs)})
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
@@ -234,123 +281,298 @@ class Sample(XPD):
         self._yamify()
 
 class ScanPlan(XPD):
-    '''ScanPlan object that defines scans to run.  To run them: prun(Sample,ScanPlan)
-    
-    Arguments:
-    scanname - string - scan name.  Important as new scans will overwrite older
-           scans with the same name.
-    scan_type - string - type of scan. allowed values are 'ct','tseries', 'Tramp' 
-           where  ct=count, tseries=time series (series of counts),
-           and Tramp=Temperature ramp.
-    scan_params - dictionary - contains all scan parameters that will be passed
-           and used at run-time.  Don't make typos in the dictionary keywords
-           or your scans won't work.  The list of allowed keywords is in the 
-           documentation, but 'exposure' sets exposure time and is all that is needed
-           for a simple count. 'num' and 'delay' are the number of images and the
-           delay time between exposures in a tseries. In Tramps as well as 'exposure' 
-           the required keys are 'Tstart', 'Tstop', 'Tstep'.
-    shutter - bool - default=True.  If True, in-hutch fast shutter will be opened before a scan and
-                closed afterwards.  Otherwise control of the shutter is left external. Set to False
-                if you want to control the shutter by hand.
-    livetable - bool - default=True. gives LiveTable output when True, not otherwise
-    verify_write - bool - default=False.  This verifies that tiff files have been written
-                   for each event.  It introduces a significant overhead so mostly used for
-                   testing.
+    '''ScanPlan class  that defines scan plan to run.
+
+    To run it ``prun(Sample, ScanPlan)``
+
+    Parameters
+    ----------
+    scanplan_meta : str
+        An important postional argument that serves two purpose:
+
+        *. If you wish to use auto-naming functionality.
+          Please supply this field with a string following allowed scheme, xpdAcq will parse your arguments.
+          Currently allowed scheme is like following:
+
+          1. 'ct_10' means Count scan with 10s exposure time in total
+
+          2. 'Tramp_10_300_200_5' means temperature ramp from 300k to 200k
+            with 5k step and 10s exposure time each
+
+          3. 'tseries_10_60_5' means time series scan of 10s exposure time each scan
+            and run for 5 scans with 60s delay between them.
+            If you don't want any delay, give it an 0.
+
+        *. If you wish to specify parameters explicitly.
+          This field will be "ScanPlan type". Currently allowed types are:
+
+          1. 'ct': which means a count scanplan with exposure time given
+
+          2. 'tseries' : which means a time series scanplan with
+          exposure time, dely between scans and number of scans specified.
+
+          3. 'Tramp' : which means a temperature ramp scanplan with
+          exposure time, starting temperature, ending temperature and
+          temperature step specified.
+
+    scan_params : dict
+        Optional. Needed if you wish to set up ScanPlan explicitly.
+        It contains all scan parameters that will be passed and used at run-time
+        Don't make typos in the dictionary keywords or your scans won't work.
+        Entire list of allowed keywords is in the documentation on https://xpdacq.github.io/
+
+    shutter : bool
+        default is True. If True, in-hutch fast shutter will be opened before a scan and closed afterwards.
+        Otherwise control of the shutter is left external. Set to False if you want to control the shutter by hand.
+
+    auto_dark_plan : bool
+        argument reserved for auto_dark collection functionality.
+        Ususally user doesn't have to specify
+
+    Examples
+    --------
+    Here are examples of instantiating ScanPlan objects with explicit form.
+
+    >>> ScanPlan('ct', {'exposure': 2.5}
+    >>> ScanPlan('tseries', {'exposure': 2.5, 'delay': 60,'num':5})
+    >>> ScanPlan('Tramp', {'exposure': 2.5, 'sartingT': 300, 'endinT':200, 'Tstep':5})
+
+    Here are examples of instantiating ScanPlan objects with auto naming scheme.
+
+    >>> ScanPlan('ct_2.5')
+    >>> ScanPlan('tseries_2.5_60_5')
+    >>> ScanPlan('Tramp_2.5_300_200_5')
+
+    ScanPlan objects from two sets of examples are equivalent.
     '''
-    def __init__(self,name, scanplan_type, scanplan_params, dk_window = None, shutter=True, livetable=True, verify_write=False, **kwargs):
-        self.name = _clean_md_input(name)
+    def __init__(self, scanplan_meta, scanplan_params = {},
+            dk_window = None, shutter=True, *, auto_dark_plan = False, **kwargs):
+        _sp_input = scanplan_meta.strip()
+        _std_param_list = self._std_param_list_gen()
+        # auto naming, parsed parameters
+        if not scanplan_params:
+            (scanplan_type, scanplan_params) = self._scanplan_name_parser(_sp_input)
+            _sp_name = _sp_input
+            self.scanplan = _clean_md_input(scanplan_type)
+        # long-form, generate name
+        elif scanplan_params:
+            _sp_name = self._scanplan_auto_name(_sp_input, scanplan_params, _std_param_list)
+            self.scanplan = _clean_md_input(_sp_input)
+        # unsupported situation (won't happen in this version, for future use)
+        else:
+            print('ScanPlan only takes auto-naming or explicit naming scheme. Please do " ScanPlan? " for more information')
+            return
+        # setting up main attributes
         self.type = 'sp'
-        self.scanplan = _clean_md_input(scanplan_type)
-        self.sp_params = scanplan_params # sc_parms is a dictionary
-        
+        self.sp_params = scanplan_params # sp_parms is a dictionary
+        self._is_bs = False # priviate attribute
+        if 'bluesky_plan' in self.sp_params:
+            self._is_bs = True
         self._plan_validator()
-        
         self.shutter = shutter
         self.md = {}
-        self.md.update({'sp_name': _clean_md_input(self.name)})
+        self.md.update({'sp_params': scanplan_params})
         self.md.update({'sp_type': _clean_md_input(self.scanplan)})
         self.md.update({'sp_usermd':_clean_md_input(kwargs)})
-        if self.shutter: 
+        # setting up optional attributes
+        _control_params = ''
+        if self.shutter:
             self.md.update({'sp_shutter_control':'in-scan'})
         else:
             self.md.update({'sp_shutter_control':'external'})
-        
+            _control_params += 'nS' # only wirte down non-default behavior
         if not dk_window:
             dk_window = glbl.dk_window
         self.md.update({'sp_dk_window': dk_window})
-
-        subs=[]
-        if livetable:
-            subs.append('livetable')
-        if verify_write:
-            subs.append('verify_write')
-        if len(subs) > 0:
-            scanplan_params.update({'subs':_clean_md_input(subs)}) 
-        self.md.update({'sp_params': _clean_md_input(scanplan_params)})
+        # scanplan name should include options, generate it at the last moment
+        if _control_params:
+            sp_name = '_'.join([_sp_name, _control_params])
+        else:
+            sp_name = _sp_name
+        if auto_dark_plan:
+            sp_name = 'auto_dark'
+            # when auto_dark collection is called. Avoid overwritting ct
+        self.name = sp_name
+        self.md.update({'sp_name': _clean_md_input(self.name)})
+        # summary of scanplan created
+        print('You have created a "{}" type ScanPlan with name = "{}"'.format(self.scanplan, self.name))
+        print('Corresponding scan parameters are:')
+        for i in range(len(_std_param_list)):
+            el = _std_param_list[i]
+            try:
+                print('{} = {}'.format(el, self.md['sp_params'][el]))
+            except KeyError:
+                # all errors should be handled before this step
+                # except for bluesky plan
+                pass
+        print('with fast-shutter control = {}'.format(self.shutter))
+        # yamify ScanPlan
         fname = self._name_for_obj_yaml_file(self.name,self.type)
         objlist = _get_yaml_list()
-        # get objlist from yaml file
         if fname in objlist:
             olduid = self._get_obj_uid(self.name,self.type)
             self.md.update({'sp_uid': olduid})
         else:
             self.md.update({'sp_uid': self._getuid()})
         self._yamify()
-    
+
+    def _std_param_list_gen(self):
+        _ct_required_params = ['exposure']
+        _tseries_required_params = ['exposure', 'delay', 'num']
+        _Tramp_required_params = ['exposure', 'startingT', 'endingT', 'Tstep']
+        # extra efforts to keep print statement in order later
+        _ordered_sp_params = _ct_required_params.copy()
+        _ordered_sp_params.extend(_tseries_required_params)
+        _ordered_sp_params.extend(_Tramp_required_params)
+        _std_params_list = list(OrderedDict.fromkeys(_ordered_sp_params))
+        return _std_params_list
+
+    def _scanplan_auto_name(self, sp_type, sp_params, _std_param_list):
+        # confirm type
+        if not isinstance(sp_params, dict):
+            print("WARNING: scanplan parameter must be a dictionary like {'key':'value'}")
+            return
+        # loop through params
+        sp_naming_list = [sp_type] # initiate list
+        for i in range(len(_std_param_list)):
+            param = sp_params.get(_std_param_list[i])
+            if param: # has element
+                sp_naming_list.append('{:.8g}'.format(param))
+        return '_'.join(sp_naming_list)
+
+    def _scanplan_name_parser(self, sp_name):
+        ''' function to parse name of ScanPlan object into parameters fed into ScanPlan
+
+        expected format for each type is following:
+        1) 'ct_10' means Count scan with 10s exposure time in total
+        2) 'Tramp_10_300_200_5' means temperature ramp from 300k to 200k with 5k step and 10s exposure time each
+        3) 'tseries_10_60_5' means time series scan of 10s exposure time each scan 
+            and run for 5 scans with 60s delay between them.
+        '''
+        _ct_required_params = ['exposure']
+        _tseries_required_params = ['exposure', 'delay', 'num']
+        _Tramp_required_params = ['exposure', 'startingT', 'endingT', 'Tstep']
+
+        _ct_optional_params = ['det','subs_dict']
+        _Tramp_optional_params = ['det', 'subs_dict']
+        _tseries_optional_params = ['det', 'subs_dict']
+
+        parsed_object = sp_name.split('_') # it will split recursively
+        scanplan_type = parsed_object[0]
+        # turn parameters into floats
+        _sp_params = []
+        for i in range(1, len(parsed_object)):
+            try:
+                _sp_params.append(float(parsed_object[i]))
+            except ValueError:
+                sys.exit(_graceful_exit('''xpdAcq can not parse your positional argument "{}".
+                We use SI units across package, so "5s" or "10k" is not necessary.
+                For more information, please go to
+                http://xpdacq.github.io.\n'''.format(parsed_object[i])))
+                return
+        # assgin exposure as it is common parameter
+        exposure = _sp_params[0]
+        sp_params = {'exposure':exposure}
+        if scanplan_type not in glbl._allowed_scanplan_type:
+            sys.exit(_graceful_exit('''{} is not a supported ScanPlan type under current version of xpdAcq.
+                                    Current supported type are {}.
+                                    Please go to http://xpdacq.github.io for more information or request
+                                    '''.format(scanplan_type, glbl._allowed_scanplan_type)))
+        if scanplan_type == 'ct' and len(_sp_params) == 1: # exposure
+            return (scanplan_type, sp_params)
+        elif scanplan_type == 'Tramp' and len(_sp_params) == 4: # exposure, startingT, endingT, Tstep
+            sp_params.update({'startingT': _sp_params[1], 'endingT': _sp_params[2], 'Tstep': _sp_params[3]})
+            return (scanplan_type, sp_params)
+        elif scanplan_type == 'tseries' and len(_sp_params) == 3: # exposure, delay, num
+            sp_params.update({'delay': _sp_params[1], 'num': int(_sp_params[2])})
+            return (scanplan_type, sp_params)
+        elif scanplan_type == 'bluesky':
+            # leave a hook for future bluesky plan autonaming
+            pass
+        else:
+            sys.exit(_graceful_exit('''xpdAcq can't parse your scanplan name {} into corresponding parameters.
+                                    Please do ``ScanPlan?`` to find out currently supported conventions.
+                                    or you can define your scanplan parameter dictionary explicitly.
+                                    For more information, go to http://xpdacq.github.io
+                                    '''.format(sp_name)))
     def _plan_validator(self):
         ''' Validator for ScanPlan object
-        
+
         It validates if required scan parameters for certain scan type are properly defined in object
 
-        Parameters
-        ----------
-            scan_type : str
-                scan tyoe of XPD Scan object
         '''
         # based on structures in xpdacq.xpdacq.py
         _Tramp_required_params = ['startingT', 'endingT', 'Tstep', 'exposure']
         _Tramp_optional_params = ['det', 'subs_dict']
 
         _ct_required_params = ['exposure']
-        _ct_optional_params = ['det','subs_dict'] 
-        # leave optional parameter list here, in case we need to use them in the future
-        
-        
-        # params in tseries is not completely finalized
-        _tseries_required_params = ['exposure', 'delay', 'num']
-        
-        if self.scanplan == 'ct':
-            for el in _ct_required_params:
-                try:
-                    self.sp_params[el]
-                except KeyError:
-                    print('It seems you are using a Count scan but the scan_params dictionary does not contain "{}"which is needed.'.format(el))
-                    print('Please use uparrow to edit and retry making your ScanPlan object')
-                    sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+        _ct_optional_params = ['det','subs_dict']
 
+        _tseries_required_params = ['exposure', 'delay', 'num']
+
+        if self.scanplan == 'ct':
+            # check missed keys
+            missed_keys = [ el for el in _ct_required_params if el not in self.sp_params]
+            if missed_keys:
+                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but you missed required parameters:
+                {}'''.format(self.scanplan, missed_keys)))
+            # check value types
+            wrong_type_dict = {}
+            for k,v in self.sp_params.items():
+                if not isinstance(v,(int,float)):
+                    wrong_type_dict.update({k:v})
+            if wrong_type_dict:
+                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but following key-value pairs are in correct type(s):
+                {}
+                Please go to http://xpdacq.github.io for more information\n'''.
+                format(self.scanplan, wrong_type_dict)))
         elif self.scanplan == 'Tramp':
-            for el in _Tramp_required_params:
-                try:
-                   self.sp_params[el]
-                except KeyError:
-                   print('It seems you are using a temperature ramp scan but the scan_params dictionary does not contain {} which is needed.'.format(el))
-                   print('Please use uparrow to edit and retry making your ScanPlan object')
-                   sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
-        
+            # check missed keys
+            missed_keys = [ el for el in _Tramp_required_params if el not in self.sp_params]
+            if missed_keys:
+                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but you missed required parameters:
+                {}'''.format(self.scanplan, missed_keys)))
+            # check value types
+            wrong_type_dict = {}
+            for k,v in self.sp_params.items():
+                if not isinstance(v,(int,float)):
+                    wrong_type_dict.update({k:v})
+            if wrong_type_dict:
+                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but following key-value pairs are in correct type(s):
+                {}
+                Please go to http://xpdacq.github.io for more information\n'''.
+                format(self.scanplan, wrong_type_dict)))
         elif self.scanplan == 'tseries':
-           for el in _tseries_required_params:
-               try:
-                   self.sp_params[el]
-               except KeyError:
-                   print('It seems you are using a tseries scan but the scan_params dictionary does not contain {} which is needed.'.format(el))
-                   print('Please use uparrow to edit and retry making your ScanPlan object')
-                   sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+            # check missed keys
+            missed_keys = [ el for el in _tseries_required_params if el not in self.sp_params]
+            if missed_keys:
+                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but you missed required parameters:
+                {}'''.format(self.scanplan, missed_keys)))
+            # check value types
+            wrong_type_dict = {}
+            for k,v in self.sp_params.items():
+                if not isinstance(v,(int,float)):
+                    wrong_type_dict.update({k:v})
+            # num needs to be int
+            if not isinstance(self.sp_params['num'], int):
+                wrong_type_dict.update({'num': self.sp_params.get('num')})
+            if wrong_type_dict:
+                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but following key-value pairs are in correct type(s):
+                {}
+                Please go to http://xpdacq.github.io for more information\n'''.
+                format(self.scanplan, wrong_type_dict)))
+
+        elif self.scanplan == 'bluesky':
+            print('''INFO: You are handing a "bluesky" type scan.
+            Please go to https://nsls-ii.github.io/bluesky/plans.html
+            for complete guide on how to define a plan.''')
+            print('INFO: This ScanPlan does not support auto-dark subtraction')
         else:
             print('It seems you are defining an unknown scan')
             print('Please use uparrow to edit and retry making your ScanPlan object')
             sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
 
-class Union(XPD):
+class _Union(XPD):
     def __init__(self,sample,scan):
         self.type = 'cmdo'
         self.sc = scan
@@ -361,7 +583,7 @@ class Union(XPD):
 
 class Scan(XPD):
     ''' a scan class that is the joint unit of Sample and ScanPlan objects
-    
+
     Scan class supports following ways of assigning Sample, ScanPlan objects:
     1) bt.get(<object_index>), eg. Scan(bt.get(2), bt.get(5))
     2) name of acquire object, eg. Scan('my_experiment', 'ct1s')
@@ -372,25 +594,30 @@ class Scan(XPD):
     -----------
     sample: xpdacq.beamtime.Sample
         instance of Sample class that holds sample related metadata
-    
+
     scanplan: xpdacq.beamtime.ScanPlan
         instance of ScanPlan calss that hold scanplan related metadata
+
     '''
     def __init__(self,sample, scanplan):
         self.type = 'sc'
         _sa = self._execute_obj_validator(sample, 'sa', Sample)
-        _sp = self._execute_obj_validator(scanplan, 'sp', ScanPlan)  
-        self.sa = _sa 
-        self.sp = _sp 
+        self.sa = _sa
+        self.md = dict(self.sa.md)
+        _sp = self._execute_obj_validator(scanplan, 'sp', ScanPlan)
+        self.sp = _sp
+        try:
+            sp_md = self.sp.md
+        except:
+            sp_md = {}
         # create a new dict copy.
-        self.md = dict(self.sp.md)
-        self.md.update(self.sa.md)
-    
+        self.md.update(sp_md)
+
     def _execute_obj_validator(self, input_obj, expect_yml_type, expect_class):
         parsed_obj = self._object_parser(input_obj, expect_yml_type)
         output_obj = self._acq_object_validator(parsed_obj, expect_class)
         return output_obj
-    
+
     def _object_parser(self, input_obj, expect_yml_type):
         '''a priviate parser for arbitrary object input
         '''

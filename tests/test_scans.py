@@ -14,6 +14,9 @@ from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
 from xpdacq.xpdacq import prun, calibration, dark, dryrun, background, _auto_dark_collection, _auto_load_calibration_file
 from xpdacq.control import _open_shutter, _close_shutter
 
+from bluesky.plans import Count
+from bluesky.examples import det, motor
+
 class NewScanTest(unittest.TestCase):
     def setUp(self):
         self.base_dir = glbl.base
@@ -42,8 +45,8 @@ class NewScanTest(unittest.TestCase):
             shutil.rmtree(os.path.join(glbl.base,'xpdConfig'))
 
     def test_auto_dark_collection(self):
-        self.sp_set_dk_window = ScanPlan('unittest_count','ct', {'exposure': 0.1}, dk_window = 25575, shutter = False)
-        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
+        self.sp_set_dk_window = ScanPlan('ct', {'exposure': 0.1}, dk_window = 25575, shutter = False)
+        self.sp = ScanPlan('ct', {'exposure': 0.1}, shutter = False)
         self.sc_set_dk_window = Scan(self.sa, self.sp_set_dk_window)
         self.sc = Scan(self.sa, self.sp)
         auto_dark_md_dict_set_dk_window = _auto_dark_collection(self.sc_set_dk_window)
@@ -55,7 +58,7 @@ class NewScanTest(unittest.TestCase):
         self.assertEqual(25575, self.sp_set_dk_window.md['sp_dk_window'])
 
     def test_auto_load_calibration(self):
-        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
+        self.sp = ScanPlan('ct', {'exposure': 0.1}, shutter = False)
         # no config file in xpdUser/config_base
         auto_calibration_md_dict = _auto_load_calibration_file()
         self.assertIsNone(auto_calibration_md_dict)
@@ -95,7 +98,7 @@ class NewScanTest(unittest.TestCase):
         self.assertEqual(modified_auto_calibration_md_dict['sc_calibration_parameters']['Others']['avgmask'], 'False')
 
     def test_new_prun_with_auto_dark_and_auto_calibration(self):
-        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1, 'dk_window':32767}, dk_window = 32767, shutter = False)
+        self.sp = ScanPlan('ct', {'exposure': 0.1, 'dk_window':32767}, dk_window = 32767, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
         cfg_f_name = 'srxconfig.cfg'
@@ -119,7 +122,7 @@ class NewScanTest(unittest.TestCase):
         self.assertFalse('sc_isprun' in self.sp.md)
 
     def test_new_prun_no_auto_dark_but_auto_calibration(self):
-        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1, 'dk_window':32767}, shutter = False)
+        self.sp = ScanPlan('ct', {'exposure': 0.1, 'dk_window':32767}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
         cfg_f_name = 'srxconfig.cfg'
@@ -140,8 +143,35 @@ class NewScanTest(unittest.TestCase):
         # is  ScanPlan.md remain unchanged after scan?
         self.assertFalse('sc_isprun' in self.sp.md)
 
+    def test_prun_with_bleusky_plan(self):
+        cc = Count([det], 2)
+        self.sp = ScanPlan('bluesky', {'bluesky_plan':cc},
+                shutter = False)
+        self.sc = Scan(self.sa, self.sp)
+        self.assertEqual(self.sc.sp, self.sp)
+        cfg_f_name = 'srxconfig.cfg'
+        cfg_src = os.path.join(os.path.dirname(__file__), cfg_f_name) # __file__ gives relative path
+        cfg_dst = os.path.join(glbl.config_base, cfg_f_name)
+        shutil.copy(cfg_src, cfg_dst)
+        prun(self.sa, self.sp)
+        # is xpdRE used?
+        self.assertTrue(glbl.xpdRE.called)
+        # is md updated?
+        self.assertFalse(glbl.xpdRE.call_args_list[-1][1] == self.sc.md)
+        # is prun passed eventually?
+        self.assertTrue('sc_isprun' in glbl.xpdRE.call_args_list[-1][1])
+        # is auto_dark executed? -> No as we don't support
+        self.assertFalse('sc_dk_field_uid' in glbl.xpdRE.call_args_list[-1][1])
+        # is calibration loaded?
+        self.assertTrue(cfg_f_name in glbl.xpdRE.call_args_list[-1][1]['sc_calibration_file_name'])
+        # is 'blusky_plan' appears in sp_params ?
+        self.assertTrue('bluesky_plan' in
+                glbl.xpdRE.call_args_list[-1][1]['sp_params'])
+        # is  ScanPlan.md remain unchanged after scan?
+        self.assertFalse('sc_isprun' in self.sp.md)
+
     def test_dark(self):
-        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
+        self.sp = ScanPlan('ct', {'exposure': 0.1}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
         cfg_f_name = 'srxconfig.cfg'
@@ -163,7 +193,7 @@ class NewScanTest(unittest.TestCase):
         self.assertFalse('sc_isdark' in self.sp.md)
 
     def test_calibration(self):
-        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
+        self.sp = ScanPlan('ct', {'exposure': 0.1}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
         calibration(self.sa, self.sp)
@@ -181,7 +211,7 @@ class NewScanTest(unittest.TestCase):
         self.assertFalse('sc_iscalibration' in self.sp.md)
 
     def test_dryrun(self):
-        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
+        self.sp = ScanPlan('ct', {'exposure': 0.1}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
         md_copy = dict(self.sc.md)
@@ -190,7 +220,7 @@ class NewScanTest(unittest.TestCase):
         self.assertTrue(md_copy == self.sc.md)
     
     def test_background(self):
-        self.sp = ScanPlan('unittest_count','ct', {'exposure': 0.1}, shutter = False)
+        self.sp = ScanPlan('ct', {'exposure': 0.1}, shutter = False)
         self.sc = Scan(self.sa, self.sp)
         self.assertEqual(self.sc.sp, self.sp)
         background(self.sa, self.sp)
