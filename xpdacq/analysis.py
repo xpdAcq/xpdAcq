@@ -164,7 +164,7 @@ def save_tiff(headers, dark_subtraction=True, *, max_count=None):
                 warnings.warn("Requested to do dark correction, but "
                               "extracting the dark image failed.  Proceeding "
                               "without correction.")
-        for ev in get_events(header):
+        for ev in get_events(header, fill=True):
             img = ev['data'][img_field]
             ind = ev['seq_num']
             f_name = _feature_gen(header)
