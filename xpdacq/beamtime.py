@@ -372,12 +372,14 @@ class ScanPlan(XPD):
         self.type = 'sp'
         self.sp_params = scanplan_params # sp_parms is a dictionary
         self._is_bs = False # priviate attribute
-        if 'bluesky_plan' in self.sp_params:
-            self._is_bs = True
         self._plan_validator()
         self.shutter = shutter
         self.md = {}
         self.md.update({'sp_params': scanplan_params})
+        if 'bluesky_plan' in self.sp_params:
+            self._is_bs = True
+            # overwrite as can't yamify ophyd objects now
+            self.md.update({'sp_params': id(scanplan_params)})
         self.md.update({'sp_type': _clean_md_input(self.scanplan)})
         self.md.update({'sp_usermd':_clean_md_input(kwargs)})
         # setting up optional attributes
@@ -420,6 +422,7 @@ class ScanPlan(XPD):
             self.md.update({'sp_uid': olduid})
         else:
             self.md.update({'sp_uid': self._getuid()})
+
         self._yamify()
 
     def _std_param_list_gen(self):
