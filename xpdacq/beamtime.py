@@ -315,6 +315,12 @@ class ScanPlan(XPD):
           exposure time, starting temperature, ending temperature and
           temperature step specified.
 
+          4. 'bluesky' : which means an arbitrary bluesky plan defined by user
+          For more information please go to : https://nsls-ii.github.io/bluesky/plans.html
+          for complete guide on how to define a plan. Note: bluesky type
+          of plan doesn't work with auto-naming, you must specify
+          explicitly.
+
     scan_params : dict
         Optional. Needed if you wish to set up ScanPlan explicitly.
         It contains all scan parameters that will be passed and used at run-time
