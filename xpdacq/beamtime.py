@@ -321,6 +321,10 @@ class ScanPlan(XPD):
           of plan doesn't work with auto-naming, you must specify
           explicitly.
 
+          Note:
+          'bluesky' plan won't be saved as reusalbe form. Everytime you define a bluesky plan,
+          we **SUGGEST** you to save code that defines your plan in a separate place (for example, a text file)
+
     scan_params : dict
         Optional. Needed if you wish to set up ScanPlan explicitly.
         It contains all scan parameters that will be passed and used at run-time
@@ -350,6 +354,13 @@ class ScanPlan(XPD):
     >>> ScanPlan('Tramp_2.5_300_200_5')
 
     ScanPlan objects from two sets of examples are equivalent.
+
+    Here is an example on how to instantiate ScanPlan carrying a bluesky plan
+    that reads area detector and em channel while moving two-theta motor from -1 to 1 in 20 steps.
+
+    >>> from bluesky.plans import AbsScanPlan
+    >>> myscan = AbsScanPlan([pe1c, em], tth_cal, -1, 1, 20)
+    >>> ScanPlan('bluesky', {'bluesky_plan': myscan})
     '''
     def __init__(self, scanplan_meta, scanplan_params = {},
             dk_window = None, shutter=True, *, auto_dark_plan = False, **kwargs):
