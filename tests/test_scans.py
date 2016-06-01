@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import os
+import ctypes
 from configparser import ConfigParser
 import shutil
 import time
@@ -153,6 +154,10 @@ class NewScanTest(unittest.TestCase):
         cfg_src = os.path.join(os.path.dirname(__file__), cfg_f_name) # __file__ gives relative path
         cfg_dst = os.path.join(glbl.config_base, cfg_f_name)
         shutil.copy(cfg_src, cfg_dst)
+        # sp_params should be id to object
+        self.assertEqual(id(cc), self.sp.md['sp_params']['bluesky_plan'])
+
+        # case 1: bluesky plan object exist in current name space
         prun(self.sa, self.sp)
         # is xpdRE used?
         self.assertTrue(glbl.xpdRE.called)
@@ -169,6 +174,10 @@ class NewScanTest(unittest.TestCase):
                 glbl.xpdRE.call_args_list[-1][1]['sp_params'])
         # is  ScanPlan.md remain unchanged after scan?
         self.assertFalse('sc_isprun' in self.sp.md)
+
+        # case 2: bluesky plan object doesn't exist in current name spaece
+        del cc
+        self.assertRaises(NameError, lambda: prun(self.sa, self,sp))
 
     def test_dark(self):
         self.sp = ScanPlan('ct', {'exposure': 0.1}, shutter = False)

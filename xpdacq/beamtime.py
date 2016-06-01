@@ -379,7 +379,9 @@ class ScanPlan(XPD):
         if 'bluesky_plan' in self.sp_params:
             self._is_bs = True
             # overwrite as can't yamify ophyd objects now
-            self.md.update({'sp_params': id(scanplan_params)})
+            plan_obj = scanplan_params['bluesky_plan']
+            plan_id = id(plan_obj)
+            self.md.update({'sp_params': {'bluesky_plan':plan_id}})
         self.md.update({'sp_type': _clean_md_input(self.scanplan)})
         self.md.update({'sp_usermd':_clean_md_input(kwargs)})
         # setting up optional attributes
@@ -409,9 +411,10 @@ class ScanPlan(XPD):
             el = _std_param_list[i]
             try:
                 print('{} = {}'.format(el, self.md['sp_params'][el]))
-            except KeyError:
+            except (KeyError, TypeError):
                 # all errors should be handled before this step
                 # except for bluesky plan
+                # TypeError is for bluesky plan object id
                 pass
         print('with fast-shutter control = {}'.format(self.shutter))
         # yamify ScanPlan
