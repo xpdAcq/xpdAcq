@@ -34,14 +34,14 @@ def _get_yaml_list():
     yaml_dir = glbl.yaml_dir
     lname = os.path.join(yaml_dir,'_acqobj_list.yml')
     with open(lname, 'r') as fout:
-        yaml_list = yaml.load(fout) 
+        yaml_list = yaml.load(fout)
     return list(yaml_list)
 
 def _get_hidden_list():
     yaml_dir = glbl.yaml_dir
     lname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
     with open(lname, 'r') as fout:
-        hidden_list = yaml.load(fout) 
+        hidden_list = yaml.load(fout)
     return list(hidden_list)
 
 def _update_objlist(objlist,name):
@@ -343,7 +343,7 @@ class ScanPlan(XPD):
     --------
     Here are examples of instantiating ScanPlan objects with explicit form.
 
-    >>> ScanPlan('ct', {'exposure': 2.5}
+    >>> ScanPlan('ct', {'exposure': 2.5})
     >>> ScanPlan('tseries', {'exposure': 2.5, 'delay': 60,'num':5})
     >>> ScanPlan('Tramp', {'exposure': 2.5, 'sartingT': 300, 'endingT':200, 'Tstep':5})
 
