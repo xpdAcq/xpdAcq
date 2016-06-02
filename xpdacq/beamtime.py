@@ -345,7 +345,7 @@ class ScanPlan(XPD):
 
     >>> ScanPlan('ct', {'exposure': 2.5}
     >>> ScanPlan('tseries', {'exposure': 2.5, 'delay': 60,'num':5})
-    >>> ScanPlan('Tramp', {'exposure': 2.5, 'sartingT': 300, 'endinT':200, 'Tstep':5})
+    >>> ScanPlan('Tramp', {'exposure': 2.5, 'sartingT': 300, 'endingT':200, 'Tstep':5})
 
     Here are examples of instantiating ScanPlan objects with auto naming scheme.
 
