@@ -15,6 +15,7 @@
 #
 ##############################################################################
 import os
+import gc
 import yaml
 import time
 import datetime
@@ -23,6 +24,7 @@ import copy
 import sys
 import uuid
 import warnings
+import ctypes
 from configparser import ConfigParser
 from xpdacq.utils import _graceful_exit, _RE_state_wrapper
 from xpdacq.glbl import glbl
@@ -57,6 +59,17 @@ def _yamify_dark(dark_def):
     dark_list.append(dark_def)
     with open(dark_yaml_name, 'w') as f:
         yaml.dump(dark_list, f)
+
+def _get_bs_plan_by_id(obj_id):
+    for obj in gc.get_objects():
+        if id(obj) == obj_id:
+            return obj
+    raise NameError('''INFO: This bluesky plan object bounded to this ScanPlan doesn't exit anymore.
+    It was probably created/instantiated in previous ipyhton session.
+    Scan will stop here.....
+
+    Please redefine your bluesky scanplan with guide on https://nsls-ii.github.io/bluesky/plans.html
+    You can then pass it to ScanPlan('bluesky',{'bluesky_plan':<your plan>}) and rerun this scan.''')
 
 def _validate_dark(light_cnt_time, expire_time, dark_scan_list = None):
     ''' find appropriate dark frame uid stored in dark_scan_list
@@ -124,7 +137,8 @@ def _unpack_and_run(scan, dryrun, subs, **kwargs):
     elif scan.md['sp_type'] == 'Tramp':
         collect_Temp_series(scan, parms['startingT'], parms['endingT'], parms['Tstep'], parms['exposure'], area_det, subs, dryrun)
     elif scan.md['sp_type'] == 'bluesky':
-        plan =  parms['bluesky_plan']
+        plan_id = parms['bluesky_plan']
+        plan = _get_bs_plan_by_id(plan_id)
         md_dict = dict(scan.md)
         xpdRE(plan, **md_dict)
     else:
