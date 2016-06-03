@@ -63,7 +63,9 @@ class CustomizedRunEngine(RunEngine):
             plan = plan.factory()
         sh = glbl.shutter
         plan = bp.pchain(bp.abs_set(sh, 1), plan, bp.abs_set(sh, 0))
-        super().__call__(plan, subs, raise_if_interrupted, **metadata_kw)
+        super().__call__(plan, subs,
+                         raise_if_interrupted=raise_if_interrupted,
+                         **metadata_kw)
 
 
 def ct(pe1c, exposure, *, md=None):
