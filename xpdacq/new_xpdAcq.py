@@ -9,16 +9,32 @@ from bluesky.callbacks import LiveTable
 from bluesky.callbacks.broker import verify_files_saved
 
 
-_PLAN_REGISTRY = {'ct': xpdAcq_count}
-
-def register_plan(plan_name, plan_func, overwrite=False):
-    if plan_name in _PLAN_REGISTRY and not overwrite:
-        raise ValueError("registry already contains this name. unregister?")
-    _PLAN_REGISTRY[plan_name] = plan_func
+# TODO Use actual xpdacq global. For now using, bluesky global state
+from bluesky.global_state import gs
+glbl = gs
 
 
-def unregister_plan(plan_name):
-    del _PLAN_REGISTRY[plan_name]
+def _summarize(plan):
+    "based on bluesky.utils.print_summary"
+    output = []
+    read_cache = []
+    for msg in plan:
+        cmd = msg.command
+        if cmd == 'open_run':
+            output.append('{:=^80}'.format(' Open Run '))
+        elif cmd == 'close_run':
+            output.append('{:=^80}'.format(' Close Run '))
+        elif cmd == 'set':
+            output.append('{motor.name} -> {args[0]}'.format(motor=msg.obj,
+                                                             args=msg.args))
+        elif cmd == 'create':
+            pass
+        elif cmd == 'read':
+            read_cache.append(msg.obj.name)
+        elif cmd == 'save':
+            output.append('  Read {}'.format(read_cache))
+            read_cache = []
+    return '\n'.join(output)
 
 
 def use_photon_shutter():
