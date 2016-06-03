@@ -105,7 +105,6 @@ class ScanPlan:
 
     def factory(self):
         global pe1c
-        #plan_func = _PLAN_REGISTRY[self.plan_name]
         plan = self.plan_func(pe1c, *self.args, **self.kwargs)
         return plan
 
