@@ -76,7 +76,7 @@ def ct(pe1c, exposure, *, md=None):
     pe1c.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = pe1c.cam.acquire_time.get()
     # compute number of frames and save metadata
-    num_frame = np.ceiling(exposure / acq_time)
+    num_frame = np.ceil(exposure / acq_time)
     if num_frame == 0:
         num_frame = 1
     computed_exposure = num_frame*acq_time
