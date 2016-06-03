@@ -1,23 +1,38 @@
 import uuid
 import time
+from collections import ChainMap
 import bluesky.plans as bp
 import numpy as np
 from bluesky import RunEngine
-from bluesky.utils import normalized_subs_input
-from bluesky.plan_tools import print_summary
+from bluesky.utils import normalize_subs_input
+from bluesky.callbacks import LiveTable
 from bluesky.callbacks.broker import verify_files_saved
+from xpdacq.xpdacq import ScanPlan
+from xpdacq.beamtime import Sample
+from xpdacq import glbl
 
 
-_PLAN_REGISTRY = {'ct': xpdAcq_count}
-
-def register_plan(plan_name, plan_func, overwrite=False):
-    if plan_name in _PLAN_REGISTRY and not overwrite:
-        raise ValueError("registry already contains this name. unregister?")
-    _PLAN_REGISTRY[plan_name] = plan_func
-
-
-def unregister_plan(plan_name):
-    del _PLAN_REGISTRY[plan_name]
+def _summarize(plan):
+    "based on bluesky.utils.print_summary"
+    output = []
+    read_cache = []
+    for msg in plan:
+        cmd = msg.command
+        if cmd == 'open_run':
+            output.append('{:=^80}'.format(' Open Run '))
+        elif cmd == 'close_run':
+            output.append('{:=^80}'.format(' Close Run '))
+        elif cmd == 'set':
+            output.append('{motor.name} -> {args[0]}'.format(motor=msg.obj,
+                                                             args=msg.args))
+        elif cmd == 'create':
+            pass
+        elif cmd == 'read':
+            read_cache.append(msg.obj.name)
+        elif cmd == 'save':
+            output.append('  Read {}'.format(read_cache))
+            read_cache = []
+    return '\n'.join(output)
 
 
 def use_photon_shutter():
@@ -31,22 +46,32 @@ def use_fast_shutter():
 class CustomizedRunEngine(RunEngine):
     def __call__(self, sample, plan, subs=None, *, raise_if_interrupted=False
             , verify_write=False, auto_dark=True, dk_window=3000,**metadata_kw):
-        _subs = normalized_subs_input(subs)
+        _subs = normalize_subs_input(subs)
+        if isinstance(plan, ScanPlan):
+            plan = plan.factory()
+
+        # For simple usage, allow sample to be a plain dict or a Sample.
+        if isinstance(sample, Sample):
+            sample_md = sample.md
+        else:
+            sample_md = sample
         #if livetable:
         #    _subs.update({'all':LiveTable([pe1c, temp_controller])})
         if verify_write:
             _subs.update({'stop':verify_files_saved})
         # No keys in metadata_kw are allows to collide with sample keys.
-        if set(sample.md) & set(metadata_kw):
+        if set(sample_md) & set(metadata_kw):
             raise ValueError("These keys in metadata_kw are illegal "
                              "because they are always in sample: "
-                             "{}".format(set(sample.md) & set(metadata_kw)))
-        metadata_kw.update(sample.md)
+                             "{}".format(set(sample_md) & set(metadata_kw)))
+        metadata_kw.update(sample_md)
         if isinstance(plan, ScanPlan):
             plan = plan.factory()
         sh = glbl.shutter
         plan = bp.pchain(bp.abs_set(sh, 1), plan, bp.abs_set(sh, 0))
-        super().__call__(plan, subs, raise_if_interrupted, **metadata_kw)
+        super().__call__(plan, subs,
+                         raise_if_interrupted=raise_if_interrupted,
+                         **metadata_kw)
 
 
 def ct(pe1c, exposure, *, md=None):
@@ -57,7 +82,7 @@ def ct(pe1c, exposure, *, md=None):
     pe1c.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = pe1c.cam.acquire_time.get()
     # compute number of frames and save metadata
-    num_frame = np.ceiling(exposure / acq_time)
+    num_frame = np.ceil(exposure / acq_time)
     if num_frame == 0:
         num_frame = 1
     computed_exposure = num_frame*acq_time
@@ -72,8 +97,6 @@ def ct(pe1c, exposure, *, md=None):
                         # 'sp_name': 'ct_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'plan_name': 'ct'})
-
-    _md = ChainMap(md, md_dict)
     plan = bp.count([pe1c], md=_md)
     plan = bp.subs_wrapper(plan, LiveTable([pe1c]))
     yield from plan
@@ -87,10 +110,9 @@ class ScanPlan:
         self.kwargs = kwargs
 
     def factory(self):
-        global pe1c
-        #plan_func = _PLAN_REGISTRY[self.plan_name]
+        pe1c = glbl.pe1c
         plan = self.plan_func(pe1c, *self.args, **self.kwargs)
         return plan
 
     def __str__(self):
-        return print_summary(self.factory())
+        return _summarize(self.factory())
