@@ -49,16 +49,24 @@ class CustomizedRunEngine(RunEngine):
     def __call__(self, sample, plan, subs=None, *, raise_if_interrupted=False
             , verify_write=False, auto_dark=True, dk_window=3000,**metadata_kw):
         _subs = normalize_subs_input(subs)
+        if isinstance(plan, ScanPlan):
+            plan = plan.factory()
+
+        # For simple usage, allow sample to be a plain dict or a Sample.
+        if isinstance(sample, Sample):
+            sample_md = sample.md
+        else:
+            sample_md = sample
         #if livetable:
         #    _subs.update({'all':LiveTable([pe1c, temp_controller])})
         if verify_write:
             _subs.update({'stop':verify_files_saved})
         # No keys in metadata_kw are allows to collide with sample keys.
-        if set(sample.md) & set(metadata_kw):
+        if set(sample_md) & set(metadata_kw):
             raise ValueError("These keys in metadata_kw are illegal "
                              "because they are always in sample: "
-                             "{}".format(set(sample.md) & set(metadata_kw)))
-        metadata_kw.update(sample.md)
+                             "{}".format(set(sample_md) & set(metadata_kw)))
+        metadata_kw.update(sample_md)
         if isinstance(plan, ScanPlan):
             plan = plan.factory()
         sh = glbl.shutter
