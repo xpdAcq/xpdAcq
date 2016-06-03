@@ -1,10 +1,11 @@
 import uuid
 import time
+from collections import ChainMap
 import bluesky.plans as bp
 import numpy as np
 from bluesky import RunEngine
-from bluesky.utils import normalized_subs_input
-from bluesky.plan_tools import print_summary
+from bluesky.utils import normalize_subs_input
+from bluesky.callbacks import LiveTable
 from bluesky.callbacks.broker import verify_files_saved
 
 
