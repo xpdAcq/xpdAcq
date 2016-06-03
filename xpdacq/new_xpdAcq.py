@@ -48,7 +48,7 @@ def use_fast_shutter():
 class CustomizedRunEngine(RunEngine):
     def __call__(self, sample, plan, subs=None, *, raise_if_interrupted=False
             , verify_write=False, auto_dark=True, dk_window=3000,**metadata_kw):
-        _subs = normalized_subs_input(subs)
+        _subs = normalize_subs_input(subs)
         #if livetable:
         #    _subs.update({'all':LiveTable([pe1c, temp_controller])})
         if verify_write:
