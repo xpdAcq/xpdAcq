@@ -7,11 +7,9 @@ from bluesky import RunEngine
 from bluesky.utils import normalize_subs_input
 from bluesky.callbacks import LiveTable
 from bluesky.callbacks.broker import verify_files_saved
-
-
-# TODO Use actual xpdacq global. For now using, bluesky global state
-from bluesky.global_state import gs
-glbl = gs
+from xpdacq.xpdacq import ScanPlan
+from xpdacq.beamtime import Sample
+from xpdacq import glbl
 
 
 def _summarize(plan):
@@ -112,7 +110,7 @@ class ScanPlan:
         self.kwargs = kwargs
 
     def factory(self):
-        global pe1c
+        pe1c = glbl.pe1c
         plan = self.plan_func(pe1c, *self.args, **self.kwargs)
         return plan
 
