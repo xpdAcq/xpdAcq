@@ -109,4 +109,4 @@ class ScanPlan:
         return plan
 
     def __str__(self):
-        return print_summary(self.factory())
+        return _summarize(self.factory())
