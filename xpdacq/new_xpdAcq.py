@@ -91,8 +91,6 @@ def ct(pe1c, exposure, *, md=None):
                         # 'sp_name': 'ct_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'plan_name': 'ct'})
-
-    _md = ChainMap(md, md_dict)
     plan = bp.count([pe1c], md=_md)
     plan = bp.subs_wrapper(plan, LiveTable([pe1c]))
     yield from plan
