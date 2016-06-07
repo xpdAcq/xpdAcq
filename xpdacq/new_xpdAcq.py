@@ -1,16 +1,18 @@
 import uuid
 import time
+from mock import MagicMock
 from collections import ChainMap
 import bluesky.plans as bp
 import numpy as np
 from bluesky import RunEngine
 from bluesky.utils import normalize_subs_input
 from bluesky.callbacks import LiveTable
-from bluesky.callbacks.broker import verify_files_saved
-from xpdacq.xpdacq import ScanPlan
+#from bluesky.callbacks.broker import verify_files_saved
+from xpdacq.beamtime import ScanPlan
 from xpdacq.beamtime import Sample
-from xpdacq import glbl
+from xpdacq.glbl import glbl
 
+verify_files_saved = MagicMock()
 
 def _summarize(plan):
     "based on bluesky.utils.print_summary"
@@ -47,9 +49,6 @@ class CustomizedRunEngine(RunEngine):
     def __call__(self, sample, plan, subs=None, *, raise_if_interrupted=False
             , verify_write=False, auto_dark=True, dk_window=3000,**metadata_kw):
         _subs = normalize_subs_input(subs)
-        if isinstance(plan, ScanPlan):
-            plan = plan.factory()
-
         # For simple usage, allow sample to be a plain dict or a Sample.
         if isinstance(sample, Sample):
             sample_md = sample.md
@@ -68,6 +67,7 @@ class CustomizedRunEngine(RunEngine):
         if isinstance(plan, ScanPlan):
             plan = plan.factory()
         sh = glbl.shutter
+        # force to open shutter before scan and close it after
         plan = bp.pchain(bp.abs_set(sh, 1), plan, bp.abs_set(sh, 0))
         super().__call__(plan, subs,
                          raise_if_interrupted=raise_if_interrupted,
@@ -93,13 +93,14 @@ def ct(pe1c, exposure, *, md=None):
                         'sp_requested_exposure': exposure,
                         'sp_computed_exposure': computed_exposure,
                         'sp_type': 'ct',
-                        # need a name to show all parameters
+                        # need a name that shows all parameters values
                         # 'sp_name': 'ct_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'plan_name': 'ct'})
     plan = bp.count([pe1c], md=_md)
     plan = bp.subs_wrapper(plan, LiveTable([pe1c]))
     yield from plan
+
 
 
 class ScanPlan:
@@ -110,7 +111,9 @@ class ScanPlan:
         self.kwargs = kwargs
 
     def factory(self):
+        # grab the area detector used in current configuration
         pe1c = glbl.pe1c
+        # pass parameter to plan_func
         plan = self.plan_func(pe1c, *self.args, **self.kwargs)
         return plan
 
