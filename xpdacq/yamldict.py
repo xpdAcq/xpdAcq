@@ -7,63 +7,81 @@
 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import tempfile
 import yaml
-from collections import MutableMapping
+import os
 
 
-class YamlDict(MutableMapping):
+class YamlDict(dict):
     """
     A dict-like wrapper over a YAML file
 
     Supports the dict-like (MutableMapping) interface plus a `flush` method
-    to manually update the file to the state of the dict. The method is
-    automatically called on `__setitem__`, `__del__`, and on Python exit.
+    to manually update the file to the state of the dict.
     """
-    def __init__(self, fname):
-        self.fname = fname
-        with open(fname, 'r') as f:
-            d = yaml.load(f)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # We need *some* file to back the YAMLDict. Until the user or
+        # subclass gives us a filepath, just make one in /tmp.
+        tf = tempfile.NamedTempoaryFile()
+        self.filepath = tf.name
+        
+    @property
+    def filepath(self):
+        return self._filepath
+
+    @filepath.setter
+    def filepath(self, fname):
+        self._filepath = fname
+        self.flush()
+
+    @classmethod
+    def from_yaml(self, f):
+        d = yaml.load(f)
         # If file is empty, make it an empty dict.
         if d is None:
             d = {}
         elif not isinstance(d, dict):
             raise TypeError("yamldict only applies to YAML files with a "
                             "mapping")
-        self._cache = d
-        self.flush()
+        instance = YamlDict(d)
+        instance.filepath = f.name  # filepath for current dir
+        return instance
 
-    def __repr__(self):
-        return repr(dict(self))
-
-    def __getitem__(self, key):
-        return self._cache[key]
+    def to_yaml(self, f=None):
+        # if f is None, we get back a string. Good for debugging
+        return yaml.dump(dict(self), f)
 
     def __setitem__(self, key, val):
-        self._cache[key] = val
+        super().__setitem__(key, val)
         self.flush()
-
-    def __iter__(self):
-        return iter(self._cache)
-
-    def __contains__(self, k):
-        return k in self._cache
 
     def __delitem__(self, key):
-        if key not in self:
-            raise KeyError(key)
-        del self._cache[key]
+        super().__delitem__(key)
         self.flush()
 
-    def __len__(self):
-        return len(self._cache)
-
     def clear(self):
-        self._cache.clear()
+        super().clear()
+        self.flush()
+
+    def copy(self):
+        raise NotImplementedError()
+
+    def pop(self, key):
+        super().pop(key)
+        self.flush()
+
+    def popitem(self):
+        super().popitem()
+        self.flush()
+
+    def update(self, val):
+        super().update(val)
         self.flush()
 
     def flush(self):
         """
         Ensure any mutable values are updated on disk.
         """
-        with open(self.fname, 'w') as f:
-            yaml.dump(self._cache, f)
+        with open(self.filepath, 'w') as f:
+            self.to_yaml(f)
