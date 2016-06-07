@@ -23,8 +23,6 @@ class YamlDict(MutableMapping):
         self.fname = fname
         with open(fname, 'r') as f:
             d = yaml.load(f)
-        print(d)
-        print(type(d))
         # If file is empty, make it an empty dict.
         if d is None:
             d = {}

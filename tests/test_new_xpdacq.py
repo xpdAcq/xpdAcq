@@ -1,6 +1,8 @@
+import os
+import yaml
 from mock import MagicMock
 from xpdacq.new_xpdAcq  import CustomizedRunEngine, ScanPlan, ct
-from xpdacq import glbl
+from xpdacq.glbl import glbl
 from bluesky.examples import motor, det, Reader
 
 prun = CustomizedRunEngine({})
@@ -20,9 +22,10 @@ class SimulatedPE1C(Reader):
         self.ready = True  # work around a hack in Reader
 
 
-glbl.pe1c = SimulatedPE1C('pe1c', ['pe1c'])
-glbl.shutter = motor  # this passes as a fake shutter
-glbl.frame_acq_time = 0.1
+def setup_module():
+    glbl.pe1c = SimulatedPE1C('pe1c', ['pe1c'])
+    glbl.shutter = motor  # this passes as a fake shutter
+    glbl.frame_acq_time = 0.1
 
 
 def test_print_scanplan():
@@ -34,3 +37,23 @@ def test_print_scanplan():
 def test_run_scanplan():
     sp = ScanPlan(ct, 1)
     prun({}, sp)
+
+
+def test_scanplan_autoname():
+    sp = ScanPlan(ct, 1)
+    std_f_name = 'ct_1_None' 
+    assert sp._default_yaml_name == std_f_name
+
+def test_scanplan_yamlize():
+    sp = ScanPlan(ct, 1)
+    expected_dict = {'plan_name': 'ct',
+                     'plan_args': {'exposure': 1, 'md': None}}
+    # reload
+    assert yaml.load(sp.to_yaml()) == expected_dict
+    # from_yaml
+    reload_scanplan = ScanPlan.from_yaml(sp.to_yaml())
+    assert yaml.load(reload_scanplan.to_yaml()) == expected_dict
+    # equality
+    other_sp = ScanPlan(ct, 5)
+    assert sp != other_sp
+    assert sp == reload_scanplan

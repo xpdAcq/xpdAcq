@@ -12,7 +12,29 @@ from xpdacq.beamtime import ScanPlan
 from xpdacq.beamtime import Sample
 from xpdacq.glbl import glbl
 
+
+import yaml
+import inspect
+from .yamldict import YamlDict
+
 verify_files_saved = MagicMock()
+
+
+# This is used to map plan names (strings in the YAML file) to actual
+# plan functions in Python.
+_PLAN_REGISTRY = {}
+
+
+def register_plan(plan_name, plan_func, overwrite=False):
+    if plan_name in _PLAN_REGISTRY and not overwrite:
+        raise KeyError("A plan is already registered by this name. Use "
+                       "overwrite=True to overwrite it.")
+    _PLAN_REGISTRY[plan_name] = plan_func
+
+
+def unregister_plan(plan_name):
+    del _PLAN_REGISTRY[plan_name]
+
 
 def _summarize(plan):
     "based on bluesky.utils.print_summary"
@@ -101,6 +123,10 @@ def ct(pe1c, exposure, *, md=None):
     plan = bp.subs_wrapper(plan, LiveTable([pe1c]))
     yield from plan
 
+class Beamtime(YamlDict):
+    def __repr__(self):
+        lst = [ str(el) for el in self]
+        return "\n".join(lst)
 
 
 class ScanPlan:
@@ -109,6 +135,18 @@ class ScanPlan:
         self.plan_name = plan_func.__name__
         self.args = args
         self.kwargs = kwargs
+        self.to_yaml(self._default_yaml_name)
+
+    @property
+    def bound_arguments(self):
+        signature = inspect.signature(self.plan_func)
+        # empty string is for pe1c 
+        bound_arguments = signature.bind('', *self.args, **self.kwargs)
+        bound_arguments.apply_defaults()
+        complete_kwargs = bound_arguments.arguments
+        # remove place holder for pe1c
+        complete_kwargs.popitem(False)
+        return complete_kwargs
 
     def factory(self):
         # grab the area detector used in current configuration
@@ -119,3 +157,36 @@ class ScanPlan:
 
     def __str__(self):
         return _summarize(self.factory())
+
+    def __eq__(self, other):
+        return self.to_yaml() == other.to_yaml()
+
+    def to_yaml(self, fname=None):
+        "With yaml.dump, return a string if fname is None"
+        # Get the complete arguments to plan_func as a dict.
+        # Even args that were given is positional will be mapped to
+        # their name.
+        yaml_info = {}
+        yaml_info['plan_args'] = dict(self.bound_arguments)
+        yaml_info['plan_name'] = self.plan_name
+        if fname is None:
+            return yaml.dump(yaml_info)
+        else:
+            with open(fname, 'w') as f:
+                yaml.dump(yaml_info, f)  # returns None
+
+    @property
+    def _default_yaml_name(self):
+        arg_value_str = map(str, self.bound_arguments.values())
+        return '_'.join([self.plan_name] + list(arg_value_str))
+
+    @classmethod
+    def from_yaml(cls, f):
+        d = yaml.load(f)
+        plan_name = d['plan_name']  # i.e., 'ct'
+        plan_args = d['plan_args']  # i.e., {'exposure': 1}
+        plan_func = _PLAN_REGISTRY[plan_name]
+        return cls(plan_func, **plan_args)
+
+
+register_plan('ct', ct)
