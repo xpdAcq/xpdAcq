@@ -23,7 +23,7 @@ class YamlDict(dict):
         super().__init__(*args, **kwargs)
         # We need *some* file to back the YAMLDict. Until the user or
         # subclass gives us a filepath, just make one in /tmp.
-        self._references = []  # other YAMLDicts to be flushed when this is
+        self._referenced_by = []  # other YAMLDicts to be flushed when this is
         self.filepath = self.default_yaml_path()
 
     def default_yaml_path(self):
@@ -53,7 +53,7 @@ class YamlDict(dict):
 
     def to_yaml(self, f=None):
         # if f is None, we get back a string. Good for debugging
-        return yaml.dump(dict(self), f)
+        return yaml.dump({k: v for k, v in self.items()}, f)
 
     def __setitem__(self, key, val):
         super().__setitem__(key, val)
@@ -92,5 +92,5 @@ class YamlDict(dict):
         """
         with open(self.filepath, 'w') as f:
             self.to_yaml(f)
-        for ref in self._references:
+        for ref in self._referenced_by:
             ref.flush()

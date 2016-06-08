@@ -191,6 +191,9 @@ class ChainMapAdapter(dict):
     def values(self):
         return self._chainmap.values()
 
+    def repr(self):
+        return repr({k: v for k, v in self.items()})
+
 
 def new_short_uid():
     return str(uuid.uuid4())[:8]
@@ -212,18 +215,18 @@ class Beamtime(ValidatedDict, YamlDict):
         return '{pi_name}.yml'.format(**self)
 
     def register_experiment(self, experiment):
-        self._references.append(experiment)
+        self._referenced_by.append(experiment)
 
 
 class Experiment(ChainMapAdapter, ValidatedDict, YamlDict):
     _REQUIRED_FIELDS = ['experiment_name']
 
     def __init__(self, experiment_name, beamtime, **kwargs):
-        beamtime.register_experiment(self)
         experiment = dict(experiment_name=experiment_name, **kwargs)
         super().__init__(experiment, beamtime)
         self.beamtime = beamtime
         self.setdefault('experiment_uid', new_short_uid())
+        beamtime.register_experiment(self)
 
     def validate(self):
         missing = set(self._REQUIRED_FIELDS) - set(self)
@@ -234,7 +237,7 @@ class Experiment(ChainMapAdapter, ValidatedDict, YamlDict):
         return '{experiment_name}.yml'.format(**self)
 
     def register_sample(self, sample):
-        self._references.append(sample)
+        self._referenced_by.append(sample)
 
 
 class Sample(ChainMapAdapter, ValidatedDict, YamlDict):
