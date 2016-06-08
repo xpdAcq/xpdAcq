@@ -96,7 +96,8 @@ class CustomizedRunEngine(RunEngine):
                          **metadata_kw)
 
 
-def ct(pe1c, exposure, *, md=None):
+def ct(dets, exposure, *, md=None):
+    pe1c, = dets
     if md is None:
         md = {}
     # setting up detector
@@ -109,7 +110,8 @@ def ct(pe1c, exposure, *, md=None):
         num_frame = 1
     computed_exposure = num_frame*acq_time
     pe1c.images_per_set.put(num_frame)
-    print('INFO: requested exposure time = ',exposure,' -> computed exposure time:',computed_exposure)
+    print("INFO: requested exposure time = {} - > computed exposure time"
+          "= {}".format(exposure, computed_exposure))
     _md = ChainMap(md, {'sp_time_per_frame': acq_time,
                         'sp_num_frames': num_frame,
                         'sp_requested_exposure': exposure,
@@ -128,6 +130,34 @@ class Beamtime(YamlDict):
         lst = [ str(el) for el in self]
         return "\n".join(lst)
 
+class Sample(YamlDict):
+    _REQUIRED_FILELDS = ['name', 'experiment']#,'composition']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.validate()
+        self.filepath = self._default_yaml_path
+
+    def validate(self):
+        missing_fields = set(_REQUIRED_FIELDS) - set(self)
+        test_result = not bool(missing_fields)
+        if not test_result:
+            raise ValueError("Missing reuqired fields {}"
+                             .format(missing_fields)
+                             )
+
+    @property
+    def _default_yaml_path(self):
+        return '{name}.yml'.format(**self)
+
+
+@contextmanager
+def dereference(d, key):
+    tmp = d[key]
+    d[key] = d[key]['uid']
+    try:
+        yield
+    finally:
+        d[key] = tmp
 
 class ScanPlan:
     def __init__(self, plan_func, *args, **kwargs):
@@ -140,11 +170,11 @@ class ScanPlan:
     @property
     def bound_arguments(self):
         signature = inspect.signature(self.plan_func)
-        # empty string is for pe1c 
-        bound_arguments = signature.bind('', *self.args, **self.kwargs)
+        # empty list is for [pe1c]  
+        bound_arguments = signature.bind([], *self.args, **self.kwargs)
         bound_arguments.apply_defaults()
         complete_kwargs = bound_arguments.arguments
-        # remove place holder for pe1c
+        # remove place holder for [pe1c]
         complete_kwargs.popitem(False)
         return complete_kwargs
 
@@ -152,7 +182,7 @@ class ScanPlan:
         # grab the area detector used in current configuration
         pe1c = glbl.pe1c
         # pass parameter to plan_func
-        plan = self.plan_func(pe1c, *self.args, **self.kwargs)
+        plan = self.plan_func([pe1c], *self.args, **self.kwargs)
         return plan
 
     def __str__(self):
