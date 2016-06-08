@@ -197,7 +197,7 @@ class ScanPlan:
         self.plan_name = plan_func.__name__
         self.args = args
         self.kwargs = kwargs
-        self.to_yaml(self._default_yaml_name)
+        self.to_yaml(self.default_yaml_path())
 
     @property
     def bound_arguments(self):
@@ -237,8 +237,7 @@ class ScanPlan:
             with open(fname, 'w') as f:
                 yaml.dump(yaml_info, f)  # returns None
 
-    @property
-    def _default_yaml_name(self):
+    def default_yaml_path(self):
         arg_value_str = map(str, self.bound_arguments.values())
         return '_'.join([self.plan_name] + list(arg_value_str))
 
