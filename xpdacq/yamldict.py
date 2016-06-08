@@ -23,9 +23,11 @@ class YamlDict(dict):
         super().__init__(*args, **kwargs)
         # We need *some* file to back the YAMLDict. Until the user or
         # subclass gives us a filepath, just make one in /tmp.
-        tf = tempfile.NamedTempoaryFile()
-        self.filepath = tf.name
-        
+        self.filepath = self.default_yaml_path()
+
+    def default_yaml_path(self):
+        return tempfile.NamedTempoaryFile().name
+
     @property
     def filepath(self):
         return self._filepath
@@ -77,6 +79,10 @@ class YamlDict(dict):
 
     def update(self, val):
         super().update(val)
+        self.flush()
+
+    def setdefault(self, key, val):
+        super().setdefault(key, val)
         self.flush()
 
     def flush(self):
