@@ -10,6 +10,7 @@ from bluesky.callbacks import LiveTable
 #from bluesky.callbacks.broker import verify_files_saved
 from xpdacq.beamtime import ScanPlan
 from xpdacq.beamtime import Sample
+from xpdacq.validated_dict import ValidatedDict
 from xpdacq.glbl import glbl
 
 
@@ -126,38 +127,40 @@ def ct(dets, exposure, *, md=None):
     yield from plan
 
 class Beamtime(YamlDict):
-    def __repr__(self):
-        lst = [ str(el) for el in self]
-        return "\n".join(lst)
+    pass
+    #def __repr__(self):
+    #    lst = [ str(el) for el in self]
+    #    return "\n".join(lst)
 
-class Sample(YamlDict):
-    _REQUIRED_FILELDS = ['name', 'experiment']#,'composition']
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.validate()
-        self.filepath = self._default_yaml_path
+
+class Sample(ValidatedDict, YamlDict):
+    _REQUIRED_FIELDS = ['name', 'composition']
+
+    def __init__(self, name, experiment, **kwargs):
+        self.experiment = experiment
+        self._chainmap = ChainMap(self, self.experiment)
+        super().__init__(name=name, **kwargs)
+
+    def __getitem__(self, key):
+        return self.get(key, self.experiment[key])
+
+    def items(self):
+        return self._chainmap.items()
+
+    def keys(self):
+        return self._chainmap.keys()
+
+    def values(self):
+        return self._chainmap.values()
 
     def validate(self):
-        missing_fields = set(_REQUIRED_FIELDS) - set(self)
-        test_result = not bool(missing_fields)
-        if not test_result:
-            raise ValueError("Missing reuqired fields {}"
-                             .format(missing_fields)
-                             )
+        missing = set(self._REQUIRED_FIELDS) - set(self)
+        if missing:
+            raise ValueError("Missing required fields {}".format(missing))
 
-    @property
-    def _default_yaml_path(self):
+    def default_yaml_path(self):
         return '{name}.yml'.format(**self)
 
-
-@contextmanager
-def dereference(d, key):
-    tmp = d[key]
-    d[key] = d[key]['uid']
-    try:
-        yield
-    finally:
-        d[key] = tmp
 
 class ScanPlan:
     def __init__(self, plan_func, *args, **kwargs):

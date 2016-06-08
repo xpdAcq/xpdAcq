@@ -26,7 +26,7 @@ class YamlDict(dict):
         self.filepath = self.default_yaml_path()
 
     def default_yaml_path(self):
-        return tempfile.NamedTempoaryFile().name
+        return tempfile.NamedTemporaryFile().name
 
     @property
     def filepath(self):
