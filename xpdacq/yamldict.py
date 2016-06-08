@@ -77,8 +77,8 @@ class YamlDict(dict):
         super().popitem()
         self.flush()
 
-    def update(self, val):
-        super().update(val)
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
         self.flush()
 
     def setdefault(self, key, val):
