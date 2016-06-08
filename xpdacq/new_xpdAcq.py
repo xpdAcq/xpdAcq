@@ -133,8 +133,77 @@ class Beamtime(YamlDict):
     #    return "\n".join(lst)
 
 
-class Sample(ValidatedDict, YamlDict):
+class ChainMapAdapter(dict):
+    "a version of ChainMap that plays with with Multiple Inheritance"
+    def __init__(self, *maps):
+        self._chainmap = ChainMap(*maps)
+        super().__init__(**self._chainmap)
+        self.maps = self._chainmap.maps
+
+    @property
+    def parents(self):
+        return self._chainmap.parents
+
+    def new_child(self, m=None):
+        return self._chainmap.new_child(m=m)
+
+    def clear(self):
+        super().clear()
+        return self._chainmap.clear()
+
+    def __getitem__(self, key):
+        return self._chainmap.__getitem__(key)
+
+    def __contains__(self, key):
+        return self._chainmap.__contains__(key)
+
+    def __setitem__(self, key, val):
+        return self._chainmap.__setitem__(key, val)
+
+    def __delitem__(self, key):
+        return self._chainmap.__delitem__(key)
+
+    def pop(self, key):
+        return self._chainmap.pop(key)
+
+    def keys(self):
+        return self._chainmap.keys()
+
+    def values(self):
+        return self._chainmap.values()
+
+    def items(self):
+        return self._chainmap.items()
+
+    def setdefault(self, key, val):
+        return self._chainmap.setdefault(key, val)
+
+    def popitem(self):
+        return self._chainmap.popitem()
+
+    def update(self, *args, **kwargs):
+        return self._chainmap.update(*args, **kwargs)
+
+
+
+class _Sample(ValidatedDict):
     _REQUIRED_FIELDS = ['name', 'composition']
+
+    def validate(self):
+        missing = set(self._REQUIRED_FIELDS) - set(self)
+        if missing:
+            raise ValueError("Missing required fields {}".format(missing))
+
+    def default_yaml_path(self):
+        return '{name}.yml'.format(**self)
+
+class Sample(ChainMapAdapter, YamlDict):
+    def __init__(self, name, experiment, **kwargs):
+        first_map = _Sample(name=name, **kwargs)
+        super().__init__(first_map, experiment)
+
+
+class OldSample(ValidatedDict, YamlDict):
 
     def __init__(self, name, experiment, **kwargs):
         self.experiment = experiment
@@ -143,6 +212,9 @@ class Sample(ValidatedDict, YamlDict):
 
     def __getitem__(self, key):
         return self.get(key, self.experiment[key])
+
+    def __contains__(self, key):
+        return key in self.keys()
 
     def items(self):
         return self._chainmap.items()
@@ -153,13 +225,6 @@ class Sample(ValidatedDict, YamlDict):
     def values(self):
         return self._chainmap.values()
 
-    def validate(self):
-        missing = set(self._REQUIRED_FIELDS) - set(self)
-        if missing:
-            raise ValueError("Missing required fields {}".format(missing))
-
-    def default_yaml_path(self):
-        return '{name}.yml'.format(**self)
 
 
 class ScanPlan:
