@@ -126,19 +126,13 @@ def ct(dets, exposure, *, md=None):
     plan = bp.subs_wrapper(plan, LiveTable([pe1c]))
     yield from plan
 
-class Beamtime(YamlDict):
-    pass
-    #def __repr__(self):
-    #    lst = [ str(el) for el in self]
-    #    return "\n".join(lst)
-
 
 class ChainMapAdapter(dict):
     "a version of ChainMap that plays with with Multiple Inheritance"
     def __init__(self, *maps):
         self._chainmap = ChainMap(*maps)
-        super().__init__(**self._chainmap)
         self.maps = self._chainmap.maps
+        super().__init__(**self._chainmap)
 
     @property
     def parents(self):
@@ -198,12 +192,60 @@ class ChainMapAdapter(dict):
         return self._chainmap.values()
 
 
+def new_short_uid():
+    return str(uuid.uuid4())[:8]
+
+
+class Beamtime(ValidatedDict, YamlDict):
+    _REQUIRED_FIELDS = ['pi_name', 'safnum']
+
+    def __init__(self, pi_name, safnum, **kwargs):
+        super().__init__(pi_name=pi_name, safnum=safnum, **kwargs)
+        self.setdefault('beamtime_uid', new_short_uid())
+
+    def validate(self):
+        missing = set(self._REQUIRED_FIELDS) - set(self)
+        if missing:
+            raise ValueError("Missing required fields {}".format(missing))
+
+    def default_yaml_path(self):
+        return '{pi_name}.yml'.format(**self)
+
+    def register_experiment(self, experiment):
+        self._references.append(experiment)
+
+
+class Experiment(ChainMapAdapter, ValidatedDict, YamlDict):
+    _REQUIRED_FIELDS = ['experiment_name']
+
+    def __init__(self, experiment_name, beamtime, **kwargs):
+        beamtime.register_experiment(self)
+        experiment = dict(experiment_name=experiment_name, **kwargs)
+        super().__init__(experiment, beamtime)
+        self.beamtime = beamtime
+        self.setdefault('experiment_uid', new_short_uid())
+
+    def validate(self):
+        missing = set(self._REQUIRED_FIELDS) - set(self)
+        if missing:
+            raise ValueError("Missing required fields {}".format(missing))
+
+    def default_yaml_path(self):
+        return '{experiment_name}.yml'.format(**self)
+
+    def register_sample(self, sample):
+        self._references.append(sample)
+
+
 class Sample(ChainMapAdapter, ValidatedDict, YamlDict):
     _REQUIRED_FIELDS = ['name', 'composition']
 
-    def __init__(self, name, experiment, **kwargs):
-        first_map = dict(name=name, **kwargs)
-        super().__init__(first_map, experiment)
+    def __init__(self, name, experiment, *, composition, **kwargs):
+        experiment.register_sample(self)
+        sample = dict(name=name, composition=composition, **kwargs)
+        super().__init__(sample, experiment)
+        self.experiment = experiment
+        self.setdefault('sample_uid', new_short_uid())
 
     def validate(self):
         missing = set(self._REQUIRED_FIELDS) - set(self)

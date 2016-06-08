@@ -23,6 +23,7 @@ class YamlDict(dict):
         super().__init__(*args, **kwargs)
         # We need *some* file to back the YAMLDict. Until the user or
         # subclass gives us a filepath, just make one in /tmp.
+        self._references = []  # other YAMLDicts to be flushed when this is
         self.filepath = self.default_yaml_path()
 
     def default_yaml_path(self):
@@ -91,3 +92,5 @@ class YamlDict(dict):
         """
         with open(self.filepath, 'w') as f:
             self.to_yaml(f)
+        for ref in self._references:
+            ref.flush()
