@@ -1,7 +1,6 @@
-from contextlib import contextmanager
+from collections import ChainMap
 
-
-class ValidatedDict(dict):
+class ValidatedDictLike:
     """
     This a dict with a `validate` method that may raise any exception.
 
@@ -77,21 +76,3 @@ class ValidatedDict(dict):
 
     def validate(self):
         pass
-
-@contextmanager
-def safe_validate(d, key):
-    tmp = d[key]
-    d[key] = d[key]['uid']
-    try:
-        yield
-    finally:
-        d[key] = tmp
-
-@contextmanager
-def dereference(d, key):
-    tmp = d[key]
-    d[key] = d[key]['uid']
-    try:
-        yield
-    finally:
-        d[key] = tmp

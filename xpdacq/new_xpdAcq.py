@@ -10,13 +10,13 @@ from bluesky.callbacks import LiveTable
 #from bluesky.callbacks.broker import verify_files_saved
 from xpdacq.beamtime import ScanPlan
 from xpdacq.beamtime import Sample
-from xpdacq.validated_dict import ValidatedDict
 from xpdacq.glbl import glbl
 
 
 import yaml
 import inspect
-from .yamldict import YamlDict
+from .yamldict import YamlDict, YamlChainMap
+from xpdacq.validated_dict import ValidatedDictLike
 
 verify_files_saved = MagicMock()
 
@@ -127,79 +127,11 @@ def ct(dets, exposure, *, md=None):
     yield from plan
 
 
-class ChainMapAdapter(dict):
-    "a version of ChainMap that plays with with Multiple Inheritance"
-    def __init__(self, *maps):
-        self._chainmap = ChainMap(*maps)
-        self.maps = self._chainmap.maps
-        super().__init__(**self._chainmap)
-
-    @property
-    def parents(self):
-        return self._chainmap.parents
-
-    def new_child(self, m=None):
-        return self._chainmap.new_child(m=m)
-
-    def __getitem__(self, key):
-        return self._chainmap.__getitem__(key)
-
-    def __contains__(self, key):
-        return self._chainmap.__contains__(key)
-
-    def __setitem__(self, key, val):
-        super().__setitem__(key, val)
-        return self._chainmap.__setitem__(key, val)
-
-    def __delitem__(self, key):
-        super().__delitem__(key)
-        return self._chainmap.__delitem__(key)
-
-    def clear(self):
-        super().clear()
-        return self._chainmap.clear()
-
-    def copy(self):
-        super().copy()
-        return self._chainmap.copy()
-
-    def get(self, key):
-        return self._chainmap.get()
-
-    def items(self):
-        return self._chainmap.items()
-
-    def keys(self):
-        return self._chainmap.keys()
-
-    def pop(self, key):
-        super().pop(key)
-        return self._chainmap.pop(key)
-
-    def popitem(self):
-        super().popitem()
-        return self._chainmap.popitem()
-
-    def setdefault(self, key, val):
-        super().setdefault(key, val)
-        return self._chainmap.setdefault(key, val)
-
-    def update(self, *args, **kwargs):
-        super().update(*args, **kwargs)
-        return self._chainmap.update(*args, **kwargs)
-
-    def values(self):
-        return self._chainmap.values()
-
-    def repr(self):
-        return repr({k: v for k, v in self.items()})
-
-
 def new_short_uid():
     return str(uuid.uuid4())[:8]
 
 
-class Beamtime(ValidatedDict, YamlDict):
+class Beamtime(ValidatedDictLike, YamlDict):
     _REQUIRED_FIELDS = ['pi_name', 'safnum']
 
     def __init__(self, pi_name, safnum, **kwargs):
@@ -218,7 +150,7 @@ class Beamtime(ValidatedDict, YamlDict):
         self._referenced_by.append(experiment)
 
 
-class Experiment(ChainMapAdapter, ValidatedDict, YamlDict):
+class Experiment(ValidatedDictLike, YamlChainMap):
     _REQUIRED_FIELDS = ['experiment_name']
 
     def __init__(self, experiment_name, beamtime, **kwargs):
@@ -240,7 +172,7 @@ class Experiment(ChainMapAdapter, ValidatedDict, YamlDict):
         self._referenced_by.append(sample)
 
 
-class Sample(ChainMapAdapter, ValidatedDict, YamlDict):
+class Sample(ValidatedDictLike, YamlChainMap):
     _REQUIRED_FIELDS = ['name', 'composition']
 
     def __init__(self, name, experiment, *, composition, **kwargs):

@@ -7,12 +7,14 @@
 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import os
 import tempfile
 import yaml
-import os
+import abc
+from collections import ChainMap
 
 
-class YamlDict(dict):
+class _YamlDictLike:
     """
     A dict-like wrapper over a YAML file
 
@@ -21,9 +23,7 @@ class YamlDict(dict):
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # We need *some* file to back the YAMLDict. Until the user or
-        # subclass gives us a filepath, just make one in /tmp.
-        self._referenced_by = []  # other YAMLDicts to be flushed when this is
+        self._referenced_by = []  # to be flushed whenever this is flushed
         self.filepath = self.default_yaml_path()
 
     def default_yaml_path(self):
@@ -38,6 +38,66 @@ class YamlDict(dict):
         self._filepath = fname
         self.flush()
 
+    @abc.abstractclassmethod
+    def from_yaml(self, f):
+        pass
+
+    @abc.abstractmethod
+    def to_yaml(self, f=None):
+        pass
+
+    def __setitem__(self, key, val):
+        res = super().__setitem__(key, val)
+        self.flush()
+        return res
+
+    def __delitem__(self, key):
+        res = super().__delitem__(key)
+        self.flush()
+        return res
+
+    def clear(self):
+        res = super().clear()
+        self.flush()
+        return res
+
+    def copy(self):
+        raise NotImplementedError
+
+    def pop(self, key):
+        res = super().pop(key)
+        self.flush()
+        return res
+
+    def popitem(self):
+        res = super().popitem()
+        self.flush()
+        return res
+
+    def update(self, *args, **kwargs):
+        res = super().update(*args, **kwargs)
+        self.flush()
+        return res
+
+    def setdefault(self, key, val):
+        res = super().setdefault(key, val)
+        self.flush()
+        return res
+
+    def flush(self):
+        """
+        Ensure any mutable values are updated on disk.
+        """
+        with open(self.filepath, 'w') as f:
+            self.to_yaml(f)
+        for ref in self._referenced_by:
+            ref.flush()
+
+
+class YamlDict(_YamlDictLike, dict):
+    def to_yaml(self, f=None):
+        return yaml.dump(dict(self), f, default_flow_style=False)
+
     @classmethod
     def from_yaml(self, f):
         d = yaml.load(f)
@@ -48,49 +108,24 @@ class YamlDict(dict):
             raise TypeError("yamldict only applies to YAML files with a "
                             "mapping")
         instance = YamlDict(d)
-        instance.filepath = f.name  # filepath for current dir
+        instance.filepath = os.path.abspath(f.name)
         return instance
 
+
+class YamlChainMap(_YamlDictLike, ChainMap):
     def to_yaml(self, f=None):
-        # if f is None, we get back a string. Good for debugging
-        return yaml.dump({k: v for k, v in self.items()}, f)
+        return yaml.dump(list(map(dict, self.maps)), f,
+                         default_flow_style=False)
 
-    def __setitem__(self, key, val):
-        super().__setitem__(key, val)
-        self.flush()
-
-    def __delitem__(self, key):
-        super().__delitem__(key)
-        self.flush()
-
-    def clear(self):
-        super().clear()
-        self.flush()
-
-    def copy(self):
-        raise NotImplementedError()
-
-    def pop(self, key):
-        super().pop(key)
-        self.flush()
-
-    def popitem(self):
-        super().popitem()
-        self.flush()
-
-    def update(self, *args, **kwargs):
-        super().update(*args, **kwargs)
-        self.flush()
-
-    def setdefault(self, key, val):
-        super().setdefault(key, val)
-        self.flush()
-
-    def flush(self):
-        """
-        Ensure any mutable values are updated on disk.
-        """
-        with open(self.filepath, 'w') as f:
-            self.to_yaml(f)
-        for ref in self._referenced_by:
-            ref.flush()
+    @classmethod
+    def from_yaml(self, f):
+        maps = yaml.load(f)
+        # If file is empty, make it an empty list.
+        if maps is None:
+            maps = []
+        elif not isinstance(maps, list):
+            raise TypeError("yamlchainmap only applies to YAML files with "
+                            "list of mappings")
+        instance = YamlChainMap(*maps)
+        instance.filepath = os.path.abspath(f.name)
+        return instance
