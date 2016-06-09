@@ -108,7 +108,8 @@ class YamlDict(_YamlDictLike, dict):
             raise TypeError("yamldict only applies to YAML files with a "
                             "mapping")
         instance = YamlDict(d)
-        instance.filepath = os.path.abspath(f.name)
+        if not isinstance(f, str):
+            instance.filepath = os.path.abspath(f.name)
         return instance
 
 
@@ -127,5 +128,6 @@ class YamlChainMap(_YamlDictLike, ChainMap):
             raise TypeError("yamlchainmap only applies to YAML files with "
                             "list of mappings")
         instance = YamlChainMap(*maps)
-        instance.filepath = os.path.abspath(f.name)
+        if not isinstance(f, str):
+            instance.filepath = os.path.abspath(f.name)
         return instance
