@@ -161,21 +161,17 @@ class Beamtime(ValidatedDictLike, YamlDict):
     @classmethod
     def from_yaml(cls, f):
         d = yaml.load(f)
-        if isinstance(f, str):
-            filepath = None
-        else:
-            filepath = os.path.abspath(f.name)
-        return cls.from_dict(d, filepath=filepath)
+        instance = cls.from_dict(d)
+        if not isinstance(f, str):
+            instance.filepath = os.path.abspath(f.name)
+        return instance
 
     @classmethod
-    def from_dict(cls, d, filepath=None):
-        instance = cls(pi_name=d.pop('pi_name'),
-                       safnum=d.pop('safnum'),
-                       beamtime_uid=d.pop('beamtime_uid'),
-                       **d)
-        if filepath is not None:
-            instance.filepath = filepath
-        return instance
+    def from_dict(cls, d):
+        return cls(pi_name=d.pop('pi_name'),
+                   safnum=d.pop('safnum'),
+                   beamtime_uid=d.pop('beamtime_uid'),
+                   **d)
 
 
 class Experiment(ValidatedDictLike, YamlChainMap):
@@ -206,25 +202,19 @@ class Experiment(ValidatedDictLike, YamlChainMap):
     @classmethod
     def from_yaml(cls, f, beamtime=None):
         map1, map2 = yaml.load(f)
-        if isinstance(f, str):
-            filepath = None
-        else:
-            filepath = f.name
-        return cls.from_dicts(map1, map2, beamtime=beamtime,
-                              filepath=filepath)
+        instance = cls.from_dicts(map1, map2, beamtime=beamtime)
+        if not isinstance(f, str):
+            instance.filepath = os.path.abspath(f.name)
+        return instance
 
     @classmethod
-    def from_dicts(cls, map1, map2, beamtime=None, filepath=None):
+    def from_dicts(cls, map1, map2, beamtime=None):
         if beamtime is None:
             beamtime = Beamtime.from_dict(map2)
-        # If file is empty, make it an empty list.
-        instance = cls(experiment_name=map1.pop('experiment_name'),
-                       beamtime=beamtime,
-                       experiment_uid=map1.pop('experiment_uid'),
-                       **map1)
-        if filepath is not None:
-            instance.filepath = filepath
-        return instance
+        return cls(experiment_name=map1.pop('experiment_name'),
+                   beamtime=beamtime,
+                   experiment_uid=map1.pop('experiment_uid'),
+                   **map1)
 
 
 class Sample(ValidatedDictLike, YamlChainMap):
@@ -248,26 +238,19 @@ class Sample(ValidatedDictLike, YamlChainMap):
     @classmethod
     def from_yaml(cls, f, experiment=None, beamtime=None):
         map1, map2, map3 = yaml.load(f)
-        if isinstance(f, str):
-            filepath = None
-        else:
-            filepath = f.name
-        return cls.from_dicts(map1, map2, map3, experiment=experiment,
-                              beamtime=beamtime, filepath=filepath)
+        instance = cls.from_dicts(map1, map2, map3, experiment, beamtime)
+        if not isinstance(f, str):
+            instance.filepath = os.path.abspath(f.name)
+        return instance
 
     @classmethod
-    def from_yaml(cls, f, experiment=None, beamtime=None, filepath=None):
-        map1, map2, map3 = yaml.load(f)
+    def from_dicts(cls, map1, map2, map3, experiment=None, beamtime=None):
         if experiment is None:
-            experiment = Experiment.from_dicts(map2, map3, beamtime=beamtime,
-                                               filepath=filepath)
-        instance = cls(name=map1.pop('name'),
-                       experiment=experiment,
-                       sample_uid=map1.pop('sample_uid'),
-                       **map1)
-        if filepath is not None:
-            instance.filepath = filepath
-        return instance
+            experiment = Experiment.from_dicts(map2, map3, beamtime=beamtime)
+        return cls(name=map1.pop('name'),
+                   experiment=experiment,
+                   sample_uid=map1.pop('sample_uid'),
+                   **map1)
 
 
 def load_beamtime(bt_yaml_file):
