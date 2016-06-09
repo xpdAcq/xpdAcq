@@ -146,7 +146,13 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self._referenced_by = self.experiments  # used by YamlDict
         self.setdefault('beamtime_uid', new_short_uid())
 
+    @property
+    def samples(self):
+        "a flattened list of all the samples from all the experiments"
+        return [s for e in self.experiments for s in e.samples]
+
     def validate(self):
+        # This is automatically called whenever the contents are changed.
         missing = set(self._REQUIRED_FIELDS) - set(self)
         if missing:
             raise ValueError("Missing required fields: {}".format(missing))
