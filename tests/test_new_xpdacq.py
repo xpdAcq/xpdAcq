@@ -156,6 +156,7 @@ def test_yaml_sync():
     assert reloaded_bt['new_field'] == 'test'
     assert reloaded_bt == bt
 
+
 def test_yaml_sync_between_objects():
     "Updating a Beamtime updates Experiment(s) and Sample(s) that refer to it"
     bt = Beamtime('Simon', 123)
