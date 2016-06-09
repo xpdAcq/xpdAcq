@@ -36,6 +36,7 @@ class _YamlDictLike:
     @filepath.setter
     def filepath(self, fname):
         self._filepath = fname
+        os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
         self.flush()
 
     @abc.abstractclassmethod

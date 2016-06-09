@@ -1,6 +1,7 @@
 import os
 import uuid
 import time
+from pprint import pformat
 from mock import MagicMock
 from collections import ChainMap
 import bluesky.plans as bp
@@ -151,7 +152,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
             raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
-        return '{pi_name}.yml'.format(**self)
+        return '{pi_name}/beamtime.yml'.format(**self)
 
     def register_experiment(self, experiment):
         # Notify this Beamtime about an Experiment that should be re-synced
@@ -173,6 +174,15 @@ class Beamtime(ValidatedDictLike, YamlDict):
                    beamtime_uid=d.pop('beamtime_uid'),
                    **d)
 
+    def __str__(self):
+        # pformat does 'pretty' formatting
+        return '\n'.join(['Experiments:',
+                          pformat(self.experiments)])
+
+    def list(self):
+        # for back-compat
+        print(self)
+
 
 class Experiment(ValidatedDictLike, YamlChainMap):
     _REQUIRED_FIELDS = ['experiment_name']
@@ -192,7 +202,8 @@ class Experiment(ValidatedDictLike, YamlChainMap):
             raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
-        return '{experiment_name}.yml'.format(**self)
+        return os.path.join('{pi_name}', 'experiments',
+                            '{experiment_name}.yml').format(**self)
 
     def register_sample(self, sample):
         # Notify this Experiment about an Sample that should be re-synced
@@ -233,7 +244,8 @@ class Sample(ValidatedDictLike, YamlChainMap):
             raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
-        return '{name}.yml'.format(**self)
+        return os.path.join('{pi_name}', 'samples',
+                            '{name}.yml').format(**self)
 
     @classmethod
     def from_yaml(cls, f, experiment=None, beamtime=None):
@@ -253,8 +265,55 @@ class Sample(ValidatedDictLike, YamlChainMap):
                    **map1)
 
 
-def load_beamtime(bt_yaml_file):
-    bt = Beamtime.from_yaml(by_yaml_file)
+def load_beamtime(directory):
+    known_uids = {}
+    beamtime_fn = os.path.join(directory, 'beamtime.yml')
+    experiment_fns = os.listdir(os.path.join(directory, 'experiments'))
+    sample_fns = os.listdir(os.path.join(directory, 'samples'))
+
+    with open(beamtime_fn, 'r') as f:
+        bt = load_yaml(f, known_uids)
+
+    for fn in experiment_fns:
+        with open(fn, 'r') as f:
+            load_yaml(f, known_uids)
+
+    for fn in sample_fns:
+        with open(fn, 'r') as f:
+            load_yaml(f, known_uids)
+
+    return bt
+
+
+def load_yaml(f, known_uids=None):
+    """
+    Recreate a Sample, Experiment, or Beamtime object from a YAML file.
+
+    If its linked objects have already been created, re-link to them.
+    If they have not yet been created, create them now.
+    """
+    if known_uids is None:
+        known_uids = {}
+    data = yaml.load(f)
+    # If f is a file handle, 'rewind' it so we can read it again.
+    if not isinstance(f, str):
+        f.seek(0)
+    if isinstance(data, dict) and 'beamtime_uid' in data:
+        obj = Beamtime.from_yaml(f)
+        known_uids[obj['beamtime_uid']] = obj
+        return obj
+    elif isinstance(data, list) and len(data) == 2:
+        beamtime = known_uids.get(data[1]['beamtime_uid'])
+        obj = Experiment.from_yaml(f, beamtime=beamtime)
+        known_uids[obj['experiment_uid']] = obj
+    elif isinstance(data, list) and len(data) == 3:
+        experiment = known_uids.get(data[1]['experiment_uid'])
+        beamtime = known_uids.get(data[2]['beamtime_uid'])
+        obj = Sample.from_yaml(f, experiment=experiment, beamtime=beamtime)
+        known_uids[obj['sample_uid']] = obj
+    else:
+        raise ValueError("File does not match a recognized specification.")
+    return obj
 
 
 class ScanPlan:
