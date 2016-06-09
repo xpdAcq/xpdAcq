@@ -172,3 +172,15 @@ def test_yaml_sync_between_objects():
     os.remove(sam.filepath)
     assert 'new_bt_field' in reloaded_ex
     assert 'new_bt_field' in reloaded_sam
+
+
+def test_chaining():
+    "All contents of Beamtime and Experiment should propagate into Sample."
+    bt = Beamtime('Simon', 123, custom1='A')
+    ex = Experiment('test-experiment', bt, custom2='B')
+    sam = Sample('test-sample', ex, composition='vapor', custom3='C')
+    for k, v in bt.items():
+        ex[k] == bt[k]
+        sam[k] == bt[k]
+    for k, v in ex.items():
+        sam[k] == ex[k]
