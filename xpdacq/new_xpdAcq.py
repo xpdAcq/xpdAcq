@@ -9,7 +9,6 @@ from bluesky.utils import normalize_subs_input
 from bluesky.callbacks import LiveTable
 #from bluesky.callbacks.broker import verify_files_saved
 from xpdacq.beamtime import ScanPlan
-from xpdacq.beamtime import Sample
 from xpdacq.glbl import glbl
 
 
@@ -70,7 +69,7 @@ def use_fast_shutter():
 
 class CustomizedRunEngine(RunEngine):
     def __init__(self, beamtime, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.beamtime = beamtime
 
     def __call__(self, sample, plan, subs=None, *, raise_if_interrupted=False,
@@ -81,24 +80,17 @@ class CustomizedRunEngine(RunEngine):
         # Beamtime's lists of Samples and ScanPlans.
         if isinstance(sample, int):
             sample = self.beamtime.samples[sample]
-        if instance(plan, int):
+        if isinstance(plan, int):
             plan = self.beamtime.scanplans[plan]
         _subs = normalize_subs_input(subs)
-        # For simple usage, allow sample to be a plain dict or a Sample.
-        if isinstance(sample, Sample):
-            sample_md = sample.md
-        else:
-            sample_md = sample
-        #if livetable:
-        #    _subs.update({'all':LiveTable([pe1c, temp_controller])})
         if verify_write:
             _subs.update({'stop':verify_files_saved})
         # No keys in metadata_kw are allows to collide with sample keys.
-        if set(sample_md) & set(metadata_kw):
+        if set(sample) & set(metadata_kw):
             raise ValueError("These keys in metadata_kw are illegal "
                              "because they are always in sample: "
-                             "{}".format(set(sample_md) & set(metadata_kw)))
-        metadata_kw.update(sample_md)
+                             "{}".format(set(sample) & set(metadata_kw)))
+        metadata_kw.update(sample)
         if isinstance(plan, ScanPlan):
             plan = plan.factory()
         sh = glbl.shutter
