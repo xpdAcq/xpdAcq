@@ -99,7 +99,7 @@ class YamlDict(_YamlDictLike, dict):
         return yaml.dump(dict(self), f, default_flow_style=False)
 
     @classmethod
-    def from_yaml(self, f):
+    def from_yaml(cls, f):
         d = yaml.load(f)
         # If file is empty, make it an empty dict.
         if d is None:
@@ -107,7 +107,7 @@ class YamlDict(_YamlDictLike, dict):
         elif not isinstance(d, dict):
             raise TypeError("yamldict only applies to YAML files with a "
                             "mapping")
-        instance = YamlDict(d)
+        instance = cls(d)
         if not isinstance(f, str):
             instance.filepath = os.path.abspath(f.name)
         return instance
@@ -119,7 +119,7 @@ class YamlChainMap(_YamlDictLike, ChainMap):
                          default_flow_style=False)
 
     @classmethod
-    def from_yaml(self, f):
+    def from_yaml(cls, f):
         maps = yaml.load(f)
         # If file is empty, make it an empty list.
         if maps is None:
@@ -127,7 +127,7 @@ class YamlChainMap(_YamlDictLike, ChainMap):
         elif not isinstance(maps, list):
             raise TypeError("yamlchainmap only applies to YAML files with "
                             "list of mappings")
-        instance = YamlChainMap(*maps)
+        instance = cls(*maps)
         if not isinstance(f, str):
             instance.filepath = os.path.abspath(f.name)
         return instance

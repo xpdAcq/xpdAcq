@@ -1,3 +1,4 @@
+import os
 import uuid
 import time
 from mock import MagicMock
@@ -140,18 +141,41 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     def __init__(self, pi_name, safnum, **kwargs):
         super().__init__(pi_name=pi_name, safnum=safnum, **kwargs)
+        self.experiments = []
+        self._referenced_by = self.experiments  # used by YamlDict
         self.setdefault('beamtime_uid', new_short_uid())
 
     def validate(self):
         missing = set(self._REQUIRED_FIELDS) - set(self)
         if missing:
-            raise ValueError("Missing required fields {}".format(missing))
+            raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
         return '{pi_name}.yml'.format(**self)
 
     def register_experiment(self, experiment):
-        self._referenced_by.append(experiment)
+        # Notify this Beamtime about an Experiment that should be re-synced
+        # whenever the contents of the Beamtime are edited.
+        self.experiments.append(experiment)
+
+    @classmethod
+    def from_yaml(cls, f):
+        d = yaml.load(f)
+        if isinstance(f, str):
+            filepath = None
+        else:
+            filepath = os.path.abspath(f.name)
+        return cls.from_dict(d, filepath=filepath)
+
+    @classmethod
+    def from_dict(cls, d, filepath=None):
+        instance = cls(pi_name=d.pop('pi_name'),
+                       safnum=d.pop('safnum'),
+                       beamtime_uid=d.pop('beamtime_uid'),
+                       **d)
+        if filepath is not None:
+            instance.filepath = filepath
+        return instance
 
 
 class Experiment(ValidatedDictLike, YamlChainMap):
@@ -161,19 +185,46 @@ class Experiment(ValidatedDictLike, YamlChainMap):
         experiment = dict(experiment_name=experiment_name, **kwargs)
         super().__init__(experiment, beamtime)
         self.beamtime = beamtime
+        self.samples = []
+        self._referenced_by = self.samples  # used by YamlDict
         self.setdefault('experiment_uid', new_short_uid())
         beamtime.register_experiment(self)
 
     def validate(self):
         missing = set(self._REQUIRED_FIELDS) - set(self)
         if missing:
-            raise ValueError("Missing required fields {}".format(missing))
+            raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
         return '{experiment_name}.yml'.format(**self)
 
     def register_sample(self, sample):
-        self._referenced_by.append(sample)
+        # Notify this Experiment about an Sample that should be re-synced
+        # whenever the contents of the Experiment are edited.
+        self.samples.append(sample)
+
+    @classmethod
+    def from_yaml(cls, f, beamtime=None):
+        map1, map2 = yaml.load(f)
+        if isinstance(f, str):
+            filepath = None
+        else:
+            filepath = f.name
+        return cls.from_dicts(map1, map2, beamtime=beamtime,
+                              filepath=filepath)
+
+    @classmethod
+    def from_dicts(cls, map1, map2, beamtime=None, filepath=None):
+        if beamtime is None:
+            beamtime = Beamtime.from_dict(map2)
+        # If file is empty, make it an empty list.
+        instance = cls(experiment_name=map1.pop('experiment_name'),
+                       beamtime=beamtime,
+                       experiment_uid=map1.pop('experiment_uid'),
+                       **map1)
+        if filepath is not None:
+            instance.filepath = filepath
+        return instance
 
 
 class Sample(ValidatedDictLike, YamlChainMap):
@@ -182,17 +233,45 @@ class Sample(ValidatedDictLike, YamlChainMap):
     def __init__(self, name, experiment, *, composition, **kwargs):
         experiment.register_sample(self)
         sample = dict(name=name, composition=composition, **kwargs)
-        super().__init__(sample, experiment)
+        super().__init__(sample, *experiment.maps)
         self.experiment = experiment
         self.setdefault('sample_uid', new_short_uid())
 
     def validate(self):
         missing = set(self._REQUIRED_FIELDS) - set(self)
         if missing:
-            raise ValueError("Missing required fields {}".format(missing))
+            raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
         return '{name}.yml'.format(**self)
+
+    @classmethod
+    def from_yaml(cls, f, experiment=None, beamtime=None):
+        map1, map2, map3 = yaml.load(f)
+        if isinstance(f, str):
+            filepath = None
+        else:
+            filepath = f.name
+        return cls.from_dicts(map1, map2, map3, experiment=experiment,
+                              beamtime=beamtime, filepath=filepath)
+
+    @classmethod
+    def from_yaml(cls, f, experiment=None, beamtime=None, filepath=None):
+        map1, map2, map3 = yaml.load(f)
+        if experiment is None:
+            experiment = Experiment.from_dicts(map2, map3, beamtime=beamtime,
+                                               filepath=filepath)
+        instance = cls(name=map1.pop('name'),
+                       experiment=experiment,
+                       sample_uid=map1.pop('sample_uid'),
+                       **map1)
+        if filepath is not None:
+            instance.filepath = filepath
+        return instance
+
+
+def load_beamtime(bt_yaml_file):
+    bt = Beamtime.from_yaml(by_yaml_file)
 
 
 class ScanPlan:
