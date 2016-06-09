@@ -69,21 +69,110 @@ def use_fast_shutter():
     glbl.shutter = 'fastfoo'
 
 
+def _stash_uid(name, doc):
+    # intercept the uid of a dark frame and stash it
+    if name == 'start':
+        glbl.last_dark_frame_uid = doc['uid']
+
+
+def take_dark():
+    "a plan for taking a single dark frame"
+    print('closing shutter...')
+    yield from bp.abs_set(glbl.shutter, 0)
+    yield from bp.sleep(2)
+    print('taking dark frame....')
+    c = bp.count([glbl.pe1c], md={'dark_frame': True})
+    yield from bp.subs_wrapper(c, _stash_uid)
+    print('opening shutter...')
+    yield from bp.abs_set(glbl.shutter, 1)
+    yield from bp.sleep(2)
+
+
+def periodic_dark(plan, period=3000*60):
+    """
+    a plan wrapper that takes a plan and inserts `take_dark`
+
+    The `take_dark` plan is inserted on the fly before the beginning of
+    any new run after a period of time `period` (in seconds) has passed.
+    """
+    last_dark_time = None
+    need_dark = True
+
+    def insert_take_dark(msg):
+        now = time.time()
+        nonlocal last_dark_time
+        nonlocal need_dark
+        if ((not need_dark) and
+                (last_dark_time is None or (now - last_dark_time) > period)):
+            need_dark = True
+        if need_dark and msg.command == 'open_run':
+            # We are about to start a new 'run' (e.g., a count or a scan).
+            # Insert a dark frame run first.
+            last_dark_time = time.time()
+            need_dark = False
+            return bp.pchain(take_dark(), bp.single_gen(msg)), None
+        else:
+            return None, None
+
+    return (yield from bp.plan_mutator(plan, insert_take_dark))
+
+
+def _inject_last_dark_frame_uid(msg):
+    if msg.command == 'open_run' and msg.kwargs.get('dark_frame') != True:
+        msg.kwargs['dark_frame'] = glbl.last_dark_frame_uid
+    return msg
+
+
 class CustomizedRunEngine(RunEngine):
     def __init__(self, beamtime, *args, **kwargs):
+        """
+        A RunEngine customized for XPD workflows.
+
+        Parameters
+        ----------
+        beamtime : Beamtime
+        
+        Examples
+        --------
+        Automatic configuration during startup process...
+        >>> bt = load_beamtime('some/directory/pi_name')
+        >>> prun = CustomizedRunEngine(bt)
+        
+        Basic usage...
+        >>> prun(3, 'ct')  # Do an XPD count ('ct') plan on Sample 3.
+
+        Advanced usage...
+        
+        Use custom plans 
+        >>> prun(3, custom_plan)  # sample 3, an arbitrary bluesky plan
+
+        Or custom sample info --- sample just has to be dict-like
+        and contain the required keys.
+        >>> prun(custom_sample_dict, custom_plan)
+
+        Customize dark frame period
+        >>> prun(3, 'ct', dark_strategy=partial(periodic_dark, period=1000)
+
+        Or use completely custom dark frame logic
+        >>> prun(3, 'ct', dark_strategy=some_custom_func)
+        """
         super().__init__(*args, **kwargs)
         self.beamtime = beamtime
 
-    def __call__(self, sample, plan, subs=None, *, raise_if_interrupted=False,
-                 verify_write=False, auto_dark=True, dk_window=3000,
-                 **metadata_kw):
+    def __call__(self, sample, plan, subs=None, *,
+                 verify_write=False, dark_strategy=periodic_dark,
+                 raise_if_interrupted=False, **metadata_kw):
         # The CustomizedRunEngine knows about a Beamtime object, and it
-        # interprets integers for 'sample' and 'plans' and indexes into the
-        # Beamtime's lists of Samples and ScanPlans.
+        # interprets integers for 'sample' as indexes into the Beamtime's
+        # lists of Samples from all its Experiments.
         if isinstance(sample, int):
             sample = self.beamtime.samples[sample]
-        if isinstance(plan, int):
-            plan = self.beamtime.scanplans[plan]
+        # If a plan is given as a string, look in up in the global registry.
+        if isinstance(plan, str):
+            plan = _PLAN_REGISTRY[plan]
+        # If the plan is an xpdAcq 'ScanPlan', make the actual plan.
+        if isinstance(plan, ScanPlan):
+            plan = plan.factory()
         _subs = normalize_subs_input(subs)
         if verify_write:
             _subs.update({'stop': verify_files_saved})
@@ -93,11 +182,12 @@ class CustomizedRunEngine(RunEngine):
                              "because they are always in sample: "
                              "{}".format(set(sample) & set(metadata_kw)))
         metadata_kw.update(sample)
-        if isinstance(plan, ScanPlan):
-            plan = plan.factory()
         sh = glbl.shutter
         # force to open shutter before scan and close it after
         plan = bp.pchain(bp.abs_set(sh, 1), plan, bp.abs_set(sh, 0))
+        # Alter the plan to incorporate dark frames.
+        plan = dark_strategy(plan)
+        plan = bp.msg_mutator(plan, _inject_last_dark_frame_uid)
         super().__call__(plan, subs,
                          raise_if_interrupted=raise_if_interrupted,
                          **metadata_kw)
