@@ -266,6 +266,15 @@ class Sample(ValidatedDictLike, YamlChainMap):
 
 
 def load_beamtime(directory):
+    """
+    Load a Beamtime and associated objects.
+
+    Expected directory structure:
+    directory/
+      beamtime.yml
+      samples/
+      experiments/
+    """
     known_uids = {}
     beamtime_fn = os.path.join(directory, 'beamtime.yml')
     experiment_fns = os.listdir(os.path.join(directory, 'experiments'))
@@ -275,11 +284,11 @@ def load_beamtime(directory):
         bt = load_yaml(f, known_uids)
 
     for fn in experiment_fns:
-        with open(fn, 'r') as f:
+        with open(os.path.join(directory, 'experiments', fn), 'r') as f:
             load_yaml(f, known_uids)
 
     for fn in sample_fns:
-        with open(fn, 'r') as f:
+        with open(os.path.join(directory, 'samples', fn), 'r') as f:
             load_yaml(f, known_uids)
 
     return bt

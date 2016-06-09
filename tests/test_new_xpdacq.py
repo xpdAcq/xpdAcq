@@ -2,7 +2,7 @@ import os
 import yaml
 from mock import MagicMock
 from xpdacq.new_xpdAcq import (CustomizedRunEngine, ScanPlan, ct, Beamtime,
-                               Experiment, Sample)
+                               Experiment, Sample, load_beamtime, load_yaml)
 from xpdacq.glbl import glbl
 from bluesky.examples import motor, det, Reader
 
@@ -187,3 +187,14 @@ def test_chaining():
         sam[k] == bt[k]
     for k, v in ex.items():
         sam[k] == ex[k]
+
+
+def test_load_beamtime():
+    bt = Beamtime('test-bt', 123)
+    ex = Experiment('test-experiment', bt)
+    sam = Sample('test-sample', ex, composition='vapor')
+
+    bt2 = load_beamtime('test-bt')
+    assert bt2 == bt
+    assert bt2.experiments[0] == ex
+    assert bt2.experiments[0].samples[0] == sam
