@@ -1,7 +1,6 @@
 import os
 import uuid
 import time
-from pprint import pformat
 from mock import MagicMock
 from collections import ChainMap
 import bluesky.plans as bp
@@ -28,6 +27,7 @@ _PLAN_REGISTRY = {}
 
 
 def register_plan(plan_name, plan_func, overwrite=False):
+    "Map between a plan_name (string) and a plan_func (generator function)."
     if plan_name in _PLAN_REGISTRY and not overwrite:
         raise KeyError("A plan is already registered by this name. Use "
                        "overwrite=True to overwrite it.")
@@ -86,7 +86,7 @@ class CustomizedRunEngine(RunEngine):
             plan = self.beamtime.scanplans[plan]
         _subs = normalize_subs_input(subs)
         if verify_write:
-            _subs.update({'stop':verify_files_saved})
+            _subs.update({'stop': verify_files_saved})
         # No keys in metadata_kw are allows to collide with sample keys.
         if set(sample) & set(metadata_kw):
             raise ValueError("These keys in metadata_kw are illegal "
@@ -175,9 +175,13 @@ class Beamtime(ValidatedDictLike, YamlDict):
                    **d)
 
     def __str__(self):
-        # pformat does 'pretty' formatting
-        return '\n'.join(['Experiments:',
-                          pformat(self.experiments)])
+        contents = (['Experiments:'] +
+                    ['{i}: {experiment_name}'.format(i=i, **e)
+                     for i, e in enumerate(self.experiments)] +
+                    ['', 'Samples:'] +
+                    ['{i}: {name}'.format(i=i, **s)
+                     for i, s in enumerate(self.samples)])
+        return '\n'.join(contents)
 
     def list(self):
         # for back-compat
