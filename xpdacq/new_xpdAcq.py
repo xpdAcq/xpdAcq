@@ -69,8 +69,20 @@ def use_fast_shutter():
 
 
 class CustomizedRunEngine(RunEngine):
-    def __call__(self, sample, plan, subs=None, *, raise_if_interrupted=False
-            , verify_write=False, auto_dark=True, dk_window=3000,**metadata_kw):
+    def __init__(self, beamtime, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+        self.beamtime = beamtime
+
+    def __call__(self, sample, plan, subs=None, *, raise_if_interrupted=False,
+                 verify_write=False, auto_dark=True, dk_window=3000,
+                 **metadata_kw):
+        # The CustomizedRunEngine knows about a Beamtime object, and it
+        # interprets integers for 'sample' and 'plans' and indexes into the
+        # Beamtime's lists of Samples and ScanPlans.
+        if isinstance(sample, int):
+            sample = self.beamtime.samples[sample]
+        if instance(plan, int):
+            plan = self.beamtime.scanplans[plan]
         _subs = normalize_subs_input(subs)
         # For simple usage, allow sample to be a plain dict or a Sample.
         if isinstance(sample, Sample):
