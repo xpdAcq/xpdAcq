@@ -5,7 +5,7 @@ from xpdacq.new_xpdAcq  import CustomizedRunEngine, ScanPlan, ct
 from xpdacq.glbl import glbl
 from bluesky.examples import motor, det, Reader
 
-prun = CustomizedRunEngine({})
+prun = CustomizedRunEngine({}, {})
 # print messages for debugging
 prun.msg_hook = print
 
@@ -42,7 +42,7 @@ def test_run_scanplan():
 def test_scanplan_autoname():
     sp = ScanPlan(ct, 1)
     std_f_name = 'ct_1_None' 
-    assert sp._default_yaml_name == std_f_name
+    assert sp.default_yaml_path() == std_f_name
 
 def test_scanplan_yamlize():
     sp = ScanPlan(ct, 1)
