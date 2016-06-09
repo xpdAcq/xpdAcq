@@ -62,6 +62,8 @@ def test_scanplan_yamlize():
 
 
 def test_beamtime_roundtrip():
+    # This includes checking that a new uid is only generated once and
+    # persists thereafter.
     bt = Beamtime('Simon', 123)
     reloaded_bt = bt.from_yaml(bt.to_yaml())
     os.remove(bt.filepath)
