@@ -1,7 +1,11 @@
+from bluesky.examples import NullStatus
 import numpy as np
 from time import sleep
 
 class mock_shutter():
+    def set(self, value):
+        return NullStatus()
+
     def put(self,value):
         pass
     def get(self,status=1):

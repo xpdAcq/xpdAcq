@@ -5,6 +5,18 @@ import numpy as np
 from unittest.mock import MagicMock
 from time import strftime, sleep
 from xpdacq.mock_objects import mock_shutter, mock_livetable#, Cam, , mock_areadetector
+from bluesky.examples import Reader
+
+class SimulatedPE1C(Reader):
+    "Subclass the bluesky plain detector examples ('Reader'); add attributes."
+    def __init__(self, name, fields):
+        self.images_per_set = MagicMock()
+        self.number_of_sets = MagicMock()
+        self.cam = MagicMock()
+        self.frame_acq_time = MagicMock()
+        super().__init__(name, fields)
+
+        self.ready = True  # work around a hack in Reader
 
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
@@ -87,6 +99,10 @@ class glbl():
     beamline_id = BEAMLINE_ID
     group = GROUP
     _allowed_scanplan_type = ALLOWED_SCANPLAN_TYPE
+
+    pe1c = SimulatedPE1C('pe1c', ['pe1c'])
+    # shutter = motor  # this passes as a fake shutter
+    frame_acq_time = 0.1
 
     # logic to assign correct objects depends on simulation or real experiment
     if not simulation:
