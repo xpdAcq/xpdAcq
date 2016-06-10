@@ -81,8 +81,11 @@ def take_dark():
     yield from bp.abs_set(glbl.shutter, 0)
     yield from bp.sleep(2)
     print('taking dark frame....')
+    # upto this stage, pe1c has been configured to so exposure time is
+    # correct
     c = bp.count([glbl.pe1c], md={'dark_frame': True})
-    yield from bp.subs_wrapper(c, _stash_uid)
+    #yield from bp.subs_wrapper(c, _stash_uid)
+    yield from c
     print('opening shutter...')
     yield from bp.abs_set(glbl.shutter, 1)
     yield from bp.sleep(2)
@@ -95,26 +98,77 @@ def periodic_dark(plan, period=3000*60):
     The `take_dark` plan is inserted on the fly before the beginning of
     any new run after a period of time `period` (in seconds) has passed.
     """
-    last_dark_time = None
     need_dark = True
 
     def insert_take_dark(msg):
         now = time.time()
         nonlocal last_dark_time
         nonlocal need_dark
-        if ((not need_dark) and
-                (last_dark_time is None or (now - last_dark_time) > period)):
+        qaulified_dark_uid = _validate_dark()
+        if ((not need_dark) and (not qualified_dark_uid)):
             need_dark = True
         if need_dark and msg.command == 'open_run':
             # We are about to start a new 'run' (e.g., a count or a scan).
             # Insert a dark frame run first.
             last_dark_time = time.time()
+            _update_dark_dict_list()
             need_dark = False
             return bp.pchain(take_dark(), bp.single_gen(msg)), None
         else:
             return None, None
 
+
     return (yield from bp.plan_mutator(plan, insert_take_dark))
+
+
+def _validate_dark(expire_time=None, dark_dict_list=None):
+    """ find appropriate dark frame uid stored in dark_dict_list
+
+    element in dark_scan_dict is expected to be a dict with following
+    keys: 'exposure', 'uid' and 'timestamp'
+
+    """
+    if expire_time is None:
+        expire_time = glbl.dk_window
+    # actually we don't want user to touch this list
+    if dark_dict_list is None:
+        dark_dict_list = glbl._dark_dict_list
+    # obtain light count time that is already set to pe1c
+    acq_time = pe1c.cam.acquire_time.get()
+    num_frame = pe1c.images_per_set.get()
+    light_cnt_time = acq_time * num_frame
+    # find fresh and qualified dark
+    now = time.time()
+    qualified_dark_uid = [ el['uid'] for el in dark_scan_dict if
+                         abs(el['exposure'] - light_cnt_time) <= acq_time and
+                         abs(el['timestamp'] - now) <= (expire_time - acq_time)
+                         ]
+    if qualified_dark_uid:
+        return qualified_dark_uid[-1]
+    else:
+        return None
+
+
+def _update_dark_dict_list(dark_dict_list=None):
+    """ generate dark frame reference
+
+    This function shuld be called everytime dark_frame is collected
+    """
+    # actually I don't want user to touch glbl list
+    if dark_dict_list is None:
+        dark_dict_list = list(glbl._dark_dict_list)
+    # obtain light count time that is already set to pe1c
+    acq_time = pe1c.cam.acquire_time.get()
+    num_frame = pe1c.images_per_set.get()
+    light_cnt_time = acq_time * num_frame
+
+    dark_dict = {}
+    dark_dict['exp'] = light_cnt_time
+    dark_dict['uid'] = str(uuid.uuid4()) # FIXME: can I use bluesky uid?
+    dark_dict['timestamp'] = time.time() # FIXME: can I use bluesky timestamp?
+    dark_dict_list.append(dark_dict)
+    glbl._dark_dict_list = dark_dict_list # update glbl._dark_dict_list
+    return dark_dict_list
 
 
 def _inject_last_dark_frame_uid(msg):
@@ -131,19 +185,19 @@ class CustomizedRunEngine(RunEngine):
         Parameters
         ----------
         beamtime : Beamtime
-        
+
         Examples
         --------
         Automatic configuration during startup process...
         >>> bt = load_beamtime('some/directory/pi_name')
         >>> prun = CustomizedRunEngine(bt)
-        
+
         Basic usage...
         >>> prun(3, 'ct')  # Do an XPD count ('ct') plan on Sample 3.
 
         Advanced usage...
-        
-        Use custom plans 
+
+        Use custom plans
         >>> prun(3, custom_plan)  # sample 3, an arbitrary bluesky plan
 
         Or custom sample info --- sample just has to be dict-like
