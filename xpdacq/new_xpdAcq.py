@@ -125,7 +125,6 @@ def periodic_dark(plan, period=glbl.dk_window):
 
     def insert_take_dark(msg):
         now = time.time()
-        nonlocal last_dark_time
         nonlocal need_dark
         qaulified_dark_uid = _validate_dark(expire_time=period)
 
@@ -320,7 +319,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
     plan = bp.subs_wrapper(plan, LiveTable([pe1c, cs700]))
     yield from plan
 
-def tseries(dets, exposrue, delay, num, *, md = None):
+def tseries(dets, exposure, delay, num, *, md = None):
     pe1c, = dets
     if md is None:
         md = {}
