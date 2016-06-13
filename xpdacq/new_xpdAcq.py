@@ -75,6 +75,30 @@ def _stash_uid(name, doc):
         glbl.last_dark_frame_uid = doc['uid']
 
 
+def _update_dark_dict_list(name, doc, dark_dict_list=None):
+    """ generate dark frame reference
+
+    This function shuld be called everytime dark_frame is collected
+    """
+    # actually I don't want user to touch glbl list
+    if dark_dict_list is None:
+        dark_dict_list = list(glbl._dark_dict_list)
+    # obtain light count time that is already set to pe1c
+    acq_time = pe1c.cam.acquire_time.get()
+    num_frame = pe1c.images_per_set.get()
+    light_cnt_time = acq_time * num_frame
+
+    dark_dict = {}
+    dark_dict['exp'] = light_cnt_time
+    if name == 'start':
+        dark_dict['uid'] = doc['uid']
+    if name == 'stop':
+        dark_dict['timestamp'] = doc['timestamp']
+    dark_dict_list.append(dark_dict)
+    glbl._dark_dict_list = dark_dict_list # update glbl._dark_dict_list
+    return
+
+
 def take_dark():
     "a plan for taking a single dark frame"
     print('closing shutter...')
@@ -84,16 +108,13 @@ def take_dark():
     # upto this stage, pe1c has been configured to so exposure time is
     # correct
     c = bp.count([glbl.pe1c], md={'dark_frame': True})
-    #yield from bp.subs_wrapper(c, _stash_uid)
-    yield from c
-    # update dark_dict_list after dark frame
-    _update_dark_dict_list()
+    yield from bp.subs_wrapper(c, _update_dark_dict_list)
     print('opening shutter...')
     yield from bp.abs_set(glbl.shutter, 1)
     yield from bp.sleep(2)
 
 
-def periodic_dark(plan, period=3000*60):
+def periodic_dark(plan, period=glbl.dk_window):
     """
     a plan wrapper that takes a plan and inserts `take_dark`
 
@@ -106,16 +127,18 @@ def periodic_dark(plan, period=3000*60):
         now = time.time()
         nonlocal last_dark_time
         nonlocal need_dark
-        qaulified_dark_uid = _validate_dark()
+        qaulified_dark_uid = _validate_dark(expire_time=period)
+
+        # FIXME: should we do "or" or "and"?
         if ((not need_dark) and (not qualified_dark_uid)):
             need_dark = True
         if need_dark and msg.command == 'open_run':
             # We are about to start a new 'run' (e.g., a count or a scan).
             # Insert a dark frame run first.
-            last_dark_time = time.time()
             need_dark = False
             return bp.pchain(take_dark(), bp.single_gen(msg)), None
         else:
+            # do nothing if (not need_dark)
             return None, None
 
 
@@ -150,28 +173,6 @@ def _validate_dark(expire_time=None, dark_dict_list=None):
         return None
 
 
-def _update_dark_dict_list(dark_dict_list=None):
-    """ generate dark frame reference
-
-    This function shuld be called everytime dark_frame is collected
-    """
-    # actually I don't want user to touch glbl list
-    if dark_dict_list is None:
-        dark_dict_list = list(glbl._dark_dict_list)
-    # obtain light count time that is already set to pe1c
-    acq_time = pe1c.cam.acquire_time.get()
-    num_frame = pe1c.images_per_set.get()
-    light_cnt_time = acq_time * num_frame
-
-    dark_dict = {}
-    dark_dict['exp'] = light_cnt_time
-    dark_dict['uid'] = str(uuid.uuid4()) # FIXME: can I use bluesky uid?
-    dark_dict['timestamp'] = time.time() # FIXME: can I use bluesky timestamp?
-    dark_dict_list.append(dark_dict)
-    glbl._dark_dict_list = dark_dict_list # update glbl._dark_dict_list
-    return dark_dict_list
-
-
 def _inject_last_dark_frame_uid(msg):
     if msg.command == 'open_run' and msg.kwargs.get('dark_frame') != True:
         msg.kwargs['dark_frame'] = glbl.last_dark_frame_uid
@@ -180,8 +181,8 @@ def _inject_last_dark_frame_uid(msg):
 
 def _inject_qualified_dark_frame_uid(msg):
     if msg.command == 'open_run' and msg.kwargs.get('dark_frame') != True:
-        dark_uid = _validate_dark()
-        msg.kwargs['dark_frame'] = dark_uid
+        dark_uid = _validate_dark(glbl.dk_window)
+        msg.kwargs['dark_frame_uid'] = dark_uid
     return msg
 
 
@@ -327,8 +328,10 @@ def tseries(dets, exposrue, delay, num, *, md = None):
     _configure_pe1c()
     real_delay = max(0, delay - computed_exposure)
     period = max(computed_exposure, real_delay + computed_exposure)
-    print('INFO: requested delay = {}s  -> computed delay = {}s'.format(delay, real_delay))
-    print('INFO: nominal period (neglecting readout overheads) of {} s'.format(period))
+    print('INFO: requested delay = {}s  -> computed delay = {}s'
+          .format(delay, real_delay))
+    print('INFO: nominal period (neglecting readout overheads) of {} s'
+          .format(period))
     # update md
     _md = ChainMap(md, {'sp_time_per_frame': acq_time,
                         'sp_num_frames': num_frame,
@@ -351,7 +354,9 @@ def _nstep(start, stop, step_size):
     computed_nsteps = int(requested_nsteps)+1 # round down for finer step size
     computed_step_list = np.linspace(start, stop, computed_nsteps)
     computed_step_size = computed_step_list[1]- computed_step_list[0]
-    print('INFO: requested temperature step size = ',step_size,' -> computed temperature step size:',abs(computed_step_size))
+    print("INFO: requested temperature step size = {} ->"
+          "computed temperature step size = {}"
+          .format(step_size,computed_step_size))
     return (computed_nsteps, computed_step_size)
 
 
