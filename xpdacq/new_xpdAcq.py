@@ -86,6 +86,8 @@ def take_dark():
     c = bp.count([glbl.pe1c], md={'dark_frame': True})
     #yield from bp.subs_wrapper(c, _stash_uid)
     yield from c
+    # update dark_dict_list after dark frame
+    _update_dark_dict_list()
     print('opening shutter...')
     yield from bp.abs_set(glbl.shutter, 1)
     yield from bp.sleep(2)
@@ -111,7 +113,6 @@ def periodic_dark(plan, period=3000*60):
             # We are about to start a new 'run' (e.g., a count or a scan).
             # Insert a dark frame run first.
             last_dark_time = time.time()
-            _update_dark_dict_list()
             need_dark = False
             return bp.pchain(take_dark(), bp.single_gen(msg)), None
         else:
@@ -174,6 +175,13 @@ def _update_dark_dict_list(dark_dict_list=None):
 def _inject_last_dark_frame_uid(msg):
     if msg.command == 'open_run' and msg.kwargs.get('dark_frame') != True:
         msg.kwargs['dark_frame'] = glbl.last_dark_frame_uid
+    return msg
+
+
+def _inject_qualified_dark_frame_uid(msg):
+    if msg.command == 'open_run' and msg.kwargs.get('dark_frame') != True:
+        dark_uid = _validate_dark()
+        msg.kwargs['dark_frame'] = dark_uid
     return msg
 
 
@@ -241,7 +249,7 @@ class CustomizedRunEngine(RunEngine):
         plan = bp.pchain(bp.abs_set(sh, 1), plan, bp.abs_set(sh, 0))
         # Alter the plan to incorporate dark frames.
         plan = dark_strategy(plan)
-        plan = bp.msg_mutator(plan, _inject_last_dark_frame_uid)
+        plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
         super().__call__(plan, subs,
                          raise_if_interrupted=raise_if_interrupted,
                          **metadata_kw)
