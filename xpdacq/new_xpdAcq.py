@@ -82,9 +82,9 @@ def _update_dark_dict_list(name, doc):
     """
     # always grab from glbl state 
     dark_dict_list = list(glbl._dark_dict_list)
-    # obtain light count time that is already set to pe1c
-    acq_time = pe1c.cam.acquire_time.get()
-    num_frame = pe1c.images_per_set.get()
+    # obtain light count time that is already set to glbl.pe1c
+    acq_time = glbl.pe1c.cam.acquire_time.get()
+    num_frame = glbl.pe1c.images_per_set.get()
     light_cnt_time = acq_time * num_frame
 
     dark_dict = {}
@@ -104,7 +104,7 @@ def take_dark():
     yield from bp.abs_set(glbl.shutter, 0)
     yield from bp.sleep(2)
     print('taking dark frame....')
-    # upto this stage, pe1c has been configured to so exposure time is
+    # upto this stage, glbl.pe1c has been configured to so exposure time is
     # correct
     c = bp.count([glbl.pe1c], md={'dark_frame': True})
     yield from bp.subs_wrapper(c, _update_dark_dict_list)
@@ -125,7 +125,7 @@ def periodic_dark(plan):
     def insert_take_dark(msg):
         now = time.time()
         nonlocal need_dark
-        qaulified_dark_uid = _validate_dark(expire_time=glbl.dk_window)
+        qualified_dark_uid = _validate_dark(expire_time=glbl.dk_window)
 
         # FIXME: should we do "or" or "and"?
         if ((not need_dark) and (not qualified_dark_uid)):
@@ -156,12 +156,12 @@ def _validate_dark(expire_time=None, dark_dict_list=None):
     if dark_dict_list is None:
         dark_dict_list = glbl._dark_dict_list
     # obtain light count time that is already set to pe1c
-    acq_time = pe1c.cam.acquire_time.get()
-    num_frame = pe1c.images_per_set.get()
+    acq_time = glbl.pe1c.cam.acquire_time.get()
+    num_frame = glbl.pe1c.images_per_set.get()
     light_cnt_time = acq_time * num_frame
     # find fresh and qualified dark
     now = time.time()
-    qualified_dark_uid = [ el['uid'] for el in dark_scan_dict if
+    qualified_dark_uid = [ el['uid'] for el in dark_dict_list if
                          abs(el['exposure'] - light_cnt_time) <= acq_time and
                          abs(el['timestamp'] - now) <= (expire_time - acq_time)
                          ]
@@ -253,30 +253,31 @@ class CustomizedRunEngine(RunEngine):
                          raise_if_interrupted=raise_if_interrupted,
                          **metadata_kw)
 
-def _configure_pe1c():
+def _configure_pe1c(exposure):
     """ priviate function to configure pe1c with continuous acquistion
     mode"""
     # TODO maybe move it into glbl?
     # setting up detector
-    pe1c.number_of_sets.put(1)
-    pe1c.cam.acquire_time.put(glbl.frame_acq_time)
-    acq_time = pe1c.cam.acquire_time.get()
+    glbl.pe1c.number_of_sets.put(1)
+    glbl.pe1c.cam.acquire_time.put(glbl.frame_acq_time)
+    acq_time = glbl.pe1c.cam.acquire_time.get()
     # compute number of frames
     num_frame = np.ceil(exposure / acq_time)
     if num_frame == 0:
         num_frame = 1
     computed_exposure = num_frame*acq_time
-    pe1c.images_per_set.put(num_frame)
+    glbl.pe1c.images_per_set.put(num_frame)
     # print exposure time
     print("INFO: requested exposure time = {} - > computed exposure time"
           "= {}".format(exposure, computed_exposure))
+    return (num_frame, acq_time, computed_exposure)
 
 def ct(dets, exposure, *, md=None):
     pe1c, = dets
     if md is None:
         md = {}
     # setting up area_detector
-    _configure_pe1c()
+    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
     # update md
     _md = ChainMap(md, {'sp_time_per_frame': acq_time,
                         'sp_num_frames': num_frame,
@@ -296,7 +297,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
     if md is None:
         md = {}
     # setting up area_detector
-    _configure_pe1c()
+    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
     # compute Nsteps
     (Nsteps, computed_step_size) = _nstep(Tstart, Tstop, Tstep)
     # update md
@@ -323,7 +324,7 @@ def tseries(dets, exposure, delay, num, *, md = None):
     if md is None:
         md = {}
     # setting up area_detector
-    _configure_pe1c()
+    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
     real_delay = max(0, delay - computed_exposure)
     period = max(computed_exposure, real_delay + computed_exposure)
     print('INFO: requested delay = {}s  -> computed delay = {}s'
@@ -499,7 +500,63 @@ class Sample(ValidatedDictLike, YamlChainMap):
                    sample_uid=map1.pop('sample_uid'),
                    **map1)
 
+class ScanPlan(ValidatedDictLike, YamlChainMap):
+    def __init__(self, plan_func, *args, **kwargs):
+        self.plan_func = plan_func
+        self.plan_name = plan_func.__name__
+        self.args = args
+        self.kwargs = kwargs
+        self.to_yaml(self.default_yaml_path())
 
+    @property
+    def bound_arguments(self):
+        signature = inspect.signature(self.plan_func)
+        # empty list is for [pe1c]  
+        bound_arguments = signature.bind([], *self.args, **self.kwargs)
+        bound_arguments.apply_defaults()
+        complete_kwargs = bound_arguments.arguments
+        # remove place holder for [pe1c]
+        complete_kwargs.popitem(False)
+        return complete_kwargs
+
+    def factory(self):
+        # grab the area detector used in current configuration
+        pe1c = glbl.pe1c
+        # pass parameter to plan_func
+        plan = self.plan_func([pe1c], *self.args, **self.kwargs)
+        return plan
+
+    def __str__(self):
+        return _summarize(self.factory())
+
+    def __eq__(self, other):
+        return self.to_yaml() == other.to_yaml()
+
+    def to_yaml(self, fname=None):
+        "With yaml.dump, return a string if fname is None"
+        # Get the complete arguments to plan_func as a dict.
+        # Even args that were given is positional will be mapped to
+        # their name.
+        yaml_info = {}
+        yaml_info['plan_args'] = dict(self.bound_arguments)
+        yaml_info['plan_name'] = self.plan_name
+        if fname is None:
+            return yaml.dump(yaml_info)
+        else:
+            with open(fname, 'w') as f:
+                yaml.dump(yaml_info, f)  # returns None
+
+    def default_yaml_path(self):
+        arg_value_str = map(str, self.bound_arguments.values())
+        return '_'.join([self.plan_name] + list(arg_value_str))
+
+    @classmethod
+    def from_yaml(cls, f):
+        d = yaml.load(f)
+        plan_name = d['plan_name']  # i.e., 'ct'
+        plan_args = d['plan_args']  # i.e., {'exposure': 1}
+        plan_func = _PLAN_REGISTRY[plan_name]
+        return cls(plan_func, **plan_args)
 def load_beamtime(directory):
     """
     Load a Beamtime and associated objects.
