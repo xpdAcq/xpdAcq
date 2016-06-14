@@ -75,14 +75,13 @@ def _stash_uid(name, doc):
         glbl.last_dark_frame_uid = doc['uid']
 
 
-def _update_dark_dict_list(name, doc, dark_dict_list=None):
+def _update_dark_dict_list(name, doc):
     """ generate dark frame reference
 
     This function shuld be called everytime dark_frame is collected
     """
-    # actually I don't want user to touch glbl list
-    if dark_dict_list is None:
-        dark_dict_list = list(glbl._dark_dict_list)
+    # always grab from glbl state 
+    dark_dict_list = list(glbl._dark_dict_list)
     # obtain light count time that is already set to pe1c
     acq_time = pe1c.cam.acquire_time.get()
     num_frame = pe1c.images_per_set.get()
@@ -114,19 +113,19 @@ def take_dark():
     yield from bp.sleep(2)
 
 
-def periodic_dark(plan, period=glbl.dk_window):
+def periodic_dark(plan):
     """
     a plan wrapper that takes a plan and inserts `take_dark`
 
     The `take_dark` plan is inserted on the fly before the beginning of
-    any new run after a period of time `period` (in seconds) has passed.
+    any new run after a period of time defined by `glbl.dk_window` has passed.
     """
     need_dark = True
 
     def insert_take_dark(msg):
         now = time.time()
         nonlocal need_dark
-        qaulified_dark_uid = _validate_dark(expire_time=period)
+        qaulified_dark_uid = _validate_dark(expire_time=glbl.dk_window)
 
         # FIXME: should we do "or" or "and"?
         if ((not need_dark) and (not qualified_dark_uid)):
