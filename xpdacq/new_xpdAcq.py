@@ -95,7 +95,6 @@ def _update_dark_dict_list(name, doc):
         dark_dict['timestamp'] = doc['timestamp']
     dark_dict_list.append(dark_dict)
     glbl._dark_dict_list = dark_dict_list # update glbl._dark_dict_list
-    return
 
 
 def take_dark():
