@@ -11,7 +11,7 @@ from bluesky.callbacks import LiveTable
 #from bluesky.callbacks.broker import verify_files_saved
 from xpdacq.beamtime import ScanPlan
 from xpdacq.glbl import glbl
-
+glbl._dark_dict_list = []
 
 import yaml
 import inspect
@@ -25,6 +25,38 @@ verify_files_saved = MagicMock()
 # plan functions in Python.
 _PLAN_REGISTRY = {}
 
+from bluesky.examples import motor, det, Reader
+
+
+class FakeSignal(MagicMock):
+    def get(self):
+        return 5
+
+class SimulatedPE1C(Reader):
+    "Subclass the bluesky plain detector examples ('Reader'); add attributes."
+    def __init__(self, name, fields):
+        self.images_per_set = MagicMock()
+        self.images_per_set.get = MagicMock(return_value=5)
+        self.number_of_sets = MagicMock()
+        self.number_of_sets.put = MagicMock(return_value=1)
+        self.number_of_sets.get = MagicMock(return_value=1)
+        self.cam = MagicMock()
+        self.cam.acquire_time = MagicMock()
+        self.cam.acquire_time.put = MagicMock(return_value=0.1)
+        self.cam.acquire_time.get = MagicMock(return_value=0.1)
+
+        super().__init__(name, fields)
+
+        self.ready = True  # work around a hack in Reader
+
+
+def setup_module():
+    glbl.pe1c = SimulatedPE1C('pe1c', ['pe1c'])
+    glbl.shutter = motor  # this passes as a fake shutter
+    glbl.frame_acq_time = 0.1
+    glbl._dark_dict_list = []
+
+setup_module()
 
 def register_plan(plan_name, plan_func, overwrite=False):
     "Map between a plan_name (string) and a plan_func (generator function)."
@@ -78,7 +110,8 @@ def _stash_uid(name, doc):
 def _update_dark_dict_list(name, doc):
     """ generate dark frame reference
 
-    This function shuld be called everytime dark_frame is collected
+    This function should be subscribed to 'stop' documents from dark
+    frame runs.
     """
     # always grab from glbl state 
     dark_dict_list = list(glbl._dark_dict_list)
@@ -88,11 +121,9 @@ def _update_dark_dict_list(name, doc):
     light_cnt_time = acq_time * num_frame
 
     dark_dict = {}
-    dark_dict['exp'] = light_cnt_time
-    if name == 'start':
-        dark_dict['uid'] = doc['uid']
-    if name == 'stop':
-        dark_dict['timestamp'] = doc['timestamp']
+    dark_dict['exposure'] = light_cnt_time
+    dark_dict['timestamp'] = doc['time']
+    dark_dict['uid'] = doc['run_start']
     dark_dict_list.append(dark_dict)
     glbl._dark_dict_list = dark_dict_list # update glbl._dark_dict_list
 
@@ -106,7 +137,7 @@ def take_dark():
     # upto this stage, glbl.pe1c has been configured to so exposure time is
     # correct
     c = bp.count([glbl.pe1c], md={'dark_frame': True})
-    yield from bp.subs_wrapper(c, _update_dark_dict_list)
+    yield from bp.subs_wrapper(c, {'stop': [_update_dark_dict_list]})
     print('opening shutter...')
     yield from bp.abs_set(glbl.shutter, 1)
     yield from bp.sleep(2)
@@ -129,7 +160,8 @@ def periodic_dark(plan):
         # FIXME: should we do "or" or "and"?
         if ((not need_dark) and (not qualified_dark_uid)):
             need_dark = True
-        if need_dark and msg.command == 'open_run':
+        if need_dark and msg.command == 'open_run' and ('dark_frame' not
+                in msg.kwargs):
             # We are about to start a new 'run' (e.g., a count or a scan).
             # Insert a dark frame run first.
             need_dark = False
@@ -142,7 +174,7 @@ def periodic_dark(plan):
     return (yield from bp.plan_mutator(plan, insert_take_dark))
 
 
-def _validate_dark(expire_time=None, dark_dict_list=None):
+def _validate_dark(expire_time=None):
     """ find appropriate dark frame uid stored in dark_dict_list
 
     element in dark_scan_dict is expected to be a dict with following
@@ -151,9 +183,11 @@ def _validate_dark(expire_time=None, dark_dict_list=None):
     """
     if expire_time is None:
         expire_time = glbl.dk_window
-    # actually we don't want user to touch this list
-    if dark_dict_list is None:
-        dark_dict_list = glbl._dark_dict_list
+    dark_dict_list = glbl._dark_dict_list
+    # print('my dark_dict_list is {}'.format(dark_dict_list))
+    # print('dark_dict_list is False = {}'.format(dark_dict_list is False))
+    if not dark_dict_list:
+        return None
     # obtain light count time that is already set to pe1c
     acq_time = glbl.pe1c.cam.acquire_time.get()
     num_frame = glbl.pe1c.images_per_set.get()
@@ -166,7 +200,7 @@ def _validate_dark(expire_time=None, dark_dict_list=None):
                          ]
     if qualified_dark_uid:
         return qualified_dark_uid[-1]
-    else:
+    else :
         return None
 
 
@@ -556,6 +590,8 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         plan_args = d['plan_args']  # i.e., {'exposure': 1}
         plan_func = _PLAN_REGISTRY[plan_name]
         return cls(plan_func, **plan_args)
+
+
 def load_beamtime(directory):
     """
     Load a Beamtime and associated objects.
