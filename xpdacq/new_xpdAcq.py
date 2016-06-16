@@ -28,9 +28,28 @@ _PLAN_REGISTRY = {}
 from bluesky.examples import motor, det, Reader
 
 
-class FakeSignal(MagicMock):
-    def get(self):
-        return 5
+def start_xpdacq():
+    dirs = [d for d in os.listdir(glbl.xpdconfig) if os.path.isdir(d)]
+    # create sample dir if it doesn't exist yet
+    if 'samples' not in dirs:
+        sample_dir = os.path.join(glbl.xpdconfig, 'samples')
+        os.makredirs(sample_dir, exist_ok=True)
+    else:
+        dirs.remove('samples')
+    # now we have all dirs that are not samples;
+    # only PI_name dirs left
+
+    if len(dirs) == 1:
+        bt = load_beamtime(dirs)
+
+    elif len(dirs) > 1:
+        print("INFO: There are more than one PI_name dirs:"
+              "{}".format(dirs))
+        print("Please choose the one you want to use and run:"
+              "bt = load_beamtime(<path to the PI name dir>)")
+
+    else:
+        print("INFO: No PI_name has been found")
 
 class SimulatedPE1C(Reader):
     "Subclass the bluesky plain detector examples ('Reader'); add attributes."
