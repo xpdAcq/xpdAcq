@@ -19,6 +19,6 @@ setup(
                             ],
     dependency_links=[
         'https://github.com/NSLS-II/event-model/zipball/v1.0.2#egg=event_model-v1.0.2',
-        "https://github.com/NSLS-II/bluesky/zipball/v0.5.2#egg=bluesky-v0.5.2"
+        "https://github.com/NSLS-II/bluesky/zipball/v0.5.3#egg=bluesky-v0.5.3"
         ]
     )
