@@ -100,18 +100,18 @@ class glbl():
         from databroker import get_images as getImages
         from databroker import get_events as getEvents
         from bluesky.callbacks import LiveTable as livetable
-        from bluesky.broker_callbacks import verify_files_saved as verifyFiles
-        
+        from bluesky.callbacks.broker import verify_files_saved as verifyFiles
         from ophyd import EpicsSignalRO, EpicsSignal
-        from bluesky.suspenders import PVSuspendFloor
+        from bluesky.suspenders import SuspendFloor
         ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I', name='ring_current')
         xpdRE = RunEngine()
         xpdRE.md['owner'] = owner
         xpdRE.md['beamline_id'] = beamline_id
         xpdRE.md['group'] = group
         register_mds(xpdRE)
-        PVSuspendFloor(xpdRE,'SR:OPS-BI{DCCT:1}I:Real-I',
-                    ring_current.get()-10, resume_thresh = ring_current.get())
+        beamdump_sus = SuspendFloor(ring_current, ring_current.get()*0.9,
+                resume_thresh = ring_current.get()*0.9, sleep = 1200)
+        #xpdRE.install_suspender(beamdump_sus) # don't enable it untill beam is back
         # real imports
         Msg = msg
         Count = count

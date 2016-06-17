@@ -315,6 +315,16 @@ class ScanPlan(XPD):
           exposure time, starting temperature, ending temperature and
           temperature step specified.
 
+          4. 'bluesky' : which means an arbitrary bluesky plan defined by user
+          For more information please go to : https://nsls-ii.github.io/bluesky/plans.html
+          for complete guide on how to define a plan. Note: bluesky type
+          of plan doesn't work with auto-naming, you must specify
+          explicitly.
+
+          Note:
+          'bluesky' plan won't be saved as reusalbe form. Everytime you define a bluesky plan,
+          we **SUGGEST** you to save code that defines your plan in a separate place (for example, a text file)
+
     scan_params : dict
         Optional. Needed if you wish to set up ScanPlan explicitly.
         It contains all scan parameters that will be passed and used at run-time
@@ -344,6 +354,13 @@ class ScanPlan(XPD):
     >>> ScanPlan('Tramp_2.5_300_200_5')
 
     ScanPlan objects from two sets of examples are equivalent.
+
+    Here is an example on how to instantiate ScanPlan carrying a bluesky plan
+    that reads area detector and em channel while moving two-theta motor from -1 to 1 in 20 steps.
+
+    >>> from bluesky.plans import AbsScanPlan
+    >>> myscan = AbsScanPlan([pe1c, em], tth_cal, -1, 1, 20)
+    >>> ScanPlan('bluesky', {'bluesky_plan': myscan})
     '''
     def __init__(self, scanplan_meta, scanplan_params = {},
             dk_window = None, shutter=True, *, auto_dark_plan = False, **kwargs):
@@ -366,12 +383,16 @@ class ScanPlan(XPD):
         self.type = 'sp'
         self.sp_params = scanplan_params # sp_parms is a dictionary
         self._is_bs = False # priviate attribute
-        if 'bluesky_plan' in self.sp_params:
-            self._is_bs = True
         self._plan_validator()
         self.shutter = shutter
         self.md = {}
         self.md.update({'sp_params': scanplan_params})
+        if 'bluesky_plan' in self.sp_params:
+            self._is_bs = True
+            # overwrite as can't yamify ophyd objects now
+            plan_obj = scanplan_params['bluesky_plan']
+            plan_id = id(plan_obj)
+            self.md.update({'sp_params': {'bluesky_plan':plan_id}})
         self.md.update({'sp_type': _clean_md_input(self.scanplan)})
         self.md.update({'sp_usermd':_clean_md_input(kwargs)})
         # setting up optional attributes
@@ -401,9 +422,10 @@ class ScanPlan(XPD):
             el = _std_param_list[i]
             try:
                 print('{} = {}'.format(el, self.md['sp_params'][el]))
-            except KeyError:
+            except (KeyError, TypeError):
                 # all errors should be handled before this step
                 # except for bluesky plan
+                # TypeError is for bluesky plan object id
                 pass
         print('with fast-shutter control = {}'.format(self.shutter))
         # yamify ScanPlan
@@ -414,6 +436,7 @@ class ScanPlan(XPD):
             self.md.update({'sp_uid': olduid})
         else:
             self.md.update({'sp_uid': self._getuid()})
+
         self._yamify()
 
     def _std_param_list_gen(self):
