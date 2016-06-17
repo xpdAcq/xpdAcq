@@ -1,5 +1,7 @@
 from xpdacq.new_xpdacq import (CustomizedRunEngine, load_beamtime, 
                                start_xpdacq)
+
+# load beamtime
 bt = start_xpdacq()
 if bt is not None:
     prun = CustomizedRunEngine(bt)
