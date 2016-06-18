@@ -9,38 +9,51 @@ from bluesky import RunEngine
 from bluesky.utils import normalize_subs_input
 from bluesky.callbacks import LiveTable
 #from bluesky.callbacks.broker import verify_files_saved
-from xpdacq.beamtime import ScanPlan
 from xpdacq.glbl import glbl
-glbl._dark_dict_list = []
 
 import yaml
 import inspect
-from .yamldict import YamlDict, YamlChainMap
+from xpdqcq.yamldict import YamlDict, YamlChainMap
 from xpdacq.validated_dict import ValidatedDictLike
-
-verify_files_saved = MagicMock()
-
 
 # This is used to map plan names (strings in the YAML file) to actual
 # plan functions in Python.
 _PLAN_REGISTRY = {}
 
-from bluesky.examples import motor, det, Reader
-
 
 def start_xpdacq():
-    dirs = [d for d in os.listdir(glbl.xpdconfig) if os.path.isdir(d)]
+    bt_list = [f for f in os.listdir(glbl.yaml_dir) if
+            f.startswith('bt') and os.path.isfile(f)]
+
+    if len(bt_list) == 1:
+        bt_f = bt_list[-1]
+        bt = load_beamtime(bt_f)
+
+    elif len(dirs) > 1:
+        print("WARNING: There are more than one beamtime objects:"
+              "{}".format(bt_list))
+        print("Please contact beamline staff immediately")
+
+    else:
+        print("INFO: No beamtime object has been found")
+        print("INFO: Please run _start_beamtime(<PI_last>, <saf_num>)"
+              "to initiate beamtime")
+
+# advanced version, allowed multiple beamtime. but not used for now
+def _start_xpdacq():
+    dirs = [d for d in os.listdir(glbl.yaml_dir) if os.path.isdir(d)]
     # create sample dir if it doesn't exist yet
     if 'samples' not in dirs:
         sample_dir = os.path.join(glbl.xpdconfig, 'samples')
-        os.makredirs(sample_dir, exist_ok=True)
+        os.makedirs(sample_dir, exist_ok=True)
     else:
         dirs.remove('samples')
     # now we have all dirs that are not samples;
     # only PI_name dirs left
 
     if len(dirs) == 1:
-        bt = load_beamtime(dirs)
+        load_dirs = dirs[-1]
+        bt = load_beamtime(load_dirs)
 
     elif len(dirs) > 1:
         print("INFO: There are more than one PI_name dirs:"
@@ -51,31 +64,6 @@ def start_xpdacq():
     else:
         print("INFO: No PI_name has been found")
 
-class SimulatedPE1C(Reader):
-    "Subclass the bluesky plain detector examples ('Reader'); add attributes."
-    def __init__(self, name, fields):
-        self.images_per_set = MagicMock()
-        self.images_per_set.get = MagicMock(return_value=5)
-        self.number_of_sets = MagicMock()
-        self.number_of_sets.put = MagicMock(return_value=1)
-        self.number_of_sets.get = MagicMock(return_value=1)
-        self.cam = MagicMock()
-        self.cam.acquire_time = MagicMock()
-        self.cam.acquire_time.put = MagicMock(return_value=0.1)
-        self.cam.acquire_time.get = MagicMock(return_value=0.1)
-
-        super().__init__(name, fields)
-
-        self.ready = True  # work around a hack in Reader
-
-
-def setup_module():
-    glbl.pe1c = SimulatedPE1C('pe1c', ['pe1c'])
-    glbl.shutter = motor  # this passes as a fake shutter
-    glbl.frame_acq_time = 0.1
-    glbl._dark_dict_list = []
-
-setup_module()
 
 def register_plan(plan_name, plan_func, overwrite=False):
     "Map between a plan_name (string) and a plan_func (generator function)."
@@ -439,6 +427,8 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     def __init__(self, pi_name, safnum, **kwargs):
         super().__init__(pi_name=pi_name, safnum=safnum, **kwargs)
+        self.pi_name = pi_name
+        self.saf_num = safnum
         self.experiments = []
         self.samples = []
         self._referenced_by = self.experiments  # used by YamlDict
@@ -455,8 +445,8 @@ class Beamtime(ValidatedDictLike, YamlDict):
             raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
-        return os.path.join(glbl.xpdconfig, '{pi_name}',
-                            'beamtime.yml').format(**self)
+        return os.path.join(glbl.config_base,
+                            'bt_bt.yml').format(**self)
 
     def register_experiment(self, experiment):
         # Notify this Beamtime about an Experiment that should be re-synced
@@ -522,6 +512,7 @@ class Experiment(ValidatedDictLike, YamlChainMap):
         self.scanplans.append(scanplan)
 
     @classmethod
+
     def from_yaml(cls, f, beamtime=None):
         map1, map2 = yaml.load(f)
         instance = cls.from_dicts(map1, map2, beamtime=beamtime)
