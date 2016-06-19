@@ -1,6 +1,8 @@
 import os
 import uuid
 import time
+import yaml
+import inspect
 from mock import MagicMock
 from collections import ChainMap
 import bluesky.plans as bp
@@ -9,12 +11,11 @@ from bluesky import RunEngine
 from bluesky.utils import normalize_subs_input
 from bluesky.callbacks import LiveTable
 #from bluesky.callbacks.broker import verify_files_saved
-from new_xpdacq.glbl import glbl
 
-import yaml
-import inspect
-from new_xpdqcq.yamldict import YamlDict, YamlChainMap
-from new_xpdacq.validated_dict import ValidatedDictLike
+# FIXME
+from .glbl import glbl
+from .yamldict import YamlDict, YamlChainMap
+from .validated_dict import ValidatedDictLike
 
 def new_short_uid():
     return str(uuid.uuid4())[:8]

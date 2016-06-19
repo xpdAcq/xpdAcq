@@ -1,7 +1,16 @@
-from xpdacq.new_xpdacq import (CustomizedRunEngine, load_beamtime,
-                               start_xpdacq)
+import os
+import socket
+import yaml
+import numpy as np
+from unittest.mock import MagicMock
+from time import strftime, sleep
 
 
+from .xpdacq import (load_beamtime, start_xpdacq)
+from .customized_runengine import CustomizedRunEngine
+
+
+from bluesky.examples import Reader
 import bluesky.examples as be
 
 # load beamtime
@@ -78,9 +87,9 @@ config_base/
                 scanplnas/
 """
 BT_DIR = YAML_DIR
-SAMPLE_DIR  = os.path.join(YAML_DIR, 'sample')
-EXAMPLE_DIR  = os.path.join(YAML_DIR, 'example')
-SCANPLAN_DIR  = os.path.join(YAML_DIR, 'scanplan')
+SAMPLE_DIR  = os.path.join(YAML_DIR, 'samples')
+EXPERIMENT_DIR  = os.path.join(YAML_DIR, 'experiments')
+SCANPLAN_DIR  = os.path.join(YAML_DIR, 'scanplans')
 # other dirs
 IMPORT_DIR = os.path.join(HOME_DIR, 'Import')
 ANALYSIS_DIR = os.path.join(HOME_DIR, 'userAnalysis')
@@ -94,7 +103,7 @@ ALL_FOLDERS = [
         YAML_DIR,
         CONFIG_BASE,
         SAMPLE_DIR,
-        EXAMPLE_DIR,
+        EXPERIMENT_DIR,
         SCANPLAN_DIR,
         TIFF_BASE,
         USERSCRIPT_DIR,
@@ -191,7 +200,7 @@ class glbl():
         db = MagicMock()
         get_events = MagicMock()
         get_images = MagicMock()
-        LiveTable = mock_livetable
+        LiveTable = None # FIXME real import later
         verify_files_saved = MagicMock()
         # mock collection objects
         area_det = SimulatedPE1C('pe1c', ['pe1c'])
