@@ -44,7 +44,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
             raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
-        return os.path.join(glbl.config_base,
+        return os.path.join(glbl.yaml_dir,
                             'bt_bt.yml').format(**self)
 
     def register_experiment(self, experiment):
@@ -72,7 +72,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
                     ['{i}: {experiment_name}'.format(i=i, **e)
                      for i, e in enumerate(self.experiments)] +
                     ['', 'ScanPlans:'] +
-                    ['{i}: {sp!r}'.format(i=i, sp=sp)
+                    ['{i}: {sp!r}'.format(i=i, sp=sp.short_summary())
                      for i, sp in enumerate(self.scanplans)] +
                     ['', 'Samples:'] +
                     ['{i}: {name}'.format(i=i, **s)
@@ -102,7 +102,9 @@ class Experiment(ValidatedDictLike, YamlChainMap):
             raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
-        return os.path.join(glbl.xpdconfig, '{pi_name}', 'experiments',
+        #return os.path.join(glbl.yaml_dir, '{pi_name}', 'experiments',
+        #                    '{experiment_name}.yml').format(**self)
+        return os.path.join(glbl.yaml_dir, 'experiments',
                             '{experiment_name}.yml').format(**self)
 
     def register_scanplan(self, scanplan):
@@ -142,7 +144,7 @@ class Sample(ValidatedDictLike, YamlDict):
             raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
-        return os.path.join(glbl.xpdconfig, 'samples',
+        return os.path.join(glbl.yaml_dir, 'samples',
                             '{name}.yml').format(**self)
 
 
@@ -169,10 +171,15 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
 
     def factory(self):
         # grab the area detector used in current configuration
-        pe1c = glbl.pe1c
+        pe1c = glbl.area_det
         # pass parameter to plan_func
         plan = self.plan_func([pe1c], *self['args'], **self['kwargs'])
         return plan
+
+    def short_summary(self):
+        arg_value_str = map(str, self.bound_arguments.values())
+        fn = '_'.join([self['plan_name']] + list(arg_value_str))
+        return fn
 
     def __str__(self):
         return _summarize(self.factory())
@@ -200,82 +207,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
     def default_yaml_path(self):
         arg_value_str = map(str, self.bound_arguments.values())
         fn = '_'.join([self['plan_name']] + list(arg_value_str))
-        return os.path.join(glbl.xpdconfig, '{pi_name}', 'scanplans',
-                            '%s.yml' % fn).format(**self)
-
-
-def load_beamtime(directory):
-    """
-    Load a Beamtime and associated objects.
-
-    Expected directory structure:
-
-    <glbl.xpdconfig>/
-      samples/
-      <pi_name1>/
-        beamtime.yml
-        scanplans/
-        experiments/
-      <pi_name2>/
-        beamtime.yaml
-        scanplans/
-        experiments
-    """
-    known_uids = {}
-    beamtime_fn = os.path.join(directory, 'beamtime.yml')
-    experiment_fns = os.listdir(os.path.join(directory, 'experiments'))
-    sample_fns = os.listdir(os.path.join(directory, '..', 'samples'))
-    scanplan_fns = os.listdir(os.path.join(directory, 'scanplans'))
-
-    with open(beamtime_fn, 'r') as f:
-        bt = load_yaml(f, known_uids)
-
-    for fn in experiment_fns:
-        with open(os.path.join(directory, 'experiments', fn), 'r') as f:
-            load_yaml(f, known_uids)
-
-    for fn in scanplan_fns:
-        with open(os.path.join(directory, 'scanplans', fn), 'r') as f:
-            load_yaml(f, known_uids)
-
-    # Samples are not part of the heirarchy, but all beamtimes know about
-    # all Samples.
-    for fn in sample_fns:
-        with open(os.path.join(directory, '..', 'samples', fn), 'r') as f:
-            data = yaml.load(f)
-            bt.samples.append(data)
-
-    return bt
-
-
-def load_yaml(f, known_uids=None):
-    """
-    Recreate a ScanPlan, Experiment, or Beamtime object from a YAML file.
-
-    If its linked objects have already been created, re-link to them.
-    If they have not yet been created, create them now.
-    """
-    if known_uids is None:
-        known_uids = {}
-    data = yaml.load(f)
-    # If f is a file handle, 'rewind' it so we can read it again.
-    if not isinstance(f, str):
-        f.seek(0)
-    if isinstance(data, dict) and 'beamtime_uid' in data:
-        obj = Beamtime.from_yaml(f)
-        known_uids[obj['beamtime_uid']] = obj
-        return obj
-    elif isinstance(data, list) and len(data) == 2:
-        beamtime = known_uids.get(data[1]['beamtime_uid'])
-        obj = Experiment.from_yaml(f, beamtime=beamtime)
-        known_uids[obj['experiment_uid']] = obj
-    elif isinstance(data, list) and len(data) == 3:
-        experiment = known_uids.get(data[1]['experiment_uid'])
-        beamtime = known_uids.get(data[2]['beamtime_uid'])
-        obj = ScanPlan.from_yaml(f, experiment=experiment, beamtime=beamtime)
-        known_uids[obj['scanplan_uid']] = obj
-    else:
-        raise ValueError("File does not match a recognized specification.")
-    return obj
+        return os.path.join(glbl.yaml_dir, 'scanplans',
+                            '%s.yml' % fn)
 
 

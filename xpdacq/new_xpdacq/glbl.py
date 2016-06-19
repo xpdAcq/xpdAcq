@@ -106,15 +106,6 @@ ALL_FOLDERS = [
 _EXCLUDE_DIR = [HOME_DIR, BLCONFIG_DIR, YAML_DIR]
 _EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
 
-# for simulation put a dummy bt object in xpdUser/config_base/yml/
-os.makedirs(BLCONFIG_DIR, exist_ok=True)
-tmp_safname = os.path.join(BLCONFIG_DIR,'saf123.yml')
-if not os.path.isfile(tmp_safname):
-    dummy_config = {'saf number':123,'PI last name':'simulation','experimenter list':[('PIlastname','PIfirstname',1123456),('Exp2lastname','Exp2firstname',654321),
-                     ('Add more lines','as needed, one for each experimenter',98765)]}
-    with open(tmp_safname, 'w') as fo:
-        yaml.dump(dummy_config,fo)
-
 class glbl():
     beamline_host_name = BEAMLINE_HOST_NAME
     base = BASE_DIR

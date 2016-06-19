@@ -13,12 +13,14 @@ from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 
 def start_xpdacq():
+    os.makedirs(glbl.yaml_dir, exist_ok=True)
     bt_list = [f for f in os.listdir(glbl.yaml_dir) if
-            f.startswith('bt') and os.path.isfile(f)]
+               f.startswith('bt') and
+               os.path.isfile(os.path.join(glbl.yaml_dir, f))]
 
     if len(bt_list) == 1:
         bt_f = bt_list[-1]
-        bt = load_beamtime(bt_f)
+        bt = load_beamtime()
         return bt
 
     elif len(bt_list) > 1:
@@ -44,7 +46,7 @@ def load_beamtime(directory=None):
       experiments/
     """
     if directory is None:
-        directory = glbl.yaml_dir # leave room for future upgrade
+        directory = glbl.yaml_dir # leave room for future multi-beamtime
     known_uids = {}
     beamtime_fn = os.path.join(directory, 'beamtime.yml')
     experiment_fns = os.listdir(os.path.join(directory, 'experiments'))
