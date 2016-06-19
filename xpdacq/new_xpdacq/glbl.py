@@ -5,22 +5,13 @@ import numpy as np
 from unittest.mock import MagicMock
 from time import strftime, sleep
 
-
-from .xpdacq import (load_beamtime, start_xpdacq)
-from .customized_runengine import CustomizedRunEngine
-
-
-from bluesky.examples import Reader
+from bluesky import RunEngine
+from bluesky.utils import normalize_subs_input
+from bluesky.callbacks import LiveTable
 import bluesky.examples as be
 
-# load beamtime
-bt = start_xpdacq()
-if bt is not None:
-    prun = CustomizedRunEngine(bt)
-
-
 # define simulated PE1C
-class SimulatedPE1C(Reader):
+class SimulatedPE1C(be.Reader):
     "Subclass the bluesky plain detector examples ('Reader'); add attributes."
     def __init__(self, name, fields):
         self.images_per_set = MagicMock()

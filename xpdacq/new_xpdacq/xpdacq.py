@@ -15,12 +15,16 @@ from bluesky.callbacks import LiveTable
 from .glbl import glbl
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
-#from .customized_runengine import CustomizedRunEngine
+from .beamtimeSetup import start_xpdacq
 
 # This is used to map plan names (strings in the YAML file) to actual
 # plan functions in Python.
 _PLAN_REGISTRY = {}
 
+# load beamtime
+bt = start_xpdacq()
+if bt is not None:
+    prun = CustomizedRunEngine(bt)
 
 
 def register_plan(plan_name, plan_func, overwrite=False):
@@ -67,8 +71,8 @@ def _update_dark_dict_list(name, doc):
     # always grab from glbl state 
     dark_dict_list = list(glbl._dark_dict_list)
     # obtain light count time that is already set to glbl.pe1c
-    acq_time = glbl.pe1c.cam.acquire_time.get()
-    num_frame = glbl.pe1c.images_per_set.get()
+    acq_time = glbl.area_det.cam.acquire_time.get()
+    num_frame = glbl.area_det.images_per_set.get()
     light_cnt_time = acq_time * num_frame
 
     dark_dict = {}
@@ -87,7 +91,7 @@ def take_dark():
     print('taking dark frame....')
     # upto this stage, glbl.pe1c has been configured to so exposure time is
     # correct
-    c = bp.count([glbl.pe1c], md={'dark_frame': True})
+    c = bp.count([glbl.area_det], md={'dark_frame': True})
     yield from bp.subs_wrapper(c, {'stop': [_update_dark_dict_list]})
     print('opening shutter...')
     yield from bp.abs_set(glbl.shutter, 1)
@@ -255,15 +259,15 @@ def _configure_pe1c(exposure):
     mode"""
     # TODO maybe move it into glbl?
     # setting up detector
-    glbl.pe1c.number_of_sets.put(1)
-    glbl.pe1c.cam.acquire_time.put(glbl.frame_acq_time)
-    acq_time = glbl.pe1c.cam.acquire_time.get()
+    glbl.area_det.number_of_sets.put(1)
+    glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
+    acq_time = glbl.area_det.cam.acquire_time.get()
     # compute number of frames
     num_frame = np.ceil(exposure / acq_time)
     if num_frame == 0:
         num_frame = 1
     computed_exposure = num_frame*acq_time
-    glbl.pe1c.images_per_set.put(num_frame)
+    glbl.area_det.images_per_set.put(num_frame)
     # print exposure time
     print("INFO: requested exposure time = {} - > computed exposure time"
           "= {}".format(exposure, computed_exposure))
