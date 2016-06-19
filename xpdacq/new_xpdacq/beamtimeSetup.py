@@ -11,6 +11,14 @@ import numpy as np
 from .glbl import glbl
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
+from .beamtime import Beamtime
+
+def _start_beamtime(PI_last, saf_num):
+    bt = Beamtime(PI_last, saf_num)
+    print('INFO: Create all required folders for experiment')
+    for el in glbl.allfolders:
+        os.makedirs(el, exist_ok=True)
+    return bt
 
 def start_xpdacq():
     os.makedirs(glbl.yaml_dir, exist_ok=True)
