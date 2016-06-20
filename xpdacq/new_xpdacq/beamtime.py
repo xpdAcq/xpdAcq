@@ -150,13 +150,20 @@ def new_short_uid():
     return str(uuid.uuid4())[:8]
 
 
-class Beamtime(ValidatedDictLike, YamlDict):
-    _REQUIRED_FIELDS = ['pi_name', 'safnum']
+def _clean_info(obj):
+    """ stringtify and replace space"""
+    return str(obj).strip().replace(' ', '')
 
-    def __init__(self, pi_name, safnum, **kwargs):
-        super().__init__(pi_name=pi_name, safnum=safnum, **kwargs)
-        self.pi_name = pi_name
-        self.saf_num = safnum
+
+class Beamtime(ValidatedDictLike, YamlDict):
+    _REQUIRED_FIELDS = ['pi_name', 'saf_num']
+
+    def __init__(self, pi_name, saf_num, experimenters=[], *,
+                 wavelength=None, **kwargs):
+        super().__init__(pi_name=_clean_info(pi_name),
+                         saf_num=_clean_info(saf_num),
+                         experimenters=experimenters,
+                         wavelength=wavelength, **kwargs)
         self.experiments = []
         self.samples = []
         self._referenced_by = self.experiments  # used by YamlDict

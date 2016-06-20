@@ -19,25 +19,39 @@ from .validated_dict import ValidatedDictLike
 from .beamtime import *
 from .utils import _graceful_exit
 
-def _start_beamtime(PI_last, saf_num):
+def _start_beamtime(PI_last, saf_num, experimenters=[], *,
+                    wavelength=None):
     """ function for start beamtime """
-    try:
-        dir_list = os.listdir(glbl.home)
-    except FileNotFoundError:
-        raise RuntimeError("WARNING: fundamental directory {} does not exist"
-              "Please contact beamline staff immediately"
-              .format(glbl.home))
+    # TODO - allow config file later
 
+    if not os.path.exists(glbl.home):
+        raise RuntimeError("WARNING: fundamental directory {} does not"
+                           "exist. Please contact beamline staff immediately"
+                           .format(glbl.home))
+
+    dir_list = os.listdir(glbl.home)
     if len(dir_list) != 0:
-        print("WARNING: There are more than one directories under"
-              "{}, have you 'run _end_beamtime()' yet?"
-              .format(glbl.home))
-        return
+        raise FileExistsError("There are more than one files/directories"
+                              "under {}, have you 'run _end_beamtime()' yet?"
+                              .format(glbl.home))
     elif len(dir_list) == 0:
-        for el in glbl.allfolders:
-            os.makedirs(el, exist_ok=True)
-        bt = Beamtime(PI_last, saf_num)
+        print("INFO: initiating requried directories for experiment")
+        _make_clean_env()
+        bt = Beamtime(PI_last, saf_num, experimenters,
+                wavelength=wavelength)
+        os.chdir(glbl.home)
         return bt
+
+
+def _make_clean_env():
+    '''Make a clean environment for a new user
+    '''
+    out = []
+    for d in glbl.allfolders:
+        os.makedirs(d, exist_ok=True)
+        out.append(d)
+    return out
+
 
 def start_xpdacq():
     """ function to reload beamtime """
@@ -138,7 +152,7 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
 
     It check if directory structure is correct and flush directories
     """
-    _required_info = ['pi_name', 'safnum', 'beamtime_uid']
+    _required_info = ['pi_name', 'saf_num', 'beamtime_uid']
     if archive_dir is None:
         archive_dir = glbl.archive_dir
     if base_dir is None:
