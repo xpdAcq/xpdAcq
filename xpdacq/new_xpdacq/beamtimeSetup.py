@@ -11,14 +11,26 @@ import numpy as np
 from .glbl import glbl
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
-from .beamtime import Beamtime
+from .beamtime import Beamtime, Experiment, ScanPlan, Sample 
 
 def _start_beamtime(PI_last, saf_num):
-    bt = Beamtime(PI_last, saf_num)
-    print('INFO: Create all required folders for experiment')
-    for el in glbl.allfolders:
-        os.makedirs(el, exist_ok=True)
-    return bt
+    try:
+        dir_list = os.path.listdir(glbl.home)
+    except FileNotFoundError:
+        print("WARNING: fundamental directory {} does not exist"
+              "Please contact beamline staff immediately"
+              .format(glbl.home))
+        return
+    if len(dir_list) != 0:
+        print("WARNING: There are more than one directories under"
+              "{}, did you already run _end_beamtime()"
+              .format(glbl.home))
+
+    elif len(dir_list) == 0:
+        for el in glbl.allfolders:
+            os.makedirs(el, exist_ok=True)
+        bt = Beamtime(PI_last, saf_num)
+        return bt
 
 def start_xpdacq():
     os.makedirs(glbl.yaml_dir, exist_ok=True)
@@ -56,7 +68,7 @@ def load_beamtime(directory=None):
     if directory is None:
         directory = glbl.yaml_dir # leave room for future multi-beamtime
     known_uids = {}
-    beamtime_fn = os.path.join(directory, 'beamtime.yml')
+    beamtime_fn = os.path.join(directory, 'bt_bt.yml')
     experiment_fns = os.listdir(os.path.join(directory, 'experiments'))
     sample_fns = os.listdir(os.path.join(directory, 'samples'))
     scanplan_fns = os.listdir(os.path.join(directory, 'scanplans'))

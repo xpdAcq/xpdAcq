@@ -17,27 +17,6 @@ from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 from .beamtimeSetup import start_xpdacq
 
-# This is used to map plan names (strings in the YAML file) to actual
-# plan functions in Python.
-_PLAN_REGISTRY = {}
-
-# load beamtime
-bt = start_xpdacq()
-if bt is not None:
-    prun = CustomizedRunEngine(bt)
-
-
-def register_plan(plan_name, plan_func, overwrite=False):
-    "Map between a plan_name (string) and a plan_func (generator function)."
-    if plan_name in _PLAN_REGISTRY and not overwrite:
-        raise KeyError("A plan is already registered by this name. Use "
-                       "overwrite=True to overwrite it.")
-    _PLAN_REGISTRY[plan_name] = plan_func
-
-
-def unregister_plan(plan_name):
-    del _PLAN_REGISTRY[plan_name]
-
 
 def _summarize(plan):
     "based on bluesky.utils.print_summary"
@@ -144,8 +123,8 @@ def _validate_dark(expire_time=None):
     if not dark_dict_list:
         return None
     # obtain light count time that is already set to pe1c
-    acq_time = glbl.pe1c.cam.acquire_time.get()
-    num_frame = glbl.pe1c.images_per_set.get()
+    acq_time = glbl.area_det.cam.acquire_time.get()
+    num_frame = glbl.area_det.images_per_set.get()
     light_cnt_time = acq_time * num_frame
     # find fresh and qualified dark
     now = time.time()
@@ -254,112 +233,8 @@ class CustomizedRunEngine(RunEngine):
                          raise_if_interrupted=raise_if_interrupted,
                          **metadata_kw)
 
-def _configure_pe1c(exposure):
-    """ priviate function to configure pe1c with continuous acquistion
-    mode"""
-    # TODO maybe move it into glbl?
-    # setting up detector
-    glbl.area_det.number_of_sets.put(1)
-    glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
-    acq_time = glbl.area_det.cam.acquire_time.get()
-    # compute number of frames
-    num_frame = np.ceil(exposure / acq_time)
-    if num_frame == 0:
-        num_frame = 1
-    computed_exposure = num_frame*acq_time
-    glbl.area_det.images_per_set.put(num_frame)
-    # print exposure time
-    print("INFO: requested exposure time = {} - > computed exposure time"
-          "= {}".format(exposure, computed_exposure))
-    return (num_frame, acq_time, computed_exposure)
 
-def ct(dets, exposure, *, md=None):
-    pe1c, = dets
-    if md is None:
-        md = {}
-    # setting up area_detector
-    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
-    # update md
-    _md = ChainMap(md, {'sp_time_per_frame': acq_time,
-                        'sp_num_frames': num_frame,
-                        'sp_requested_exposure': exposure,
-                        'sp_computed_exposure': computed_exposure,
-                        'sp_type': 'ct',
-                        # need a name that shows all parameters values
-                        # 'sp_name': 'ct_<exposure_time>',
-                        'sp_uid': str(uuid.uuid4()),
-                        'plan_name': 'ct'})
-    plan = bp.count([pe1c], md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([pe1c]))
-    yield from plan
-
-def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
-    pe1c, = dets
-    if md is None:
-        md = {}
-    # setting up area_detector
-    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
-    # compute Nsteps
-    (Nsteps, computed_step_size) = _nstep(Tstart, Tstop, Tstep)
-    # update md
-    _md = ChainMap(md, {'sp_time_per_frame': acq_time,
-                        'sp_num_frames': num_frame,
-                        'sp_requested_exposure': exposure,
-                        'sp_computed_exposure': computed_exposure,
-                        'sp_type': 'Tramp',
-                        'sp_startingT': Tstart,
-                        'sp_endingT': Tstop,
-                        'sp_requested_Tstep': Tstep,
-                        'sp_computed_Tstep': computed_step_size,
-                        'sp_Nsteps': Nsteps,
-                        # need a name that shows all parameters values
-                        # 'sp_name': 'Tramp_<exposure_time>',
-                        'sp_uid': str(uuid.uuid4()),
-                        'plan_name': 'Tramp'})
-    plan = bp.scan([pe1c], cs700, Tstart, Tstop, Nsteps, md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([pe1c, cs700]))
-    yield from plan
-
-def tseries(dets, exposure, delay, num, *, md = None):
-    pe1c, = dets
-    if md is None:
-        md = {}
-    # setting up area_detector
-    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
-    real_delay = max(0, delay - computed_exposure)
-    period = max(computed_exposure, real_delay + computed_exposure)
-    print('INFO: requested delay = {}s  -> computed delay = {}s'
-          .format(delay, real_delay))
-    print('INFO: nominal period (neglecting readout overheads) of {} s'
-          .format(period))
-    # update md
-    _md = ChainMap(md, {'sp_time_per_frame': acq_time,
-                        'sp_num_frames': num_frame,
-                        'sp_requested_exposure': exposure,
-                        'sp_computed_exposure': computed_exposure,
-                        'sp_type': 'tseries',
-                        # need a name that shows all parameters values
-                        # 'sp_name': 'tseries_<exposure_time>',
-                        'sp_uid': str(uuid.uuid4()),
-                        'plan_name': 'tseries'})
-
-    plan = bp.count([pe1c], num, delay, md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([pe1c]))
-    yield from plan
-
-def _nstep(start, stop, step_size):
-    ''' return (start, stop, nsteps)'''
-    requested_nsteps = abs((start - stop) / step_size)
-
-    computed_nsteps = int(requested_nsteps)+1 # round down for finer step size
-    computed_step_list = np.linspace(start, stop, computed_nsteps)
-    computed_step_size = computed_step_list[1]- computed_step_list[0]
-    print("INFO: requested temperature step size = {} ->"
-          "computed temperature step size = {}"
-          .format(step_size,computed_step_size))
-    return (computed_nsteps, computed_step_size)
-
-
-register_plan('ct', ct)
-register_plan('Tramp', Tramp)
-register_plan('tseries', tseries)
+# load beamtime
+bt = start_xpdacq()
+if bt is not None:
+    prun = CustomizedRunEngine(bt)
