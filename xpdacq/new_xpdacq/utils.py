@@ -4,6 +4,7 @@ import shutil
 from shutil import ReadError
 import tarfile as tar
 from time import strftime
+from .glbl import glbl
 
 def _graceful_exit(error_message):
     try:

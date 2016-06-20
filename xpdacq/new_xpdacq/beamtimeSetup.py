@@ -175,19 +175,8 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
     # laod bt yaml
     if not bto:
         bto = _load_bt(glbl.yaml_dir)
-
-    # grab information
-    bt_info_list = []
-    for el in _required_info:
-        bt_info = bto.get(el)
-        if bt_info is None:
-            print("WARNING: required beamtime information {} doesn't exit."
-                  "User might have edited it during experiment."
-                  "Please contact user for further inforamtion".format(el))
-            sys.exit()
-        bt_info_list.append(_clean_info(bt_info))
-    bt_info_list.append(strftime('%Y-%m-%d-%H%M'))
-    archive_name ='_'.join(bt_info_list)
+    # load bt info
+    archive_name = _load_bt_info(bto, _required_info)
     # archive file
     archive_full_name = _tar_user_data(archive_name)
     # confirm archive
@@ -199,6 +188,22 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
 def _clean_info(obj):
     """ stringtify and replace space"""
     return str(obj).strip().replace(' ', '')
+
+
+def _load_bt_info(bt_obj, required_fields):
+    # grab information
+    bt_info_list = []
+    for el in required_fields:
+        bt_info = bt_obj.get(el)
+        if bt_info is None:
+            print("WARNING: required beamtime information {} doesn't exit."
+                  "User might have edited it during experiment."
+                  "Please contact user for further inforamtion".format(el))
+            sys.exit()
+        bt_info_list.append(_clean_info(bt_info))
+    bt_info_list.append(strftime('%Y-%m-%d-%H%M'))
+    archive_name ='_'.join(bt_info_list)
+    return archive_name
 
 
 def _tar_user_data(archive_name, root_dir = None, archive_format ='tar'):
