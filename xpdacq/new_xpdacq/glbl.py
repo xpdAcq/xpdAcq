@@ -188,4 +188,6 @@ class glbl():
         area_det = SimulatedPE1C('pe1c', ['pe1c'])
         temp_controller = be.motor
         shutter = MagicMock()
-        print('==== Simulation being created in current directory:{} ===='.format(BASE_DIR))
+        print('==== Simulation being created in current directory:{} ===='
+              .format(BASE_DIR))
+        os.makedirs(home, exist_ok=True)

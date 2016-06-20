@@ -55,10 +55,12 @@ def _make_clean_env():
 
 def start_xpdacq():
     """ function to reload beamtime """
-    os.makedirs(glbl.yaml_dir, exist_ok=True)
-    bt_list = [f for f in os.listdir(glbl.yaml_dir) if
-               f.startswith('bt') and
-               os.path.isfile(os.path.join(glbl.yaml_dir, f))]
+    try:
+        bt_list = [f for f in os.listdir(glbl.yaml_dir) if
+                   f.startswith('bt') and
+                   os.path.isfile(os.path.join(glbl.yaml_dir, f))]
+    except FileNotFoundError:
+        return _no_beamtime()
 
     if len(bt_list) == 1:
         bt_f = bt_list[-1]
@@ -71,9 +73,15 @@ def start_xpdacq():
         print("Please contact beamline staff immediately")
 
     else:
-        print("INFO: No beamtime object has been found")
-        print("INFO: Please run _start_beamtime(<PI_last>, <saf_num>)"
-              "to initiate beamtime")
+       return _no_beamtime()
+
+
+def _no_beamtime():
+    print("INFO: No beamtime object has been found")
+    print("INFO: Please run 'bt=_start_beamtime(<PI_last>, <saf_num>,"
+          "<experimenter_list>, wavelength=<wavelength_num>)'"
+          "to initiate beamtime")
+
 
 def load_beamtime(directory=None):
     """
