@@ -1,8 +1,13 @@
 import os
+import sys
 import uuid
 import time
 import yaml
+import shutil
 import inspect
+import datetime
+from time import strftime
+
 from mock import MagicMock
 from collections import ChainMap
 import bluesky.plans as bp
@@ -11,21 +16,23 @@ import numpy as np
 from .glbl import glbl
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
-from .beamtime import Beamtime, Experiment, ScanPlan, Sample 
+from .beamtime import *
+from .utils import _graceful_exit
 
 def _start_beamtime(PI_last, saf_num):
+    """ function for start beamtime """
     try:
-        dir_list = os.path.listdir(glbl.home)
+        dir_list = os.listdir(glbl.home)
     except FileNotFoundError:
-        print("WARNING: fundamental directory {} does not exist"
+        raise RuntimeError("WARNING: fundamental directory {} does not exist"
               "Please contact beamline staff immediately"
               .format(glbl.home))
-        return
+
     if len(dir_list) != 0:
         print("WARNING: There are more than one directories under"
-              "{}, did you already run _end_beamtime()"
+              "{}, have you 'run _end_beamtime()' yet?"
               .format(glbl.home))
-
+        return
     elif len(dir_list) == 0:
         for el in glbl.allfolders:
             os.makedirs(el, exist_ok=True)
@@ -33,6 +40,7 @@ def _start_beamtime(PI_last, saf_num):
         return bt
 
 def start_xpdacq():
+    """ function to reload beamtime """
     os.makedirs(glbl.yaml_dir, exist_ok=True)
     bt_list = [f for f in os.listdir(glbl.yaml_dir) if
                f.startswith('bt') and
@@ -123,6 +131,112 @@ def load_yaml(f, known_uids=None):
     else:
         raise ValueError("File does not match a recognized specification.")
     return obj
+
+
+def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
+    """ funciton to end a beamtime.
+
+    It check if directory structure is correct and flush directories
+    """
+    _required_info = ['pi_name', 'safnum', 'beamtime_uid']
+    if archive_dir is None:
+        archive_dir = glbl.archive_dir
+    if base_dir is None:
+        base_dir = glbl.base
+    os.makedirs(glbl.home, exist_ok = True)
+    # check env
+    files = os.listdir(glbl.home)
+    if len(files)==0:
+        raise FileNotFoundError("It appears that end_beamtime may have been"
+                                "run. If so, do not run again but proceed to"
+                                "bt = _start_beamtime(pi_last, saf_num)")
+    # laod bt yaml
+    if not bto:
+        bto = _load_bt(glbl.yaml_dir)
+
+    # grab information
+    bt_info_list = []
+    for el in _required_info:
+        bt_info = bto.get(el)
+        if bt_info is None:
+            print("WARNING: required beamtime information {} doesn't exit."
+                  "User might have edited it during experiment."
+                  "Please contact user for further inforamtion".format(el))
+            sys.exit()
+        bt_info_list.append(_clean_info(bt_info))
+    bt_info_list.append(strftime('%Y-%m-%d-%H%M'))
+    archive_name ='_'.join(bt_info_list)
+    # archive file
+    archive_full_name = _tar_user_data(archive_name)
+    # confirm archive
+    _confirm_archive(archive_full_name)
+    # flush
+    _delete_home_dir_tree()
+
+
+def _clean_info(obj):
+    """ stringtify and replace space"""
+    return str(obj).strip().replace(' ', '')
+
+
+def _tar_user_data(archive_name, root_dir = None, archive_format ='tar'):
+    """ Create a remote tarball of all user folders under xpdUser directory
+    """
+    archive_full_name = os.path.join(glbl.archive_dir, archive_name)
+    if root_dir is None:
+        root_dir = glbl.base
+    cur_path = os.getcwd()
+    try:
+        os.chdir(glbl.base)
+        print("INFO: Archiving your data now. That may take several"
+              "minutes. please be patient :)" )
+        tar_return = shutil.make_archive(archive_full_name,
+                                         archive_format, root_dir=glbl.base,
+                                         base_dir='xpdUser', verbose=1,
+                                         dry_run=False)
+    finally:
+        os.chdir(cur_path)
+    return archive_full_name
+
+
+def _load_bt(bt_yaml_path):
+    btoname = os.path.join(glbl.yaml_dir,'bt_bt.yml')
+    if not os.path.isfile(btoname):
+        sys.exit(_graceful_exit("{} does not exist in {}. User might have"
+                                "deleted it accidentally.Please create it"
+                                "based on user information or contect user"
+                                .format(os.path.basename(btoname),
+                                        glbl.yaml_dir)))
+    with open(btoname, 'r') as fi:
+        bto = yaml.load(fi)
+    return bto
+
+
+def  _get_user_confirmation():
+    conf = input("Please confirm data are backed up. Are you ready to continue"
+                 "with xpdUser directory contents deletion (y,[n])?: ")
+    return conf
+
+
+def _any_input_method(inp_func):
+    return inp_func()
+
+
+def _confirm_archive(archive_f_name):
+    print("tarball archived to {}".format(archive_f_name))
+    conf = _any_input_method(_get_user_confirmation)
+    if conf in ('y','Y'):
+        return
+    else:
+        sys.exit(_graceful_exit("xpdUser directory delete operation cancelled."
+                                "at Users request"))
+
+def _delete_home_dir_tree():
+    os.chdir(glbl.base) # move out from xpdUser before deletion
+    shutil.rmtree(glbl.home)
+    os.makedirs(glbl.home, exist_ok=True)
+    os.chdir(glbl.home)  # now move back into xpdUser
+    return
 
 
 """ hodding place
