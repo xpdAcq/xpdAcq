@@ -114,12 +114,9 @@ def load_beamtime(directory=None):
         with open(os.path.join(directory, 'scanplans', fn), 'r') as f:
             load_yaml(f, known_uids)
 
-    # Samples are not part of the heirarchy, but all beamtimes know about
-    # all Samples.
     for fn in sample_fns:
         with open(os.path.join(directory, 'samples', fn), 'r') as f:
-            data = yaml.load(f)
-            bt.samples.append(data)
+            load_yaml(f, known_uids)
 
     return bt
 
@@ -141,10 +138,14 @@ def load_yaml(f, known_uids=None):
         obj = Beamtime.from_yaml(f)
         known_uids[obj['beamtime_uid']] = obj
         return obj
-    elif isinstance(data, list) and len(data) == 2:
+    elif isinstance(data, list) and 'experiment_uid' in data[0]:
         beamtime = known_uids.get(data[1]['beamtime_uid'])
         obj = Experiment.from_yaml(f, beamtime=beamtime)
         known_uids[obj['experiment_uid']] = obj
+    elif isinstance(data, list) and 'sample_uid' in data[0]:
+        beamtime = known_uids.get(data[1]['beamtime_uid'])
+        obj = Sample.from_yaml(f, beamtime=beamtime)
+        known_uids[obj['sample_uid']] = obj
     elif isinstance(data, list) and len(data) == 3:
         experiment = known_uids.get(data[1]['experiment_uid'])
         beamtime = known_uids.get(data[2]['beamtime_uid'])

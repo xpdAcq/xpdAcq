@@ -166,7 +166,9 @@ class Beamtime(ValidatedDictLike, YamlDict):
                          wavelength=wavelength, **kwargs)
         self.experiments = []
         self.samples = []
-        self._referenced_by = self.experiments # used by YamlDict
+        self._referenced_by = self.experiments
+        self._referenced_by.extend(self.samples)
+        # used by YamlDict
         self.setdefault('beamtime_uid', new_short_uid())
 
     @property
@@ -187,6 +189,11 @@ class Beamtime(ValidatedDictLike, YamlDict):
         # Notify this Beamtime about an Experiment that should be re-synced
         # whenever the contents of the Beamtime are edited.
         self.experiments.append(experiment)
+
+    def register_sample(self, sample):
+        # Notify this Beamtime about an Sample that should be re-synced
+        # whenever the contents of the Beamtime are edited.
+        self.samples.append(sample)
 
     @classmethod
     def from_yaml(cls, f):
@@ -249,7 +256,6 @@ class Experiment(ValidatedDictLike, YamlChainMap):
         self.scanplans.append(scanplan)
 
     @classmethod
-
     def from_yaml(cls, f, beamtime=None):
         map1, map2 = yaml.load(f)
         instance = cls.from_dicts(map1, map2, beamtime=beamtime)
@@ -266,12 +272,15 @@ class Experiment(ValidatedDictLike, YamlChainMap):
                    **map1)
 
 
-class Sample(ValidatedDictLike, YamlDict):
+#class Sample(ValidatedDictLike, YamlDict):
+class Sample(ValidatedDictLike, YamlChainMap):
     _REQUIRED_FIELDS = ['name', 'composition']
 
-    def __init__(self, name, *, composition, **kwargs):
+    def __init__(self, name, beamtime, *, composition, **kwargs):
+        beamtime.register_sample(self)
         sample = dict(name=name, composition=composition, **kwargs)
-        super().__init__(sample)
+        super().__init__(sample, beamtime)
+        self.beamtime = beamtime
         self.setdefault('sample_uid', new_short_uid())
 
     def validate(self):
@@ -282,6 +291,22 @@ class Sample(ValidatedDictLike, YamlDict):
     def default_yaml_path(self):
         return os.path.join(glbl.yaml_dir, 'samples',
                             '{name}.yml').format(**self)
+
+    @classmethod
+    def from_yaml(cls, f, beamtime=None):
+        map1, map2 = yaml.load(f)
+        instance = cls.from_dicts(map1, map2, beamtime=beamtime)
+        if not isinstance(f, str):
+            instance.filepath = os.path.abspath(f.name)
+        return instance
+
+    @classmethod
+    def from_dicts(cls, map1, map2, beamtime=None):
+        if beamtime is None:
+            beamtime = Beamtime.from_dict(map2)
+        return cls(map1.pop('name'), beamtime,
+                   sample_uid=map1.pop('sample_uid'),
+                   **map1)
 
 
 class ScanPlan(ValidatedDictLike, YamlChainMap):
