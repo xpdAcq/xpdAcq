@@ -199,7 +199,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
     @classmethod
     def from_dict(cls, d):
         return cls(d.pop('pi_name'),
-                   d.pop('safnum'),
+                   d.pop('saf_num'),
                    beamtime_uid=d.pop('beamtime_uid'),
                    **d)
 
