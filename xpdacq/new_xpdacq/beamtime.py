@@ -166,7 +166,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
                          wavelength=wavelength, **kwargs)
         self.experiments = []
         self.samples = []
-        self._referenced_by = self.experiments  # used by YamlDict
+        self._referenced_by = self.experiments # used by YamlDict
         self.setdefault('beamtime_uid', new_short_uid())
 
     @property
