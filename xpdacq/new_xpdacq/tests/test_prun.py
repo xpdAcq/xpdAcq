@@ -9,9 +9,9 @@ from time import strftime
 from xpdacq.new_xpdacq.glbl import glbl
 from xpdacq.new_xpdacq.beamtime import *
 from xpdacq.new_xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
-from xpdacq.new_xpdacq.xpdacq import _validate_dark
+from xpdacq.new_xpdacq.xpdacq import _validate_dark, CustomizedRunEngine
 
-class NewBeamtimeTest(unittest.TestCase):
+class PrunTest(unittest.TestCase):
 
     def setUp(self):
         self.base_dir = glbl.base
@@ -21,6 +21,13 @@ class NewBeamtimeTest(unittest.TestCase):
         self.saf_num = '123'   # must be 123 for proper load of config yaml => don't change
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
+        self.bt = _start_beamtime(self.PI_name, self.saf_num,
+                                  self.experimenters,
+                                  wavelength=self.wavelength)
+        self.ex = Experiment('temp_test', self.bt)
+        self.sp = ScanPlan(self.bt.experiments[0], ct, 10)
+        self.sa = Sample('test_sample', self.bt, composition={})
+
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -65,11 +72,18 @@ class NewBeamtimeTest(unittest.TestCase):
                        (glbl.dk_window*60 -0.1)]
         # large window
         rv = _validate_dark()
-        self.assertEqual(rv, correct_uid[-1]) 
+        self.assertEqual(rv, correct_uid[-1])
         # small window
         rv = _validate_dark(0.1)
         self.assertEqual(rv, None)
         # medium window
         rv = _validate_dark(1.5)
         correct_uid = dark_dict_list[0]['uid']
-        self.assertEqual(rv, correct_uid) 
+        self.assertEqual(rv, correct_uid)
+
+        # case3: with real prun
+        prun = CustomizedRunEngine(self.bt)
+        prun_uid = prun(0,0)
+        self.assertEqual(len(prun_uid),2) # first one is auto_dark
+        rv = _validate_dark()
+        self.assertEqual(prun_uid[0], rv)

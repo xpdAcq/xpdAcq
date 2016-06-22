@@ -3,7 +3,6 @@ import uuid
 import time
 import yaml
 import inspect
-from mock import MagicMock
 from collections import ChainMap
 import bluesky.plans as bp
 import numpy as np
@@ -16,7 +15,7 @@ from .glbl import glbl
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 from .beamtimeSetup import start_xpdacq
-
+from .beamtime import *
 
 def _summarize(plan):
     "based on bluesky.utils.print_summary"
@@ -118,8 +117,7 @@ def _validate_dark(expire_time=None):
     if expire_time is None:
         expire_time = glbl.dk_window
     dark_dict_list = glbl._dark_dict_list
-    # print('my dark_dict_list is {}'.format(dark_dict_list))
-    # print('dark_dict_list is False = {}'.format(dark_dict_list is False))
+    # if glbl.dark_dict_list = None, do a dark anyway
     if not dark_dict_list:
         return None
     # obtain light count time that is already set to pe1c
@@ -130,7 +128,7 @@ def _validate_dark(expire_time=None):
     now = time.time()
     qualified_dark_uid = [ el['uid'] for el in dark_dict_list if
                          abs(el['exposure'] - light_cnt_time) <= acq_time and
-                         abs(el['timestamp'] - now) <= (expire_time - acq_time)
+                         abs(el['timestamp'] - now) <= (expire_time*60 - acq_time)
                          ]
     if qualified_dark_uid:
         return qualified_dark_uid[-1]
@@ -233,8 +231,10 @@ class CustomizedRunEngine(RunEngine):
                          raise_if_interrupted=raise_if_interrupted,
                          **metadata_kw)
 
+        return self._run_start_uids
 
 # load beamtime
 bt = start_xpdacq()
 if bt is not None:
+    print("INFO: Reload and hook beamtime objects:\n{}".format(bt))
     prun = CustomizedRunEngine(bt)

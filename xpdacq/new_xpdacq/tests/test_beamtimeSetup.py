@@ -35,6 +35,28 @@ class NewBeamtimeTest(unittest.TestCase):
         if os.path.isdir(os.path.join(self.base_dir,'xpdConfig')):
             shutil.rmtree(os.path.join(self.base_dir,'xpdConfig'))
 
+
+    def test_make_clean_env(self):
+        # check directory structure from glbl
+        home_dir = os.path.join(self.base_dir,'xpdUser')
+        conf_dir = os.path.join(self.base_dir,'xpdConfig')
+        tiff_dir = os.path.join(self.home_dir,'tiff_base')
+        usrconfig_dir = os.path.join(self.home_dir,'config_base')
+        import_dir = os.path.join(self.home_dir,'Import')
+        userysis_dir = os.path.join(self.home_dir,'userAnalysis')
+        userscripts_dir = os.path.join(self.home_dir,'userScripts')
+        yml_dir = os.path.join(self.home_dir,usrconfig_dir,'yml')
+        sample_dir = os.path.join(yml_dir, 'samples')
+        experiment_dir = os.path.join(yml_dir, 'experiments')
+        scanplan_dir = os.path.join(yml_dir, 'scanplans')
+        dirs = _make_clean_env()
+        dir_list = [home_dir, conf_dir, tiff_dir, usrconfig_dir,
+                    import_dir, userysis_dir, userscripts_dir,
+                    yml_dir, sample_dir, experiment_dir, scanplan_dir]
+        for el in dir_list:
+            self.assertTrue(el in glbl.allfolders)
+
+
     def test_start_beamtime(self):
         # sanity check. xpdUser directory exists.
         # First make sure the code works right when it doesn't exist.
@@ -58,7 +80,7 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertRaises(FileExistsError,
                           lambda:_start_beamtime(self.PI_name, self.saf_num))
         os.removedirs(self.newdir)
-        # real doing it:
+        # real doing: 
         os.mkdir(self.home_dir)
         self.assertTrue(os.path.isdir(self.home_dir))
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
@@ -74,26 +96,6 @@ class NewBeamtimeTest(unittest.TestCase):
         # FIXME
         #strtScnLst = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sp_ct_0.1.yml','sp_ct_0.5.yml','sp_ct_1.yml','sp_ct_5.yml','sp_ct_10.yml','sp_ct_30.yml']
         #self.assertEqual(newobjlist,strtScnLst)
-
-    def test_make_clean_env(self):
-        # check directory structure from glbl
-        home_dir = os.path.join(self.base_dir,'xpdUser')
-        conf_dir = os.path.join(self.base_dir,'xpdConfig')
-        tiff_dir = os.path.join(self.home_dir,'tiff_base')
-        usrconfig_dir = os.path.join(self.home_dir,'config_base')
-        import_dir = os.path.join(self.home_dir,'Import')
-        userysis_dir = os.path.join(self.home_dir,'userAnalysis')
-        userscripts_dir = os.path.join(self.home_dir,'userScripts')
-        yml_dir = os.path.join(self.home_dir,usrconfig_dir,'yml')
-        sample_dir = os.path.join(yml_dir, 'samples')
-        experiment_dir = os.path.join(yml_dir, 'experiments')
-        scanplan_dir = os.path.join(yml_dir, 'scanplans')
-        dirs = _make_clean_env()
-        dir_list = [home_dir, conf_dir, tiff_dir, usrconfig_dir,
-                    import_dir, userysis_dir, userscripts_dir,
-                    yml_dir, sample_dir, experiment_dir, scanplan_dir]
-        for el in dir_list:
-            self.assertTrue(el in glbl.allfolders)
 
 
     def test_end_beamtime(self):
