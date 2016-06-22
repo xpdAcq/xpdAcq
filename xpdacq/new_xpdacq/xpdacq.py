@@ -4,8 +4,10 @@ import time
 import yaml
 import inspect
 from collections import ChainMap
-import bluesky.plans as bp
+from configparser import ConfigParser
+
 import numpy as np
+import bluesky.plans as bp
 from bluesky import RunEngine
 from bluesky.utils import normalize_subs_input
 from bluesky.callbacks import LiveTable
@@ -63,17 +65,19 @@ def _update_dark_dict_list(name, doc):
 
 def take_dark():
     "a plan for taking a single dark frame"
-    print('closing shutter...')
+    print('INFO: closing shutter...')
     yield from bp.abs_set(glbl.shutter, 0)
-    yield from bp.sleep(2)
-    print('taking dark frame....')
+    if not glbl.simulation:
+        yield from bp.sleep(2)
+    print('INFO: taking dark frame....')
     # upto this stage, glbl.pe1c has been configured to so exposure time is
     # correct
     c = bp.count([glbl.area_det], md={'dark_frame': True})
     yield from bp.subs_wrapper(c, {'stop': [_update_dark_dict_list]})
     print('opening shutter...')
     yield from bp.abs_set(glbl.shutter, 1)
-    yield from bp.sleep(2)
+    if not glbl.simulation:
+        yield from bp.sleep(2)
 
 
 def periodic_dark(plan):
@@ -136,10 +140,80 @@ def _validate_dark(expire_time=None):
         return None
 
 
+def _timestamp_to_time(timestamp):
+    """ short help function """
+    return datetime.datetime.fromtimestamp(timestamp).strftime('%Y%m%d-%H%M')
+
+
+def _auto_load_calibration_file():
+    """ function to load the most recent calibration file in config_base
+
+    Returns
+    -------
+    config_md_dict : dict
+    dictionary contains calibration parameters computed by SrXplanar,
+    file name and timestamp of the most recent calibration file.
+    If no calibration file exits in xpdUser/config_base, returns None.
+    """
+
+    config_dir = glbl.config_base
+    if not os.path.isdir(config_dir):
+        raise RuntimeError("WARNING: Required directory {} doesn't"
+                           " exist, did you accidentally delete it?"
+                           .format(glbl.config_base))
+    f_list = [ f for f in os.listdir(config_dir) if f.endswith('cfg')]
+    if not f_list:
+        print("INFO: No calibration file found in config_base."
+              "Scan will still keep going on")
+        return
+    f_list_full_path = list(map(lambda f: os.path.join(config_dir, f), f_list))
+    sorted_list = sorted(f_list_full_path, key=os.path.getmtime)
+    config_in_use = sorted_list [-1]
+    print("INFO: This scan will append calibration parameters recorded"
+          " in {}".format(os.path.basename(config_in_use)))
+    config_timestamp = os.path.getmtime(config_in_use)
+    config_time = _timestamp_to_time(config_timestamp)
+    config_dict = _parse_calibration_file(os.path.join(config_dir,
+                                                       config_in_use))
+    # FIXME - finalized format?
+    config_md_dict = {'parameters':config_dict,
+                      'file_name': os.path.basename(config_in_use),
+                      'timestamp':config_time}
+    return config_md_dict
+
+
+def _parse_calibration_file(config_file_name):
+    ''' helper function to parse calibration file '''
+    calibration_parser = ConfigParser()
+    calibration_parser.read(config_file_name)
+    sections = calibration_parser.sections()
+    config_dict = {}
+    for section in sections:
+        config_dict[section] = {} # write down header
+        options = calibration_parser.options(section)
+        for option in options:
+            try:
+                config_dict[section][option] = calibration_parser.get(section,
+                                                                      option)
+                # if config_dict[option] == -1:
+                # DebugPrint("skip: %s" % option)
+            except:
+                print("exception on %s!" % option)
+                config_dict[option] = None
+    return config_dict
+
+
 def _inject_qualified_dark_frame_uid(msg):
     if msg.command == 'open_run' and msg.kwargs.get('dark_frame') != True:
         dark_uid = _validate_dark(glbl.dk_window)
         msg.kwargs['dark_frame_uid'] = dark_uid
+    return msg
+
+
+def _inject_calibration_md(msg):
+    if msg.command == 'open_run':
+        calibration_md = _auto_load_calibration_file()
+        msg.kwargs['calibration_md'] = calibration_md
     return msg
 
 
@@ -227,6 +301,9 @@ class CustomizedRunEngine(RunEngine):
         # Alter the plan to incorporate dark frames.
         plan = dark_strategy(plan)
         plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
+        # Load calibration file
+        plan = bp.msg_mutator(plan, _inject_calibration_md)
+        # Execute
         super().__call__(plan, subs,
                          raise_if_interrupted=raise_if_interrupted,
                          **metadata_kw)
