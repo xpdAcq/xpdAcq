@@ -12,12 +12,16 @@ except NameError:
     pass
 
 from xpdacq.new_xpdacq.xpdacq import *
-#from xpdacq.analysis import * # gonna seperate analysis from collection
+# beamtime reload happen in xpdacq
+
+# gonna seperate analysis from collection
+#from xpdacq.analysis import * 
+
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
 YAML_DIR = glbl.yaml_dir
 
-print('INFO: Initializing the XPD data acquisition environment') 
+print('INFO: Initializing the XPD data acquisition environment')
 if os.path.isdir(HOME_DIR):
     os.chdir(HOME_DIR)
 else:
