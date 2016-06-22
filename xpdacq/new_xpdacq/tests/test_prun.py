@@ -82,8 +82,14 @@ class PrunTest(unittest.TestCase):
         self.assertEqual(rv, correct_uid)
 
         # case3: with real prun
+        glbl.shutter_control = False # avoid waiting
         prun = CustomizedRunEngine(self.bt)
         prun_uid = prun(0,0)
         self.assertEqual(len(prun_uid),2) # first one is auto_dark
         rv = _validate_dark()
         self.assertEqual(prun_uid[0], rv)
+        # no auto-dark
+        glbl.auto_dark = False
+        new_prun_uid = prun(0,0)
+        self.assertEqual(len(new_prun_uid),1) # no dark frame
+        self.assertEqual(glbl._dark_dict_list[-1]['uid'],  rv) # no update

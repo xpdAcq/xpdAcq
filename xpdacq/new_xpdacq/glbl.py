@@ -126,6 +126,7 @@ class glbl():
     dk_window = DARK_WINDOW
     frame_acq_time = FRAME_ACQUIRE_TIME
     auto_dark = True
+    shutter_control = True
     owner = OWNER
     beamline_id = BEAMLINE_ID
     group = GROUP
@@ -136,13 +137,9 @@ class glbl():
         from bluesky.run_engine import RunEngine
         from bluesky.register_mds import register_mds
         # import real object as other names to avoid possible self-referencing later
-        from bluesky import Msg as msg
-        from bluesky.plans import Count as count
-        from bluesky.plans import AbsScanPlan as absScanPlan
         from databroker import DataBroker
         from databroker import get_images as getImages
         from databroker import get_events as getEvents
-        from bluesky.callbacks import LiveTable as livetable
         from bluesky.callbacks.broker import verify_files_saved as verifyFiles
         from ophyd import EpicsSignalRO, EpicsSignal
         from bluesky.suspenders import SuspendFloor
@@ -156,33 +153,26 @@ class glbl():
                 resume_thresh = ring_current.get()*0.9, sleep = 1200)
         #xpdRE.install_suspender(beamdump_sus) # don't enable it untill beam is back
         # real imports
-        Msg = msg
-        Count = count
         db = DataBroker
         LiveTable = livetable
         get_events = getEvents
         get_images = getImages
-        AbsScanPlan = absScanPlan 
         verify_files_saved = verifyFiles
         # real collection objects will be loaded during start_up
         area_det = None
         temp_controller = None
         shutter = None
-        
+
     else:
         simulation = True
-        
+
         # shutter = motor  # this passes as a fake shutter
         frame_acq_time = 0.1
         ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')
         # mock imports
-        Msg = MagicMock()
-        Count = MagicMock()
-        AbsScanPlan = MagicMock()
         db = MagicMock()
         get_events = MagicMock()
         get_images = MagicMock()
-        LiveTable = None # FIXME real import later
         verify_files_saved = MagicMock()
         # mock collection objects
         area_det = SimulatedPE1C('pe1c', ['pe1c'])

@@ -67,7 +67,7 @@ def take_dark():
     "a plan for taking a single dark frame"
     print('INFO: closing shutter...')
     yield from bp.abs_set(glbl.shutter, 0)
-    if not glbl.simulation:
+    if glbl.shutter_control:
         yield from bp.sleep(2)
     print('INFO: taking dark frame....')
     # upto this stage, glbl.pe1c has been configured to so exposure time is
@@ -76,7 +76,7 @@ def take_dark():
     yield from bp.subs_wrapper(c, {'stop': [_update_dark_dict_list]})
     print('opening shutter...')
     yield from bp.abs_set(glbl.shutter, 1)
-    if not glbl.simulation:
+    if glbl.shutter_control:
         yield from bp.sleep(2)
 
 
@@ -299,8 +299,9 @@ class CustomizedRunEngine(RunEngine):
         # force to open shutter before scan and close it after
         plan = bp.pchain(bp.abs_set(sh, 1), plan, bp.abs_set(sh, 0))
         # Alter the plan to incorporate dark frames.
-        plan = dark_strategy(plan)
-        plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
+        if glbl.auto_dark:
+            plan = dark_strategy(plan)
+            plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
         # Load calibration file
         plan = bp.msg_mutator(plan, _inject_calibration_md)
         # Execute
