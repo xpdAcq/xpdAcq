@@ -3,13 +3,15 @@ import os
 import shutil
 import yaml
 import uuid
+from configparser import ConfigParser
 from time import strftime
 
 # FIXME
 from xpdacq.new_xpdacq.glbl import glbl
 from xpdacq.new_xpdacq.beamtime import *
 from xpdacq.new_xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
-from xpdacq.new_xpdacq.xpdacq import _validate_dark, CustomizedRunEngine
+from xpdacq.new_xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
+                                      _auto_load_calibration_file)
 
 class PrunTest(unittest.TestCase):
 
@@ -21,6 +23,7 @@ class PrunTest(unittest.TestCase):
         self.saf_num = '123'   # must be 123 for proper load of config yaml => don't change
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
+        os.makedirs(self.home_dir, exist_ok=True)
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
@@ -93,3 +96,45 @@ class PrunTest(unittest.TestCase):
         new_prun_uid = prun(0,0)
         self.assertEqual(len(new_prun_uid),1) # no dark frame
         self.assertEqual(glbl._dark_dict_list[-1]['uid'],  rv) # no update
+
+
+    def test_auto_load_calibration(self):
+        # no config file in xpdUser/config_base
+        auto_calibration_md_dict = _auto_load_calibration_file()
+        self.assertIsNone(auto_calibration_md_dict)
+        # one config file in xpdUser/config_base:
+        cfg_f_name = 'srxconfig.cfg'
+        cfg_src = os.path.join(os.path.dirname(__file__), cfg_f_name)
+        # __file__ gives relative path
+        cfg_dst = os.path.join(glbl.config_base, cfg_f_name)
+        config = ConfigParser()
+        config.read(cfg_src)
+        with open(cfg_dst, 'w') as f_original:
+            config.write(f_original)
+        #shutil.copy(cfg_src, cfg_dst)
+        auto_calibration_md_dict = _auto_load_calibration_file()
+        # is file loaded??
+        self.assertTrue('parameters' in auto_calibration_md_dict)
+        # is information loaded in correctly?
+        self.assertEqual(auto_calibration_md_dict['parameters']['Experiment']
+                         ['integrationspace'], 'qspace')
+        self.assertEqual(auto_calibration_md_dict['parameters']['Others']
+                         ['uncertaintyenable'], 'True')
+        self.assertEqual(auto_calibration_md_dict['file_name'], cfg_f_name)
+        # multiple config files in xpdUser/config_base:
+        self.assertTrue(os.path.isfile(cfg_dst))
+        modified_cfg_f_name = 'srxconfig_1.cfg'
+        modified_cfg_dst = os.path.join(glbl.config_base, modified_cfg_f_name)
+        config = ConfigParser()
+        config.read(cfg_src)
+        config['Others']['avgmask'] = 'False'
+        with open(modified_cfg_dst, 'w') as f_modified:
+            config.write(f_modified)
+        self.assertTrue(os.path.isfile(modified_cfg_dst))
+        modified_auto_calibration_md_dict = _auto_load_calibration_file()
+        # is information loaded in correctly?
+        self.assertEqual(modified_auto_calibration_md_dict
+                         ['file_name'], modified_cfg_f_name)
+        self.assertEqual(modified_auto_calibration_md_dict
+                         ['parameters']['Others']['avgmask'],
+                         'False')
