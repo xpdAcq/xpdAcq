@@ -1,6 +1,7 @@
 import os
 from xpdacq.new_xpdacq.glbl import glbl
-from xpdacq.new_xpdacq.beamtimeSetup import start_xpdacq
+from xpdacq.new_xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
+                                             _end_beamtime)
 from xpdacq.new_xpdacq.beamtime import *
 
 try:

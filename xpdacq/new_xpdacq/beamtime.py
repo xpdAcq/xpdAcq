@@ -34,6 +34,29 @@ def unregister_plan(plan_name):
     del _PLAN_REGISTRY[plan_name]
 
 
+def _summarize(plan):
+    "based on bluesky.utils.print_summary"
+    output = []
+    read_cache = []
+    for msg in plan:
+        cmd = msg.command
+        if cmd == 'open_run':
+            output.append('{:=^80}'.format(' Open Run '))
+        elif cmd == 'close_run':
+            output.append('{:=^80}'.format(' Close Run '))
+        elif cmd == 'set':
+            output.append('{motor.name} -> {args[0]}'.format(motor=msg.obj,
+                                                             args=msg.args))
+        elif cmd == 'create':
+            pass
+        elif cmd == 'read':
+            read_cache.append(msg.obj.name)
+        elif cmd == 'save':
+            output.append('  Read {}'.format(read_cache))
+            read_cache = []
+    return '\n'.join(output)
+
+
 def _configure_pe1c(exposure):
     """ priviate function to configure pe1c with continuous acquistion
     mode"""
