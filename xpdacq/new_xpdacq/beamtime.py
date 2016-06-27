@@ -340,6 +340,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         plan_name = plan_func.__name__
         super().__init__({'plan_name': plan_name , 'args': args,
                           'kwargs': kwargs}, *experiment.maps)
+        print('SETTTING default uid')
         self.setdefault('scanplan_uid', new_short_uid())
 
     @property
@@ -393,5 +394,4 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         fn = '_'.join([self['plan_name']] + list(arg_value_str))
         return os.path.join(glbl.yaml_dir, 'scanplans',
                             '%s.yml' % fn)
-
 
