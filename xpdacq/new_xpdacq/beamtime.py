@@ -340,7 +340,6 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         plan_name = plan_func.__name__
         super().__init__({'plan_name': plan_name , 'args': args,
                           'kwargs': kwargs}, *experiment.maps)
-        print('SETTTING default uid')
         self.setdefault('scanplan_uid', new_short_uid())
 
     @property
