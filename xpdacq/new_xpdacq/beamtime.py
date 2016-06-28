@@ -18,6 +18,11 @@ from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 
 
+# handing glbl objects to functions
+pe1c = glbl.area_det
+cs700 = glbl.temp_controller
+
+
 # This is used to map plan names (strings in the YAML file) to actual
 # plan functions in Python.
 _PLAN_REGISTRY = {}
