@@ -5,7 +5,8 @@ import unittest
 from mock import MagicMock
 
 from xpdacq.new_xpdacq.glbl import glbl
-from xpdacq.new_xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
+from xpdacq.new_xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
+                                             load_beamtime)
 from xpdacq.new_xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp,
                                         tseries, Beamtime, Experiment, Sample)
 
@@ -245,26 +246,22 @@ class BeamtimeObjTest(unittest.TestCase):
         self.assertTrue('new_bt_field' in reloaded_sa)
 
 
-    @unittest.expectedFailure
     def test_chaining(self):
         "All contents of Beamtime and Experiment should propagate into Sample."
-        bt = Beamtime('Simon', 123, custom1='A')
+        bt =  Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
         ex = Experiment('test-experiment', bt, custom2='B')
-        sam = Sample('test-sample', ex, composition='vapor', custom3='C')
+        sa = Sample('test-sample', bt, composition='vapor', custom3='C')
         for k, v in bt.items():
             ex[k] == bt[k]
-            sam[k] == bt[k]
-        for k, v in ex.items():
-            sam[k] == ex[k]
+            sa[k] == bt[k]
 
 
-    @unittest.expectedFailure
     def test_load_beamtime(self):
-        bt = Beamtime('test-bt', 123)
-        ex = Experiment('test-experiment', bt)
-        sam = Sample('test-sample', ex, composition='vapor')
+        bt =  Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
+        ex = Experiment('test-experiment', bt, custom2='B')
+        sa = Sample('test-sample', bt, composition='vapor', custom3='C')
 
-        bt2 = load_beamtime('test-bt')
-        assert bt2 == bt
-        assert bt2.experiments[0] == ex
-        assert bt2.experiments[0].samples[0] == sam
+        bt2 = load_beamtime()
+        self.assertEqual(bt2, bt)
+        self.assertEqual(bt2.experiments[0], ex)
+        self.assertEqual(bt2.samples[0], sa)
