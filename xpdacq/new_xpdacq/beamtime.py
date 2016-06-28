@@ -189,8 +189,9 @@ class Beamtime(ValidatedDictLike, YamlDict):
                          wavelength=wavelength, **kwargs)
         self.experiments = []
         self.samples = []
-        self._referenced_by = self.experiments
-        self._referenced_by.extend(self.samples)
+        self._referenced_by = []
+        #self._referenced_by = self.experiments
+        #self._referenced_by.extend(self.samples)
         # used by YamlDict
         self.setdefault('beamtime_uid', new_short_uid())
 
@@ -212,11 +213,16 @@ class Beamtime(ValidatedDictLike, YamlDict):
         # Notify this Beamtime about an Experiment that should be re-synced
         # whenever the contents of the Beamtime are edited.
         self.experiments.append(experiment)
+        self._referenced_by.extend([el for el in self.experiments if el
+                                    not in self._referenced_by])
 
     def register_sample(self, sample):
         # Notify this Beamtime about an Sample that should be re-synced
         # whenever the contents of the Beamtime are edited.
+        print('register sample called')
         self.samples.append(sample)
+        self._referenced_by.extend([el for el in self.samples if el
+                                    not in self._referenced_by])
 
     @classmethod
     def from_yaml(cls, f):
@@ -300,11 +306,11 @@ class Sample(ValidatedDictLike, YamlChainMap):
     _REQUIRED_FIELDS = ['name', 'composition']
 
     def __init__(self, name, beamtime, *, composition, **kwargs):
-        beamtime.register_sample(self)
         sample = dict(name=name, composition=composition, **kwargs)
         super().__init__(sample, beamtime)
         self.beamtime = beamtime
         self.setdefault('sample_uid', new_short_uid())
+        beamtime.register_sample(self)
 
     def validate(self):
         missing = set(self._REQUIRED_FIELDS) - set(self)
@@ -338,15 +344,17 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         self.experiment = experiment
         experiment.register_scanplan(self)
         plan_name = plan_func.__name__
-        super().__init__({'plan_name': plan_name , 'args': args,
-                          'kwargs': kwargs}, *experiment.maps)
+        sp_dict = {'plan_name': plan_name , 'sp_args': args,
+                   'sp_kwargs': kwargs}
+        super().__init__(sp_dict, *experiment.maps)
         self.setdefault('scanplan_uid', new_short_uid())
 
     @property
     def bound_arguments(self):
         signature = inspect.signature(self.plan_func)
         # empty list is for [pe1c]  
-        bound_arguments = signature.bind([], *self['args'], **self['kwargs'])
+        bound_arguments = signature.bind([], *self['sp_args'],
+                                         **self['sp_kwargs'])
         bound_arguments.apply_defaults()
         complete_kwargs = bound_arguments.arguments
         # remove place holder for [pe1c]
@@ -357,7 +365,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         # grab the area detector used in current configuration
         pe1c = glbl.area_det
         # pass parameter to plan_func
-        plan = self.plan_func([pe1c], *self['args'], **self['kwargs'])
+        plan = self.plan_func([pe1c], *self['sp_args'], **self['sp_kwargs'])
         return plan
 
     def short_summary(self):
@@ -385,8 +393,10 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
             experiment = Experiment.from_dicts(map2, map3, beamtime=beamtime)
         plan_name = map1.pop('plan_name')
         plan_func = _PLAN_REGISTRY[plan_name]
+        plan_uid = map1.pop('scanplan_uid')
         return cls(experiment, plan_func,
-                   *map1['args'], **map1['kwargs'])
+                   *map1['sp_args'],
+                   **map1['sp_kwargs'])
 
     def default_yaml_path(self):
         arg_value_str = map(str, self.bound_arguments.values())

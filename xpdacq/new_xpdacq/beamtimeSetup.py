@@ -146,7 +146,8 @@ def load_yaml(f, known_uids=None):
         beamtime = known_uids.get(data[1]['beamtime_uid'])
         obj = Sample.from_yaml(f, beamtime=beamtime)
         known_uids[obj['sample_uid']] = obj
-    elif isinstance(data, list) and len(data) == 3:
+    #elif isinstance(data, list) and len(data) == 3:
+    elif isinstance(data, list) and 'scanplan_uid' in data[0]:
         experiment = known_uids.get(data[1]['experiment_uid'])
         beamtime = known_uids.get(data[2]['beamtime_uid'])
         obj = ScanPlan.from_yaml(f, experiment=experiment, beamtime=beamtime)
