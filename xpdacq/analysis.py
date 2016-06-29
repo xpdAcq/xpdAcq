@@ -95,15 +95,13 @@ def save_last_tiff(dark_subtraction=True, max_count_num=None):
         necessary information to perform dark subtraction, uncorrected
         image will be saved.
 
-    max_count : int, optional
+    max_count_num : int, optional
         The maximum number of events to process per-run.  This can be
         useful to 'preview' an export or if there are corrupted files
         in the data stream (ex from the IOC crashing during data acquisition).
     """
-    if not max_count_num:
-        save_tiff(db[-1], dark_subtraction, max_count = max_count_num)
-    else:
-        save_tiff(db[-1], dark_subtraction)
+    save_tiff(db[-1], dark_subtraction=dark_subtraction, max_count=max_count_num)
+    return
 
 
 def save_tiff(headers, dark_subtraction=True, *, max_count=None):
