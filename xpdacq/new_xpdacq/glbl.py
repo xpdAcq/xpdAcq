@@ -136,6 +136,8 @@ class glbl():
     if not simulation:
         from bluesky.run_engine import RunEngine
         from bluesky.register_mds import register_mds
+        from bluesky.utils import normalize_subs_input
+        from bluesky.callbacks import LiveTable as lvt
         # import real object as other names to avoid possible self-referencing later
         from databroker import DataBroker
         from databroker import get_images as getImages
@@ -154,7 +156,7 @@ class glbl():
         #xpdRE.install_suspender(beamdump_sus) # don't enable it untill beam is back
         # real imports
         db = DataBroker
-        LiveTable = livetable
+        LiveTable = lvt
         get_events = getEvents
         get_images = getImages
         verify_files_saved = verifyFiles

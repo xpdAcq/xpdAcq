@@ -1,8 +1,12 @@
 import os
+
+from bluesky.callbacks import LiveTable
+
 from xpdacq.new_xpdacq.glbl import glbl
 from xpdacq.new_xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
                                              _end_beamtime)
 from xpdacq.new_xpdacq.beamtime import *
+
 
 try:
     # if pe1c and other exits, i.e. at XPD 
@@ -10,7 +14,7 @@ try:
     glbl.shutter = shctl1
     glbl.temp_controller = cs700
 except NameError:
-    pass
+    
 
 from xpdacq.new_xpdacq.xpdacq import *
 # beamtime reload happen in xpdacq
