@@ -23,10 +23,20 @@ class SimulatedPE1C(be.Reader):
         self.cam.acquire_time = MagicMock()
         self.cam.acquire_time.put = MagicMock(return_value=0.1)
         self.cam.acquire_time.get = MagicMock(return_value=0.1)
+        self._staged = False
 
         super().__init__(name, fields)
 
         self.ready = True  # work around a hack in Reader
+
+    def stage(self):
+        if self._staged:
+            raise RuntimeError("Device is already staged.")
+        self._staged = True
+        return [self]
+
+    def unstage(self):
+        self._staged = False
 
 
 def setup_module():
