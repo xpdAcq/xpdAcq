@@ -126,7 +126,7 @@ class BeamtimeObjTest(unittest.TestCase):
         os.remove(sam.filepath)
         self.assertEqual(reloaded_sam, sam)
 
-    @unittest.skip
+
     def test_scanplan_roundtrip(self):
         bt = Beamtime('Simon', '123', [], wavelength=0.1828)
         ex = Experiment('test-experiment', bt)

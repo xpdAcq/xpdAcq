@@ -351,6 +351,9 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         plan_name = plan_func.__name__
         sp_dict = {'plan_name': plan_name , 'sp_args': args,
                    'sp_kwargs': kwargs}
+        if 'scanplan_uid' in sp_dict['sp_kwargs']:
+            scanplan_uid = sp_dict['sp_kwargs'].pop('scanplan_uid')
+            sp_dict.update({'scanplan_uid':scanplan_uid})
         super().__init__(sp_dict, *experiment.maps)
         self.setdefault('scanplan_uid', new_short_uid())
 
@@ -399,9 +402,11 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         plan_name = map1.pop('plan_name')
         plan_func = _PLAN_REGISTRY[plan_name]
         plan_uid = map1.pop('scanplan_uid')
+        sp_kwargs = map1['sp_kwargs']
+        sp_kwargs.update({'scanplan_uid':plan_uid})
         return cls(experiment, plan_func,
                    *map1['sp_args'],
-                   **map1['sp_kwargs'])
+                   **sp_kwargs)
 
     def default_yaml_path(self):
         arg_value_str = map(str, self.bound_arguments.values())

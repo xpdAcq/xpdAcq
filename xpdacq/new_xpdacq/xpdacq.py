@@ -57,6 +57,7 @@ def _update_dark_dict_list(name, doc):
     light_cnt_time = acq_time * num_frame
 
     dark_dict = {}
+    dark_dict['acq_time'] = acq_time
     dark_dict['exposure'] = light_cnt_time
     dark_dict['timestamp'] = doc['time']
     dark_dict['uid'] = doc['run_start']
@@ -99,7 +100,7 @@ def periodic_dark(plan):
         if ((not need_dark) and (not qualified_dark_uid)):
             need_dark = True
         if need_dark and msg.command == 'open_run' and ('dark_frame' not
-                in msg.kwargs):
+                                                         in msg.kwargs):
             # We are about to start a new 'run' (e.g., a count or a scan).
             # Insert a dark frame run first.
             need_dark = False
@@ -134,6 +135,7 @@ def _validate_dark(expire_time=None):
     qualified_dark_uid = [ el['uid'] for el in dark_dict_list if
                          abs(el['exposure'] - light_cnt_time) <= acq_time and
                          abs(el['timestamp'] - now) <= (expire_time*60 - acq_time)
+                         and (el['acq_time'] == acq_time)
                          ]
     if qualified_dark_uid:
         return qualified_dark_uid[-1]
