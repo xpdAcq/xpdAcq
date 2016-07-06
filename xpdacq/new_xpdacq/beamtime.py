@@ -19,8 +19,8 @@ from .validated_dict import ValidatedDictLike
 
 
 # handing glbl objects to functions
-pe1c = glbl.area_det
-cs700 = glbl.temp_controller
+#pe1c = glbl.area_det
+#cs700 = glbl.temp_controller
 
 
 # This is used to map plan names (strings in the YAML file) to actual
@@ -67,8 +67,12 @@ def _configure_pe1c(exposure):
     mode"""
     # TODO maybe move it into glbl?
     # setting up detector
+    glbl.area_det.cam.acquire.put(0)
     glbl.area_det.number_of_sets.put(1)
     glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
+    time.sleep(1)
+    glbl.area_det.cam.acquire.put(1)
+    time.sleep(1)
     acq_time = glbl.area_det.cam.acquire_time.get()
     # compute number of frames
     num_frame = np.ceil(exposure / acq_time)
@@ -98,8 +102,9 @@ def ct(dets, exposure, *, md=None):
                         # 'sp_name': 'ct_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'plan_name': 'ct'})
-    plan = bp.count([pe1c], md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([pe1c]))
+    #plan = bp.count([pe1c], md=_md)
+    plan = bp.count([glbl.area_det], md = _md)
+    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
     yield from plan
 
 def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
@@ -125,8 +130,9 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
                         # 'sp_name': 'Tramp_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'plan_name': 'Tramp'})
-    plan = bp.scan([pe1c], cs700, Tstart, Tstop, Nsteps, md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([pe1c, cs700]))
+    #plan = bp.scan([pe1c], cs700, Tstart, Tstop, Nsteps, md=_md)
+    plan = bp.scan([glbl.area_det], glbl.temp_controller, Tstart, Tstop, Nsteps, md=_md)
+    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det, glbl.temp_controller]))
     yield from plan
 
 def tseries(dets, exposure, delay, num, *, md = None):
@@ -152,8 +158,8 @@ def tseries(dets, exposure, delay, num, *, md = None):
                         'sp_uid': str(uuid.uuid4()),
                         'plan_name': 'tseries'})
 
-    plan = bp.count([pe1c], num, delay, md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([pe1c]))
+    plan = bp.count([glbl.area_det], num, delay, md=_md)
+    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
     yield from plan
 
 def _nstep(start, stop, step_size):
@@ -366,10 +372,11 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
     @property
     def bound_arguments(self):
         signature = inspect.signature(self.plan_func)
+        print('HIT signature: {}'.format(signature))
         # empty list is for [pe1c]  
         bound_arguments = signature.bind([], *self['sp_args'],
                                          **self['sp_kwargs'])
-        bound_arguments.apply_defaults()
+        #bound_arguments.apply_defaults()
         complete_kwargs = bound_arguments.arguments
         # remove place holder for [pe1c]
         complete_kwargs.popitem(False)
