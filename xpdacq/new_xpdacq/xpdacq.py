@@ -104,7 +104,13 @@ def periodic_dark(plan):
             # We are about to start a new 'run' (e.g., a count or a scan).
             # Insert a dark frame run first.
             need_dark = False
-            return bp.pchain(take_dark(), bp.single_gen(msg)), None
+            # Annoying detail: the detector was probably already staged.
+            # Unstage it (if it wasn't staged, nothing will happen) and
+            # then take_dark() and then re-stage it. 
+            return bp.pchain(bp.unstage(glbl.area_det),
+                             take_dark(),
+                             bp.stage(glbl.area_det),
+                             bp.single_gen(msg)), None
         else:
             # do nothing if (not need_dark)
             return None, None
