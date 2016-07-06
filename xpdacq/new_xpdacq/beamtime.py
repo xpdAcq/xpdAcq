@@ -358,6 +358,12 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         self.setdefault('scanplan_uid', new_short_uid())
 
     @property
+    def md(self):
+        open_run, = [msg for msg in self.factory() if
+                     msg.command == 'open_run']
+        return open_run.kwargs
+
+    @property
     def bound_arguments(self):
         signature = inspect.signature(self.plan_func)
         # empty list is for [pe1c]  

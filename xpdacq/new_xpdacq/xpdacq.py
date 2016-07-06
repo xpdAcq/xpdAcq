@@ -233,7 +233,7 @@ class CustomizedRunEngine(RunEngine):
 
         Parameters
         ----------
-        beamtime : Beamtime
+        beamtime : Beamtime or None
 
         Examples
         --------
@@ -276,7 +276,15 @@ class CustomizedRunEngine(RunEngine):
         >>> prun(3, 'ct', dark_strategy=some_custom_func)
         """
         super().__init__(*args, **kwargs)
-        self.beamtime = beamtime
+        self._beamtime = beamtime
+
+    @property
+    def beamtime(self):
+        if self._beamtime is None:
+            raise RuntimeError("This CustomizedRunEngine was not "
+               "assigned a beamtime object, so integer-based lookup is not "
+               "available.")
+        return self._beamtime
 
     def __call__(self, sample, plan, subs=None, *,
                  verify_write=False, dark_strategy=periodic_dark,
