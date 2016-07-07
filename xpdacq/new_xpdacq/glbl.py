@@ -117,6 +117,7 @@ _EXCLUDE_DIR = [HOME_DIR, BLCONFIG_DIR, YAML_DIR]
 _EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
 
 class glbl():
+    _is_simulation = simulation
     beamline_host_name = BEAMLINE_HOST_NAME
     base = BASE_DIR
     home = HOME_DIR
@@ -148,22 +149,20 @@ class glbl():
         from bluesky.register_mds import register_mds
         from bluesky.utils import normalize_subs_input
         from bluesky.callbacks import LiveTable as lvt
-        # import real object as other names to avoid possible self-referencing later
+        # import other names to avoid possible self-referencing later
         from databroker import DataBroker
         from databroker import get_images as getImages
         from databroker import get_events as getEvents
         from bluesky.callbacks.broker import verify_files_saved as verifyFiles
         from ophyd import EpicsSignalRO, EpicsSignal
         from bluesky.suspenders import SuspendFloor
-        ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I', name='ring_current')
-        xpdRE = RunEngine()
-        xpdRE.md['owner'] = owner
-        xpdRE.md['beamline_id'] = beamline_id
-        xpdRE.md['group'] = group
-        register_mds(xpdRE)
+        ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
+                                     name='ring_current')
+        register_mds(prun)
         beamdump_sus = SuspendFloor(ring_current, ring_current.get()*0.9,
-                resume_thresh = ring_current.get()*0.9, sleep = 1200)
-        #xpdRE.install_suspender(beamdump_sus) # don't enable it untill beam is back
+                                    resume_thresh = ring_current.get()*0.9,
+                                    sleep = 1200)
+        xpdRE.install_suspender(beamdump_sus)
         # real imports
         db = DataBroker
         LiveTable = lvt
@@ -177,7 +176,6 @@ class glbl():
 
     else:
         simulation = True
-
         # shutter = motor  # this passes as a fake shutter
         frame_acq_time = 0.1
         ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')

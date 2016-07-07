@@ -1,23 +1,25 @@
 import os
-
-from bluesky.callbacks import LiveTable
-
 from xpdacq.new_xpdacq.glbl import glbl
 from xpdacq.new_xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
                                              _end_beamtime)
 from xpdacq.new_xpdacq.beamtime import *
 
 
-try:
-    # if pe1c and other exits, i.e. at XPD 
+if not glbl._is_simulation:
     glbl.area_det = pe1c
     glbl.shutter = shctl1
     glbl.temp_controller = cs700
-except NameError:
-    
+    # let NameError to handle missing object
 
-from xpdacq.new_xpdacq.xpdacq import *
+
 # beamtime reload happen in xpdacq
+from xpdacq.new_xpdacq.xpdacq import *
+
+# instantiate prun without beamtime, like bluesky setup
+prun = CustomizedRunEngine(None)
+prun.md['owner'] = glbl.owner
+prun.md['beamline_id'] = glbl.beamline_id
+prun.md['group'] = glbl.group
 
 # gonna seperate analysis from collection
 #from xpdacq.analysis import * 
