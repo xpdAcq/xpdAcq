@@ -35,8 +35,8 @@ def _start_beamtime(PI_last, saf_num, experimenters=[], *,
                               "under {}, have you 'run _end_beamtime()' yet?"
                               .format(glbl.home))
     elif len(dir_list) == 0:
-        print("INFO: initiating requried directories for experiment")
         _make_clean_env()
+        print("INFO: initiated requried directories for experiment")
         bt = Beamtime(PI_last, saf_num, experimenters,
                 wavelength=wavelength)
         os.chdir(glbl.home)

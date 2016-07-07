@@ -21,6 +21,13 @@ prun.md['owner'] = glbl.owner
 prun.md['beamline_id'] = glbl.beamline_id
 prun.md['group'] = glbl.group
 
+# load beamtime
+bt = start_xpdacq()
+if bt is not None:
+    print("INFO: Reload and hook beamtime objects:\n{}\n".format(bt))
+    #prun = CustomizedRunEngine(bt)
+    prun.beamtime = bt
+
 # gonna seperate analysis from collection
 #from xpdacq.analysis import * 
 

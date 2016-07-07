@@ -18,11 +18,6 @@ from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 
 
-# handing glbl objects to functions
-#pe1c = glbl.area_det
-#cs700 = glbl.temp_controller
-
-
 # This is used to map plan names (strings in the YAML file) to actual
 # plan functions in Python.
 _PLAN_REGISTRY = {}
@@ -230,7 +225,6 @@ class Beamtime(ValidatedDictLike, YamlDict):
     def register_sample(self, sample):
         # Notify this Beamtime about an Sample that should be re-synced
         # whenever the contents of the Beamtime are edited.
-        print('register sample called')
         self.samples.append(sample)
         self._referenced_by.extend([el for el in self.samples if el
                                     not in self._referenced_by])

@@ -332,8 +332,3 @@ class CustomizedRunEngine(RunEngine):
 
         return self._run_start_uids
 
-# load beamtime
-bt = start_xpdacq()
-if bt is not None:
-    print("INFO: Reload and hook beamtime objects:\n{}".format(bt))
-    prun = CustomizedRunEngine(bt)
