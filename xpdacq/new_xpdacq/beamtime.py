@@ -372,11 +372,10 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
     @property
     def bound_arguments(self):
         signature = inspect.signature(self.plan_func)
-        print('HIT signature: {}'.format(signature))
         # empty list is for [pe1c]  
         bound_arguments = signature.bind([], *self['sp_args'],
                                          **self['sp_kwargs'])
-        #bound_arguments.apply_defaults()
+        #bound_arguments.apply_defaults() # only valid in py 3.5
         complete_kwargs = bound_arguments.arguments
         # remove place holder for [pe1c]
         complete_kwargs.popitem(False)
