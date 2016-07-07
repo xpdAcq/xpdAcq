@@ -286,6 +286,10 @@ class CustomizedRunEngine(RunEngine):
                "available.")
         return self._beamtime
 
+    @beamtime.setter
+    def beamtime(self, bt_obj):
+        self._beamtime = bt_obj
+
     def __call__(self, sample, plan, subs=None, *,
                  verify_write=False, dark_strategy=periodic_dark,
                  raise_if_interrupted=False, **metadata_kw):
