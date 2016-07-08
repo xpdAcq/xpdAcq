@@ -61,7 +61,8 @@ class BeamtimeObjTest(unittest.TestCase):
 
     def test_ct_scanplan_autoname(self):
         sp = ScanPlan(self.bt.experiments[0], ct, 1)
-        std_f_name = 'ct_1_None.yml' 
+        #std_f_name = 'ct_1_None.yml' #py3.4 only gets args
+        std_f_name = 'ct_1.yml' #py3.4 only gets args
         yaml_name = os.path.basename(sp.default_yaml_path())
         self.assertEqual(yaml_name, std_f_name)
 
@@ -82,7 +83,8 @@ class BeamtimeObjTest(unittest.TestCase):
     def test_scanplan_yamlize(self):
         sp = ScanPlan(self.bt.experiments[0], ct, 1)
         # bound arguments
-        expected_bound_args = {'exposure': 1, 'md': None}
+        #expected_bound_args = {'exposure': 1, 'md': None} 
+        expected_bound_args = {'exposure': 1} #py3.4 only get args
         self.assertEqual(dict(sp.bound_arguments),
                          expected_bound_args)
         # reload

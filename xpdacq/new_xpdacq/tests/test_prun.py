@@ -30,7 +30,7 @@ class PrunTest(unittest.TestCase):
         self.ex = Experiment('temp_test', self.bt)
         self.sp = ScanPlan(self.bt.experiments[0], ct, 10)
         self.sa = Sample('test_sample', self.bt, composition={})
-
+        glbl.shutter_control = False
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -38,7 +38,8 @@ class PrunTest(unittest.TestCase):
             shutil.rmtree(self.home_dir)
         if os.path.isdir(os.path.join(self.base_dir,'xpdConfig')):
             shutil.rmtree(os.path.join(self.base_dir,'xpdConfig'))
-
+        if os.path.isdir(os.path.join(self.base_dir,'pe2_data')):
+            shutil.rmtree(os.path.join(self.base_dir,'pe2_data'))
 
     def test_validate_dark(self):
         """ test login in this function """
@@ -55,7 +56,8 @@ class PrunTest(unittest.TestCase):
         for i in range(5):
             dark_dict_list.append({'uid':str(uuid.uuid4()),
                                    'exposure':(i+1)*0.1,
-                                   'timestamp':now})
+                                   'timestamp':now,
+                                   'acq_time':0.1})
         glbl._dark_dict_list = dark_dict_list
         correct_uid = [el['uid'] for el in dark_dict_list if
                        el['exposure'] == 0.5]
@@ -68,7 +70,8 @@ class PrunTest(unittest.TestCase):
         for i in range(5):
             dark_dict_list.append({'uid':str(uuid.uuid4()),
                                    'exposure': 0.5,
-                                   'timestamp':now-(i+1)*60})
+                                   'timestamp':now-(i+1)*60,
+                                   'acq_time':0.1})
         glbl._dark_dict_list = dark_dict_list
         correct_uid = [el['uid'] for el in dark_dict_list
                        if el['timestamp']- time.time() <=
@@ -84,7 +87,21 @@ class PrunTest(unittest.TestCase):
         correct_uid = dark_dict_list[0]['uid']
         self.assertEqual(rv, correct_uid)
 
-        # case3: with real prun
+        # case3: adjust acqtime
+        dark_dict_list = []
+        for i in range(5):
+            dark_dict_list.append({'uid':str(uuid.uuid4()),
+                                   'exposure': 0.5,
+                                   'timestamp':now,
+                                   'acq_time':0.1*i})
+        glbl._dark_dict_list = dark_dict_list
+        correct_uid = [el['uid'] for el in dark_dict_list
+                       if el['acq_time'] == glbl.frame_acq_time]
+        rv = _validate_dark()
+        self.assertEqual(len(correct_uid), 1)
+        self.assertEqual(rv, correct_uid[-1])
+
+        # case4: with real prun
         glbl.shutter_control = False # avoid waiting
         prun = CustomizedRunEngine(self.bt)
         prun_uid = prun(0,0)
