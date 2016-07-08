@@ -299,13 +299,25 @@ class CustomizedRunEngine(RunEngine):
         # interprets integers for 'sample' as indexes into the Beamtime's
         # lists of Samples from all its Experiments.
         if isinstance(sample, int):
-            sample = self.beamtime.samples[sample]
+            try:
+                sample = self.beamtime.samples[sample]
+            except IndexError:
+                print("WARNING: hmm, there is no sample with index `{}`"
+                      ", please do `bt.list()` to check if it exists yet"
+                      .format(sample))
+                return
         # If a plan is given as a string, look in up in the global registry.
         if isinstance(plan, str):
             # e.g., 'ct'
             plan = _PLAN_REGISTRY[plan]
         elif isinstance(plan, int):
-            plan = self.beamtime.scanplans[plan]
+            try:
+                plan = self.beamtime.scanplans[plan]
+            except IndexError:
+                print("WARNING: hmm, there is no scanplan with index `{}`"
+                      ", please do `bt.list()` to check if it exists yet"
+                      .format(plan))
+                return
         # If the plan is an xpdAcq 'ScanPlan', make the actual plan.
         if isinstance(plan, ScanPlan):
             plan = plan.factory()
