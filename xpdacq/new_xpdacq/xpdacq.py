@@ -289,6 +289,8 @@ class CustomizedRunEngine(RunEngine):
     @beamtime.setter
     def beamtime(self, bt_obj):
         self._beamtime = bt_obj
+        print("INFO: beamtime object:\n%r\nhas been linked"
+              % bt_obj)
 
     def __call__(self, sample, plan, subs=None, *,
                  verify_write=False, dark_strategy=periodic_dark,

@@ -40,6 +40,8 @@ def _start_beamtime(PI_last, saf_num, experimenters=[], *,
         bt = Beamtime(PI_last, saf_num, experimenters,
                 wavelength=wavelength)
         os.chdir(glbl.home)
+        print("INFO: to link newly created beamtime object to prun, "
+              "please do `prun.beamtime = bt`")
         return bt
 
 
