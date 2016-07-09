@@ -162,7 +162,7 @@ class glbl():
         beamdump_sus = SuspendFloor(ring_current, ring_current.get()*0.9,
                                     resume_thresh = ring_current.get()*0.9,
                                     sleep = 1200)
-        xpdRE.install_suspender(beamdump_sus)
+        prun.install_suspender(beamdump_sus)
         # real imports
         db = DataBroker
         LiveTable = lvt

@@ -29,7 +29,7 @@ if bt is not None:
     prun.beamtime = bt
 
 # gonna seperate analysis from collection
-#from xpdacq.analysis import * 
+from xpdacq.analysis import * 
 
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
