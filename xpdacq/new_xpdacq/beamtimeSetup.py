@@ -136,24 +136,24 @@ def load_yaml(f, known_uids=None):
     # If f is a file handle, 'rewind' it so we can read it again.
     if not isinstance(f, str):
         f.seek(0)
-    if isinstance(data, dict) and 'beamtime_uid' in data:
+    if isinstance(data, dict) and 'bt_uid' in data:
         obj = Beamtime.from_yaml(f)
-        known_uids[obj['beamtime_uid']] = obj
+        known_uids[obj['bt_uid']] = obj
         return obj
-    elif isinstance(data, list) and 'experiment_uid' in data[0]:
-        beamtime = known_uids.get(data[1]['beamtime_uid'])
+    elif isinstance(data, list) and 'ex_uid' in data[0]:
+        beamtime = known_uids.get(data[1]['bt_uid'])
         obj = Experiment.from_yaml(f, beamtime=beamtime)
-        known_uids[obj['experiment_uid']] = obj
-    elif isinstance(data, list) and 'sample_uid' in data[0]:
-        beamtime = known_uids.get(data[1]['beamtime_uid'])
+        known_uids[obj['ex_uid']] = obj
+    elif isinstance(data, list) and 'sa_uid' in data[0]:
+        beamtime = known_uids.get(data[1]['bt_uid'])
         obj = Sample.from_yaml(f, beamtime=beamtime)
-        known_uids[obj['sample_uid']] = obj
+        known_uids[obj['sa_uid']] = obj
     #elif isinstance(data, list) and len(data) == 3:
-    elif isinstance(data, list) and 'scanplan_uid' in data[0]:
-        experiment = known_uids.get(data[1]['experiment_uid'])
-        beamtime = known_uids.get(data[2]['beamtime_uid'])
+    elif isinstance(data, list) and 'sp_uid' in data[0]:
+        experiment = known_uids.get(data[1]['ex_uid'])
+        beamtime = known_uids.get(data[2]['bt_uid'])
         obj = ScanPlan.from_yaml(f, experiment=experiment, beamtime=beamtime)
-        known_uids[obj['scanplan_uid']] = obj
+        known_uids[obj['sp_uid']] = obj
     else:
         raise ValueError("File does not match a recognized specification.")
     return obj
