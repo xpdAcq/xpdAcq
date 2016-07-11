@@ -291,6 +291,7 @@ class CustomizedRunEngine(RunEngine):
     @beamtime.setter
     def beamtime(self, bt_obj):
         self._beamtime = bt_obj
+        self.md.update(bt_obj.md)
         print("INFO: beamtime object:\n%r\nhas been linked"
               % bt_obj)
         if not glbl.simulation:
@@ -360,6 +361,5 @@ class CustomizedRunEngine(RunEngine):
         super().__call__(plan, subs,
                          raise_if_interrupted=raise_if_interrupted,
                          **metadata_kw)
-
         return self._run_start_uids
 
