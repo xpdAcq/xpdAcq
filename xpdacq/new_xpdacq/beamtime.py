@@ -204,6 +204,10 @@ class Beamtime(ValidatedDictLike, YamlDict):
     def scanplans(self):
         return [s for e in self.experiments for s in e.scanplans]
 
+    @property
+    def md(self):
+        return dict(self)
+
     def validate(self):
         # This is automatically called whenever the contents are changed.
         missing = set(self._REQUIRED_FIELDS) - set(self)
@@ -275,6 +279,10 @@ class Experiment(ValidatedDictLike, YamlChainMap):
         self.setdefault('ex_uid', new_short_uid())
         beamtime.register_experiment(self)
 
+    @property
+    def md(self):
+        return dict(self)
+
     def validate(self):
         missing = set(self._REQUIRED_FIELDS) - set(self)
         if missing:
@@ -319,6 +327,10 @@ class Sample(ValidatedDictLike, YamlChainMap):
         self.beamtime = beamtime
         self.setdefault('sa_uid', new_short_uid())
         beamtime.register_sample(self)
+
+    @property
+    def md(self):
+        return dict(self)
 
     def validate(self):
         missing = set(self._REQUIRED_FIELDS) - set(self)
