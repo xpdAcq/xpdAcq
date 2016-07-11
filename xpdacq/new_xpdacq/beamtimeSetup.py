@@ -164,7 +164,7 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
 
     It check if directory structure is correct and flush directories
     """
-    _required_info = ['pi_name', 'saf_num', 'beamtime_uid']
+    _required_info = ['bt_piLast', 'bt_sasfN', 'bt_uid']
     if archive_dir is None:
         archive_dir = glbl.archive_dir
     if base_dir is None:
@@ -175,7 +175,8 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
     if len(files)==0:
         raise FileNotFoundError("It appears that end_beamtime may have been"
                                 "run. If so, do not run again but proceed to"
-                                "bt = _start_beamtime(pi_last, saf_num)")
+                                "bt = _start_beamtime(pi_last, saf_num,"
+                                "experimenters, wavelength=<value>)")
     # laod bt yaml
     if not bto:
         bto = _load_bt(glbl.yaml_dir)
@@ -198,6 +199,7 @@ def _load_bt_info(bt_obj, required_fields):
     # grab information
     bt_info_list = []
     for el in required_fields:
+        print('loaded bt info = {}'.format(dict(bt_obj)))
         bt_info = bt_obj.get(el)
         if bt_info is None:
             print("WARNING: required beamtime information {} doesn't exit."

@@ -34,7 +34,8 @@ class NewBeamtimeTest(unittest.TestCase):
             shutil.rmtree(self.home_dir)
         if os.path.isdir(os.path.join(self.base_dir,'xpdConfig')):
             shutil.rmtree(os.path.join(self.base_dir,'xpdConfig'))
-
+        if os.path.isdir(os.path.join(self.base_dir,'pe2_data')):
+            shutil.rmtree(os.path.join(self.base_dir,'pe2_data'))
 
     def test_make_clean_env(self):
         # check directory structure from glbl
@@ -88,10 +89,10 @@ class NewBeamtimeTest(unittest.TestCase):
                                   wavelength=self.wavelength)
         self.assertIsInstance(self.bt, Beamtime)
         # test normalized md
-        self.assertEqual('Billinge', self.bt.get('pi_name'))
-        self.assertEqual('123', self.bt.get('saf_num'))
-        self.assertEqual(self.experimenters, self.bt.get('experimenters'))
-        self.assertEqual(self.wavelength, self.bt.get('wavelength'))
+        self.assertEqual('Billinge', self.bt.get('bt_piLast'))
+        self.assertEqual('123', self.bt.get('bt_safN'))
+        self.assertEqual(self.experimenters, self.bt.get('bt_experimenters'))
+        self.assertEqual(self.wavelength, self.bt.get('bt_wavelength'))
         self.assertEqual(os.getcwd(), self.home_dir)
         # FIXME
         #strtScnLst = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sp_ct_0.1.yml','sp_ct_0.5.yml','sp_ct_1.yml','sp_ct_5.yml','sp_ct_10.yml','sp_ct_30.yml']
@@ -99,7 +100,7 @@ class NewBeamtimeTest(unittest.TestCase):
 
 
     def test_end_beamtime(self):
-        _required_info = ['pi_name', 'saf_num', 'beamtime_uid']
+        _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']
         # end_beamtime has been run
         self.assertRaises(FileNotFoundError, lambda:_end_beamtime())
         # entire trip. _start_beamtime to _end_beamtime
@@ -117,9 +118,9 @@ class NewBeamtimeTest(unittest.TestCase):
         shutil.move(bt_path_dst, bt_path_src)
         self.assertTrue(os.path.isfile(bt_path_src))
         self.assertFalse(os.path.isfile(bt_path_dst))
-        pi_name = self.bt.get('pi_name')
-        saf_num = self.bt.get('saf_num')
-        bt_uid = self.bt.get('beamtime_uid')
+        pi_name = self.bt.get('bt_piLast')
+        saf_num = self.bt.get('bt_safN')
+        bt_uid = self.bt.get('bt_uid')
         archive_name = _load_bt_info(self.bt, _required_info)
         archive_full_name = _tar_user_data(archive_name)
         test_tar_name = '_'.join([pi_name, saf_num, bt_uid,

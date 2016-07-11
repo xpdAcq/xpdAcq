@@ -41,7 +41,8 @@ class BeamtimeObjTest(unittest.TestCase):
             shutil.rmtree(self.home_dir)
         if os.path.isdir(os.path.join(self.base_dir,'xpdConfig')):
             shutil.rmtree(os.path.join(self.base_dir,'xpdConfig'))
-
+        if os.path.isdir(os.path.join(self.base_dir,'pe2_data')):
+            shutil.rmtree(os.path.join(self.base_dir,'pe2_data'))
 
 
     def test_print_scanplan(self):
@@ -70,8 +71,8 @@ class BeamtimeObjTest(unittest.TestCase):
         sp = ScanPlan(self.bt.experiments[0], ct, 1)
         sp_md = dict(sp)
         # md to scanplan itself
-        self.assertEqual(sp_md['plan_name'], 'ct')
-        self.assertTrue('scanplan_uid' in sp_md)
+        self.assertEqual(sp_md['sp_plan_name'], 'ct')
+        self.assertTrue('sp_uid' in sp_md)
         self.assertTrue(1 in sp_md['sp_args'])
         # scanplan knows bt
         for k,v in dict(self.bt).items():

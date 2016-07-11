@@ -240,7 +240,8 @@ class Beamtime(ValidatedDictLike, YamlDict):
     def from_dict(cls, d):
         return cls(d.pop('bt_piLast'),
                    d.pop('bt_safN'),
-                   bt_wavelength=d.pop('bt_wavelength'),
+                   d.pop('bt_experimenters'),
+                   wavelength=d.pop('bt_wavelength'),
                    bt_uid=d.pop('bt_uid'),
                    **d)
 
@@ -303,7 +304,7 @@ class Experiment(ValidatedDictLike, YamlChainMap):
         if beamtime is None:
             beamtime = Beamtime.from_dict(map2)
         return cls(map1.pop('ex_name'), beamtime,
-                   experiment_uid=map1.pop('ex_uid'),
+                   ex_uid=map1.pop('ex_uid'),
                    **map1)
 
 
@@ -341,7 +342,8 @@ class Sample(ValidatedDictLike, YamlChainMap):
         if beamtime is None:
             beamtime = Beamtime.from_dict(map2)
         return cls(map1.pop('sa_name'), beamtime,
-                   sample_uid=map1.pop('sa_uid'),
+                   sa_uid=map1.pop('sa_uid'),
+                   composition=map1.pop('sa_composition'),
                    **map1)
 
 
