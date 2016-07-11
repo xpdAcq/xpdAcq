@@ -4,14 +4,16 @@ import time
 import yaml
 import inspect
 import datetime
+import numpy as np
 from collections import ChainMap
 from configparser import ConfigParser
 
-import numpy as np
+
 import bluesky.plans as bp
 from bluesky import RunEngine
 from bluesky.utils import normalize_subs_input
-from bluesky.callbacks import LiveTable
+from bluesky.suspenders import SuspendFloor
+from bluesky.register_mds import register_mds
 
 # FIXME use exact import after entire cleaning
 from .glbl import glbl
@@ -172,7 +174,7 @@ def _auto_load_calibration_file():
                            .format(glbl.config_base))
     f_list = [ f for f in os.listdir(config_dir) if f.endswith('cfg')]
     if not f_list:
-        print("INFO: No calibration file found in config_base."
+        print("INFO: No calibration file found in config_base. "
               "Scan will still keep going on")
         return
     f_list_full_path = list(map(lambda f: os.path.join(config_dir, f), f_list))
@@ -215,14 +217,14 @@ def _parse_calibration_file(config_file_name):
 def _inject_qualified_dark_frame_uid(msg):
     if msg.command == 'open_run' and msg.kwargs.get('dark_frame') != True:
         dark_uid = _validate_dark(glbl.dk_window)
-        msg.kwargs['dark_frame_uid'] = dark_uid
+        msg.kwargs['sc_dark_frame_uid'] = dark_uid
     return msg
 
 
 def _inject_calibration_md(msg):
     if msg.command == 'open_run':
         calibration_md = _auto_load_calibration_file()
-        msg.kwargs['calibration_md'] = calibration_md
+        msg.kwargs['sc_calibration_md'] = calibration_md
     return msg
 
 
@@ -291,6 +293,18 @@ class CustomizedRunEngine(RunEngine):
         self._beamtime = bt_obj
         print("INFO: beamtime object:\n%r\nhas been linked"
               % bt_obj)
+        if not glbl.simulation:
+            print("suspender method has been called")
+            register_mds(self)
+            beamdump_sus = SuspendFloor(ring_current, ring_current.get()*0.9,
+                                        resume_thresh = ring_current.get()*0.9,
+                                        sleep = 1200)
+            self.install_suspender(beamdump_sus)
+            print("INFO: beam dump suspender has been activated."
+                  "To check, type prun.suspenders")
+        else:
+            #print('set suspender method has been called') # debug line
+            pass
 
     def __call__(self, sample, plan, subs=None, *,
                  verify_write=False, dark_strategy=periodic_dark,
@@ -329,6 +343,9 @@ class CustomizedRunEngine(RunEngine):
             raise ValueError("These keys in metadata_kw are illegal "
                              "because they are always in sample: "
                              "{}".format(set(sample) & set(metadata_kw)))
+        if self._beamtime.get('bt_wavelength') is None:
+            print("WARNING: there is no wavelength information in current"
+                  "beamtime object, scan will keep going....")
         metadata_kw.update(sample)
         sh = glbl.shutter
         # force to open shutter before scan and close it after

@@ -9,7 +9,7 @@ if not glbl._is_simulation:
     glbl.area_det = pe1c
     glbl.shutter = shctl1
     glbl.temp_controller = cs700
-    # let NameError to handle missing object
+    # let NameError handle missing object
 
 
 # beamtime reload happen in xpdacq
@@ -29,7 +29,7 @@ if bt is not None:
     prun.beamtime = bt
 
 # gonna seperate analysis from collection
-from xpdacq.analysis import * 
+from xpdacq.analysis import *
 
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base

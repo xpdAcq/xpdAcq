@@ -158,11 +158,6 @@ class glbl():
         from bluesky.suspenders import SuspendFloor
         ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
                                      name='ring_current')
-        register_mds(prun)
-        beamdump_sus = SuspendFloor(ring_current, ring_current.get()*0.9,
-                                    resume_thresh = ring_current.get()*0.9,
-                                    sleep = 1200)
-        prun.install_suspender(beamdump_sus)
         # real imports
         db = DataBroker
         LiveTable = lvt
