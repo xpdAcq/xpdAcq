@@ -328,6 +328,7 @@ class CustomizedRunEngine(RunEngine):
         elif isinstance(plan, int):
             try:
                 plan = self.beamtime.scanplans[plan]
+                exp = plan.experiment
             except IndexError:
                 print("WARNING: hmm, there is no scanplan with index `{}`"
                       ", please do `bt.list()` to check if it exists yet"
@@ -348,6 +349,8 @@ class CustomizedRunEngine(RunEngine):
             print("WARNING: there is no wavelength information in current"
                   "beamtime object, scan will keep going....")
         metadata_kw.update(sample)
+        metadata_kw.update(exp)
+        print('!!!! md kw = {}'.format(metadata_kw))
         sh = glbl.shutter
         # force to open shutter before scan and close it after
         plan = bp.pchain(bp.abs_set(sh, 1), plan, bp.abs_set(sh, 0))
