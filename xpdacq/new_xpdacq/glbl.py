@@ -1,6 +1,7 @@
 import os
 import socket
 import yaml
+import time
 import numpy as np
 from unittest.mock import MagicMock
 from time import strftime, sleep
@@ -116,7 +117,7 @@ ALL_FOLDERS = [
 _EXCLUDE_DIR = [HOME_DIR, BLCONFIG_DIR, YAML_DIR]
 _EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
 
-class glbl():
+class Glbl:
     _is_simulation = simulation
     beamline_host_name = BEAMLINE_HOST_NAME
     base = BASE_DIR
@@ -135,7 +136,7 @@ class glbl():
     allfolders = ALL_FOLDERS
     archive_dir = USER_BACKUP_DIR
     dk_window = DARK_WINDOW
-    frame_acq_time = FRAME_ACQUIRE_TIME
+    #frame_acq_time = FRAME_ACQUIRE_TIME
     auto_dark = True
     shutter_control = True
     owner = OWNER
@@ -172,8 +173,7 @@ class glbl():
     else:
         simulation = True
         # shutter = motor  # this passes as a fake shutter
-        frame_acq_time = 0.1
-        ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,'userSimulationArchive')
+        archive_dir = os.path.join(BASE_DIR,'userSimulationArchive')
         # mock imports
         db = MagicMock()
         get_events = MagicMock()
@@ -186,3 +186,22 @@ class glbl():
         print('==== Simulation being created in current directory:{} ===='
               .format(BASE_DIR))
         os.makedirs(home, exist_ok=True)
+
+    def __init__(self, frame_acq_time=FRAME_ACQUIRE_TIME):
+        self._frame_acq_time = frame_acq_time
+
+    @property
+    def frame_acq_time(self):
+        return self._frame_acq_time
+
+    @frame_acq_time.setter
+    def frame_acq_time(self, val):
+        self.area_det.cam.acquire.put(0)
+        time.sleep(1)
+        self.area_det.number_of_sets.put(1)
+        self.area_det.cam.acquire_time.put(val)
+        time.sleep(1)
+        self.area_det.cam.acquire.put(1)
+        print("INFO: area detector has been configured to new"
+              " exposure_time = {}s".format(val))
+glbl = Glbl()

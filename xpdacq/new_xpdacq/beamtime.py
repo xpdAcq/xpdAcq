@@ -60,14 +60,6 @@ def _summarize(plan):
 def _configure_pe1c(exposure):
     """ priviate function to configure pe1c with continuous acquistion
     mode"""
-    # TODO maybe move it into glbl?
-    # setting up detector
-    glbl.area_det.cam.acquire.put(0)
-    glbl.area_det.number_of_sets.put(1)
-    glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
-    time.sleep(1)
-    glbl.area_det.cam.acquire.put(1)
-    time.sleep(1)
     acq_time = glbl.area_det.cam.acquire_time.get()
     # compute number of frames
     num_frame = np.ceil(exposure / acq_time)

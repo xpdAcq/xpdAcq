@@ -350,7 +350,6 @@ class CustomizedRunEngine(RunEngine):
                   "beamtime object, scan will keep going....")
         metadata_kw.update(sample)
         metadata_kw.update(exp)
-        print('!!!! md kw = {}'.format(metadata_kw))
         sh = glbl.shutter
         # force to open shutter before scan and close it after
         plan = bp.pchain(bp.abs_set(sh, 1), plan, bp.abs_set(sh, 0))
