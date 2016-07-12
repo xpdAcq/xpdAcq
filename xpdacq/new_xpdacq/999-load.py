@@ -25,7 +25,6 @@ prun.md['group'] = glbl.group
 bt = start_xpdacq()
 if bt is not None:
     print("INFO: Reload and hook beamtime objects:\n{}\n".format(bt))
-    #prun = CustomizedRunEngine(bt)
     prun.beamtime = bt
 
 # gonna seperate analysis from collection

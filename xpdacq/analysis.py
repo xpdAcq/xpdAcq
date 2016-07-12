@@ -23,16 +23,16 @@ from time import strftime
 import numpy as np
 import tifffile as tif
 import matplotlib as plt
-from xpdacq.glbl import glbl
+from xpdacq.new_xpdacq.glbl import Glbl
 import warnings
 
 # top definition for minimal impacts on the code 
-db = glbl.db
-get_events = glbl.get_events
-get_images = glbl.get_images
+db = Glbl.db
+get_events = Glbl.get_events
+get_images = Glbl.get_images
 
 _fname_field = ['sa_name','sp_name']
-w_dir = os.path.join(glbl.home, 'tiff_base')
+w_dir = os.path.join(Glbl.home, 'tiff_base')
 W_DIR = w_dir # in case of crashes in old codes
 
 def bt_uid():

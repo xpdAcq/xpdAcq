@@ -292,8 +292,8 @@ class CustomizedRunEngine(RunEngine):
     def beamtime(self, bt_obj):
         self._beamtime = bt_obj
         self.md.update(bt_obj.md)
-        print("INFO: beamtime object:\n%r\nhas been linked"
-              % bt_obj)
+        print("INFO: beamtime object:\n{}\nhas been linked\n"
+              .format(bt_obj.md))
         if not glbl.simulation:
             print("suspender method has been called")
             register_mds(self)
