@@ -186,11 +186,22 @@ class Beamtime(ValidatedDictLike, YamlDict):
                          bt_safN=_clean_info(saf_num),
                          bt_experimenters=experimenters,
                          bt_wavelength=wavelength, **kwargs)
+        self._wavelength = wavelength
         self.experiments = []
         self.samples = []
         self._referenced_by = []
         # used by YamlDict
         self.setdefault('bt_uid', new_short_uid())
+
+    @property
+    def wavelength(self):
+        return self._wavelength
+
+    @wavelength.setter
+    def wavelength(self, val):
+        self._wavelength = val
+        self.update(bt_wavelength=val)
+
 
     @property
     def scanplans(self):
