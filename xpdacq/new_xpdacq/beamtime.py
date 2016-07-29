@@ -325,6 +325,13 @@ class Sample(ValidatedDictLike, YamlChainMap):
     _REQUIRED_FIELDS = ['sa_name', 'sa_composition']
 
     def __init__(self, name, beamtime, *, composition, **kwargs):
+        if not isinstance(composition, list):
+            raise TypeError("WARNING: for the richeness of your"
+                            "metadata, please enter your sample "
+                            "composition information as a list of "
+                            "elements and quantities. For example: "
+                            "['Na',1,'Cl',1], ['Ni',1] or ['Ti',1,"
+                            "'O',2]")
         sample = dict(sa_name=name, sa_composition=composition, **kwargs)
         super().__init__(sample, beamtime)
         self.beamtime = beamtime
