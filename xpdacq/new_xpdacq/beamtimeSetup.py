@@ -164,7 +164,7 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
 
     It check if directory structure is correct and flush directories
     """
-    _required_info = ['bt_piLast', 'bt_sasfN', 'bt_uid']
+    _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']
     if archive_dir is None:
         archive_dir = glbl.archive_dir
     if base_dir is None:

@@ -217,7 +217,7 @@ def _parse_calibration_file(config_file_name):
 def _inject_qualified_dark_frame_uid(msg):
     if msg.command == 'open_run' and msg.kwargs.get('dark_frame') != True:
         dark_uid = _validate_dark(glbl.dk_window)
-        msg.kwargs['sc_dark_frame_uid'] = dark_uid
+        msg.kwargs['sc_dk_field_uid'] = dark_uid
     return msg
 
 
@@ -294,13 +294,14 @@ class CustomizedRunEngine(RunEngine):
         self.md.update(bt_obj.md)
         print("INFO: beamtime object:\n{}\nhas been linked\n"
               .format(bt_obj.md))
-        if not glbl.simulation:
-            print("suspender method has been called")
+        if not glbl._is_simulation:
             register_mds(self)
-            beamdump_sus = SuspendFloor(ring_current, ring_current.get()*0.9,
-                                        resume_thresh = ring_current.get()*0.9,
+            # let user deal with suspender
+            beamdump_sus = SuspendFloor(glbl.ring_current, 50,
+                                        resume_thresh = glbl.ring_current.get()*0.9,
                                         sleep = 1200)
-            self.install_suspender(beamdump_sus)
+            glbl.suspender = beamdump_sus
+            #self.install_suspender(beamdump_sus)
             print("INFO: beam dump suspender has been activated."
                   "To check, type prun.suspenders")
         else:
@@ -349,7 +350,10 @@ class CustomizedRunEngine(RunEngine):
             print("WARNING: there is no wavelength information in current"
                   "beamtime object, scan will keep going....")
         metadata_kw.update(sample)
-        metadata_kw.update(exp)
+        try:
+            metadata_kw.update(exp)
+        except UnboundLocalError:
+            print("INFO: using bluesky plan .....")
         sh = glbl.shutter
         # force to open shutter before scan and close it after
         plan = bp.pchain(bp.abs_set(sh, 1), plan, bp.abs_set(sh, 0))

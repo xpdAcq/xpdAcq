@@ -154,9 +154,10 @@ def save_tiff(headers, dark_subtraction=True, *, max_count=None):
             try:
                 # bluesky only looks for uid it defines
                 dark_search = {'group': 'XPD',
-                               'sc_dark_uid': dark_uid_appended} # the one we need to look up data
+                               'uid': dark_uid_appended} # the one we need to look up for dark
 
                 dark_header = db(**dark_search)
+                #dark_header = db[dark_uid_appended] # can't use it as for backsupport
                 dark_img = np.asarray(get_images(dark_header,
                                                  img_field)).squeeze()
             except ValueError:
@@ -164,6 +165,7 @@ def save_tiff(headers, dark_subtraction=True, *, max_count=None):
                 warnings.warn("Requested to do dark correction, but "
                               "extracting the dark image failed.  Proceeding "
                               "without correction.")
+            
         for ev in get_events(header, fill=True):
             img = ev['data'][img_field]
             ind = ev['seq_num']
