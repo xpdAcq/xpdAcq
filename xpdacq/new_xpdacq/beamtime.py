@@ -325,14 +325,15 @@ class Sample(ValidatedDictLike, YamlChainMap):
     _REQUIRED_FIELDS = ['sa_name', 'sa_composition']
 
     def __init__(self, name, beamtime, *, composition, **kwargs):
-        if not isinstance(composition, list):
+        if not isinstance(composition, dict) or not composition:
             raise TypeError("WARNING: for the richeness of your"
                             "metadata, please enter your sample "
-                            "composition information as a list of "
-                            "elements and quantities. For example: "
-                            "['Na',1,'Cl',1], ['Ni',1] or ['Ti',1,"
-                            "'O',2]")
+                            "composition information as a dictionary "
+                            "with elements and quantities. For example: "
+                            "{'Ni':1}, {'Ti':1, 'O':2}")
+        element_list = list(composition.keys())
         sample = dict(sa_name=name, sa_composition=composition, **kwargs)
+        sample.update({'sa_element_list':element_list})
         super().__init__(sample, beamtime)
         self.beamtime = beamtime
         self.setdefault('sa_uid', new_short_uid())
@@ -363,9 +364,11 @@ class Sample(ValidatedDictLike, YamlChainMap):
     def from_dicts(cls, map1, map2, beamtime=None):
         if beamtime is None:
             beamtime = Beamtime.from_dict(map2)
+        print('from dict, map1={}'.format(map1))
+        composition = map1.pop('sa_composition')
         return cls(map1.pop('sa_name'), beamtime,
                    sa_uid=map1.pop('sa_uid'),
-                   composition=map1.pop('sa_composition'),
+                   composition=composition,
                    **map1)
 
 

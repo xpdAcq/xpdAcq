@@ -29,7 +29,7 @@ class PrunTest(unittest.TestCase):
                                   wavelength=self.wavelength)
         self.ex = Experiment('temp_test', self.bt)
         self.sp = ScanPlan(self.bt.experiments[0], ct, 10)
-        self.sa = Sample('test_sample', self.bt, composition={})
+        self.sa = Sample('test_sample', self.bt, composition={'Ni':1})
         glbl.shutter_control = False
 
     def tearDown(self):

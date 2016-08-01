@@ -33,7 +33,7 @@ class BeamtimeObjTest(unittest.TestCase):
                                   self.experimenters,
                                   wavelength=self.wavelength)
         self.ex = Experiment('temp_test', self.bt)
-        self.sa = Sample('test_sample', self.bt, composition={})
+        self.sa = Sample('test_sample', self.bt, composition={'Ni':1})
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -122,7 +122,7 @@ class BeamtimeObjTest(unittest.TestCase):
     def test_sample_roundtrip(self):
         bt = Beamtime('Simon', '123', [], wavelength=0.1828)
         ex = Experiment('test-experiment', bt)
-        sam = Sample('test-sample', bt, composition='vapor')
+        sam = Sample('test-sample', bt, composition={'vapor':1})
         reloaded_sam = Sample.from_yaml(sam.to_yaml())
         os.remove(bt.filepath)
         os.remove(ex.filepath)
@@ -253,7 +253,7 @@ class BeamtimeObjTest(unittest.TestCase):
         "All contents of Beamtime and Experiment should propagate into Sample."
         bt =  Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
         ex = Experiment('test-experiment', bt, custom2='B')
-        sa = Sample('test-sample', bt, composition='vapor', custom3='C')
+        sa = Sample('test-sample', bt, composition={'vapor':1}, custom3='C')
         for k, v in bt.items():
             ex[k] == bt[k]
             sa[k] == bt[k]
@@ -262,7 +262,7 @@ class BeamtimeObjTest(unittest.TestCase):
     def test_load_beamtime(self):
         bt =  Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
         ex = Experiment('test-experiment', bt, custom2='B')
-        sa = Sample('test-sample', bt, composition='vapor', custom3='C')
+        sa = Sample('test-sample', bt, composition={'vapor':1}, custom3='C')
 
         bt2 = load_beamtime()
         self.assertEqual(bt2, bt)
