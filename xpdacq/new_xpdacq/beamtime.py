@@ -364,7 +364,6 @@ class Sample(ValidatedDictLike, YamlChainMap):
     def from_dicts(cls, map1, map2, beamtime=None):
         if beamtime is None:
             beamtime = Beamtime.from_dict(map2)
-        print('from dict, map1={}'.format(map1))
         composition = map1.pop('sa_composition')
         return cls(map1.pop('sa_name'), beamtime,
                    sa_uid=map1.pop('sa_uid'),
