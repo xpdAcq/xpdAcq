@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from databroker import DataBroker as db
 from bluesky.callbacks.broker import LiveTiffExporter
@@ -8,12 +9,12 @@ class xpdAcqSubtractedTiffExporter(LiveTiffExporter):
         # The metadata refers to the scan uid of the dark scan.
         dark_sub = True
         if 'dark_frame' not in doc:
-            if 'sc_dk_field_uid' not in doc:
+            if 'sc_dk_field_uid' in doc:
+                self.dark_uid = doc['sc_dk_field_uid']
+            else:
                 print("No dark_frame was associated in this scan."
                       "no subtraction will be performed")
                 self.dark_uid = None
-            self.dark_uid = doc['sc_dk_field_uid']
-
         elif 'dark_frame'in doc:
             self.dark_uid = None # found a dark frame
         super().start(doc)
@@ -47,5 +48,5 @@ class xpdAcqSubtractedTiffExporter(LiveTiffExporter):
         return filename
         # Don't call super() because that tries to fill_event again.
 
-xpdacq_template = "/home/xf28id1/xpdUser/tiff_base/{start.sa_name}_{start.time}_{start.uid}_step{event.seq_num}.tif"
-xpdacq_exporter = xpdAcqSubtractedTiffExporter('pe1_image', xpdacq_template)
+#xpdacq_template = "/home/xf28id1/xpdUser/tiff_base/{start.sa_name}_{start.time}_{start.uid}_step{event.seq_num}.tif"
+#xpdacq_exporter = xpdAcqSubtractedTiffExporter('pe1_image', xpdacq_template)
