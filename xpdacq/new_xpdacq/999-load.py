@@ -9,6 +9,9 @@ if not glbl._is_simulation:
     glbl.area_det = pe1c
     glbl.shutter = shctl1
     glbl.temp_controller = cs700
+    from xpdacq.new_xpdacq.tiff_export import XpdAcqSubtractedTiffExporter
+    tiff_template = "/home/xf28id1/xpdUser/tiff_base/{start.sa_name}/{start.time}_{start.uid}_step{event.seq_num}.tif"
+    tiff_export = XpdAcqSubtractedTiffExporter('pe1_image', tiff_template)
     # let NameError handle missing object
 
 

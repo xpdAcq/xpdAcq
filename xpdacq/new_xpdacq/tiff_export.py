@@ -3,7 +3,7 @@ import numpy as np
 from databroker import DataBroker as db
 from bluesky.callbacks.broker import LiveTiffExporter
 
-class xpdAcqSubtractedTiffExporter(LiveTiffExporter):
+class XpdAcqSubtractedTiffExporter(LiveTiffExporter):
     "Intercept images before saving and subtract dark image"
     def start(self, doc):
         # The metadata refers to the scan uid of the dark scan.
