@@ -107,13 +107,13 @@ def periodic_dark(plan):
     def insert_take_dark(msg):
         now = time.time()
         nonlocal need_dark
+        #print('after nonlocal dark, need_dark={}'.format(need_dark))
         qualified_dark_uid = _validate_dark(expire_time=glbl.dk_window)
-
+        #print('qualified_dark_uid is {}'.format(qualified_dark_uid))
         # FIXME: should we do "or" or "and"?
         if ((not need_dark) and (not qualified_dark_uid)):
             need_dark = True
-        if need_dark and msg.command == 'open_run' and ('dark_frame' not
-                                                         in msg.kwargs):
+        if need_dark and (not qualified_dark_uid) and msg.command == 'open_run' and ('dark_frame' not in msg.kwargs):
             # We are about to start a new 'run' (e.g., a count or a scan).
             # Insert a dark frame run first.
             need_dark = False
