@@ -76,7 +76,18 @@ def take_dark():
     print('INFO: taking dark frame....')
     # upto this stage, glbl.pe1c has been configured to so exposure time is
     # correct
-    c = bp.count([glbl.area_det], md={'dark_frame': True})
+    acq_time = glbl.area_det.cam.acquire_time.get()
+    num_frame = glbl.area_det.images_per_set.get()
+    computed_exposure = acq_time*num_frame
+    # update md
+    _md = {'sp_time_per_frame': acq_time,
+           'sp_num_frames': num_frame,
+           'sp_computed_exposure': computed_exposure,
+           'sp_type': 'ct',
+           #'sp_uid': str(uuid.uuid4()), # dark plan doesn't need uid
+           'sp_plan_name': 'dark_{}'.format(computed_exposure),
+           'dark_frame':True}
+    c = bp.count([glbl.area_det], md=_md)
     yield from bp.subs_wrapper(c, {'stop': [_update_dark_dict_list]})
     print('opening shutter...')
     yield from bp.abs_set(glbl.shutter, 1)
