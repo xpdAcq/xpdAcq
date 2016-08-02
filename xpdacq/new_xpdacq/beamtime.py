@@ -326,14 +326,15 @@ class Sample(ValidatedDictLike, YamlChainMap):
 
     def __init__(self, name, beamtime, *, composition, **kwargs):
         if not isinstance(composition, dict) or not composition:
-            raise TypeError("WARNING: for the richeness of your"
-                            "metadata, please enter your sample "
-                            "composition information as a dictionary "
-                            "with elements and quantities. For example: "
-                            "{'Ni':1}, {'Ti':1, 'O':2}")
+            print("WARNING: for the richeness of your"
+                  "metadata, please enter your sample "
+                  "composition information as a dictionary "
+                  "with elements and quantities. For example: "
+                  "{'Ni':1}, {'Ti':1, 'O':2}")
         try:
             element_list = list(composition.keys())
         except AttributeError:
+            element_list = None
             pass # back-compt
         sample = dict(sa_name=name, sa_composition=composition, **kwargs)
         sample.update({'sa_element_list':element_list})
