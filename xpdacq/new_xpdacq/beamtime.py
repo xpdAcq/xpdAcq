@@ -331,7 +331,10 @@ class Sample(ValidatedDictLike, YamlChainMap):
                             "composition information as a dictionary "
                             "with elements and quantities. For example: "
                             "{'Ni':1}, {'Ti':1, 'O':2}")
-        element_list = list(composition.keys())
+        try:
+            element_list = list(composition.keys())
+        except AttributeError:
+            pass # back-compt
         sample = dict(sa_name=name, sa_composition=composition, **kwargs)
         sample.update({'sa_element_list':element_list})
         super().__init__(sample, beamtime)
