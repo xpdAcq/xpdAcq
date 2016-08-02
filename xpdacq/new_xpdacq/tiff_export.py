@@ -6,27 +6,36 @@ class xpdAcqSubtractedTiffExporter(LiveTiffExporter):
     "Intercept images before saving and subtract dark image"
     def start(self, doc):
         # The metadata refers to the scan uid of the dark scan.
-        #if 'dark_frame' not in doc:
         dark_sub = True
         if 'dark_frame' not in doc:
             if 'sc_dk_field_uid' not in doc:
-                raise ValueError("No dark_frame was recorded.")
-            uid = doc['sc_dk_field_uid']
-            dark_header = db[uid]
-            self.dark_img, = db.get_images(db[uid], 'pe1_image')
+                print("No dark_frame was associated in this scan."
+                      "no subtraction will be performed")
+                self.dark_uid = None
+            self.dark_uid = doc['sc_dk_field_uid']
+
         elif 'dark_frame'in doc:
-            print('WOOOP, dark frame')
+            self.dark_uid = None # found a dark frame
         super().start(doc)
+
+    def _save_image(self, image, filename):
+        base_name = os.path.split(filename)[0]
+        base_name += '/'
+        os.makedirs(base_name, exist_ok=True)
+        super()._save_image(image, filename)
 
     def event(self, doc):
         if self.field not in doc['data']:
-            raise KeyError('required field = {} is not in header'.format(self.field))
-            return
+            raise KeyError('required field = {} is not in header'
+                           .format(self.field))
 
         db.fill_event(doc)  # modifies in place
-
         image = np.asarray(doc['data'][self.field])
-        image = np.clip(image - self.dark_img, 0, None)
+        if self.dark_uid is not None:
+            dark_header = db[self.dark_uid]
+            dark_img = db.get_images(dark_header, self.field)
+        dark_img = np.zeros_like(image)
+        image = np.clip(image - dark_img, 0, None)
         if image.ndim == 2:
             filename = self.template.format(start=self._start, event=doc)
             self._save_image(image, filename)
@@ -38,5 +47,5 @@ class xpdAcqSubtractedTiffExporter(LiveTiffExporter):
         return filename
         # Don't call super() because that tries to fill_event again.
 
-xpdacq_template = "/home/xf28id1/xpdUser/{start.sa_name}_{start.time}_{start.uid}_step{event.seq_num}.tif"
+xpdacq_template = "/home/xf28id1/xpdUser/tiff_base/{start.sa_name}_{start.time}_{start.uid}_step{event.seq_num}.tif"
 xpdacq_exporter = xpdAcqSubtractedTiffExporter('pe1_image', xpdacq_template)
