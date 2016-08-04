@@ -381,7 +381,6 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
     def __init__(self, experiment, plan_func, *args, **kwargs):
         self.plan_func = plan_func
         self.experiment = experiment
-        experiment.register_scanplan(self)
         plan_name = plan_func.__name__
         sp_dict = {'sp_plan_name': plan_name , 'sp_args': args,
                    'sp_kwargs': kwargs}
@@ -390,6 +389,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
             sp_dict.update({'sp_uid':scanplan_uid})
         super().__init__(sp_dict, *experiment.maps)
         self.setdefault('sp_uid', new_short_uid())
+        experiment.register_scanplan(self) # register after validation
 
     @property
     def md(self):
