@@ -60,7 +60,9 @@ def _summarize(plan):
 def _configure_pe1c(exposure):
     """ priviate function to configure pe1c with continuous acquistion
     mode"""
-    acq_time = glbl.area_det.cam.acquire_time.get()
+    #acq_time = glbl.area_det.cam.acquire_time.get()
+    #cs studio configuration doesn't propagate to python level
+    acq_time = glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
     # compute number of frames
     num_frame = np.ceil(exposure / acq_time)
     if num_frame == 0:
@@ -173,7 +175,7 @@ def new_short_uid():
 
 def _clean_info(obj):
     """ stringtify and replace space"""
-    return str(obj).strip().replace(' ', '')
+    return str(obj).strip().replace(' ', '_')
 
 
 class Beamtime(ValidatedDictLike, YamlDict):
