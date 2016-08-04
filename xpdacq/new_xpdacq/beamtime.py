@@ -226,13 +226,18 @@ class Beamtime(ValidatedDictLike, YamlDict):
     def register_experiment(self, experiment):
         # Notify this Beamtime about an Experiment that should be re-synced
         # whenever the contents of the Beamtime are edited.
-        self.experiments.append(experiment)
-        self._referenced_by.extend([el for el in self.experiments if el
-                                    not in self._referenced_by])
+        exp_list = [ex.get('ex_name', {}) for ex in self.experiments]
+        if experiment['ex_name'] in exp_list:
+            # do not overwrite
+            pass
+        else:
+            self.experiments.append(experiment)
+            self._referenced_by.extend([el for el in self.experiments if el
+                                        not in self._referenced_by])
 
     def register_sample(self, sample):
         # Notify this Beamtime about an Sample that should be re-synced
-        # whenever the contents of the Beamtime are edited.
+        # whenever the contents of the Beamtime are edited. 
         self.samples.append(sample)
         self._referenced_by.extend([el for el in self.samples if el
                                     not in self._referenced_by])
@@ -302,7 +307,10 @@ class Experiment(ValidatedDictLike, YamlChainMap):
     def register_scanplan(self, scanplan):
         # Notify this Experiment about a ScanPlan that should be re-synced
         # whenever the contents of the Experiment are edited.
-        self.scanplans.append(scanplan)
+        sp_list = [sp.short_summary() for sp in self.scanplans]
+        if scanplan.short_summary() not in sp_list:
+            print('not in, update')
+            self.scanplans.append(scanplan)
 
     @classmethod
     def from_yaml(cls, f, beamtime=None):
