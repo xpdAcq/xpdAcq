@@ -347,6 +347,7 @@ class CustomizedRunEngine(RunEngine):
                       .format(plan))
                 return
         # If the plan is an xpdAcq 'ScanPlan', make the actual plan.
+        print('**** plan uid = {} ****'.format(plan.get('sp_uid')))
         if isinstance(plan, ScanPlan):
             plan = plan.factory()
         _subs = normalize_subs_input(subs)
@@ -365,9 +366,11 @@ class CustomizedRunEngine(RunEngine):
             metadata_kw.update(exp)
         except UnboundLocalError:
             print("INFO: using bluesky plan .....")
+
         sh = glbl.shutter
         # force to open shutter before scan and close it after
-        plan = bp.pchain(bp.abs_set(sh, 1), plan, bp.abs_set(sh, 0))
+        if glbl.shutter_control:
+            plan = bp.pchain(bp.abs_set(sh, 1), plan, bp.abs_set(sh, 0))
         # Alter the plan to incorporate dark frames.
         if glbl.auto_dark:
             plan = dark_strategy(plan)

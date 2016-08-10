@@ -88,9 +88,11 @@ def ct(dets, exposure, *, md=None):
                         'sp_computed_exposure': computed_exposure,
                         'sp_type': 'ct',
                         # need a name that shows all parameters values
-                        # 'sp_name': 'ct_<exposure_time>',
-                        'sp_uid': str(uuid.uuid4()),
+                        #'sp_name': 'ct_<exposure_time>',
+                        #'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'ct'})
+    print('*** in plan_func, sp_uid created ***')
+    #_md.setdefault({'sp_uid':str(uuid.uuid4())})
     #plan = bp.count([pe1c], md=_md)
     plan = bp.count([glbl.area_det], md = _md)
     plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
@@ -116,9 +118,11 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
                         'sp_computed_Tstep': computed_step_size,
                         'sp_Nsteps': Nsteps,
                         # need a name that shows all parameters values
-                        # 'sp_name': 'Tramp_<exposure_time>',
-                        'sp_uid': str(uuid.uuid4()),
+                        #'sp_name': 'Tramp_<exposure_time>',
+                        #'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'Tramp'})
+    print('*** in plan_func, sp_uid created ***')
+    #_md.setdefault({'sp_uid':str(uuid.uuid4())})
     #plan = bp.scan([pe1c], cs700, Tstart, Tstop, Nsteps, md=_md)
     plan = bp.scan([glbl.area_det], glbl.temp_controller, Tstart, Tstop, Nsteps, md=_md)
     plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det, glbl.temp_controller]))
@@ -144,9 +148,10 @@ def tseries(dets, exposure, delay, num, *, md = None):
                         'sp_type': 'tseries',
                         # need a name that shows all parameters values
                         # 'sp_name': 'tseries_<exposure_time>',
-                        'sp_uid': str(uuid.uuid4()),
+                        #'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'tseries'})
-
+    #_md.setdefault({'sp_uid':str(uuid.uuid4())})
+    print('*** in plan_func, sp_uid created ***')
     plan = bp.count([glbl.area_det], num, delay, md=_md)
     plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
     yield from plan
