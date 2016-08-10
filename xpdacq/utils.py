@@ -173,3 +173,70 @@ def _copy_and_delete(f_name, src_full_path, dst_dir):
                 It will not be available for use in xpdAcq, but it will be left in the xpdUser/Import/ directory'''.            format(f_name))
         return
 
+
+def _pd_dict_to_dict(pd_dict):
+    """ parser of pd generated dict to a list of valid sample dict
+
+    Parameters:
+    -----------
+    pd_dict : dict
+        dict generated from pandas.to_dict method
+
+    Return:
+    -------
+    sa_md_list : list
+        a list of dictionaries. Each element is a sample dictionary
+    """
+
+    row_num = len(pd_dict['Sample Name']) # col name doesn't matter
+    sa_md_list = []
+    for i in range(row_num):
+        sa_md = {}
+        for key in pd_dict.keys():
+            sa_md.update({key:pd_dict[key][i]})
+        sa_md_list.append(sa_md)
+
+    return sa_md_list
+
+
+def _name_parser(name_str):
+    """ parser for field with first, last name.
+
+    Parameters:
+    -----------
+    name_str : str
+        a string contains a series of <first_name  last_name>  of a human.
+        Each human is separated by a comma.
+
+    Returns:
+    --------
+    name_list : list
+        a list contains first and last names.
+    """
+    name_list = []
+    persons = name_str.split(',')
+    for el in persons:
+        first, last = el.strip().split(' ')
+        name_list.append(first)
+        name_list.append(last)
+
+    return name_list
+
+
+def _phase_parser(phase_str):
+    """ parser for filed with <chem formular>: <phase_amount>
+
+    Parameters:
+    -----------
+    phase_str : str
+        a string contains a series of <chem formular> : <phase_amount>.
+        Each phase is separated by a comma
+
+    Returns
+    -------
+    composition_dict : dict
+        a dictionary contains {element: stoichiometry}
+    phase_amount : float
+        ratio of phase amount
+    """
+    
