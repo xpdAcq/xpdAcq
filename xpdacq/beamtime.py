@@ -175,7 +175,6 @@ def _clean_info(obj):
 
 
 class Beamtime(ValidatedDictLike, YamlDict):
-    #_REQUIRED_FIELDS = ['pi', 'saf_num']
     _REQUIRED_FIELDS = ['bt_piLast', 'bt_safN']
 
     def __init__(self, pi_last, saf_num, experimenters=[], *,
@@ -259,20 +258,24 @@ class Beamtime(ValidatedDictLike, YamlDict):
         print(self)
 
 
-#class Sample(ValidatedDictLike, YamlDict):
 class Sample(ValidatedDictLike, YamlChainMap):
     _REQUIRED_FIELDS = ['sa_name', 'sa_composition']
 
-    def __init__(self, beamtime, sample_md, *, composition=None, **kwargs):
-        composition = sample_md['sa_composition']
+    def __init__(self, beamtime, sample_md, **kwargs):
+        composition = sample_md.get('sa_composition', None)
         if not isinstance(composition, dict) or not composition:
             print("WARNING: for the richeness of your"
                   "metadata, please enter your sample "
                   "composition information as a dictionary "
-                  "with elements and quantities. For example: "
-                  "{'Ni':1}, {'Ti':1, 'O':2}")
-        super().__init__(sample_md, beamtime)
-        self.beamtime = beamtime
+                  "with elements and quantities")
+        try:
+            super().__init__(sample_md, beamtime) # ChainMap signature
+        except:
+            print("At least sample_name and sample_composition is needed.\n"
+                  "For example\n"
+                  ">>> sample_md = {'sa_name':'Ni',sa_composition':{'Ni':1}\n"
+                  ">>> Sample(bt, sample_md)\n")
+            return
         self.setdefault('sa_uid', new_short_uid())
         beamtime.register_sample(self)
 
@@ -301,13 +304,12 @@ class Sample(ValidatedDictLike, YamlChainMap):
     def from_dicts(cls, map1, map2, beamtime=None):
         if beamtime is None:
             beamtime = Beamtime.from_dict(map2)
-        composition = map1.pop('sa_composition')
-        return cls(map1, beamtime,
-                   sa_uid=map1.pop('sa_uid'),
-                   composition=composition,
+        composition = map1.get('sa_composition')
+        uid = map1.pop('sa_uid')
+        return cls(beamtime, map1,
+                   sa_uid=uid,
                    **map1)
 
-#class ScanPlan(ValidatedDictLike, YamlDict):
 class ScanPlan(ValidatedDictLike, YamlChainMap):
     def __init__(self, beamtime, plan_func, *args, **kwargs):
         self.plan_func = plan_func
@@ -317,8 +319,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         if 'sp_uid' in sp_dict['sp_kwargs']:
             scanplan_uid = sp_dict['sp_kwargs'].pop('sp_uid')
             sp_dict.update({'sp_uid':scanplan_uid})
-        super().__init__(sp_dict, beamtime)
-        #super().__init__(sp_dict)
+        super().__init__(sp_dict, beamtime) # ChainMap signature
         self.setdefault('sp_uid', new_short_uid())
         beamtime.register_scanplan(self)
 
@@ -358,25 +359,6 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
     def __eq__(self, other):
         return self.to_yaml() == other.to_yaml()
 
-#    @classmethod
-#    def from_yaml(cls, f):
-#        d = yaml.load(f)
-#        instance = cls.from_dict(d)
-#        if not isinstance(f, str):
-#            instance.filepath = os.path.abspath(f.name)
-#        return instance
-
-#    @classmethod
-#    def from_dict(cls, d):
-#        plan_name = d.pop('sp_plan_name')
-#        plan_func = _PLAN_REGISTRY[plan_name]
-#        plan_uid = d.pop('sp_uid')
-#        sp_args = d['sp_args']
-#        sp_kwargs = d['sp_kwargs']
-#        sp_kwargs.update({'sp_uid':plan_uid})
-#        return cls(plan_func,
-#                   *d['sp_args'],
-#                   **sp_kwargs)
 
     @classmethod
     def from_yaml(cls, f, beamtime=None):
@@ -396,28 +378,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         sp_args = map1['sp_args']
         sp_kwargs = map1['sp_kwargs']
         sp_kwargs.update({'sp_uid':plan_uid})
-        return cls(beamtime, plan_func, **map1)
-
-#    @classmethod
-#    def from_yaml(cls, f, experiment=None, beamtime=None):
-#        map1, map2, map3 = yaml.load(f)
-#        instance = cls.from_dicts(map1, map2, map3, experiment, beamtime)
-#        if not isinstance(f, str):
-#            instance.filepath = os.path.abspath(f.name)
-#        return instance
-
-#    @classmethod
-#    def from_dicts(cls, map1, map2, map3, experiment=None, beamtime=None):
-#        if experiment is None:
-#            experiment = Experiment.from_dicts(map2, map3, beamtime=beamtime)
-#        plan_name = map1.pop('sp_plan_name')
-#        plan_func = _PLAN_REGISTRY[plan_name]
-#        plan_uid = map1.pop('sp_uid')
-#        sp_kwargs = map1['sp_kwargs']
-#        sp_kwargs.update({'sp_uid':plan_uid})
-#        return cls(experiment, plan_func,
-#                   *map1['sp_args'],
-#                   **sp_kwargs)
+        return cls(beamtime, plan_func, *sp_args, **sp_kwargs)
 
     def default_yaml_path(self):
         arg_value_str = map(str, self.bound_arguments.values())
