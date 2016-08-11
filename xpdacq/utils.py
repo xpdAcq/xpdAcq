@@ -9,6 +9,7 @@ from shutil import ReadError
 import pandas as pd
 
 from .glbl import glbl
+from .beamtime import Sample
 
 def _graceful_exit(error_message):
     try:
@@ -211,7 +212,7 @@ class ExceltoYaml:
 
         self.sa_md_list = self._pd_dict_to_dict_list(self.pd_dict.to_dict())
 
-    def create_yaml(self):
+    def create_yaml(self, bt):
         """ parse a list of sample metadata into desired format and
         create xpdacq.Sample objects inside xpdUser/config_base/yml/
 
@@ -270,12 +271,10 @@ class ExceltoYaml:
         self.parsed_sa_md_list = parsed_sa_md_list
 
         for el in self.parsed_sa_md_list:
-            w_name = os.path.join(glbl.sample_dir, el['sa_name']+'.yml')
-            with open(w_name, 'w') as f:
-                yaml.dump(dict(el), f, default_flow_style=False)
-            if os.path.isfile(w_name):
-                print("Sample object {} has been successfully imported"
-                      .format(os.path.basename(w_name)))
+            sa_name = el['sa_name']
+            Sample(bt, el)
+            print("Sample object {} has been successfully imported"
+                  .format(sa_name))
         print("*** End of import Sample object ***")
 
     def _pd_dict_to_dict_list(self, pd_dict):
@@ -384,8 +383,8 @@ class ExceltoYaml:
 
 excel_to_yaml = ExceltoYaml()
 
-def import_sample(saf_num):
+def import_sample(saf_num, bt):
     """ thing wrapper for ExceltoYaml class """
     excel_to_yaml.load(str(saf_num))
-    excel_to_yaml.create_yaml()
+    excel_to_yaml.create_yaml(bt)
     return excel_to_yaml

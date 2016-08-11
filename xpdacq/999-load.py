@@ -1,9 +1,9 @@
 import os
 from xpdacq.glbl import glbl
-from xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
-                                             _end_beamtime)
 from xpdacq.beamtime import *
-
+from xpdacq.utils import import_sample
+from xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
+                                  _end_beamtime)
 
 if not glbl._is_simulation:
     glbl.area_det = pe1c

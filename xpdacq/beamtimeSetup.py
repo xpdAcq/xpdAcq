@@ -108,9 +108,9 @@ def load_beamtime(directory=None):
     with open(beamtime_fn, 'r') as f:
         bt = load_yaml(f, known_uids)
 
-    for fn in experiment_fns:
-        with open(os.path.join(directory, 'experiments', fn), 'r') as f:
-            load_yaml(f, known_uids)
+    #for fn in experiment_fns:
+    #    with open(os.path.join(directory, 'experiments', fn), 'r') as f:
+    #        load_yaml(f, known_uids)
 
     for fn in scanplan_fns:
         with open(os.path.join(directory, 'scanplans', fn), 'r') as f:

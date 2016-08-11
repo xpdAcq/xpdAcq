@@ -333,20 +333,15 @@ class CustomizedRunEngine(RunEngine):
                       .format(sample))
                 return
         # If a plan is given as a string, look in up in the global registry.
-        if isinstance(plan, str):
-            # e.g., 'ct'
-            plan = _PLAN_REGISTRY[plan]
-        elif isinstance(plan, int):
+        if isinstance(plan, int):
             try:
                 plan = self.beamtime.scanplans[plan]
-                exp = plan.experiment
             except IndexError:
                 print("WARNING: hmm, there is no scanplan with index `{}`"
                       ", please do `bt.list()` to check if it exists yet"
                       .format(plan))
                 return
         # If the plan is an xpdAcq 'ScanPlan', make the actual plan.
-        print('**** plan uid = {} ****'.format(plan.get('sp_uid')))
         if isinstance(plan, ScanPlan):
             plan = plan.factory()
         _subs = normalize_subs_input(subs)
@@ -361,11 +356,6 @@ class CustomizedRunEngine(RunEngine):
             print("WARNING: there is no wavelength information in current"
                   "beamtime object, scan will keep going....")
         metadata_kw.update(sample)
-        try:
-            metadata_kw.update(exp)
-        except UnboundLocalError:
-            print("INFO: using bluesky plan .....")
-
         sh = glbl.shutter
         # force to open shutter before scan and close it after
         if glbl.shutter_control:
