@@ -200,18 +200,23 @@ def _pd_dict_to_dict(pd_dict):
 
 
 def _name_parser(name_str):
-    """ parser for field with first, last name.
+    """ parser for field specified names
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     name_str : str
-        a string contains a series of <first_name  last_name>  of a human.
+        a string contains a series of <first_name  last_name> of a human.
         Each human is separated by a comma.
 
-    Returns:
-    --------
+    Returns
+    -------
     name_list : list
         a list contains first and last names.
+
+    Raises:
+    -------
+    ValueError
+        if ',' is not specified between names
     """
     name_list = []
     persons = name_str.split(',')
@@ -226,8 +231,8 @@ def _name_parser(name_str):
 def _phase_parser(phase_str):
     """ parser for filed with <chem formular>: <phase_amount>
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     phase_str : str
         a string contains a series of <chem formular> : <phase_amount>.
         Each phase is separated by a comma
@@ -236,7 +241,40 @@ def _phase_parser(phase_str):
     -------
     composition_dict : dict
         a dictionary contains {element: stoichiometry}
-    phase_amount : float
-        ratio of phase amount
+    phase_dict : dict
+        a dictionary contains relative ratio of phases
+
+    Examples
+    --------
+    rv = _phase_parser('NaCl:1, Si:1')
+    rv[0] # {'Na':1, 'Cl':1, 'Si':1}
+    rv[1] # {'Nacl':0.5, 'Si':0.5}
+
+    Raises:
+    -------
+    ValueError
+        if ',' is not specified between phases
     """
-    
+
+    phase_dict = {}
+    composition_dict = {}
+    compound_meta = phase_str.split(',')
+    for el in compound_meta:
+        if len(el.split(':')) == 1:
+            com = el.split(':').pop()
+            amount = '1' # capture default
+        else:
+            com, amount = el.split(':') # expect [<com>, <amount>]
+        phase_dict.update({com.strip():float(amount.strip())})
+        parsed_tuple = composition_analysis(com.strip())
+        # expect: ([elment_1, element_2, ...], [sto_1, sto_2,...])
+        for i in range(len(parsed_tuple[0])):
+            composition_dict.update({parsed_tuple[0][i]:
+                                     parsed_tuple[1][i]})
+    # normalized phase_dict
+    total = sum(phase_dict.values())
+    for k,v in phase_dict.items():
+        ratio = "{0:.2f}".format(v/total)
+        phase_dict[k] = float(ratio)
+    return composition_dict, phase_dict
+
