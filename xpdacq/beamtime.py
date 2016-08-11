@@ -88,7 +88,7 @@ def ct(dets, exposure, *, md=None):
                         'sp_type': 'ct',
                         # need a name that shows all parameters values
                         #'sp_name': 'ct_<exposure_time>',
-                        #'sp_uid': str(uuid.uuid4()),
+                        'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'ct'})
     plan = bp.count([glbl.area_det], md = _md)
     plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
@@ -115,7 +115,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
                         'sp_Nsteps': Nsteps,
                         # need a name that shows all parameters values
                         #'sp_name': 'Tramp_<exposure_time>',
-                        #'sp_uid': str(uuid.uuid4()),
+                        'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'Tramp'})
     plan = bp.scan([glbl.area_det], glbl.temp_controller, Tstart, Tstop, Nsteps, md=_md)
     plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det, glbl.temp_controller]))
@@ -141,7 +141,7 @@ def tseries(dets, exposure, delay, num, *, md = None):
                         'sp_type': 'tseries',
                         # need a name that shows all parameters values
                         # 'sp_name': 'tseries_<exposure_time>',
-                        #'sp_uid': str(uuid.uuid4()),
+                        'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'tseries'})
     plan = bp.count([glbl.area_det], num, delay, md=_md)
     plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
@@ -202,20 +202,10 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self.update(bt_wavelength=val)
 
 
-    #@property
-    #def scanplans(self):
     def register_scanplan(self, scanplan):
         self.scanplans.append(scanplan)
         self._referenced_by.extend([el for el in self.scanplans if el
                                     not in self._referenced_by])
-        #return [s for e in self.experiments for s in e.scanplans]
-        #sp_list = [f for f in os.listdir(glbl.scanplan_dir)]
-        #scanplans = []
-        #for el in sp_list:
-        #    with open(os.path.join(glbl.scanplan_dir, el)) as f:
-        #        sp = yaml.load(f)
-        #    scanplans.append(sp)
-        #return scanplans
 
     @property
     def md(self):
@@ -271,7 +261,6 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
 #class Sample(ValidatedDictLike, YamlDict):
 class Sample(ValidatedDictLike, YamlChainMap):
-    #_REQUIRED_FIELDS = ['name', 'composition']
     _REQUIRED_FIELDS = ['sa_name', 'sa_composition']
 
     def __init__(self, beamtime, sample_md, *, composition=None, **kwargs):
