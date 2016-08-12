@@ -6,12 +6,13 @@ import yaml
 import shutil
 import inspect
 import datetime
-from time import strftime
-
-from mock import MagicMock
-from collections import ChainMap
-import bluesky.plans as bp
 import numpy as np
+from time import strftime
+from mock import MagicMock
+from IPython import get_ipython
+from collections import ChainMap
+
+import bluesky.plans as bp
 
 from .glbl import glbl
 from .yamldict import YamlDict, YamlChainMap
@@ -153,7 +154,7 @@ def load_yaml(f, known_uids=None):
     return obj
 
 
-def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
+def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm ='y'):
     """ funciton to end a beamtime.
 
     It check if directory structure is correct and flush directories
@@ -168,12 +169,14 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
     files = os.listdir(glbl.home)
     if len(files)==0:
         raise FileNotFoundError("It appears that end_beamtime may have been"
-                                "run. If so, do not run again but proceed to"
-                                "bt = _start_beamtime(pi_last, saf_num,"
-                                "experimenters, wavelength=<value>)")
+                                "run. If so, do not run again but proceed to\n"
+                                ">>> bt = _start_beamtime(pi_last, saf_num,"
+                                "experimenters, wavelength=<value>)\n")
+    ips = get_ipython()
     # laod bt yaml
     if not bto:
-        bto = _load_bt(glbl.yaml_dir)
+        #bto = _load_bt(glbl.yaml_dir)
+        bto = ips.ns_table['user_global']['bt']
     # load bt info
     archive_name = _load_bt_info(bto, _required_info)
     # archive file
@@ -182,7 +185,8 @@ def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
     _confirm_archive(archive_full_name)
     # flush
     _delete_home_dir_tree()
-
+    # delete bt
+    del ips.ns_table['user_global']['bt']
 
 def _clean_info(obj):
     """ stringtify and replace space"""
@@ -193,7 +197,7 @@ def _load_bt_info(bt_obj, required_fields):
     # grab information
     bt_info_list = []
     for el in required_fields:
-        print('loaded bt info = {}'.format(dict(bt_obj)))
+        #print('loaded bt info = {}'.format(dict(bt_obj)))
         bt_info = bt_obj.get(el)
         if bt_info is None:
             print("WARNING: required beamtime information {} doesn't exit."
