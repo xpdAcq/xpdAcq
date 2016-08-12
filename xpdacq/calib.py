@@ -125,5 +125,5 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     c.gui_peakPicker()
     c.ai.setPyFAI(**c.geoRef.getPyFAI())
     c.ai.wavelength = c.geoRef.wavelength
-
+    glbl.pyFAI_calib_params = c.ai.getPyFAI() # update untile next time
     return c.ai
