@@ -58,7 +58,7 @@ FRAME_ACQUIRE_TIME = 0.1 # pe1 frame acq time
 OWNER = 'xf28id1'
 BEAMLINE_ID = 'xpd'
 GROUP = 'XPD'
-
+IMAGE_FIELD = 'pe1_image'
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()
@@ -143,6 +143,7 @@ class Glbl:
     beamline_id = BEAMLINE_ID
     group = GROUP
     _dark_dict_list = [] # initiate a new one every time
+    det_image_field = IMAGE_FIELD
 
     # logic to assign correct objects depends on simulation or real experiment
     if not simulation:
