@@ -304,10 +304,9 @@ class Sample(ValidatedDictLike, YamlChainMap):
     def from_dicts(cls, map1, map2, beamtime=None):
         if beamtime is None:
             beamtime = Beamtime.from_dict(map2)
-        composition = map1.get('sa_composition')
-        uid = map1.pop('sa_uid')
+        #uid = map1.pop('sa_uid')
         return cls(beamtime, map1,
-                   sa_uid=uid,
+                   #sa_uid=uid,
                    **map1)
 
 class ScanPlan(ValidatedDictLike, YamlChainMap):

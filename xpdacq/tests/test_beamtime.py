@@ -34,7 +34,6 @@ class BeamtimeObjTest(unittest.TestCase):
         src = os.path.join(os.path.dirname(__file__), xlf)
         shutil.copyfile(src, os.path.join(glbl.xpdconfig, xlf))
         import_sample(self.saf_num, self.bt)
-        #self.sa = Sample('test_sample', self.bt, composition={'Ni':1})
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -226,12 +225,10 @@ class BeamtimeObjTest(unittest.TestCase):
 
         self.bt['new_bt_field'] = 'test'
         # Experiment and Sample should be automatically synced.
-        with open(self.ex.filepath, 'r') as f:
-            reloaded_ex = self.ex.from_yaml(f)
-        with open(self.sa.filepath, 'r') as f:
-            reloaded_sa = self.sa.from_yaml(f)
-        self.assertTrue('new_bt_field' in reloaded_ex)
-        self.assertTrue('new_bt_field' in reloaded_sa)
+        for el in self.bt.samples:
+            with open(el.filepath, 'r') as f:
+                reloaded_sa = el.from_yaml(f)
+            self.assertTrue('new_bt_field' in reloaded_sa)
 
 
     def test_chaining(self):
