@@ -6,12 +6,12 @@ import uuid
 from configparser import ConfigParser
 from time import strftime
 
-# FIXME
-from xpdacq.new_xpdacq.glbl import glbl
-from xpdacq.new_xpdacq.beamtime import *
-from xpdacq.new_xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
-from xpdacq.new_xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
-                                      _auto_load_calibration_file)
+from xpdacq.glbl import glbl
+from xpdacq.beamtime import *
+from xpdacq.utils import import_sample
+from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
+from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
+                           _auto_load_calibration_file)
 
 class PrunTest(unittest.TestCase):
 
@@ -20,16 +20,20 @@ class PrunTest(unittest.TestCase):
         self.home_dir = os.path.join(self.base_dir,'xpdUser')
         self.config_dir = os.path.join(self.base_dir,'xpdConfig')
         self.PI_name = 'Billinge '
-        self.saf_num = '123'   # must be 123 for proper load of config yaml => don't change
+        self.saf_num = 30079   # must be 30079 for proper load of config yaml => don't change
         self.wavelength = 0.1812
-        self.experimenters = [('van der Banerjee','S0ham',1),('Terban ',' Max',2)]
+        self.experimenters = [('van der Banerjee','S0ham',1),
+                              ('Terban ',' Max',2)]
+        # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
-        self.ex = Experiment('temp_test', self.bt)
-        self.sp = ScanPlan(self.bt.experiments[0], ct, 10)
-        self.sa = Sample('test_sample', self.bt, composition={'Ni':1})
+        xlf = '30079_sample.xlsx'
+        src = os.path.join(os.path.dirname(__file__), xlf)
+        shutil.copyfile(src, os.path.join(glbl.xpdconfig, xlf))
+        import_sample(self.saf_num, self.bt)
+        self.sp = ScanPlan(self.bt, ct, 5)
         glbl.shutter_control = False
 
     def tearDown(self):
@@ -104,15 +108,24 @@ class PrunTest(unittest.TestCase):
         # case4: with real prun
         glbl.shutter_control = False # avoid waiting
         prun = CustomizedRunEngine(self.bt)
+        glbl._dark_dict_list = [] # re-init
         prun_uid = prun(0,0)
         self.assertEqual(len(prun_uid),2) # first one is auto_dark
-        rv = _validate_dark()
-        self.assertEqual(prun_uid[0], rv)
+        dark_uid = _validate_dark()
+        self.assertEqual(prun_uid[0], dark_uid)
+        # test sc_dark_field_uid
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        prun.msg_hook = msg_rv
+        prun(0,0)
+        open_run = [el.kwargs for el in msg_list if el.command=='open_run'][0]
+        self.assertEqual(dark_uid, open_run['sc_dk_field_uid'])
         # no auto-dark
         glbl.auto_dark = False
         new_prun_uid = prun(0,0)
         self.assertEqual(len(new_prun_uid),1) # no dark frame
-        self.assertEqual(glbl._dark_dict_list[-1]['uid'],  rv) # no update
+        self.assertEqual(glbl._dark_dict_list[-1]['uid'],  dark_uid) # no update
 
 
     def test_auto_load_calibration(self):
