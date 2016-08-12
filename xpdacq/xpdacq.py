@@ -302,8 +302,8 @@ class CustomizedRunEngine(RunEngine):
     def beamtime(self, bt_obj):
         self._beamtime = bt_obj
         self.md.update(bt_obj.md)
-        print("INFO: beamtime object:\n{}\nhas been linked\n"
-              .format(bt_obj.md))
+        print("INFO: beamtime object has been linked\n")
+
         if not glbl._is_simulation:
             register_mds(self)
             # let user deal with suspender

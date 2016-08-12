@@ -101,16 +101,11 @@ def load_beamtime(directory=None):
         directory = glbl.yaml_dir # leave room for future multi-beamtime
     known_uids = {}
     beamtime_fn = os.path.join(directory, 'bt_bt.yml')
-    experiment_fns = os.listdir(os.path.join(directory, 'experiments'))
     sample_fns = os.listdir(os.path.join(directory, 'samples'))
     scanplan_fns = os.listdir(os.path.join(directory, 'scanplans'))
 
     with open(beamtime_fn, 'r') as f:
         bt = load_yaml(f, known_uids)
-
-    #for fn in experiment_fns:
-    #    with open(os.path.join(directory, 'experiments', fn), 'r') as f:
-    #        load_yaml(f, known_uids)
 
     for fn in scanplan_fns:
         with open(os.path.join(directory, 'scanplans', fn), 'r') as f:
@@ -150,7 +145,6 @@ def load_yaml(f, known_uids=None):
         known_uids[obj['sa_uid']] = obj
     elif isinstance(data, list) and len(data) == 2:
     #elif isinstance(data, list) and 'sp_uid' in data[0]:
-        #experiment = known_uids.get(data[1]['ex_uid'])
         beamtime = known_uids.get(data[1]['bt_uid'])
         obj = ScanPlan.from_yaml(f, beamtime=beamtime)
         known_uids[obj['sp_uid']] = obj
