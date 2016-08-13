@@ -35,6 +35,7 @@ class PrunTest(unittest.TestCase):
         import_sample(self.saf_num, self.bt)
         self.sp = ScanPlan(self.bt, ct, 5)
         glbl.shutter_control = False
+        self.prun = CustomizedRunEngine(self.bt)
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -48,6 +49,8 @@ class PrunTest(unittest.TestCase):
     def test_validate_dark(self):
         """ test login in this function """
         # no dark_dict_list
+        if glbl._dark_dict_list:
+            glbl._dark_dict_list = []
         self.assertFalse(glbl._dark_dict_list)
         rv = _validate_dark()
         self.assertEqual(rv, None)
@@ -106,10 +109,8 @@ class PrunTest(unittest.TestCase):
         self.assertEqual(rv, correct_uid[-1])
 
         # case4: with real prun
-        glbl.shutter_control = False # avoid waiting
-        prun = CustomizedRunEngine(self.bt)
         glbl._dark_dict_list = [] # re-init
-        prun_uid = prun(0,0)
+        prun_uid = self.prun(0,0)
         self.assertEqual(len(prun_uid),2) # first one is auto_dark
         dark_uid = _validate_dark()
         self.assertEqual(prun_uid[0], dark_uid)
@@ -117,13 +118,13 @@ class PrunTest(unittest.TestCase):
         msg_list = []
         def msg_rv(msg):
             msg_list.append(msg)
-        prun.msg_hook = msg_rv
-        prun(0,0)
+        self.prun.msg_hook = msg_rv
+        self.prun(0,0)
         open_run = [el.kwargs for el in msg_list if el.command=='open_run'][0]
         self.assertEqual(dark_uid, open_run['sc_dk_field_uid'])
         # no auto-dark
         glbl.auto_dark = False
-        new_prun_uid = prun(0,0)
+        new_prun_uid = self.prun(0,0)
         self.assertEqual(len(new_prun_uid),1) # no dark frame
         self.assertEqual(glbl._dark_dict_list[-1]['uid'],  dark_uid) # no update
 
@@ -133,38 +134,38 @@ class PrunTest(unittest.TestCase):
         auto_calibration_md_dict = _auto_load_calibration_file()
         self.assertIsNone(auto_calibration_md_dict)
         # one config file in xpdUser/config_base:
-        cfg_f_name = 'srxconfig.cfg'
+        cfg_f_name = glbl.calib_config_name
         cfg_src = os.path.join(os.path.dirname(__file__), cfg_f_name)
         # __file__ gives relative path
         cfg_dst = os.path.join(glbl.config_base, cfg_f_name)
-        config = ConfigParser()
-        config.read(cfg_src)
-        with open(cfg_dst, 'w') as f_original:
-            config.write(f_original)
-        #shutil.copy(cfg_src, cfg_dst)
+        shutil.copy(cfg_src, cfg_dst)
+        with open(cfg_dst) as f:
+            config_from_file = yaml.load(f)
+        glbl.calib_config_dict = config_from_file
         auto_calibration_md_dict = _auto_load_calibration_file()
         # is file loaded??
-        self.assertTrue('parameters' in auto_calibration_md_dict)
+        self.assertTrue('time' in auto_calibration_md_dict)
         # is information loaded in correctly?
-        self.assertEqual(auto_calibration_md_dict['parameters']['Experiment']
-                         ['integrationspace'], 'qspace')
-        self.assertEqual(auto_calibration_md_dict['parameters']['Others']
-                         ['uncertaintyenable'], 'True')
-        self.assertEqual(auto_calibration_md_dict['file_name'], cfg_f_name)
-        # multiple config files in xpdUser/config_base:
+        self.assertEqual(auto_calibration_md_dict['pixel2'],
+                         0.0002)
+        self.assertEqual(auto_calibration_md_dict['file_name'],
+                         'pyFAI_calib_Ni_20160813-1659.poni')
+        # file-based config_dict is different from glbl.calib_config_dict
         self.assertTrue(os.path.isfile(cfg_dst))
-        modified_cfg_f_name = 'srxconfig_1.cfg'
-        modified_cfg_dst = os.path.join(glbl.config_base, modified_cfg_f_name)
-        config = ConfigParser()
-        config.read(cfg_src)
-        config['Others']['avgmask'] = 'False'
-        with open(modified_cfg_dst, 'w') as f_modified:
-            config.write(f_modified)
-        self.assertTrue(os.path.isfile(modified_cfg_dst))
-        modified_auto_calibration_md_dict = _auto_load_calibration_file()
-        # is information loaded in correctly?
-        self.assertEqual(modified_auto_calibration_md_dict
-                         ['file_name'], modified_cfg_f_name)
-        self.assertEqual(modified_auto_calibration_md_dict
-                         ['parameters']['Others']['avgmask'],
-                         'False')
+        glbl.calib_config_dict = dict(auto_calibration_md_dict)
+        glbl.calib_config_dict['new_filed']='i am new'
+        re_auto_calibration_md_dict = _auto_load_calibration_file()
+        # trust file-based config_dict
+        self.assertEqual(re_auto_calibration_md_dict, config_from_file)
+        self.assertFalse('new_field' in re_auto_calibration_md_dict)
+        # test with prun
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.prun.msg_hook = msg_rv
+        prun_uid = self.prun(0,0)
+        open_run = [el.kwargs for el in msg_list
+                    if el.command=='open_run'][0]
+        self.assertTrue('sc_calibration_md' in open_run)
+        self.assertEqual(open_run['sc_calibration_md'],
+                         re_auto_calibration_md_dict)

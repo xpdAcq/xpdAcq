@@ -172,9 +172,9 @@ def _auto_load_calibration_file():
     Returns
     -------
     config_md_dict : dict
-    dictionary contains calibration parameters computed by SrXplanar,
-    file name and timestamp of the most recent calibration file.
-    If no calibration file exits in xpdUser/config_base, returns None.
+    dictionary contains calibration parameters computed by pyFAI
+    and file name of the most recent calibration. If no calibration
+    file exits in xpdUser/config_base, returns None.
     """
 
     config_dir = glbl.config_base
@@ -182,45 +182,21 @@ def _auto_load_calibration_file():
         raise RuntimeError("WARNING: Required directory {} doesn't"
                            " exist, did you accidentally delete it?"
                            .format(glbl.config_base))
-    f_list = [ f for f in os.listdir(config_dir) if f.endswith('cfg')]
-    if not f_list:
+    calib_yaml_name = os.path.join(glbl.config_base,
+                                   glbl.calib_config_name)
+    if not os.path.isfile(calib_yaml_name):
         print("INFO: No calibration file found in config_base. "
               "Scan will still keep going on")
         return
-    f_list_full_path = list(map(lambda f: os.path.join(config_dir, f), f_list))
-    sorted_list = sorted(f_list_full_path, key=os.path.getmtime)
-    config_in_use = sorted_list [-1]
-    print("INFO: This scan will append calibration parameters recorded"
-          " in {}".format(os.path.basename(config_in_use)))
-    config_timestamp = os.path.getmtime(config_in_use)
-    config_time = _timestamp_to_time(config_timestamp)
-    config_dict = _parse_calibration_file(os.path.join(config_dir,
-                                                       config_in_use))
-    # FIXME - finalized format?
-    config_md_dict = {'parameters':config_dict,
-                      'file_name': os.path.basename(config_in_use),
-                      'timestamp':config_time}
-    return config_md_dict
-
-
-def _parse_calibration_file(config_file_name):
-    ''' helper function to parse calibration file '''
-    calibration_parser = ConfigParser()
-    calibration_parser.read(config_file_name)
-    sections = calibration_parser.sections()
-    config_dict = {}
-    for section in sections:
-        config_dict[section] = {} # write down header
-        options = calibration_parser.options(section)
-        for option in options:
-            try:
-                config_dict[section][option] = calibration_parser.get(section,
-                                                                      option)
-                # if config_dict[option] == -1:
-                # DebugPrint("skip: %s" % option)
-            except:
-                print("exception on %s!" % option)
-                config_dict[option] = None
+    config_dict = glbl.calib_config_dict
+    # prviate test: equality
+    with open(calib_yaml_name) as f:
+        yaml_reload_dict = yaml.load(f)
+    if config_dict != yaml_reload_dict:
+        config_dict = yaml_reload_dict
+        # trust file-based dict, in case user change it
+    print("INFO: This scan will append calibration parameters "
+          "recorded in {}".format(config_dict['file_name']))
     return config_dict
 
 

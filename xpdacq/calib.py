@@ -1,11 +1,10 @@
 """ Script to perform pyFAI calibration in pure Python """
-
 import os
 import time
 import logging
 import datetime
 import numpy as np
-import IPython import get_ipython
+from IPython import get_ipython
 
 import tifffile as tif
 
@@ -49,7 +48,7 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     Parameters
     ----------
     exposure : int
-        optional. total exposure time. default is 60s
+        optional. total exposure time in sec. default is 60s
     calibrant_name : str
         optional.name of calibrant used, different calibrants correspond to 
         different d-spacing profiles. Default is 'Ni'. User can assign 
@@ -100,7 +99,7 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     # calibration
     timestr = _timestampstr(time.time())
     basename = '_'.join(['pyFAI_calib', calibrant_name, timestr])
-    w_name = os.path.join(glbl.config_base, basename)
+    w_name = os.path.join(glbl.config_base, basename) # poni name
     c = Calibration(wavelength=calibrant.wavelength,
                     detector=detector,
                     calibrant=calibrant,
@@ -125,5 +124,13 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     c.gui_peakPicker()
     c.ai.setPyFAI(**c.geoRef.getPyFAI())
     c.ai.wavelength = c.geoRef.wavelength
-    glbl.pyFAI_calib_params = c.ai.getPyFAI() # update untile next time
+    # update untile next time
+    glbl.calib_config_dict = c.ai.getPyFAI()
+    glbl.calib_config_dict.update({'file_name':basename})
+    glbl.calib_config_dict.update({'time':timestr})
+    # write yaml
+    yaml_name = glbl.calib_config_name
+    with open(os.path.join(glbl.config_base, yaml_name),'w') as f:
+        yaml.dump(glbl.pyFAI_params, f)
+
     return c.ai

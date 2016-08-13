@@ -59,6 +59,7 @@ OWNER = 'xf28id1'
 BEAMLINE_ID = 'xpd'
 GROUP = 'XPD'
 IMAGE_FIELD = 'pe1_image'
+CALIB_CONFIG_NAME = 'pyFAI_calib.yml'
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()
@@ -144,6 +145,7 @@ class Glbl:
     group = GROUP
     _dark_dict_list = [] # initiate a new one every time
     det_image_field = IMAGE_FIELD
+    calib_config_name = CALIB_CONFIG_NAME
 
     # logic to assign correct objects depends on simulation or real experiment
     if not simulation:
