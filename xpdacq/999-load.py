@@ -40,5 +40,6 @@ if os.path.isdir(HOME_DIR):
 else:
     os.chdir(BASE_DIR)
 
+from xpdacq.calib import run_calibration
 print('OK, ready to go.  To continue, follow the steps in the xpdAcq')
 print('documentation at http://xpdacq.github.io/xpdacq')

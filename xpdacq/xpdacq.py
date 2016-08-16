@@ -279,7 +279,7 @@ class CustomizedRunEngine(RunEngine):
         self._beamtime = bt_obj
         self.md.update(bt_obj.md)
         print("INFO: beamtime object has been linked\n")
-
+        #from xpdacq.calib import run_calibration
         if not glbl._is_simulation:
             register_mds(self)
             # let user deal with suspender

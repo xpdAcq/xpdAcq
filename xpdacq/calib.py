@@ -65,6 +65,8 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     _check_obj(_REQUIRED_OBJ_LIST)
     ips = get_ipython()
     bto = ips.ns_table['user_global']['bt']
+    prun = ips.ns_table['user_global']['prun']
+    #print('*** current beamtime info = {} ***'.format(bto.md))
     calibrant = Calibrant()
     # d-spacing
     if calibrant_file is not None:
@@ -72,11 +74,11 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
         calibrant_name = os.path.split(calibrant_file)[1]
         calibrant_name = os.path.splitext(calibrant_name)[0]
     else:
-        calibrant.load_file('Ni.D') #FIXME - need to think where it is
+        calibrant.load_file(os.path.join(glbl.usrAnalysis_dir, 'Ni24.D'))
         calibrant_name = 'Ni'
     # wavelength
     if wavelength is None:
-        _wavelength = bt['bt_wavelength']
+        _wavelength = bto['bt_wavelength']
     else:
         _wavelength = wavelength
     calibrant.wavelength = _wavelength*10**(-10)

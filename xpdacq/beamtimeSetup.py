@@ -43,6 +43,10 @@ def _start_beamtime(PI_last, saf_num, experimenters=[], *,
         os.chdir(glbl.home)
         print("INFO: to link newly created beamtime object to prun, "
               "please do `prun.beamtime = bt`")
+        # copy default Ni24.D to xpdUser/user_analysis
+        src = os.path.join(os.path.dirname(__file__), 'Ni24.D')
+        dst = os.path.join(glbl.usrAnalysis_dir, 'Ni24.D')
+        shutil.copy(src, dst)
         return bt
 
 
