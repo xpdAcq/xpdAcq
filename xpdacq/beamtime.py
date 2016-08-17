@@ -202,7 +202,17 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
 
     def register_scanplan(self, scanplan):
-        self.scanplans.append(scanplan)
+        sp_name_list = [el.short_summary() for el in self.scanplans]
+        # manage bt.list
+        if scanplan.short_summary() not in sp_name_list:
+            self.scanplans.append(scanplan)
+        else:
+            old_obj = [ obj for obj in self.scanplans
+                      if obj.short_summary() ==scanplan.short_summary()].pop()
+            old_obj_ind = self.scanplans.index(old_obj)
+            self.scanplans.remove(old_obj)
+            self.scanplans.insert(old_obj_ind, scanplan)
+        # yaml sync list
         self._referenced_by.extend([el for el in self.scanplans if el
                                     not in self._referenced_by])
 
@@ -223,7 +233,17 @@ class Beamtime(ValidatedDictLike, YamlDict):
     def register_sample(self, sample):
         # Notify this Beamtime about an Sample that should be re-synced
         # whenever the contents of the Beamtime are edited. 
-        self.samples.append(sample)
+        sa_name_list = [el.get('sa_name', None) for el in self.samples]
+        # manage bt.list
+        if sample.get('sa_name') not in sa_name_list:
+            self.samples.append(sample)
+        else:
+            old_obj = [ obj for obj in self.samples if obj.get('sa_name') ==
+                                                  sample.get('sa_name')].pop()
+            old_obj_ind = self.samples.index(old_obj)
+            self.samples.remove(old_obj)
+            self.samples.insert(old_obj_ind, sample)
+        # yaml sync list
         self._referenced_by.extend([el for el in self.samples if el
                                     not in self._referenced_by])
 
