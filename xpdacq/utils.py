@@ -230,6 +230,8 @@ class ExceltoYaml:
         for sa_md in self.sa_md_list:
             parsed_sa_md = {}
             for k, v in sa_md.items():
+                k = str(k)
+                v = str(v)
                 mapped_key = self.MAPPING.get(k, None)
                 # name field
                 if k in self.NAME_FIELD:
