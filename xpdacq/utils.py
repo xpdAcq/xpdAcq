@@ -183,6 +183,7 @@ def _copy_and_delete(f_name, src_full_path, dst_dir):
 class ExceltoYaml:
     # maintain in place
     NAME_FIELD= ['Collaborator']
+    COMMA_SEP_FIELD = ['cif name']
     SAMPLE_FIELD = ['Sample Info']
 
     # reference
@@ -232,18 +233,21 @@ class ExceltoYaml:
             for k, v in sa_md.items():
                 k = str(k)
                 v = str(v)
-                mapped_key = self.MAPPING.get(k, None)
+                #mapped_key = self.MAPPING.get(k, None) # no mapping
+
                 # name field
                 if k in self.NAME_FIELD:
-                    #print('Parsing name')
                     try:
-                        parsed_val = self._name_parser(v)
+                        parsed_val = self._comma_separate_parser(v)
+                        parsed_val = self._name_parser(parsed_val)
                         #print("successfully parsed name {} -> {}"
                         #      .format(v, parsed_val))
                     except ValueError:
                         parsed_val = v
                         #print('cant parsed {}'.format(v))
-                    parsed_sa_md.update({mapped_key:parsed_val})
+                    parsed_sa_md.setdefault({k:[]})
+                    name_val_list = parsed_sa_md.get(k)
+                    name_val_list.extend(parsed_val)
 
                 # special case
                 elif k in self.SAMPLE_FIELD:
@@ -307,34 +311,38 @@ class ExceltoYaml:
         return sa_md_list
 
 
-    def _name_parser(self, name_str):
-        """ parser for field specified names
+    def _comma_separate_parser(self, input_str):
+        """ parser for comma separated fields
 
         Parameters
         ----------
-        name_str : str
-            a string contains a series of <first_name  last_name> of a human.
-            Each human is separated by a comma.
+        input_str : str
+            a string contains a series of units that are separated by
+            commas.
 
         Returns
         -------
-        name_list : list
-            a list contains first and last names.
+        output_list : list
+            a list contains comma separated element parsed strings.
 
         Raises:
         -------
         ValueError
             if ',' is not specified between names
         """
-        name_list = []
-        persons = name_str.split(',')
-        for el in persons:
-            first, last = el.strip().split(' ')
-            name_list.append(first)
-            name_list.append(last)
+        element_list = input_str.split(',').strip()
+        return element_list
 
-        return name_list
+    def _name_parser(self, name_str):
+        """ assume a name string
 
+        Returns
+        -------
+        name_list : list
+            a list of strings in [<first_name>, <last_name>] form
+        """
+        name_list = name_str.split(' ')
+        return name_list # [first, last]
 
     def _phase_parser(self, phase_str):
         """ parser for filed with <chem formular>: <phase_amount>
