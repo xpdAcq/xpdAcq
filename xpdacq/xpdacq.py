@@ -259,8 +259,8 @@ def _insert_collection(collection_name, collection_obj, new_uid=None):
     ref_num = glbl._collection_ref_num
     glbl.collection_num = new_num
     if new_num - ref_num >=5:
-        print("yamlize obj, ref_num = {}, new_num = {}"
-              .format(ref_num, new_num))
+        #print("yamlize obj, ref_num = {}, new_num = {}"
+        #      .format(ref_num, new_num))
         glbl._collection_ref_num = new_num
         with open(os.path.join(glbl.usrAnalysis_dir,collection_name)+'.yaml', 'w') as f:
             yaml.dump(glbl.collection, f)
@@ -353,6 +353,12 @@ class CustomizedRunEngine(RunEngine):
         # The CustomizedRunEngine knows about a Beamtime object, and it
         # interprets integers for 'sample' as indexes into the Beamtime's
         # lists of Samples from all its Experiments.
+        if getattr(glbl, 'collection', None) is None:
+            raise RuntimeError("No collection has been linked to current "
+                               "experiment yet.\nPlease do\n"
+                               ">>> open_collection(<collection_name>)\n"
+                               "before you run any prun")
+
         if isinstance(sample, int):
             try:
                 sample = self.beamtime.samples[sample]
