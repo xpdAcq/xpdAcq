@@ -5,6 +5,7 @@ import yaml
 import inspect
 import datetime
 import numpy as np
+from itertools import count
 from collections import ChainMap
 from configparser import ConfigParser
 
@@ -213,6 +214,58 @@ def _inject_calibration_md(msg):
         msg.kwargs['sc_calibration_md'] = calibration_md
     return msg
 
+def open_collection(collection_name):
+    """ function to open a collection of your following scans
+
+        collection is a list of uid of your scans. Only one collection will 
+        be alive in collection environment. This set of uids will be
+        saved as a yaml file and desired operations can be applied later.
+
+        Parameters
+        ----------
+        collection_name : str
+            name of your collection, advised to have discernible name
+
+        Returns
+        -------
+        collection : list
+            attribute of glbl
+    """
+    print("INFO: open collection")
+    glbl._cnt = count()
+    glbl.collection_num = next(glbl._cnt)
+    glbl._collection_ref_num = 0
+    # get current object
+    collection = getattr(glbl, 'collection', None)
+    if collection is None:
+        glbl.collection = []
+    collection = list(glbl.collection)
+    # save current object
+    current_name = getattr(glbl, 'collection_name', None)
+    if current_name is not None:
+        with open(os.path.join(glbl.usrAnalysis_dir,current_name)+'.yaml', 'w') as f:
+            yaml.dump(collection, f)
+    # create new name
+    new_name = '_'.join([collection_name, str(uuid.uuid4())[:5]])
+    glbl.collection_name = new_name
+    # update collection
+    glbl.collection = []
+
+
+def _insert_collection(collection_name, collection_obj, new_uid=None):
+    print('Update collection')
+    collection_obj.extend(new_uid)
+    new_num = next(glbl._cnt)
+    ref_num = glbl._collection_ref_num
+    glbl.collection_num = new_num
+    if new_num - ref_num >=5:
+        print("yamlize obj, ref_num = {}, new_num = {}"
+              .format(ref_num, new_num))
+        glbl._collection_ref_num = new_num
+        with open(os.path.join(glbl.usrAnalysis_dir,collection_name)+'.yaml', 'w') as f:
+            yaml.dump(glbl.collection, f)
+
+
 
 class CustomizedRunEngine(RunEngine):
     def __init__(self, beamtime, *args, **kwargs):
@@ -346,5 +399,10 @@ class CustomizedRunEngine(RunEngine):
         super().__call__(plan, subs,
                          raise_if_interrupted=raise_if_interrupted,
                          **metadata_kw)
+
+        # insert collection
+        _insert_collection(glbl.collection_name, glbl.collection,
+                           self._run_start_uids)
+
         return self._run_start_uids
 
