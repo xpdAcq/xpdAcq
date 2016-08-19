@@ -86,8 +86,8 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     if detector is None:
         detector = Perkin()
     # scan
-    calibration_dict = {'sa_name':calibrant_name,
-                        'sa_composition':{calibrant_name :1}}
+    calibration_dict = {'sample_name':calibrant_name,
+                        'sample_composition':{calibrant_name :1}}
                         # simplified version of Sample object
     prun_uid = prun(calibration_dict, ScanPlan(bto, ct, exposure))
     light_header = glbl.db[prun_uid[-1]] # last one is always light

@@ -181,20 +181,21 @@ def _copy_and_delete(f_name, src_full_path, dst_dir):
 
 
 class ExceltoYaml:
-    # maintain in place
-    NAME_FIELD= ['Collaborator']
-    COMMA_SEP_FIELD = ['cif name']
-    SAMPLE_FIELD = ['Sample Info']
+    # maintain in place, aligned with spreadsheet header
+    NAME_FIELD= ['Collaborators', 'Sample Maker', 'Lead Experimenters',]
+    COMMA_SEP_FIELD = ['cif name', 'Tags']
+    SAMPLE_FIELD = ['Phase Info']
+    GEOMETRY_FIELD = ['Geometry']
 
-    # reference
-    MAPPING = {'composition_dict': 'sa_composition',
-               'phase_dict': 'sa_phase',
-               'Collaborator': 'ex_collaborator',
-               'Experiment Name': 'ex_name',
-               'Experiment Type' : 'ex_type',
-               'Geometry': 'ex_geometry',
-               'Structure Info': 'sa_structure_info'}
-
+    # real fields goes into metadata store
+    _NAME_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
+                          NAME_FIELD))
+    _COMMA_SEP_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
+                           COMMA_SEP_FIELD))
+    _SAMPLE_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
+                         SAMPLE_FIELD))
+    _GEOMETRY_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
+                         GEOMETRY_FIELD))
     def __init__(self):
         self.pd_dict = None
         self.sa_md_list = None
@@ -209,7 +210,8 @@ class ExceltoYaml:
                              "there is only one in {}"
                              .format(glbl.xpdconfig))
         self.pd_dict = pd.read_excel(os.path.join(glbl.xpdconfig,
-                                                  xl_f.pop()))
+                                                  xl_f.pop()),
+                                                  skiprows=0)
 
         self.sa_md_list = self._pd_dict_to_dict_list(self.pd_dict.to_dict())
 
@@ -231,59 +233,69 @@ class ExceltoYaml:
         for sa_md in self.sa_md_list:
             parsed_sa_md = {}
             for k, v in sa_md.items():
-                k = str(k)
+                k = str(k).lower()
                 v = str(v)
+                k = k.strip().replace(' ','_')
                 #mapped_key = self.MAPPING.get(k, None) # no mapping
 
-                # name field
-                if k in self.NAME_FIELD:
+                # name fields
+                if k in self._NAME_FIELD:
                     try:
-                        parsed_val = self._comma_separate_parser(v)
-                        parsed_val = self._name_parser(parsed_val)
+                        comma_sep_list = self._comma_separate_parser(v)
+                        parsed_name = []
+                        for el in comma_sep_list:
+                            parsed_name.extend(self._name_parser(el))
                         #print("successfully parsed name {} -> {}"
-                        #      .format(v, parsed_val))
+                        #      .format(v, parsed_name))
                     except ValueError:
-                        parsed_val = v
+                        parsed_name = v
                         #print('cant parsed {}'.format(v))
-                    parsed_sa_md.setdefault({k:[]})
-                    name_val_list = parsed_sa_md.get(k)
-                    name_val_list.extend(parsed_val)
+                    parsed_sa_md.setdefault(k, [])
+                    parsed_sa_md.get(k).extend(parsed_name)
 
-                # special case
-                elif k in self.SAMPLE_FIELD:
+                # sample fields
+                elif k in self._SAMPLE_FIELD:
                     try:
                         composition_dict, phase_dict = self._phase_parser(v)
                     except ValueError:
                         composition_dict = v
                         phase_dict = v
                     finally:
-                        parsed_sa_md.update({self.MAPPING['composition_dict']:
+                        parsed_sa_md.update({'sample_composition':
                                              composition_dict})
 
-                        parsed_sa_md.update({self.MAPPING['phase_dict']:
+                        parsed_sa_md.update({'sample_phase':
                                              phase_dict})
-                        # restructure sa_name
-                        v = v.replace(' ', '')
-                        v = v.replace(':','_')
-                        v = v.replace(',', '_')
-                        parsed_sa_md.update({'sa_name':v})
+
+                # comma separated fields
+                elif k in self._COMMA_SEP_FIELD:
+                    try:
+                        comma_sep_list = self._comma_separate_parser(v)
+                        #print("successfully parsed comma-sep-field {} -> {}"
+                        #      .format(v, comma_sep_list))
+                    except ValueError:
+                        comma_sep_list = v
+                    parsed_sa_md.setdefault(k, [])
+                    parsed_sa_md.get(k).extend(comma_sep_list)
 
                 # other fields dont need to be pased
                 else:
-                    #print('update {}->{}:{}'.format(k, mapped_key, v))
-                    if mapped_key is not None:
-                        parsed_sa_md.update({mapped_key:v.replace(' ','_')})
-                    else:
-                        parsed_sa_md.update({k:v.replace(' ', '_')})
+                    parsed_sa_md.update({k:v.replace(' ', '_')})
 
             parsed_sa_md_list.append(parsed_sa_md)
         self.parsed_sa_md_list = parsed_sa_md_list
 
+        # normal sample, just create
         for el in self.parsed_sa_md_list:
-            sa_name = el['sa_name']
             Sample(bt, el)
-            print("Sample object {} has been successfully imported"
-                  .format(sa_name))
+        # separate so that bkg is in the back
+        for el in self.parsed_sa_md_list:
+            bkg_name = el['geometry'] # bkg
+            bkg_dict = {'sample_name': 'bkg_'+bkg_name,
+                        'sample_composition': {bkg_name:1},
+                        'is_background': True}
+            Sample(bt, bkg_dict) # bk sample object, overwrite
+
         print("*** End of import Sample object ***")
 
     def _pd_dict_to_dict_list(self, pd_dict):
@@ -330,8 +342,9 @@ class ExceltoYaml:
         ValueError
             if ',' is not specified between names
         """
-        element_list = input_str.split(',').strip()
-        return element_list
+        element_list = input_str.split(',')
+        output_list = list(map(lambda x: x.strip(), element_list))
+        return output_list
 
     def _name_parser(self, name_str):
         """ assume a name string
@@ -397,7 +410,8 @@ class ExceltoYaml:
 excel_to_yaml = ExceltoYaml()
 
 def import_sample(saf_num, bt):
-    """ thing wrapper for ExceltoYaml class """
+    """ thin wrapper for ExceltoYaml class """
+    bt.samples = []
     excel_to_yaml.load(str(saf_num))
     excel_to_yaml.create_yaml(bt)
     return excel_to_yaml

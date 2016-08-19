@@ -233,13 +233,15 @@ class Beamtime(ValidatedDictLike, YamlDict):
     def register_sample(self, sample):
         # Notify this Beamtime about an Sample that should be re-synced
         # whenever the contents of the Beamtime are edited. 
-        sa_name_list = [el.get('sa_name', None) for el in self.samples]
+        sa_name_list = [el.get('sample_name', None) for el in self.samples]
         # manage bt.list
-        if sample.get('sa_name') not in sa_name_list:
+        if sample.get('sample_name') not in sa_name_list:
+            #print('!!! Got new sample !!!')
             self.samples.append(sample)
         else:
-            old_obj = [ obj for obj in self.samples if obj.get('sa_name') ==
-                                                  sample.get('sa_name')].pop()
+            #print('!!! Overwrite sample !!!')
+            old_obj = [ obj for obj in self.samples if obj.get('sample_name') ==
+                                                  sample.get('sample_name')].pop()
             old_obj_ind = self.samples.index(old_obj)
             self.samples.remove(old_obj)
             self.samples.insert(old_obj_ind, sample)
@@ -269,7 +271,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
                     ['{i}: {sp!r}'.format(i=i, sp=sp.short_summary())
                      for i, sp in enumerate(self.scanplans)] +
                     ['', 'Samples:'] +
-                    ['{i}: {sa_name}'.format(i=i, **s)
+                    ['{i}: {sample_name}'.format(i=i, **s)
                      for i, s in enumerate(self.samples)])
         return '\n'.join(contents)
 
@@ -279,21 +281,20 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
 
 class Sample(ValidatedDictLike, YamlChainMap):
-    _REQUIRED_FIELDS = ['sa_name', 'sa_composition']
+    #_REQUIRED_FIELDS = ['sa_name', 'sa_composition']
+    _REQUIRED_FIELDS = ['sample_name', 'sample_composition']
 
     def __init__(self, beamtime, sample_md, **kwargs):
-        composition = sample_md.get('sa_composition', None)
-        if not isinstance(composition, dict) or not composition:
-            print("WARNING: for the richeness of your"
-                  "metadata, please enter your sample "
-                  "composition information as a dictionary "
-                  "with elements and quantities")
+        composition = sample_md.get('sample_composition', None)
+        #print("composition of {} is {}".format(sample_md['sample_name'],
+        #                                       sample_md['sample_composition']))
         try:
             super().__init__(sample_md, beamtime) # ChainMap signature
         except:
             print("At least sample_name and sample_composition is needed.\n"
                   "For example\n"
-                  ">>> sample_md = {'sa_name':'Ni',sa_composition':{'Ni':1}\n"
+                  ">>> sample_md = {'sample_name':'Ni',"
+                                    "'composition_dict':{'Ni':1}\n"
                   ">>> Sample(bt, sample_md)\n")
             return
         self.setdefault('sa_uid', new_short_uid())
@@ -310,7 +311,7 @@ class Sample(ValidatedDictLike, YamlChainMap):
 
     def default_yaml_path(self):
         return os.path.join(glbl.yaml_dir, 'samples',
-                            '{sa_name}.yml').format(**self)
+                            '{sample_name}.yml').format(**self)
 
     @classmethod
     def from_yaml(cls, f, beamtime=None):
