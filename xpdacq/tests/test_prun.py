@@ -11,7 +11,8 @@ from xpdacq.beamtime import *
 from xpdacq.utils import import_sample
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
 from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
-                           _auto_load_calibration_file)
+                           _auto_load_calibration_file,
+                           open_collection)
 
 class PrunTest(unittest.TestCase):
 
@@ -169,3 +170,12 @@ class PrunTest(unittest.TestCase):
         self.assertTrue('sc_calibration_md' in open_run)
         self.assertEqual(open_run['sc_calibration_md'],
                          re_auto_calibration_md_dict)
+
+    def test_open_collection(self):
+        # no collection
+        self.assertRaise(RuntimeError, lambda: prun(0,0))
+        # collection num
+        open_collection('unittest')
+        self.aseertEqual(glbl.collection, [])
+        prun(0,0)
+        self.assertEqual(glbl.collection_num, 1)
