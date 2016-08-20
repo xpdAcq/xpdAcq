@@ -28,7 +28,7 @@ if bt is not None:
     prun.beamtime = bt
 
 # gonna seperate analysis from collection
-from xpdacq.analysis import *
+#from xpdacq.analysis import *
 
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
@@ -41,5 +41,7 @@ else:
     os.chdir(BASE_DIR)
 
 from xpdacq.calib import run_calibration
+# analysis functions
+from xpdan.data_reduction import *
 print('OK, ready to go.  To continue, follow the steps in the xpdAcq')
 print('documentation at http://xpdacq.github.io/xpdacq')
