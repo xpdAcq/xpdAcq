@@ -236,6 +236,7 @@ class ExceltoYaml:
                 k = str(k).lower()
                 v = str(v)
                 k = k.strip().replace(' ','_')
+                v = v.replace('/', '_') # yaml path
                 #mapped_key = self.MAPPING.get(k, None) # no mapping
 
                 # name fields
