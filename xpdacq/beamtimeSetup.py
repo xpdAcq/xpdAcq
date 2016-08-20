@@ -48,7 +48,7 @@ def _start_beamtime(PI_last, saf_num, experimenters=[], *,
         dst = os.path.join(glbl.usrAnalysis_dir, 'Ni24.D')
         shutil.copy(src, dst)
         # import sample
-        import_sample(saf_num, bt)
+        #import_sample(saf_num, bt)
         return bt
 
 
