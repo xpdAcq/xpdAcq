@@ -18,7 +18,7 @@ from .glbl import glbl
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 from .beamtime import *
-from .utils import _graceful_exit
+from .utils import _graceful_exit, import_sample
 
 def _start_beamtime(PI_last, saf_num, experimenters=[], *,
                     wavelength=None):
@@ -47,6 +47,8 @@ def _start_beamtime(PI_last, saf_num, experimenters=[], *,
         src = os.path.join(os.path.dirname(__file__), 'Ni24.D')
         dst = os.path.join(glbl.usrAnalysis_dir, 'Ni24.D')
         shutil.copy(src, dst)
+        # import sample
+        import_sample(saf_num, bt)
         return bt
 
 
