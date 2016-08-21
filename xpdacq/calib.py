@@ -1,6 +1,7 @@
 """ Script to perform pyFAI calibration in pure Python """
 import os
 import time
+import yaml
 import logging
 import datetime
 import numpy as np
@@ -10,6 +11,9 @@ import tifffile as tif
 
 from .glbl import glbl
 from .beamtime import ScanPlan, ct
+
+# Hot fix at beamline
+from databroker import get_images
 
 from pyFAI.gui_utils import update_fig
 from pyFAI.detectors import Perkin, Detector
@@ -62,6 +66,10 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     gaussian : int
         optional. gaussian width between rings, default is 100.
     """
+    # default params
+    interactive = True 
+    dist = 0.1
+
     _check_obj(_REQUIRED_OBJ_LIST)
     ips = get_ipython()
     bto = ips.ns_table['user_global']['bt']
@@ -92,9 +100,10 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     prun_uid = prun(calibration_dict, ScanPlan(bto, ct, exposure))
     light_header = glbl.db[prun_uid[-1]] # last one is always light
     dark_uid = light_header.start['sc_dk_field_uid']
-    dark_headr = glbl.db[dark_uid]
-    dark_img = np.asarray(glbl.get_images(dark_header,
-                          glbl.det_image_field)).squeeze()
+    dark_header = glbl.db[dark_uid]
+    # unknown signature of get_images
+    dark_img = np.asarray(get_images(dark_header, glbl.det_image_field)).squeeze()
+    #dark_img = np.asarray(glbl.get_images(dark_header, glbl.det_image_field)).squeeze()
     for ev in glbl.get_events(light_header, fill=True):
         img = ev['data'][glbl.det_image_field]
         img -= dark_img
@@ -111,7 +120,7 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     c.pointfile = w_name + ".npt"
     c.ai = AzimuthalIntegrator(dist=dist, detector=detector,
                                wavelength=calibrant.wavelength)
-    c.peakPicker = PeakPicker(img, reconst=reconstruct, mask=detector.mask,
+    c.peakPicker = PeakPicker(img, reconst=True, mask=detector.mask,
                               pointfile=c.pointfile, calibrant=calibrant,
                               wavelength=calibrant.wavelength)
                               #method=method)
@@ -128,11 +137,13 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     c.ai.wavelength = c.geoRef.wavelength
     # update untile next time
     glbl.calib_config_dict = c.ai.getPyFAI()
+    Fit2D_dict = c.ai.getFit2D()
+    glbl.calib_config_dict.update(Fit2D_dict)
     glbl.calib_config_dict.update({'file_name':basename})
     glbl.calib_config_dict.update({'time':timestr})
     # write yaml
     yaml_name = glbl.calib_config_name
     with open(os.path.join(glbl.config_base, yaml_name),'w') as f:
-        yaml.dump(glbl.pyFAI_params, f)
+        yaml.dump(glbl.calib_config_dict, f)
 
     return c.ai
