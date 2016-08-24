@@ -209,5 +209,7 @@ class Glbl:
         self.area_det.cam.acquire.put(1)
         print("INFO: area detector has been configured to new"
               " exposure_time = {}s".format(val))
+        self._frame_acq_time = val
+
 
 glbl = Glbl()

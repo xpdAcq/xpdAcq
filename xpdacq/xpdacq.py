@@ -189,19 +189,21 @@ def _auto_load_calibration_file():
         print("INFO: No calibration file found in config_base. "
               "Scan will still keep going on")
         return
-    config_dict = glbl.calib_config_dict
+    #config_dict = glbl.calib_config_dict
+    config_dict = getattr(glbl, 'calib_config_dict', None)
     # prviate test: equality
     with open(calib_yaml_name) as f:
         yaml_reload_dict = yaml.load(f)
     if config_dict != yaml_reload_dict:
         config_dict = yaml_reload_dict
-        # trust file-based dict, in case user change it
+    # trust file-based dict, in case user change it
     print("INFO: This scan will append calibration parameters "
           "recorded in {}".format(config_dict['file_name']))
     return config_dict
 
 
 def _inject_qualified_dark_frame_uid(msg):
+    #print('!!!! INJECT dark uid !!!')
     if msg.command == 'open_run' and msg.kwargs.get('dark_frame') != True:
         dark_uid = _validate_dark(glbl.dk_window)
         msg.kwargs['sc_dk_field_uid'] = dark_uid
