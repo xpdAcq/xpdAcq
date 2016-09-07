@@ -37,6 +37,7 @@ class PrunTest(unittest.TestCase):
         self.sp = ScanPlan(self.bt, ct, 5)
         glbl.shutter_control = False
         self.prun = CustomizedRunEngine(self.bt)
+        open_collection('unittest')
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -173,9 +174,10 @@ class PrunTest(unittest.TestCase):
 
     def test_open_collection(self):
         # no collection
-        self.assertRaise(RuntimeError, lambda: prun(0,0))
-        # collection num
-        open_collection('unittest')
-        self.aseertEqual(glbl.collection, [])
-        prun(0,0)
+        delattr(glbl,'collection')
+        self.assertRaises(RuntimeError, lambda: self.prun(0,0))
+        # test collection num
+        open_collection('unittest_collection')
+        self.assertEqual(glbl.collection, [])
+        self.prun(0,0)
         self.assertEqual(glbl.collection_num, 1)

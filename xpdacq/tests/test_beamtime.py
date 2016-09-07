@@ -5,7 +5,8 @@ import unittest
 from mock import MagicMock
 
 from xpdacq.glbl import glbl
-from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime, load_beamtime)
+from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
+                                  load_beamtime)
 from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
 from xpdacq.utils import import_sample
@@ -53,13 +54,6 @@ class BeamtimeObjTest(unittest.TestCase):
         # test Msg processed
         self.assertEqual(str(sp1),str(sp2))
 
-
-    @unittest.skip
-    def test_run_scanplan(self):
-        sp = ScanPlan(ct, 1)
-        prun({}, sp)
-
-
     def test_ct_scanplan_autoname(self):
         sp = ScanPlan(self.bt, ct, 1)
         #std_f_name = 'ct_1_None.yml' #py3.4 only gets args
@@ -96,7 +90,7 @@ class BeamtimeObjTest(unittest.TestCase):
         reload_scanplan = ScanPlan.from_yaml(sp.to_yaml())
         other_sp = ScanPlan(self.bt, ct, 5)
         self.assertFalse(sp == other_sp)
-        #self.assertTrue(sp == reload_scanplan)
+        self.assertTrue(sp == reload_scanplan)
 
     def test_beamtime_roundtrip(self):
         # This includes checking that a new uid is only generated once
@@ -108,7 +102,7 @@ class BeamtimeObjTest(unittest.TestCase):
 
 
     def test_sample_roundtrip(self):
-        sa_dict = {'sa_name':'Ni', 'sa_composition':{'Ni':1}}
+        sa_dict = {'sample_name':'Ni', 'sample_composition':{'Ni':1}}
         bt = Beamtime('Simon', '123', [], wavelength=0.1828)
         sam = Sample(bt, sa_dict)
         reloaded_sam = Sample.from_yaml(sam.to_yaml())
@@ -234,7 +228,7 @@ class BeamtimeObjTest(unittest.TestCase):
     def test_chaining(self):
         "All contents of Beamtime and Experiment should propagate into Sample."
         bt =  Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
-        sa_dict = {'sa_name':'Ni', 'sa_composition':{'Ni':1}}
+        sa_dict = {'sample_name':'Ni', 'sample_composition':{'Ni':1}}
         sa = Sample(bt, sa_dict, custom3='C')
         for k, v in bt.items():
             sa[k] == bt[k]
@@ -242,7 +236,7 @@ class BeamtimeObjTest(unittest.TestCase):
 
     def test_load_beamtime(self):
         bt =  Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
-        sa_dict = {'sa_name':'Ni', 'sa_composition':{'Ni':1}}
+        sa_dict = {'sample_name':'Ni', 'sample_composition':{'Ni':1}}
         sa = Sample(bt, sa_dict, custom3='C')
 
         bt2 = load_beamtime()

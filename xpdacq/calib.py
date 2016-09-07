@@ -13,7 +13,8 @@ from .glbl import glbl
 from .beamtime import ScanPlan, ct
 
 # Hot fix at beamline
-from databroker import get_images
+if not glbl._is_simulation:
+    from databroker import get_images
 
 from pyFAI.gui_utils import update_fig
 from pyFAI.detectors import Perkin, Detector
