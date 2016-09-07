@@ -206,8 +206,8 @@ def _load_bt_info(bt_obj, required_fields):
         #print('loaded bt info = {}'.format(dict(bt_obj)))
         bt_info = bt_obj.get(el)
         if bt_info is None:
-            print("WARNING: required beamtime information {} doesn't exit."
-                  "User might have edited it during experiment."
+            print("WARNING: required beamtime information {} doesn't exist. "
+                  "User might have edited it during experiment. "
                   "Please contact user for further inforamtion".format(el))
             sys.exit()
         bt_info_list.append(_clean_info(bt_info))
