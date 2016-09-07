@@ -10,7 +10,6 @@ import numpy as np
 from bluesky import RunEngine
 from bluesky.utils import normalize_subs_input
 from bluesky.callbacks import LiveTable
-#from bluesky.callbacks.broker import verify_files_saved
 
 from .glbl import glbl
 from .yamldict import YamlDict, YamlChainMap
@@ -94,6 +93,7 @@ def ct(dets, exposure, *, md=None):
     plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
     yield from plan
 
+
 def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
     pe1c, = dets
     if md is None:
@@ -121,6 +121,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
     plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det, glbl.temp_controller]))
     yield from plan
 
+
 def tseries(dets, exposure, delay, num, *, md = None):
     pe1c, = dets
     if md is None:
@@ -147,8 +148,10 @@ def tseries(dets, exposure, delay, num, *, md = None):
     plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
     yield from plan
 
+
 def _nstep(start, stop, step_size):
-    ''' return (start, stop, nsteps)'''
+    ''' helper function to compute number of steps and step_size
+    '''
     requested_nsteps = abs((start - stop) / step_size)
 
     computed_nsteps = int(requested_nsteps)+1 # round down for finer step size
@@ -199,7 +202,6 @@ class Beamtime(ValidatedDictLike, YamlDict):
     def wavelength(self, val):
         self._wavelength = val
         self.update(bt_wavelength=val)
-
 
     def register_scanplan(self, scanplan):
         sp_name_list = [el.short_summary() for el in self.scanplans]
