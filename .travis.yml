@@ -81,6 +81,6 @@ script:
       source ~/ci_scripts/make-docs.sh
     fi
 
-after_success:
+after_script:
   - codecov
   - coveralls
