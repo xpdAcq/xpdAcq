@@ -84,12 +84,3 @@ script:
 after_success:
   - codecov
   - coveralls
-#  - |
-    if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_REPO_SLUG == 'NSLS-II/bluesky' && $BUILD_DOCS == true && $TRAVIS_BRANCH == 'master' ]]; then
-      echo "Adding encrypted deployment key for uploading docs"
-      openssl aes-256-cbc -K $encrypted_5e70d93e51c3_key -iv $encrypted_5e70d93e51c3_iv -in bluesky-docs-deploy.enc -out bluesky-docs-deploy -d
-      eval `ssh-agent -s`
-      chmod 600 bluesky-docs-deploy
-      ssh-add bluesky-docs-deploy
-      source ~/ci_scripts/push-docs.sh
-    fi
