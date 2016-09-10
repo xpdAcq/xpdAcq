@@ -36,7 +36,7 @@ def _check_obj(required_obj_list):
     ips = get_ipython()
     for obj_str in required_obj_list:
         if not ips.ns_table['user_global'].get(obj_str, None):
-            raise NameError("Required object {} doesn't exit in"
+            raise NameError("Required object {} doesn't exist in"
                             "namespace".format(obj_str))
     return
 
@@ -68,7 +68,7 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
         optional. gaussian width between rings, default is 100.
     """
     # default params
-    interactive = True 
+    interactive = True
     dist = 0.1
 
     _check_obj(_REQUIRED_OBJ_LIST)
@@ -96,8 +96,9 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
         detector = Perkin()
     # scan
     calibration_dict = {'sample_name':calibrant_name,
-                        'sample_composition':{calibrant_name :1}}
-                        # simplified version of Sample object
+                        'sample_composition':{calibrant_name :1},
+                        'is_calibration': True}
+                         # simplified version of Sample object
     prun_uid = prun(calibration_dict, ScanPlan(bto, ct, exposure))
     light_header = glbl.db[prun_uid[-1]] # last one is always light
     dark_uid = light_header.start['sc_dk_field_uid']
@@ -136,12 +137,13 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     c.gui_peakPicker()
     c.ai.setPyFAI(**c.geoRef.getPyFAI())
     c.ai.wavelength = c.geoRef.wavelength
-    # update untile next time
+    # update until next time
     glbl.calib_config_dict = c.ai.getPyFAI()
     Fit2D_dict = c.ai.getFit2D()
     glbl.calib_config_dict.update(Fit2D_dict)
     glbl.calib_config_dict.update({'file_name':basename})
     glbl.calib_config_dict.update({'time':timestr})
+    glbl.calib_config_dict.update({'calibration_uid':prun_uid[-1]})
     # write yaml
     yaml_name = glbl.calib_config_name
     with open(os.path.join(glbl.config_base, yaml_name),'w') as f:
