@@ -14,7 +14,6 @@ import bluesky.plans as bp
 from bluesky import RunEngine
 from bluesky.utils import normalize_subs_input
 from bluesky.suspenders import SuspendFloor
-from bluesky.register_mds import register_mds
 
 from .glbl import glbl
 from .yamldict import YamlDict, YamlChainMap
@@ -342,9 +341,10 @@ class CustomizedRunEngine(RunEngine):
                                         resume_thresh = glbl.ring_current.get()*0.9,
                                         sleep = 1200)
             glbl.suspender = beamdump_sus
+            #FIXME : print info for user
             #self.install_suspender(beamdump_sus)
-            print("INFO: beam dump suspender has been activated."
-                  "To check, type prun.suspenders")
+            #print("INFO: beam dump suspender has been created."
+            #      "To check, type prun.suspenders")
         else:
             #print('set suspender method has been called') # debug line
             pass
