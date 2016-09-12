@@ -324,6 +324,8 @@ class Beamtime(ValidatedDictLike, YamlDict):
             self.scanplans.insert(old_obj_ind, scanplan)
         # yaml sync list
         # simply append object to list to increase speed
+        #self._referenced_by.extend([el for el in self.scanplans if el
+        #                            not in self._referenced_by])
         self._referenced_by.append(scanplan)
 
     @property
@@ -357,6 +359,8 @@ class Beamtime(ValidatedDictLike, YamlDict):
         # yaml sync list
         # simply append object to list to increase speed
         # filtering logic is handle when importing sample
+        #self._referenced_by.extend([el for el in self.samples if el
+        #                            not in self._referenced_by])
         self._referenced_by.append(sample)
 
     @classmethod
