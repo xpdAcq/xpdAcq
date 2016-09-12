@@ -14,7 +14,7 @@ import bluesky.examples as be
 # define simulated PE1C
 class SimulatedPE1C(be.Reader):
     "Subclass the bluesky plain detector examples ('Reader'); add attributes."
-    def __init__(self, name, fields):
+    def __init__(self, name, read_fields):
         self.images_per_set = MagicMock()
         self.images_per_set.get = MagicMock(return_value=5)
         self.number_of_sets = MagicMock()
@@ -26,7 +26,7 @@ class SimulatedPE1C(be.Reader):
         self.cam.acquire_time.get = MagicMock(return_value=0.1)
         self._staged = False
 
-        super().__init__(name, fields)
+        super().__init__(name, read_fields)
 
         self.ready = True  # work around a hack in Reader
 
@@ -38,13 +38,6 @@ class SimulatedPE1C(be.Reader):
 
     def unstage(self):
         self._staged = False
-
-
-def setup_module():
-    glbl.pe1c = SimulatedPE1C('pe1c', ['pe1c'])
-    glbl.shutter = motor  # this passes as a fake shutter
-    glbl.frame_acq_time = 0.1
-    glbl._dark_dict_list = []
 
 
 # better to get this from a config file in the fullness of time
@@ -183,7 +176,7 @@ class Glbl:
         get_images = MagicMock()
         verify_files_saved = MagicMock()
         # mock collection objects
-        area_det = SimulatedPE1C('pe1c', ['pe1c'])
+        area_det = SimulatedPE1C('pe1c', {'intensity': lambda: 5})
         temp_controller = be.motor
         shutter = MagicMock()
         ring_current = MagicMock()
