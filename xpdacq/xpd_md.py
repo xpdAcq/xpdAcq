@@ -35,7 +35,7 @@ class Beamtime(object):
         self.set_beamtime(safN, experimenters, update)
 
     def set_beamtime(self, safN_val, experimenters_val, update = False):
-
+        pass
 
     def show_beamtime(self):
         full_info = self.__dict__

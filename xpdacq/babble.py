@@ -1,31 +1,32 @@
 class XPDSTATE:
-      def __init__(self, dirpath):
-           self._cur_beamtime = {}
-           self._cur_sample = {}
-           self._cur_scan = {}
-           self._cur_exposure = {}
-           self._done_measurements = []
+    def __init__(self, dirpath):
+       self._cur_beamtime = {}
+       self._cur_sample = {}
+       self._cur_scan = {}
+       self._cur_exposure = {}
+       self._done_measurements = []
+       pass
 
-       def start_beamtime(self, pi_last, ):
-           pass
+    def start_beamtime(self, pi_last, ):
+       pass
 
-       def change_sample(self, sample_details):
-           pass
+    def change_sample(self, sample_details):
+       pass
 
-       def export_for_BS(self):
-           out = dict()
-           out.update(self._cur_beamtime)
-           out.update(self._cur_exposure)
+    def export_for_BS(self):
+       out = dict()
+       out.update(self._cur_beamtime)
+       out.update(self._cur_exposure)
 
-       def export_to_yaml(self):
-           pass
+    def export_to_yaml(self):
+       pass
 
-       @classmethod
-       def from_yaml(cls, fname):
-           new_state = cls()
-           with fopen(fname) as f:
-               for k, v in yaml.read(f):
-                   pass
+    @classmethod
+    def from_yaml(cls, fname):
+       new_state = cls()
+       with fopen(fname) as f:
+           for k, v in yaml.read(f):
+               pass
 
 
 
