@@ -9,8 +9,10 @@ import bluesky.examples as be
 
 # define simulated PE1C
 class SimulatedPE1C(be.Reader):
-    """Subclass the bluesky plain detector examples ('Reader'); add attributes."""
-
+    """
+    Subclass the bluesky plain detector examples ('Reader');
+    add attributes.
+    """
     def __init__(self, name, read_fields):
         self.images_per_set = MagicMock()
         self.images_per_set.get = MagicMock(return_value=5)
