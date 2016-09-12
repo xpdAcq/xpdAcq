@@ -321,8 +321,9 @@ class Beamtime(ValidatedDictLike, YamlDict):
             self.scanplans.remove(old_obj)
             self.scanplans.insert(old_obj_ind, scanplan)
         # yaml sync list
-        self._referenced_by.extend([el for el in self.scanplans if el
-                                    not in self._referenced_by])
+        #self._referenced_by.extend([el for el in self.scanplans if el
+        #                            not in self._referenced_by])
+        self._referenced_by.append(scanplan)
 
     @property
     def md(self):
@@ -355,8 +356,9 @@ class Beamtime(ValidatedDictLike, YamlDict):
             self.samples.remove(old_obj)
             self.samples.insert(old_obj_ind, sample)
         # yaml sync list
-        self._referenced_by.extend([el for el in self.samples if el
-                                    not in self._referenced_by])
+        #self._referenced_by.extend([el for el in self.samples if el
+        #                            not in self._referenced_by])
+        self._referenced_by.append(sample)
 
     @classmethod
     def from_yaml(cls, f):

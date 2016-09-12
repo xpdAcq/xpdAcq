@@ -314,8 +314,8 @@ class ExceltoYaml:
         for el in self.parsed_sa_md_list:
             Sample(bt, el)
         # separate so that bkg is in the back
-        for el in self.parsed_sa_md_list:
-            bkg_name = el['geometry']  # bkg
+        bkg_name_list = [el['geometry'] for el in self.parsed_sa_md_list]
+        for bkg_name in set(bkg_name_list):
             bkg_dict = {'sample_name': 'bkg_' + bkg_name,
                         'sample_composition': {bkg_name: 1},
                         'is_background': True}
@@ -451,6 +451,9 @@ def import_sample(saf_num, bt):
         beamtime object that is going to be linked with these samples
     """
     bt.samples = []
+    ## !! test needs to be carefull !!! ##
+    bt._referenced_by = []
+    ##
     excel_to_yaml.load(str(saf_num))
     excel_to_yaml.create_yaml(bt)
     return excel_to_yaml
