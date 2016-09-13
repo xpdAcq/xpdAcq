@@ -77,6 +77,25 @@ def _configure_pe1c(exposure):
 
 
 def ct(dets, exposure, *, md=None):
+    """
+    Take one reading from area detectors with given exposure time
+
+    Parameters
+    ----------
+    detectors : list
+        list of 'readable' objects
+    exposure : float
+        total time of exposrue in seconds
+    md : dict, optional
+        extra metadata
+
+    Note
+    ----
+    area detector that is triggered will always be the one configured in
+    global state. Please refer to http://xpdacq.github.io for more information
+
+    """
+
     pe1c, = dets
     if md is None:
         md = {}
@@ -98,6 +117,33 @@ def ct(dets, exposure, *, md=None):
 
 
 def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
+    """
+    Scan over temeprature controller in steps.
+
+    temeprature steps are defined by starting point, stoping point and step size
+
+    Parameters
+    ----------
+    detectors : list
+        list of 'readable' objects
+    exposure : float
+        exposure time at each temeprature step in seconds
+    Tstart : float
+        starting point of temperature sequence
+    Tstop : float
+        stoping point of temperature sequence
+    Tstep : float
+        step size between Tstart and Tstop of this sequence
+    md : dict, optional
+        extra metadata
+
+    Note
+    ----
+    temeprature controller that is driven will always be the one configured in
+    global state. Please refer to http://xpdacq.github.io for more information
+
+    """
+
     pe1c, = dets
     if md is None:
         md = {}
@@ -128,6 +174,28 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
 
 
 def tseries(dets, exposure, delay, num, *, md=None):
+    """
+    time series scan with area detector.
+
+    Parameters
+    ----------
+    detectors : list
+        list of 'readable' objects
+    exposure : float
+        exposure time at each reading from area detector in seconds
+    delay : float
+        delay between two adjustant reading from area detector in seconds
+    num : int
+        total number of readings
+    md : dict, optional
+        metadata
+
+    Note
+    ----
+    area detector that is triggered will always be the one configured in
+    global state. Please refer to http://xpdacq.github.io for more information
+    """
+
     pe1c, = dets
     if md is None:
         md = {}
@@ -183,6 +251,24 @@ def _clean_info(obj):
 
 
 class Beamtime(ValidatedDictLike, YamlDict):
+    """ class that carries necessary information for a beamtime
+
+    Parameters
+    ----------
+    pi_last : str
+        last name of PI to this beamtime.
+    saf_num : int
+        Safty Approval Form number to current beamtime.
+    experimenters : list, optional
+        list of experimenter names. Each of experimenter name is
+        expected to be comma separated as `first_name', `last_name`.
+    wavelength : float, optional
+        wavelength of current beamtime, in angstrom.
+    kwargs :
+        extra keyword arguments for current beamtime.
+
+    """
+
     _REQUIRED_FIELDS = ['bt_piLast', 'bt_safN']
 
     def __init__(self, pi_last, saf_num, experimenters=[], *,
@@ -201,6 +287,8 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     @property
     def wavelength(self):
+        """ wavelength value of current beamtime. updated value will be
+        passed down to all related objects"""
         return self._wavelength
 
     @wavelength.setter
@@ -225,6 +313,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     @property
     def md(self):
+        """ metadata of current object """
         return dict(self)
 
     def validate(self):
@@ -239,7 +328,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     def register_sample(self, sample):
         # Notify this Beamtime about an Sample that should be re-synced
-        # whenever the contents of the Beamtime are edited. 
+        # whenever the contents of the Beamtime are edited.
         sa_name_list = [el.get('sample_name', None) for el in self.samples]
         # manage bt.list
         if sample.get('sample_name') not in sa_name_list:
@@ -283,12 +372,27 @@ class Beamtime(ValidatedDictLike, YamlDict):
         return '\n'.join(contents)
 
     def list(self):
+        """ method to list out all ScanPlan and Sample objects related
+        to this Beamtime object
+        """
         # for back-compat
         print(self)
 
 
 class Sample(ValidatedDictLike, YamlChainMap):
-    # _REQUIRED_FIELDS = ['sa_name', 'sa_composition']
+    """
+    class that carries sample-related metadata
+
+    Parameters
+    ----------
+    beamtime : xpdacq.beamtime.Beamtime
+        object representing current beamtime
+    sample_md : dict
+        dictionary contains all sample related metadata
+    kwargs :
+        keyword arguments for extr metadata
+    """
+
     _REQUIRED_FIELDS = ['sample_name', 'sample_composition']
 
     def __init__(self, beamtime, sample_md, **kwargs):
@@ -309,6 +413,7 @@ class Sample(ValidatedDictLike, YamlChainMap):
 
     @property
     def md(self):
+        """ metadata for current object """
         return dict(self)
 
     def validate(self):
@@ -339,6 +444,31 @@ class Sample(ValidatedDictLike, YamlChainMap):
 
 
 class ScanPlan(ValidatedDictLike, YamlChainMap):
+    """ class that carries scan plan with corresponding experimental arguements
+
+    Parameters
+    ----------
+    beamtime : xpdacq.beamtime.Beamtime
+        object representing current beamtime.
+    plan_func :
+        predefined plan function. For complete list of available functions,
+        please refere to http://xpdacq.github.io for more information.
+    args :
+        positional arguments corresponding to plan function in used.
+    kwargs :
+        keyword arguments corresponding to plan function in used.
+
+    Examples
+    --------
+    A `ct` (count) scan with 5s exposure time linked to Beamtime object `bt`.
+    >>> ScanPlan(bt, ct, 5)
+
+    `ScanPlan` class also takes keyword arguments.
+    >>> ScanPlan(bt, ct, exposure=5)
+
+    Please refer to http://xpdacq.github.io for more examples.
+    """
+
     def __init__(self, beamtime, plan_func, *args, **kwargs):
         self.plan_func = plan_func
         plan_name = plan_func.__name__
@@ -353,14 +483,16 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
 
     @property
     def md(self):
+        """ metadata for current object """
         open_run, = [msg for msg in self.factory() if
                      msg.command == 'open_run']
         return open_run.kwargs
 
     @property
     def bound_arguments(self):
+        """ bound arguments of this ScanPlan object """
         signature = inspect.signature(self.plan_func)
-        # empty list is for [pe1c]  
+        # empty list is for [pe1c]
         bound_arguments = signature.bind([], *self['sp_args'],
                                          **self['sp_kwargs'])
         # bound_arguments.apply_defaults() # only valid in py 3.5
