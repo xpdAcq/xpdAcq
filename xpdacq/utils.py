@@ -10,7 +10,6 @@ import pandas as pd
 from .glbl import glbl
 from .beamtime import Sample, ScanPlan
 
-
 def _graceful_exit(error_message):
     try:
         raise RuntimeError(error_message)
