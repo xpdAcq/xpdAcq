@@ -8,7 +8,7 @@ from shutil import ReadError
 import pandas as pd
 
 from .glbl import glbl
-from .beamtime import Sample
+from .beamtime import Sample, ScanPlan
 
 
 def _graceful_exit(error_message):
@@ -451,8 +451,9 @@ def import_sample(saf_num, bt):
         beamtime object that is going to be linked with these samples
     """
     bt.samples = []
-    ## !! test needs to be carefull !!! ##
-    bt._referenced_by = []
+    ## !! this test needs to be treated carefully !!! ##
+    sp_ref = [el for el in bt._referenced_by if isinstance(el, ScanPlan)]
+    bt._referenced_by = sp_ref
     ##
     excel_to_yaml.load(str(saf_num))
     excel_to_yaml.create_yaml(bt)
