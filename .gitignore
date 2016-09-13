@@ -57,3 +57,6 @@ doc/_build/
 
 # PyBuilder
 target/
+
+# charm
+.idea/
