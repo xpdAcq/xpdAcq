@@ -263,6 +263,23 @@ class Beamtime(ValidatedDictLike, YamlDict):
     kwargs :
         extra keyword arguments for current beamtime.
 
+    Examples
+    --------
+    Inspect avaiable samples, plans.
+    >>> print(bt)
+    ScanPlans:
+    0: (...summary of scanplan...)
+
+    Samples:
+    0: (...name of sample...)
+
+    or equivalently
+    >>> bt.list()
+    ScanPlans:
+    0: (...summary of scanplan...)
+
+    Samples:
+    0: (...name of sample...)
     """
 
     _REQUIRED_FIELDS = ['bt_piLast', 'bt_safN']
