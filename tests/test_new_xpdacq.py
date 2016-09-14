@@ -80,7 +80,7 @@ def test_sample_roundtrip():
 
 
 def test_yaml_sync():
-    "Updating the object immediately, automatically updates the file."
+    """Updating the object immediately, automatically updates the file."""
 
     # Adding a field syncs
     bt = Beamtime('Simon', 123)
@@ -150,7 +150,7 @@ def test_yaml_sync():
 
 
 def test_yaml_sync_between_objects():
-    "Updating a Beamtime updates Experiment(s) and Sample(s) that refer to it"
+    """Updating a Beamtime updates Experiment(s) and Sample(s) that refer to it"""
     bt = Beamtime('Simon', 123)
     ex = Experiment('test-experiment', bt)
     sam = Sample('test-sample', ex, composition='vapor')
@@ -168,7 +168,7 @@ def test_yaml_sync_between_objects():
 
 
 def test_chaining():
-    "All contents of Beamtime and Experiment should propagate into Sample."
+    """All contents of Beamtime and Experiment should propagate into Sample."""
     bt = Beamtime('Simon', 123, custom1='A')
     ex = Experiment('test-experiment', bt, custom2='B')
     sam = Sample('test-sample', ex, composition='vapor', custom3='C')

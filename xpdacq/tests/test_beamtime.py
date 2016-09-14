@@ -12,20 +12,20 @@ from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
 from xpdacq.utils import import_sample
 from bluesky.examples import motor, det, Reader
 
+
 # print messages for debugging
-#prun.msg_hook = print
+# prun.msg_hook = print
 
 class BeamtimeObjTest(unittest.TestCase):
-
     def setUp(self):
         self.base_dir = glbl.base
-        self.home_dir = os.path.join(self.base_dir,'xpdUser')
-        self.config_dir = os.path.join(self.base_dir,'xpdConfig')
+        self.home_dir = os.path.join(self.base_dir, 'xpdUser')
+        self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
         self.PI_name = 'Billinge '
-        self.saf_num = 30079   # must be 30079 for proper load of config yaml => don't change
+        self.saf_num = 30079  # must be 30079 for proper load of config yaml => don't change
         self.wavelength = 0.1812
-        self.experimenters = [('van der Banerjee','S0ham',1),
-                              ('Terban ',' Max',2)]
+        self.experimenters = [('van der Banerjee', 'S0ham', 1),
+                              ('Terban ', ' Max', 2)]
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
@@ -40,11 +40,10 @@ class BeamtimeObjTest(unittest.TestCase):
         os.chdir(self.base_dir)
         if os.path.isdir(self.home_dir):
             shutil.rmtree(self.home_dir)
-        if os.path.isdir(os.path.join(self.base_dir,'xpdConfig')):
-            shutil.rmtree(os.path.join(self.base_dir,'xpdConfig'))
-        if os.path.isdir(os.path.join(self.base_dir,'pe2_data')):
-            shutil.rmtree(os.path.join(self.base_dir,'pe2_data'))
-
+        if os.path.isdir(os.path.join(self.base_dir, 'xpdConfig')):
+            shutil.rmtree(os.path.join(self.base_dir, 'xpdConfig'))
+        if os.path.isdir(os.path.join(self.base_dir, 'pe2_data')):
+            shutil.rmtree(os.path.join(self.base_dir, 'pe2_data'))
 
     def test_print_scanplan(self):
         # using positional args
@@ -52,12 +51,12 @@ class BeamtimeObjTest(unittest.TestCase):
         # using kwargs is equivalent
         sp2 = ScanPlan(self.bt, ct, exposure=1)
         # test Msg processed
-        self.assertEqual(str(sp1),str(sp2))
+        self.assertEqual(str(sp1), str(sp2))
 
     def test_ct_scanplan_autoname(self):
         sp = ScanPlan(self.bt, ct, 1)
-        #std_f_name = 'ct_1_None.yml' #py3.4 only gets args
-        std_f_name = 'ct_1.yml' #py3.4 only gets args
+        # std_f_name = 'ct_1_None.yml' #py3.4 only gets args
+        std_f_name = 'ct_1.yml'  # py3.4 only gets args
         yaml_name = os.path.basename(sp.default_yaml_path())
         self.assertEqual(yaml_name, std_f_name)
 
@@ -69,19 +68,19 @@ class BeamtimeObjTest(unittest.TestCase):
         self.assertTrue('sp_uid' in sp_md)
         self.assertTrue(1 in sp_md['sp_args'])
         # scanplan knows bt
-        for k,v in dict(self.bt).items():
-            self.assertEqual(sp_md[k],v)
+        for k, v in dict(self.bt).items():
+            self.assertEqual(sp_md[k], v)
 
     def test_scanplan_yamlize(self):
         sp = ScanPlan(self.bt, ct, 1)
         # bound arguments
-        #expected_bound_args = {'exposure': 1, 'md': None} 
-        expected_bound_args = {'exposure': 1} #py3.4 only get args
+        # expected_bound_args = {'exposure': 1, 'md': None}
+        expected_bound_args = {'exposure': 1}  # py3.4 only get args
         self.assertEqual(dict(sp.bound_arguments),
                          expected_bound_args)
         # reload
         reload_dict = yaml.load(sp.to_yaml())
-        self.assertEqual(len(reload_dict), 2) # bt and sp
+        self.assertEqual(len(reload_dict), 2)  # bt and sp
         ## contents of chainmap
         self.assertEqual(reload_dict[0], sp.maps[0])
         self.assertEqual(reload_dict[1], sp.maps[1])
@@ -100,9 +99,8 @@ class BeamtimeObjTest(unittest.TestCase):
         os.remove(bt.filepath)
         self.assertEqual(reloaded_bt, bt)
 
-
     def test_sample_roundtrip(self):
-        sa_dict = {'sample_name':'Ni', 'sample_composition':{'Ni':1}}
+        sa_dict = {'sample_name': 'Ni', 'sample_composition': {'Ni': 1}}
         bt = Beamtime('Simon', '123', [], wavelength=0.1828)
         sam = Sample(bt, sa_dict)
         reloaded_sam = Sample.from_yaml(sam.to_yaml())
@@ -110,30 +108,29 @@ class BeamtimeObjTest(unittest.TestCase):
         os.remove(sam.filepath)
         self.assertEqual(reloaded_sam, sam)
 
-
     def test_scanplan_roundtrip(self):
         bt = Beamtime('Simon', '123', [], wavelength=0.1828)
         sp = ScanPlan(self.bt, ct, 1)
         reload_sp = ScanPlan.from_yaml(sp.to_yaml())
         self.assertEqual(reload_sp, sp)
-        #reload_scanplan = ScanPlan.from_yaml(sp.to_yaml())
-        #print('reload scanplan = {}'
+        # reload_scanplan = ScanPlan.from_yaml(sp.to_yaml())
+        # print('reload scanplan = {}'
         #      .format(reload_scanplan))
-        #print('scanplan = {}'.format(sp.maps))
+        # print('scanplan = {}'.format(sp.maps))
         # from_yaml
-        #self.assertEqual(len(yaml.load(reload_scanplan.to_yaml())), 3)
-        #print('reload scanplan = {}'
+        # self.assertEqual(len(yaml.load(reload_scanplan.to_yaml())), 3)
+        # print('reload scanplan = {}'
         #      .format(yaml.load(reload_scanplan.to_yaml())))
-        #print('scanplan = {}'.format(sp.maps))
-        #self.assertEqual(yaml.load(reload_scanplan.to_yaml())[0],
+        # print('scanplan = {}'.format(sp.maps))
+        # self.assertEqual(yaml.load(reload_scanplan.to_yaml())[0],
         #                 sp.maps[0])
-        #self.assertEqual(yaml.load(reload_scanplan.to_yaml())[1],
+        # self.assertEqual(yaml.load(reload_scanplan.to_yaml())[1],
         #                 sp.maps[1])
-        #self.assertEqual(yaml.load(reload_scanplan.to_yaml())[2],
+        # self.assertEqual(yaml.load(reload_scanplan.to_yaml())[2],
         #                 sp.maps[2])
 
     def test_yaml_sync(self):
-        "Updating the object immediately, automatically updates the file."
+        """Updating the object immediately, automatically updates the file."""
 
         # Adding a field syncs
         bt = Beamtime('Simon', '123', [], wavelength=0.1828,
@@ -170,9 +167,9 @@ class BeamtimeObjTest(unittest.TestCase):
             reloaded_bt_after_change = bt.from_yaml(f)
         os.remove(bt.filepath)
         self.assertEqual(reloaded_bt_before_change['field_to_update'],
-                                                   'before')
+                         'before')
         self.assertEqual(reloaded_bt_after_change['field_to_update'],
-                                                  'after')
+                         'after')
         self.assertEqual(reloaded_bt_after_change, bt)
 
         # Deleting a field syncs
@@ -212,9 +209,8 @@ class BeamtimeObjTest(unittest.TestCase):
         self.assertEqual(reloaded_bt['new_field'], 'test')
         self.assertEqual(reloaded_bt, bt)
 
-
     def test_yaml_sync_between_objects(self):
-        "Updating a Beamtime updates Experiment(s) and Sample(s)"
+        """Updating a Beamtime updates Experiment(s) and Sample(s)"""
         "that refer to it"
 
         self.bt['new_bt_field'] = 'test'
@@ -224,19 +220,17 @@ class BeamtimeObjTest(unittest.TestCase):
                 reloaded_sa = el.from_yaml(f)
             self.assertTrue('new_bt_field' in reloaded_sa)
 
-
     def test_chaining(self):
-        "All contents of Beamtime and Experiment should propagate into Sample."
-        bt =  Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
-        sa_dict = {'sample_name':'Ni', 'sample_composition':{'Ni':1}}
+        """All contents of Beamtime and Experiment should propagate into Sample."""
+        bt = Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
+        sa_dict = {'sample_name': 'Ni', 'sample_composition': {'Ni': 1}}
         sa = Sample(bt, sa_dict, custom3='C')
         for k, v in bt.items():
             sa[k] == bt[k]
 
-
     def test_load_beamtime(self):
-        bt =  Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
-        sa_dict = {'sample_name':'Ni', 'sample_composition':{'Ni':1}}
+        bt = Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
+        sa_dict = {'sample_name': 'Ni', 'sample_composition': {'Ni': 1}}
         sa = Sample(bt, sa_dict, custom3='C')
 
         bt2 = load_beamtime()

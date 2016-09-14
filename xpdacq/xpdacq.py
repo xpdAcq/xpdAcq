@@ -9,7 +9,6 @@ from itertools import count
 from collections import ChainMap
 from configparser import ConfigParser
 
-
 import bluesky.plans as bp
 from bluesky import RunEngine
 from bluesky.utils import normalize_subs_input
@@ -21,8 +20,9 @@ from .validated_dict import ValidatedDictLike
 from .beamtimeSetup import start_xpdacq
 from .beamtime import *
 
+
 def _summarize(plan):
-    "based on bluesky.utils.print_summary"
+    """based on bluesky.utils.print_summary"""
     output = []
     read_cache = []
     for msg in plan:
@@ -63,11 +63,11 @@ def _update_dark_dict_list(name, doc):
     dark_dict['timestamp'] = doc['time']
     dark_dict['uid'] = doc['run_start']
     dark_dict_list.append(dark_dict)
-    glbl._dark_dict_list = dark_dict_list # update glbl._dark_dict_list
+    glbl._dark_dict_list = dark_dict_list  # update glbl._dark_dict_list
 
 
 def take_dark():
-    "a plan for taking a single dark frame"
+    """a plan for taking a single dark frame"""
     print('INFO: closing shutter...')
     yield from bp.abs_set(glbl.shutter, 0)
     if glbl.shutter_control:
@@ -77,15 +77,15 @@ def take_dark():
     # correct
     acq_time = glbl.area_det.cam.acquire_time.get()
     num_frame = glbl.area_det.images_per_set.get()
-    computed_exposure = acq_time*num_frame
+    computed_exposure = acq_time * num_frame
     # update md
     _md = {'sp_time_per_frame': acq_time,
            'sp_num_frames': num_frame,
            'sp_computed_exposure': computed_exposure,
            'sp_type': 'ct',
-           #'sp_uid': str(uuid.uuid4()), # dark plan doesn't need uid
+           # 'sp_uid': str(uuid.uuid4()), # dark plan doesn't need uid
            'sp_plan_name': 'dark_{}'.format(computed_exposure),
-           'dark_frame':True}
+           'dark_frame': True}
     c = bp.count([glbl.area_det], md=_md)
     yield from bp.subs_wrapper(c, {'stop': [_update_dark_dict_list]})
     print('opening shutter...')
@@ -106,13 +106,15 @@ def periodic_dark(plan):
     def insert_take_dark(msg):
         now = time.time()
         nonlocal need_dark
-        #print('after nonlocal dark, need_dark={}'.format(need_dark))
+        # print('after nonlocal dark, need_dark={}'.format(need_dark))
         qualified_dark_uid = _validate_dark(expire_time=glbl.dk_window)
-        #print('qualified_dark_uid is {}'.format(qualified_dark_uid))
+        # print('qualified_dark_uid is {}'.format(qualified_dark_uid))
         # FIXME: should we do "or" or "and"?
-        if ((not need_dark) and (not qualified_dark_uid)):
+        if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
-        if need_dark and (not qualified_dark_uid) and msg.command == 'open_run' and ('dark_frame' not in msg.kwargs):
+        if need_dark and (
+                not qualified_dark_uid) and msg.command == 'open_run' and (
+                    'dark_frame' not in msg.kwargs):
             # We are about to start a new 'run' (e.g., a count or a scan).
             # Insert a dark frame run first.
             need_dark = False
@@ -126,7 +128,6 @@ def periodic_dark(plan):
         else:
             # do nothing if (not need_dark)
             return None, None
-
 
     return (yield from bp.plan_mutator(plan, insert_take_dark))
 
@@ -150,14 +151,15 @@ def _validate_dark(expire_time=None):
     light_cnt_time = acq_time * num_frame
     # find fresh and qualified dark
     now = time.time()
-    qualified_dark_uid = [ el['uid'] for el in dark_dict_list if
-                         abs(el['exposure'] - light_cnt_time) <= acq_time and
-                         abs(el['timestamp'] - now) <= (expire_time*60 - acq_time)
-                         and (el['acq_time'] == acq_time)
-                         ]
+    qualified_dark_uid = [el['uid'] for el in dark_dict_list if
+                          abs(el['exposure'] - light_cnt_time) <= acq_time and
+                          abs(el['timestamp'] - now) <= (
+                              expire_time * 60 - acq_time)
+                          and (el['acq_time'] == acq_time)
+                          ]
     if qualified_dark_uid:
         return qualified_dark_uid[-1]
-    else :
+    else:
         return None
 
 
@@ -188,7 +190,7 @@ def _auto_load_calibration_file():
         print("INFO: No calibration file found in config_base. "
               "Scan will still keep going on")
         return
-    #config_dict = glbl.calib_config_dict
+    # config_dict = glbl.calib_config_dict
     config_dict = getattr(glbl, 'calib_config_dict', None)
     # prviate test: equality
     with open(calib_yaml_name) as f:
@@ -202,7 +204,7 @@ def _auto_load_calibration_file():
 
 
 def _inject_qualified_dark_frame_uid(msg):
-    #print('!!!! INJECT dark uid !!!')
+    # print('!!!! INJECT dark uid !!!')
     if msg.command == 'open_run' and msg.kwargs.get('dark_frame') != True:
         dark_uid = _validate_dark(glbl.dk_window)
         msg.kwargs['sc_dk_field_uid'] = dark_uid
@@ -214,6 +216,7 @@ def _inject_calibration_md(msg):
         calibration_md = _auto_load_calibration_file()
         msg.kwargs['sc_calibration_md'] = calibration_md
     return msg
+
 
 def open_collection(collection_name):
     """ function to open a collection of your following scans
@@ -244,7 +247,8 @@ def open_collection(collection_name):
     # save current object
     current_name = getattr(glbl, 'collection_name', None)
     if current_name is not None:
-        with open(os.path.join(glbl.usrAnalysis_dir,current_name)+'.yaml', 'w') as f:
+        with open(os.path.join(glbl.usrAnalysis_dir, current_name) + '.yaml',
+                  'w') as f:
             yaml.dump(collection, f)
     # create new name
     new_name = '_'.join([collection_name, str(uuid.uuid4())[:5]])
@@ -259,13 +263,13 @@ def _insert_collection(collection_name, collection_obj, new_uid=None):
     new_num = next(glbl._cnt)
     ref_num = glbl._collection_ref_num
     glbl.collection_num = new_num
-    if new_num - ref_num >=5:
-        #print("yamlize obj, ref_num = {}, new_num = {}"
+    if new_num - ref_num >= 5:
+        # print("yamlize obj, ref_num = {}, new_num = {}"
         #      .format(ref_num, new_num))
         glbl._collection_ref_num = new_num
-        with open(os.path.join(glbl.usrAnalysis_dir,collection_name)+'.yaml', 'w') as f:
+        with open(os.path.join(glbl.usrAnalysis_dir,
+                               collection_name) + '.yaml', 'w') as f:
             yaml.dump(glbl.collection, f)
-
 
 
 class CustomizedRunEngine(RunEngine):
@@ -324,8 +328,8 @@ class CustomizedRunEngine(RunEngine):
     def beamtime(self):
         if self._beamtime is None:
             raise RuntimeError("This CustomizedRunEngine was not "
-               "assigned a beamtime object, so integer-based lookup is not "
-               "available.")
+                               "assigned a beamtime object, so integer-based lookup is not "
+                               "available.")
         return self._beamtime
 
     @beamtime.setter
@@ -333,20 +337,20 @@ class CustomizedRunEngine(RunEngine):
         self._beamtime = bt_obj
         self.md.update(bt_obj.md)
         print("INFO: beamtime object has been linked\n")
-        #from xpdacq.calib import run_calibration
+        # from xpdacq.calib import run_calibration
         if not glbl._is_simulation:
             self.subscribe('all', mds.insert)
             # let user deal with suspender
             beamdump_sus = SuspendFloor(glbl.ring_current, 50,
-                                        resume_thresh = glbl.ring_current.get()*0.9,
-                                        sleep = 1200)
+                                        resume_thresh=glbl.ring_current.get() * 0.9,
+                                        sleep=1200)
             glbl.suspender = beamdump_sus
-            #FIXME : print info for user
-            #self.install_suspender(beamdump_sus)
-            #print("INFO: beam dump suspender has been created."
+            # FIXME : print info for user
+            # self.install_suspender(beamdump_sus)
+            # print("INFO: beam dump suspender has been created."
             #      "To check, type prun.suspenders")
         else:
-            #print('set suspender method has been called') # debug line
+            # print('set suspender method has been called') # debug line
             pass
 
     def __call__(self, sample, plan, subs=None, *,
@@ -413,4 +417,3 @@ class CustomizedRunEngine(RunEngine):
                            self._run_start_uids)
 
         return self._run_start_uids
-

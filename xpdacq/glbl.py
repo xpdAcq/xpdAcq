@@ -11,9 +11,11 @@ from bluesky.utils import normalize_subs_input
 from bluesky.callbacks import LiveTable
 import bluesky.examples as be
 
+
 # define simulated PE1C
 class SimulatedPE1C(be.Reader):
-    "Subclass the bluesky plain detector examples ('Reader'); add attributes."
+    """Subclass the bluesky plain detector examples ('Reader'); add attributes."""
+
     def __init__(self, name, read_fields):
         self.images_per_set = MagicMock()
         self.images_per_set.get = MagicMock(return_value=5)
@@ -46,8 +48,8 @@ BLCONFIG_DIR_NAME = 'xpdConfig'
 BEAMLINE_HOST_NAME = 'xf28id1-ws2'
 ARCHIVE_BASE_DIR_NAME = 'pe2_data/.userBeamtimeArchive'
 USER_BACKUP_DIR_NAME = strftime('%Y')
-DARK_WINDOW = 3000 # default value, in terms of minute
-FRAME_ACQUIRE_TIME = 0.1 # pe1 frame acq time
+DARK_WINDOW = 3000  # default value, in terms of minute
+FRAME_ACQUIRE_TIME = 0.1  # pe1 frame acq time
 OWNER = 'xf28id1'
 BEAMLINE_ID = 'xpd'
 GROUP = 'XPD'
@@ -69,7 +71,7 @@ else:
 # top directories
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
 BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
-ARCHIVE_BASE_DIR = os.path.join(BASE_DIR,ARCHIVE_BASE_DIR_NAME)
+ARCHIVE_BASE_DIR = os.path.join(BASE_DIR, ARCHIVE_BASE_DIR_NAME)
 
 # aquire object directories
 CONFIG_BASE = os.path.join(HOME_DIR, 'config_base')
@@ -83,9 +85,9 @@ config_base/
                 scanplnas/
 """
 BT_DIR = YAML_DIR
-SAMPLE_DIR  = os.path.join(YAML_DIR, 'samples')
-EXPERIMENT_DIR  = os.path.join(YAML_DIR, 'experiments')
-SCANPLAN_DIR  = os.path.join(YAML_DIR, 'scanplans')
+SAMPLE_DIR = os.path.join(YAML_DIR, 'samples')
+EXPERIMENT_DIR = os.path.join(YAML_DIR, 'experiments')
+SCANPLAN_DIR = os.path.join(YAML_DIR, 'scanplans')
 # other dirs
 IMPORT_DIR = os.path.join(HOME_DIR, 'Import')
 ANALYSIS_DIR = os.path.join(HOME_DIR, 'userAnalysis')
@@ -94,22 +96,23 @@ TIFF_BASE = os.path.join(HOME_DIR, 'tiff_base')
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 
 ALL_FOLDERS = [
-        HOME_DIR,
-        BLCONFIG_DIR,
-        YAML_DIR,
-        CONFIG_BASE,
-        SAMPLE_DIR,
-        EXPERIMENT_DIR,
-        SCANPLAN_DIR,
-        TIFF_BASE,
-        USERSCRIPT_DIR,
-        IMPORT_DIR,
-        ANALYSIS_DIR
-        ]
+    HOME_DIR,
+    BLCONFIG_DIR,
+    YAML_DIR,
+    CONFIG_BASE,
+    SAMPLE_DIR,
+    EXPERIMENT_DIR,
+    SCANPLAN_DIR,
+    TIFF_BASE,
+    USERSCRIPT_DIR,
+    IMPORT_DIR,
+    ANALYSIS_DIR
+]
 
 # directories that won't be tar in the end of beamtime
 _EXCLUDE_DIR = [HOME_DIR, BLCONFIG_DIR, YAML_DIR]
 _EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
+
 
 class Glbl:
     _is_simulation = simulation
@@ -120,7 +123,7 @@ class Glbl:
     xpdconfig = BLCONFIG_DIR
     import_dir = IMPORT_DIR
     config_base = CONFIG_BASE
-    tiff_base =TIFF_BASE
+    tiff_base = TIFF_BASE
     usrScript_dir = USERSCRIPT_DIR
     usrAnalysis_dir = ANALYSIS_DIR
     yaml_dir = YAML_DIR
@@ -131,13 +134,13 @@ class Glbl:
     allfolders = ALL_FOLDERS
     archive_dir = USER_BACKUP_DIR
     dk_window = DARK_WINDOW
-    #frame_acq_time = FRAME_ACQUIRE_TIME
+    # frame_acq_time = FRAME_ACQUIRE_TIME
     auto_dark = True
     shutter_control = True
     owner = OWNER
     beamline_id = BEAMLINE_ID
     group = GROUP
-    _dark_dict_list = [] # initiate a new one every time
+    _dark_dict_list = []  # initiate a new one every time
     det_image_field = IMAGE_FIELD
     calib_config_name = CALIB_CONFIG_NAME
 
@@ -169,7 +172,7 @@ class Glbl:
     else:
         simulation = True
         # shutter = motor  # this passes as a fake shutter
-        archive_dir = os.path.join(BASE_DIR,'userSimulationArchive')
+        archive_dir = os.path.join(BASE_DIR, 'userSimulationArchive')
         # mock imports
         db = MagicMock()
         get_events = MagicMock()

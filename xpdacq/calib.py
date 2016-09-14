@@ -24,6 +24,7 @@ from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 
 _REQUIRED_OBJ_LIST = ['prun', 'bt']
 
+
 def _check_obj(required_obj_list):
     """ function to check if object(s) exist
 
@@ -40,10 +41,13 @@ def _check_obj(required_obj_list):
                             "namespace".format(obj_str))
     return
 
+
 def _timestampstr(timestamp):
-    ''' convert timestamp to strftime formate '''
-    timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y%m%d-%H%M')
+    """ convert timestamp to strftime formate """
+    timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime(
+        '%Y%m%d-%H%M')
     return timestring
+
 
 def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
                     detector=None, gaussian=None):
@@ -68,14 +72,14 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
         optional. gaussian width between rings, default is 100.
     """
     # default params
-    interactive = True 
+    interactive = True
     dist = 0.1
 
     _check_obj(_REQUIRED_OBJ_LIST)
     ips = get_ipython()
     bto = ips.ns_table['user_global']['bt']
     prun = ips.ns_table['user_global']['prun']
-    #print('*** current beamtime info = {} ***'.format(bto.md))
+    # print('*** current beamtime info = {} ***'.format(bto.md))
     calibrant = Calibrant()
     # d-spacing
     if calibrant_file is not None:
@@ -90,28 +94,29 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
         _wavelength = bto['bt_wavelength']
     else:
         _wavelength = wavelength
-    calibrant.wavelength = _wavelength*10**(-10)
+    calibrant.wavelength = _wavelength * 10 ** (-10)
     # detector
     if detector is None:
         detector = Perkin()
     # scan
-    calibration_dict = {'sample_name':calibrant_name,
-                        'sample_composition':{calibrant_name :1}}
-                        # simplified version of Sample object
+    calibration_dict = {'sample_name': calibrant_name,
+                        'sample_composition': {calibrant_name: 1}}
+    # simplified version of Sample object
     prun_uid = prun(calibration_dict, ScanPlan(bto, ct, exposure))
-    light_header = glbl.db[prun_uid[-1]] # last one is always light
+    light_header = glbl.db[prun_uid[-1]]  # last one is always light
     dark_uid = light_header.start['sc_dk_field_uid']
     dark_header = glbl.db[dark_uid]
     # unknown signature of get_images
-    dark_img = np.asarray(get_images(dark_header, glbl.det_image_field)).squeeze()
-    #dark_img = np.asarray(glbl.get_images(dark_header, glbl.det_image_field)).squeeze()
+    dark_img = np.asarray(
+        get_images(dark_header, glbl.det_image_field)).squeeze()
+    # dark_img = np.asarray(glbl.get_images(dark_header, glbl.det_image_field)).squeeze()
     for ev in glbl.get_events(light_header, fill=True):
         img = ev['data'][glbl.det_image_field]
         img -= dark_img
     # calibration
     timestr = _timestampstr(time.time())
     basename = '_'.join(['pyFAI_calib', calibrant_name, timestr])
-    w_name = os.path.join(glbl.config_base, basename) # poni name
+    w_name = os.path.join(glbl.config_base, basename)  # poni name
     c = Calibration(wavelength=calibrant.wavelength,
                     detector=detector,
                     calibrant=calibrant,
@@ -124,7 +129,7 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     c.peakPicker = PeakPicker(img, reconst=True, mask=detector.mask,
                               pointfile=c.pointfile, calibrant=calibrant,
                               wavelength=calibrant.wavelength)
-                              #method=method)
+    # method=method)
     if gaussian is not None:
         c.peakPicker.massif.setValleySize(gaussian)
     else:
@@ -140,11 +145,11 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     glbl.calib_config_dict = c.ai.getPyFAI()
     Fit2D_dict = c.ai.getFit2D()
     glbl.calib_config_dict.update(Fit2D_dict)
-    glbl.calib_config_dict.update({'file_name':basename})
-    glbl.calib_config_dict.update({'time':timestr})
+    glbl.calib_config_dict.update({'file_name': basename})
+    glbl.calib_config_dict.update({'time': timestr})
     # write yaml
     yaml_name = glbl.calib_config_name
-    with open(os.path.join(glbl.config_base, yaml_name),'w') as f:
+    with open(os.path.join(glbl.config_base, yaml_name), 'w') as f:
         yaml.dump(glbl.calib_config_dict, f)
 
     return c.ai
