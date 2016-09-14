@@ -1,11 +1,16 @@
 import os
 import sys
+import yaml
 import shutil
-from shutil import ReadError
 import tarfile as tar
 from time import strftime
+from shutil import ReadError
 
-from xpdacq.glbl import glbl
+import pandas as pd
+
+from .glbl import glbl
+from .beamtime import Sample
+
 def _graceful_exit(error_message):
     try:
         raise RuntimeError(error_message)
@@ -173,3 +178,241 @@ def _copy_and_delete(f_name, src_full_path, dst_dir):
                 It will not be available for use in xpdAcq, but it will be left in the xpdUser/Import/ directory'''.            format(f_name))
         return
 
+
+
+class ExceltoYaml:
+    # maintain in place, aligned with spreadsheet header
+    NAME_FIELD= ['Collaborators', 'Sample Maker', 'Lead Experimenters',]
+    COMMA_SEP_FIELD = ['cif name', 'Tags']
+    SAMPLE_FIELD = ['Phase Info']
+    GEOMETRY_FIELD = ['Geometry']
+
+    # real fields goes into metadata store
+    _NAME_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
+                          NAME_FIELD))
+    _COMMA_SEP_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
+                           COMMA_SEP_FIELD))
+    _SAMPLE_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
+                         SAMPLE_FIELD))
+    _GEOMETRY_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
+                         GEOMETRY_FIELD))
+    def __init__(self):
+        self.pd_dict = None
+        self.sa_md_list = None
+
+    def load(self, saf_num):
+        xl_f = [f for f in os.listdir(glbl.xpdconfig) if
+                f.startswith(str(saf_num)+'_sample')]
+        if not xl_f:
+            raise FileNotFoundError("assigned file doesn't exist")
+        if len(xl_f) >1:
+            raise ValueError("Found more than one file, please make sure"
+                             "there is only one in {}"
+                             .format(glbl.xpdconfig))
+        self.pd_dict = pd.read_excel(os.path.join(glbl.xpdconfig,
+                                                  xl_f.pop()),
+                                                  skiprows=0)
+
+        self.sa_md_list = self._pd_dict_to_dict_list(self.pd_dict.to_dict())
+
+    def create_yaml(self, bt):
+        """ parse a list of sample metadata into desired format and
+        create xpdacq.Sample objects inside xpdUser/config_base/yml/
+
+        Parameters
+        ----------
+        bt : xpdacq.Beamtime object
+            an object carries SAF, PI_last and other information
+
+        Returns
+        -------
+        None
+        """
+
+        parsed_sa_md_list = []
+        for sa_md in self.sa_md_list:
+            parsed_sa_md = {}
+            for k, v in sa_md.items():
+                k = str(k).lower()
+                v = str(v)
+                k = k.strip().replace(' ','_')
+                v = v.replace('/', '_') # yaml path
+                #mapped_key = self.MAPPING.get(k, None) # no mapping
+
+                # name fields
+                if k in self._NAME_FIELD:
+                    try:
+                        comma_sep_list = self._comma_separate_parser(v)
+                        parsed_name = []
+                        for el in comma_sep_list:
+                            parsed_name.extend(self._name_parser(el))
+                        #print("successfully parsed name {} -> {}"
+                        #      .format(v, parsed_name))
+                    except ValueError:
+                        parsed_name = v
+                        #print('cant parsed {}'.format(v))
+                    parsed_sa_md.setdefault(k, [])
+                    parsed_sa_md.get(k).extend(parsed_name)
+
+                # sample fields
+                elif k in self._SAMPLE_FIELD:
+                    try:
+                        composition_dict, phase_dict = self._phase_parser(v)
+                    except ValueError:
+                        composition_dict = v
+                        phase_dict = v
+                    finally:
+                        parsed_sa_md.update({'sample_composition':
+                                             composition_dict})
+
+                        parsed_sa_md.update({'sample_phase':
+                                             phase_dict})
+
+                # comma separated fields
+                elif k in self._COMMA_SEP_FIELD:
+                    try:
+                        comma_sep_list = self._comma_separate_parser(v)
+                        #print("successfully parsed comma-sep-field {} -> {}"
+                        #      .format(v, comma_sep_list))
+                    except ValueError:
+                        comma_sep_list = v
+                    parsed_sa_md.setdefault(k, [])
+                    parsed_sa_md.get(k).extend(comma_sep_list)
+
+                # other fields dont need to be pased
+                else:
+                    parsed_sa_md.update({k:v.replace(' ', '_')})
+
+            parsed_sa_md_list.append(parsed_sa_md)
+        self.parsed_sa_md_list = parsed_sa_md_list
+
+        # normal sample, just create
+        for el in self.parsed_sa_md_list:
+            Sample(bt, el)
+        # separate so that bkg is in the back
+        for el in self.parsed_sa_md_list:
+            bkg_name = el['geometry'] # bkg
+            bkg_dict = {'sample_name': 'bkg_'+bkg_name,
+                        'sample_composition': {bkg_name:1},
+                        'is_background': True}
+            Sample(bt, bkg_dict) # bk sample object, overwrite
+
+        print("*** End of import Sample object ***")
+
+    def _pd_dict_to_dict_list(self, pd_dict):
+        """ parser of pd generated dict to a list of valid sample dicts
+
+        Parameters
+        ----------
+        pd_dict : dict
+            dict generated from pandas.to_dict method
+
+        Return:
+        -------
+        sa_md_list : list
+            a list of dictionaries. Each element is a sample dictionary
+        """
+
+        row_num = len(list(pd_dict.values())[0])
+        sa_md_list = []
+        for i in range(row_num):
+            sa_md = {}
+            for key in pd_dict.keys():
+                sa_md.update({key:pd_dict[key][i]})
+            sa_md_list.append(sa_md)
+
+        return sa_md_list
+
+
+    def _comma_separate_parser(self, input_str):
+        """ parser for comma separated fields
+
+        Parameters
+        ----------
+        input_str : str
+            a string contains a series of units that are separated by
+            commas.
+
+        Returns
+        -------
+        output_list : list
+            a list contains comma separated element parsed strings.
+
+        Raises:
+        -------
+        ValueError
+            if ',' is not specified between names
+        """
+        element_list = input_str.split(',')
+        output_list = list(map(lambda x: x.strip(), element_list))
+        return output_list
+
+    def _name_parser(self, name_str):
+        """ assume a name string
+
+        Returns
+        -------
+        name_list : list
+            a list of strings in [<first_name>, <last_name>] form
+        """
+        name_list = name_str.split(' ')
+        return name_list # [first, last]
+
+    def _phase_parser(self, phase_str):
+        """ parser for filed with <chem formular>: <phase_amount>
+
+        Parameters
+        ----------
+        phase_str : str
+            a string contains a series of <chem formular> : <phase_amount>.
+            Each phase is separated by a comma
+
+        Returns
+        -------
+        composition_dict : dict
+            a dictionary contains {element: stoichiometry}
+        phase_dict : dict
+            a dictionary contains relative ratio of phases
+
+        Examples
+        --------
+        rv = _phase_parser('NaCl:1, Si:1')
+        rv[0] # {'Na':1, 'Cl':1, 'Si':1}
+        rv[1] # {'Nacl':0.5, 'Si':0.5}
+
+        Raises:
+        -------
+        ValueError
+            if ',' is not specified between phases
+        """
+
+        phase_dict = {}
+        composition_dict = {}
+        compound_meta = phase_str.split(',')
+        for el in compound_meta:
+            if len(el.split(':')) == 1:
+                com = el.split(':').pop()
+                amount = '1' # capture default
+            else:
+                com, amount = el.split(':') # expect [<com>, <amount>]
+            phase_dict.update({com.strip():float(amount.strip())})
+            parsed_tuple = composition_analysis(com.strip())
+            # expect: ([elment_1, element_2, ...], [sto_1, sto_2,...])
+            for i in range(len(parsed_tuple[0])):
+                composition_dict.update({parsed_tuple[0][i]:
+                                         parsed_tuple[1][i]})
+        # normalized phase_dict
+        total = sum(phase_dict.values())
+        for k,v in phase_dict.items():
+            ratio = "{0:.2f}".format(v/total)
+            phase_dict[k] = float(ratio)
+        return composition_dict, phase_dict
+
+excel_to_yaml = ExceltoYaml()
+
+def import_sample(saf_num, bt):
+    """ thin wrapper for ExceltoYaml class """
+    bt.samples = []
+    excel_to_yaml.load(str(saf_num))
+    excel_to_yaml.create_yaml(bt)
+    return excel_to_yaml

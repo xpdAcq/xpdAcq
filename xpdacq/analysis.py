@@ -23,21 +23,21 @@ from time import strftime
 import numpy as np
 import tifffile as tif
 import matplotlib as plt
-from xpdacq.glbl import glbl
+from xpdacq.glbl import Glbl
 import warnings
 
 # top definition for minimal impacts on the code 
-db = glbl.db
-get_events = glbl.get_events
-get_images = glbl.get_images
+db = Glbl.db
+get_events = Glbl.get_events
+get_images = Glbl.get_images
 
 _fname_field = ['sa_name','sp_name']
-w_dir = os.path.join(glbl.home, 'tiff_base')
+w_dir = os.path.join(Glbl.home, 'tiff_base')
 W_DIR = w_dir # in case of crashes in old codes
 
 def bt_uid():
     """ function to obtain uid of current beamtime
-    
+
     Returns
     -------
     bt_uid : str
@@ -152,9 +152,10 @@ def save_tiff(headers, dark_subtraction=True, *, max_count=None):
             try:
                 # bluesky only looks for uid it defines
                 dark_search = {'group': 'XPD',
-                               'sc_dark_uid': dark_uid_appended} # the one we need to look up data
+                               'uid': dark_uid_appended} # the one we need to look up for dark
 
                 dark_header = db(**dark_search)
+                #dark_header = db[dark_uid_appended] # can't use it as for backsupport
                 dark_img = np.asarray(get_images(dark_header,
                                                  img_field)).squeeze()
             except ValueError:
@@ -162,6 +163,7 @@ def save_tiff(headers, dark_subtraction=True, *, max_count=None):
                 warnings.warn("Requested to do dark correction, but "
                               "extracting the dark image failed.  Proceeding "
                               "without correction.")
+            
         for ev in get_events(header, fill=True):
             img = ev['data'][img_field]
             ind = ev['seq_num']

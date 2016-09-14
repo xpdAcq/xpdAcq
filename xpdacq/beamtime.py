@@ -1,720 +1,410 @@
-#!/usr/bin/env python
-##############################################################################
-#
-# xpdacq            by Billinge Group
-#                   Simon J. L. Billinge sb2896@columbia.edu
-#                   (c) 2016 trustees of Columbia University in the City of
-#                        New York.
-#                   All rights reserved
-#
-# File coded by:    Timothy Liu, Simon Billinge, Tom Caswell
-#
-# See AUTHORS.txt for a list of people who contributed.
-# See LICENSE.txt for license information.
-#
-##############################################################################
-import uuid
-import yaml
 import os
-import shutil
-import datetime
-from time import strftime
-import sys
-from collections import OrderedDict
-import copy
-from xpdacq.glbl import glbl
-from xpdacq.utils import _graceful_exit
+import uuid
+import time
+import yaml
+import inspect
+from mock import MagicMock
+from collections import ChainMap
+import bluesky.plans as bp
+import numpy as np
+from bluesky import RunEngine
+from bluesky.utils import normalize_subs_input
+from bluesky.callbacks import LiveTable
 
-from bluesky.plans import Plan
+from .glbl import glbl
+from .yamldict import YamlDict, YamlChainMap
+from .validated_dict import ValidatedDictLike
 
-home_dir = glbl.home
-yaml_dir = glbl.yaml_dir
 
-def _get_yaml_list():
-    yaml_dir = glbl.yaml_dir
-    lname = os.path.join(yaml_dir,'_acqobj_list.yml')
-    with open(lname, 'r') as fout:
-        yaml_list = yaml.load(fout) 
-    return list(yaml_list)
+# This is used to map plan names (strings in the YAML file) to actual
+# plan functions in Python.
+_PLAN_REGISTRY = {}
 
-def _get_hidden_list():
-    yaml_dir = glbl.yaml_dir
-    lname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
-    with open(lname, 'r') as fout:
-        hidden_list = yaml.load(fout) 
-    return list(hidden_list)
+def register_plan(plan_name, plan_func, overwrite=False):
+    "Map between a plan_name (string) and a plan_func (generator function)."
+    if plan_name in _PLAN_REGISTRY and not overwrite:
+        raise KeyError("A plan is already registered by this name. Use "
+                       "overwrite=True to overwrite it.")
+    _PLAN_REGISTRY[plan_name] = plan_func
 
-def _update_objlist(objlist,name):
-    # check whether this obj exists already if yes, don't add it again.
-    if name not in objlist:
-        objlist.append(name)
-    return objlist
 
-class XPD:
-    objlist = []
-    def _getuid(self):
-        return str(uuid.uuid4())
+def unregister_plan(plan_name):
+    del _PLAN_REGISTRY[plan_name]
 
-    def export(self):
-        return self.md
 
-    def _get_obj_uid(self,name,otype):
-        yamls = self.loadyamls()
-        uidid = "_".join([otype,'uid'])
-        for i in yamls:
-            if i.name == name:
-                if i.type == otype:
-                    ouid = i.md[str(uidid)]
-        return ouid
-
-    def _yaml_path(self):
-        os.makedirs(yaml_dir, exist_ok = True)
-        return yaml_dir
-
-    def _name_for_obj_yaml_file(self,oname,ftype):
-        cleaned_oname = _clean_name(oname)
-        cleaned_ftype = _clean_name(ftype)
-        fname = str(cleaned_ftype) +'_'+ str(cleaned_oname) +'.yml'
-        return fname
-
-    def _yamify(self):
-        '''write a yaml file for this object and place it in config_base/yml'''
-        yaml_dir = glbl.yaml_dir
-        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
-        oname = self.name
-        ftype = self.type
-        fname = self._name_for_obj_yaml_file(oname,ftype)
-        fpath = os.path.join(self._yaml_path(), fname)
-        objlist = _get_yaml_list()
-        objlist = _update_objlist(objlist, fname)
-        with open(lname, 'w') as fout:
-            yaml.dump(objlist, fout)
-
-        if isinstance(fpath, str):
-            with open(fpath, 'w') as fout:
-                yaml.dump(self, fout)
-        else:
-            yaml.dump(self, fpath)
-        return fpath
-
-    def loadyamls(self):
-        yaml_dir = glbl.yaml_dir
-        yaml_list = _get_yaml_list()
-        olist = []
-        for f in yaml_list:
-            fname = os.path.join(yaml_dir,f)
-            with open(fname, 'r') as fout:
-                olist.append(yaml.load(fout))
-        return olist
-
-    @classmethod
-    def list(cls, type=None):
-        olist = cls.loadyamls(cls)
-        hlist = _get_hidden_list()
-        if type is None:
-            iter = 0
-            for i in olist:
-                iter += 1
-                #myuid = i._get_obj_uid(i.name,i.type)
-                if iter-1 not in hlist:
-                    print(i.type+' object '+str(i.name)+' has list index ', iter-1)#'and uid',myuid[:6])
-        else:
-            iter = 0
-            for i in olist:
-                iter += 1
-                if i.type == type:
-                    if iter-1 not in hlist:
-                        print(i.type+' object '+str(i.name)+' has list index ', iter-1)
-        print('Use bt.get(index) to get the one you want')
-
-    def hide(self,index):
-        hidden_list = _get_hidden_list()
-        hidden_list.append(index)
-        yaml_dir = glbl.yaml_dir
-        hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
-        fo = open(hname, 'w')
-        yaml.dump(hidden_list, fo)
-        return hidden_list
-
-    def unhide(self,index):
-        hidden_list = _get_hidden_list()
-        while index in hidden_list: 
-            hidden_list.remove(index)
-        yaml_dir = glbl.yaml_dir
-        hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
-        fo = open(hname, 'w')
-        yaml.dump(hidden_list, fo)
-        return hidden_list
-
-    def _init_dark_scan_list(self):
-        dark_scan_list = []
-        with open(glbl.dk_yaml,'w') as f:
-            yaml.dump(dark_scan_list, f)
-
-    @classmethod
-    def get(cls, index):
-        list = cls.loadyamls(cls)
-        return list[index]
-    
-    def set_wavelength(self,wavelength):
-        self.md.update({'bt_wavelength': _clean_md_input(wavelength)})
-        self._yamify()
-
-class Beamtime(XPD):
-    ''' Class that holds basic information to current beamtime 
-    
-    Parameters
-    ----------
-    pi_last : str
-        last name of PI to this beamtime
-    
-    safn : str
-        SAF number to this beamtime
-    
-    wavelength : float
-        optional but it is strongly recommended to enter. x-ray wavelength to this beamtime, it will be used during data deduction
-    
-    experimenters : list
-        optional. a list of tuples that are made of (last_name, first_name, id) of each experimenter involved.
-    
-    **kwargs : dict
-        optional. a dictionary for user-supplied information.
-    ''' 
-    def __init__(self, pi_last, safn, wavelength=None, experimenters=[], **kwargs):
-        self.name = 'bt'
-        self.type = 'bt'
-        self.md = {'bt_piLast': _clean_md_input(pi_last), 'bt_safN': _clean_md_input(safn), 
-                    'bt_usermd':_clean_md_input(kwargs)}
-        self.md.update({'bt_wavelength': _clean_md_input(wavelength)})
-        self.md.update({'bt_experimenters': _clean_md_input(experimenters)})
-
-        #initialize the objlist yaml file if it doesn't exist
-        yaml_dir = glbl.yaml_dir
-        lname = os.path.join(yaml_dir,'_acqobj_list.yml')
-        hname = os.path.join(yaml_dir,'_hidden_objects_list.yml')
-        dname = os.path.join(yaml_dir,'_dk_objects_list.yml')
-        if not os.path.isfile(lname):
-            objlist = []
-            fo = open(lname, 'w')
-            yaml.dump(objlist, fo)
-        if not os.path.isfile(hname):
-            hidlist = []
-            fo = open(hname, 'w')
-            yaml.dump(hidlist, fo)
-        if not os.path.isfile(dname):
-            dklist = []
-            fo = open(dname, 'w')
-            yaml.dump(dklist, fo)
-   
-        fname = self._name_for_obj_yaml_file(self.name,self.type)
-        objlist = _get_yaml_list()
-        # get objlist from yaml file
-        if fname in objlist:
-            olduid = self._get_obj_uid(self.name,self.type)
-            self.md.update({'bt_uid': olduid})
-        else:
-            self.md.update({'bt_uid': self._getuid()})
-        self._yamify()
-
-class Experiment(XPD):
-    ''' class that holds experiment information 
-    
-    Parameters
-    ----------
-    expname : str
-        name to this experiment
-    
-    beamtime : xpdAcq.beamtime.Beamtime object
-        object to current beamtime
-    
-    **kwargs : dict
-        optional. a dictionary for user-supplied information.
-    ''' 
-    def __init__(self, expname, beamtime, **kwargs):
-        self.bt = beamtime
-        self.name = _clean_md_input(expname)
-        self.type = 'ex'
-        self.md = self.bt.md
-        self.md.update({'ex_name': self.name})
-        self.md.update({'ex_uid': self._getuid()})
-        self.md.update({'ex_usermd':_clean_md_input(kwargs)})
-        fname = self._name_for_obj_yaml_file(self.name,self.type)
-        objlist = _get_yaml_list()
-        # get objlist from yaml file
-        if fname in objlist:
-            olduid = self._get_obj_uid(self.name,self.type)
-            self.md.update({'ex_uid': olduid})
-        else:
-            self.md.update({'ex_uid': self._getuid()})
-        self._yamify()
-
-class Sample(XPD):
-    ''' class that holds sample information 
-    
-    Parameters
-    ----------
-    samname : str
-        name to this sample
-    
-    experiment : xpdAcq.beamtime.Experiment object
-        object that contains information of experiment
-    
-    **kwargs : dict
-        optional. a dictionary for user-supplied information.
-    '''
-    def __init__(self, samname, experiment, **kwargs):
-        self.name = _clean_md_input(samname)
-        self.type = 'sa'
-        self.ex = experiment
-        self.md = self.ex.md
-        self.md.update({'sa_name': self.name})
-        self.md.update({'sa_uid': self._getuid()})
-        self.md.update({'sa_usermd': _clean_md_input(kwargs)})
-        fname = self._name_for_obj_yaml_file(self.name,self.type)
-        objlist = _get_yaml_list()
-        # get objlist from yaml file
-        if fname in objlist:
-            olduid = self._get_obj_uid(self.name,self.type)
-            self.md.update({'sa_uid': olduid})
-        else:
-            self.md.update({'sa_uid': self._getuid()})
-        self._yamify()
-
-class ScanPlan(XPD):
-    '''ScanPlan class  that defines scan plan to run.
-
-    To run it ``prun(Sample, ScanPlan)``
-
-    Parameters
-    ----------
-    scanplan_meta : str
-        An important postional argument that serves two purpose:
-
-        *. If you wish to use auto-naming functionality.
-          Please supply this field with a string following allowed scheme, xpdAcq will parse your arguments.
-          Currently allowed scheme is like following:
-
-          1. 'ct_10' means Count scan with 10s exposure time in total
-
-          2. 'Tramp_10_300_200_5' means temperature ramp from 300k to 200k
-            with 5k step and 10s exposure time each
-
-          3. 'tseries_10_60_5' means time series scan of 10s exposure time each scan
-            and run for 5 scans with 60s delay between them.
-            If you don't want any delay, give it an 0.
-
-        *. If you wish to specify parameters explicitly.
-          This field will be "ScanPlan type". Currently allowed types are:
-
-          1. 'ct': which means a count scanplan with exposure time given
-
-          2. 'tseries' : which means a time series scanplan with
-          exposure time, dely between scans and number of scans specified.
-
-          3. 'Tramp' : which means a temperature ramp scanplan with
-          exposure time, starting temperature, ending temperature and
-          temperature step specified.
-
-          4. 'bluesky' : which means an arbitrary bluesky plan defined by user
-          For more information please go to : https://nsls-ii.github.io/bluesky/plans.html
-          for complete guide on how to define a plan. Note: bluesky type
-          of plan doesn't work with auto-naming, you must specify
-          explicitly.
-
-          Note:
-          'bluesky' plan won't be saved as reusalbe form. Everytime you define a bluesky plan,
-          we **SUGGEST** you to save code that defines your plan in a separate place (for example, a text file)
-
-    scan_params : dict
-        Optional. Needed if you wish to set up ScanPlan explicitly.
-        It contains all scan parameters that will be passed and used at run-time
-        Don't make typos in the dictionary keywords or your scans won't work.
-        Entire list of allowed keywords is in the documentation on https://xpdacq.github.io/
-
-    shutter : bool
-        default is True. If True, in-hutch fast shutter will be opened before a scan and closed afterwards.
-        Otherwise control of the shutter is left external. Set to False if you want to control the shutter by hand.
-
-    auto_dark_plan : bool
-        argument reserved for auto_dark collection functionality.
-        Ususally user doesn't have to specify
-
-    Examples
-    --------
-    Here are examples of instantiating ScanPlan objects with explicit form.
-
-    >>> ScanPlan('ct', {'exposure': 2.5}
-    >>> ScanPlan('tseries', {'exposure': 2.5, 'delay': 60,'num':5})
-    >>> ScanPlan('Tramp', {'exposure': 2.5, 'sartingT': 300, 'endinT':200, 'Tstep':5})
-
-    Here are examples of instantiating ScanPlan objects with auto naming scheme.
-
-    >>> ScanPlan('ct_2.5')
-    >>> ScanPlan('tseries_2.5_60_5')
-    >>> ScanPlan('Tramp_2.5_300_200_5')
-
-    ScanPlan objects from two sets of examples are equivalent.
-
-    Here is an example on how to instantiate ScanPlan carrying a bluesky plan
-    that reads area detector and em channel while moving two-theta motor from -1 to 1 in 20 steps.
-
-    >>> from bluesky.plans import AbsScanPlan
-    >>> myscan = AbsScanPlan([pe1c, em], tth_cal, -1, 1, 20)
-    >>> ScanPlan('bluesky', {'bluesky_plan': myscan})
-    '''
-    def __init__(self, scanplan_meta, scanplan_params = {},
-            dk_window = None, shutter=True, *, auto_dark_plan = False, **kwargs):
-        _sp_input = scanplan_meta.strip()
-        _std_param_list = self._std_param_list_gen()
-        # auto naming, parsed parameters
-        if not scanplan_params:
-            (scanplan_type, scanplan_params) = self._scanplan_name_parser(_sp_input)
-            _sp_name = _sp_input
-            self.scanplan = _clean_md_input(scanplan_type)
-        # long-form, generate name
-        elif scanplan_params:
-            _sp_name = self._scanplan_auto_name(_sp_input, scanplan_params, _std_param_list)
-            self.scanplan = _clean_md_input(_sp_input)
-        # unsupported situation (won't happen in this version, for future use)
-        else:
-            print('ScanPlan only takes auto-naming or explicit naming scheme. Please do " ScanPlan? " for more information')
-            return
-        # setting up main attributes
-        self.type = 'sp'
-        self.sp_params = scanplan_params # sp_parms is a dictionary
-        self._is_bs = False # priviate attribute
-        self._plan_validator()
-        self.shutter = shutter
-        self.md = {}
-        self.md.update({'sp_params': scanplan_params})
-        if 'bluesky_plan' in self.sp_params:
-            self._is_bs = True
-            # overwrite as can't yamify ophyd objects now
-            plan_obj = scanplan_params['bluesky_plan']
-            plan_id = id(plan_obj)
-            self.md.update({'sp_params': {'bluesky_plan':plan_id}})
-        self.md.update({'sp_type': _clean_md_input(self.scanplan)})
-        self.md.update({'sp_usermd':_clean_md_input(kwargs)})
-        # setting up optional attributes
-        _control_params = ''
-        if self.shutter:
-            self.md.update({'sp_shutter_control':'in-scan'})
-        else:
-            self.md.update({'sp_shutter_control':'external'})
-            _control_params += 'nS' # only wirte down non-default behavior
-        if not dk_window:
-            dk_window = glbl.dk_window
-        self.md.update({'sp_dk_window': dk_window})
-        # scanplan name should include options, generate it at the last moment
-        if _control_params:
-            sp_name = '_'.join([_sp_name, _control_params])
-        else:
-            sp_name = _sp_name
-        if auto_dark_plan:
-            sp_name = 'auto_dark'
-            # when auto_dark collection is called. Avoid overwritting ct
-        self.name = sp_name
-        self.md.update({'sp_name': _clean_md_input(self.name)})
-        # summary of scanplan created
-        print('You have created a "{}" type ScanPlan with name = "{}"'.format(self.scanplan, self.name))
-        print('Corresponding scan parameters are:')
-        for i in range(len(_std_param_list)):
-            el = _std_param_list[i]
-            try:
-                print('{} = {}'.format(el, self.md['sp_params'][el]))
-            except (KeyError, TypeError):
-                # all errors should be handled before this step
-                # except for bluesky plan
-                # TypeError is for bluesky plan object id
-                pass
-        print('with fast-shutter control = {}'.format(self.shutter))
-        # yamify ScanPlan
-        fname = self._name_for_obj_yaml_file(self.name,self.type)
-        objlist = _get_yaml_list()
-        if fname in objlist:
-            olduid = self._get_obj_uid(self.name,self.type)
-            self.md.update({'sp_uid': olduid})
-        else:
-            self.md.update({'sp_uid': self._getuid()})
-
-        self._yamify()
-
-    def _std_param_list_gen(self):
-        _ct_required_params = ['exposure']
-        _tseries_required_params = ['exposure', 'delay', 'num']
-        _Tramp_required_params = ['exposure', 'startingT', 'endingT', 'Tstep']
-        # extra efforts to keep print statement in order later
-        _ordered_sp_params = _ct_required_params.copy()
-        _ordered_sp_params.extend(_tseries_required_params)
-        _ordered_sp_params.extend(_Tramp_required_params)
-        _std_params_list = list(OrderedDict.fromkeys(_ordered_sp_params))
-        return _std_params_list
-
-    def _scanplan_auto_name(self, sp_type, sp_params, _std_param_list):
-        # confirm type
-        if not isinstance(sp_params, dict):
-            print("WARNING: scanplan parameter must be a dictionary like {'key':'value'}")
-            return
-        # loop through params
-        sp_naming_list = [sp_type] # initiate list
-        for i in range(len(_std_param_list)):
-            param = sp_params.get(_std_param_list[i])
-            if param: # has element
-                sp_naming_list.append('{:.8g}'.format(param))
-        return '_'.join(sp_naming_list)
-
-    def _scanplan_name_parser(self, sp_name):
-        ''' function to parse name of ScanPlan object into parameters fed into ScanPlan
-
-        expected format for each type is following:
-        1) 'ct_10' means Count scan with 10s exposure time in total
-        2) 'Tramp_10_300_200_5' means temperature ramp from 300k to 200k with 5k step and 10s exposure time each
-        3) 'tseries_10_60_5' means time series scan of 10s exposure time each scan 
-            and run for 5 scans with 60s delay between them.
-        '''
-        _ct_required_params = ['exposure']
-        _tseries_required_params = ['exposure', 'delay', 'num']
-        _Tramp_required_params = ['exposure', 'startingT', 'endingT', 'Tstep']
-
-        _ct_optional_params = ['det','subs_dict']
-        _Tramp_optional_params = ['det', 'subs_dict']
-        _tseries_optional_params = ['det', 'subs_dict']
-
-        parsed_object = sp_name.split('_') # it will split recursively
-        scanplan_type = parsed_object[0]
-        # turn parameters into floats
-        _sp_params = []
-        for i in range(1, len(parsed_object)):
-            try:
-                _sp_params.append(float(parsed_object[i]))
-            except ValueError:
-                sys.exit(_graceful_exit('''xpdAcq can not parse your positional argument "{}".
-                We use SI units across package, so "5s" or "10k" is not necessary.
-                For more information, please go to
-                http://xpdacq.github.io.\n'''.format(parsed_object[i])))
-                return
-        # assgin exposure as it is common parameter
-        exposure = _sp_params[0]
-        sp_params = {'exposure':exposure}
-        if scanplan_type not in glbl._allowed_scanplan_type:
-            sys.exit(_graceful_exit('''{} is not a supported ScanPlan type under current version of xpdAcq.
-                                    Current supported type are {}.
-                                    Please go to http://xpdacq.github.io for more information or request
-                                    '''.format(scanplan_type, glbl._allowed_scanplan_type)))
-        if scanplan_type == 'ct' and len(_sp_params) == 1: # exposure
-            return (scanplan_type, sp_params)
-        elif scanplan_type == 'Tramp' and len(_sp_params) == 4: # exposure, startingT, endingT, Tstep
-            sp_params.update({'startingT': _sp_params[1], 'endingT': _sp_params[2], 'Tstep': _sp_params[3]})
-            return (scanplan_type, sp_params)
-        elif scanplan_type == 'tseries' and len(_sp_params) == 3: # exposure, delay, num
-            sp_params.update({'delay': _sp_params[1], 'num': int(_sp_params[2])})
-            return (scanplan_type, sp_params)
-        elif scanplan_type == 'bluesky':
-            # leave a hook for future bluesky plan autonaming
+def _summarize(plan):
+    "based on bluesky.utils.print_summary"
+    output = []
+    read_cache = []
+    for msg in plan:
+        cmd = msg.command
+        if cmd == 'open_run':
+            output.append('{:=^80}'.format(' Open Run '))
+        elif cmd == 'close_run':
+            output.append('{:=^80}'.format(' Close Run '))
+        elif cmd == 'set':
+            output.append('{motor.name} -> {args[0]}'.format(motor=msg.obj,
+                                                             args=msg.args))
+        elif cmd == 'create':
             pass
-        else:
-            sys.exit(_graceful_exit('''xpdAcq can't parse your scanplan name {} into corresponding parameters.
-                                    Please do ``ScanPlan?`` to find out currently supported conventions.
-                                    or you can define your scanplan parameter dictionary explicitly.
-                                    For more information, go to http://xpdacq.github.io
-                                    '''.format(sp_name)))
-    def _plan_validator(self):
-        ''' Validator for ScanPlan object
+        elif cmd == 'read':
+            read_cache.append(msg.obj.name)
+        elif cmd == 'save':
+            output.append('  Read {}'.format(read_cache))
+            read_cache = []
+    return '\n'.join(output)
 
-        It validates if required scan parameters for certain scan type are properly defined in object
 
-        '''
-        # based on structures in xpdacq.xpdacq.py
-        _Tramp_required_params = ['startingT', 'endingT', 'Tstep', 'exposure']
-        _Tramp_optional_params = ['det', 'subs_dict']
+def _configure_pe1c(exposure):
+    """ priviate function to configure pe1c with continuous acquistion
+    mode"""
+    #cs studio configuration doesn't propagate to python level
+    glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
+    acq_time = glbl.area_det.cam.acquire_time.get()
+    # compute number of frames
+    num_frame = np.ceil(exposure / acq_time)
+    if num_frame == 0:
+        num_frame = 1
+    computed_exposure = num_frame*acq_time
+    glbl.area_det.images_per_set.put(num_frame)
+    # print exposure time
+    print("INFO: requested exposure time = {} - > computed exposure time"
+          "= {}".format(exposure, computed_exposure))
+    return (num_frame, acq_time, computed_exposure)
 
-        _ct_required_params = ['exposure']
-        _ct_optional_params = ['det','subs_dict']
 
-        _tseries_required_params = ['exposure', 'delay', 'num']
+def ct(dets, exposure, *, md=None):
+    pe1c, = dets
+    if md is None:
+        md = {}
+    # setting up area_detector
+    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
+    # update md
+    _md = ChainMap(md, {'sp_time_per_frame': acq_time,
+                        'sp_num_frames': num_frame,
+                        'sp_requested_exposure': exposure,
+                        'sp_computed_exposure': computed_exposure,
+                        'sp_type': 'ct',
+                        # need a name that shows all parameters values
+                        #'sp_name': 'ct_<exposure_time>',
+                        'sp_uid': str(uuid.uuid4()),
+                        'sp_plan_name': 'ct'})
+    plan = bp.count([glbl.area_det], md = _md)
+    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
+    yield from plan
 
-        if self.scanplan == 'ct':
-            # check missed keys
-            missed_keys = [ el for el in _ct_required_params if el not in self.sp_params]
-            if missed_keys:
-                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but you missed required parameters:
-                {}'''.format(self.scanplan, missed_keys)))
-            # check value types
-            wrong_type_dict = {}
-            for k,v in self.sp_params.items():
-                if not isinstance(v,(int,float)):
-                    wrong_type_dict.update({k:v})
-            if wrong_type_dict:
-                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but following key-value pairs are in correct type(s):
-                {}
-                Please go to http://xpdacq.github.io for more information\n'''.
-                format(self.scanplan, wrong_type_dict)))
-        elif self.scanplan == 'Tramp':
-            # check missed keys
-            missed_keys = [ el for el in _Tramp_required_params if el not in self.sp_params]
-            if missed_keys:
-                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but you missed required parameters:
-                {}'''.format(self.scanplan, missed_keys)))
-            # check value types
-            wrong_type_dict = {}
-            for k,v in self.sp_params.items():
-                if not isinstance(v,(int,float)):
-                    wrong_type_dict.update({k:v})
-            if wrong_type_dict:
-                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but following key-value pairs are in correct type(s):
-                {}
-                Please go to http://xpdacq.github.io for more information\n'''.
-                format(self.scanplan, wrong_type_dict)))
-        elif self.scanplan == 'tseries':
-            # check missed keys
-            missed_keys = [ el for el in _tseries_required_params if el not in self.sp_params]
-            if missed_keys:
-                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but you missed required parameters:
-                {}'''.format(self.scanplan, missed_keys)))
-            # check value types
-            wrong_type_dict = {}
-            for k,v in self.sp_params.items():
-                if not isinstance(v,(int,float)):
-                    wrong_type_dict.update({k:v})
-            # num needs to be int
-            if not isinstance(self.sp_params['num'], int):
-                wrong_type_dict.update({'num': self.sp_params.get('num')})
-            if wrong_type_dict:
-                sys.exit(_graceful_exit('''You are using a "{}" ScanPlan but following key-value pairs are in correct type(s):
-                {}
-                Please go to http://xpdacq.github.io for more information\n'''.
-                format(self.scanplan, wrong_type_dict)))
 
-        elif self.scanplan == 'bluesky':
-            print('''INFO: You are handing a "bluesky" type scan.
-            Please go to https://nsls-ii.github.io/bluesky/plans.html
-            for complete guide on how to define a plan.''')
-            print('INFO: This ScanPlan does not support auto-dark subtraction')
-        else:
-            print('It seems you are defining an unknown scan')
-            print('Please use uparrow to edit and retry making your ScanPlan object')
-            sys.exit('Please ignore this RunTime error and continue, using the hint above if you like')
+def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
+    pe1c, = dets
+    if md is None:
+        md = {}
+    # setting up area_detector
+    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
+    # compute Nsteps
+    (Nsteps, computed_step_size) = _nstep(Tstart, Tstop, Tstep)
+    # update md
+    _md = ChainMap(md, {'sp_time_per_frame': acq_time,
+                        'sp_num_frames': num_frame,
+                        'sp_requested_exposure': exposure,
+                        'sp_computed_exposure': computed_exposure,
+                        'sp_type': 'Tramp',
+                        'sp_startingT': Tstart,
+                        'sp_endingT': Tstop,
+                        'sp_requested_Tstep': Tstep,
+                        'sp_computed_Tstep': computed_step_size,
+                        'sp_Nsteps': Nsteps,
+                        # need a name that shows all parameters values
+                        #'sp_name': 'Tramp_<exposure_time>',
+                        'sp_uid': str(uuid.uuid4()),
+                        'sp_plan_name': 'Tramp'})
+    plan = bp.scan([glbl.area_det], glbl.temp_controller, Tstart, Tstop, Nsteps, md=_md)
+    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det, glbl.temp_controller]))
+    yield from plan
 
-class _Union(XPD):
-    def __init__(self,sample,scan):
-        self.type = 'cmdo'
-        self.sc = scan
-        self.sa = sample
-        self.md = self.sc.md
-        self.md.update(self.sa.md)
- #       self._yamify()    # no need to yamify this
 
-class Scan(XPD):
-    ''' a scan class that is the joint unit of Sample and ScanPlan objects
+def tseries(dets, exposure, delay, num, *, md = None):
+    pe1c, = dets
+    if md is None:
+        md = {}
+    # setting up area_detector
+    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
+    real_delay = max(0, delay - computed_exposure)
+    period = max(computed_exposure, real_delay + computed_exposure)
+    print('INFO: requested delay = {}s  -> computed delay = {}s'
+          .format(delay, real_delay))
+    print('INFO: nominal period (neglecting readout overheads) of {} s'
+          .format(period))
+    # update md
+    _md = ChainMap(md, {'sp_time_per_frame': acq_time,
+                        'sp_num_frames': num_frame,
+                        'sp_requested_exposure': exposure,
+                        'sp_computed_exposure': computed_exposure,
+                        'sp_type': 'tseries',
+                        # need a name that shows all parameters values
+                        # 'sp_name': 'tseries_<exposure_time>',
+                        'sp_uid': str(uuid.uuid4()),
+                        'sp_plan_name': 'tseries'})
+    plan = bp.count([glbl.area_det], num, delay, md=_md)
+    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
+    yield from plan
 
-    Scan class supports following ways of assigning Sample, ScanPlan objects:
-    1) bt.get(<object_index>), eg. Scan(bt.get(2), bt.get(5))
-    2) name of acquire object, eg. Scan('my_experiment', 'ct1s')
-    3) index to acquire object, eg. Scan(2,5)
-    All of above assigning methods can be used in a mix way.
 
-    Parameters:
-    -----------
-    sample: xpdacq.beamtime.Sample
-        instance of Sample class that holds sample related metadata
-
-    scanplan: xpdacq.beamtime.ScanPlan
-        instance of ScanPlan calss that hold scanplan related metadata
-
+def _nstep(start, stop, step_size):
+    ''' helper function to compute number of steps and step_size
     '''
-    def __init__(self,sample, scanplan):
-        self.type = 'sc'
-        _sa = self._execute_obj_validator(sample, 'sa', Sample)
-        self.sa = _sa
-        self.md = dict(self.sa.md)
-        _sp = self._execute_obj_validator(scanplan, 'sp', ScanPlan)
-        self.sp = _sp
+    requested_nsteps = abs((start - stop) / step_size)
+
+    computed_nsteps = int(requested_nsteps)+1 # round down for finer step size
+    computed_step_list = np.linspace(start, stop, computed_nsteps)
+    computed_step_size = computed_step_list[1]- computed_step_list[0]
+    print("INFO: requested temperature step size = {} ->"
+          "computed temperature step size = {}"
+          .format(step_size,computed_step_size))
+    return (computed_nsteps, computed_step_size)
+
+
+register_plan('ct', ct)
+register_plan('Tramp', Tramp)
+register_plan('tseries', tseries)
+
+
+def new_short_uid():
+    return str(uuid.uuid4())[:8]
+
+
+def _clean_info(obj):
+    """ stringtify and replace space"""
+    return str(obj).strip().replace(' ', '_')
+
+
+class Beamtime(ValidatedDictLike, YamlDict):
+    _REQUIRED_FIELDS = ['bt_piLast', 'bt_safN']
+
+    def __init__(self, pi_last, saf_num, experimenters=[], *,
+                 wavelength=None, **kwargs):
+        super().__init__(bt_piLast=_clean_info(pi_last),
+                         bt_safN=_clean_info(saf_num),
+                         bt_experimenters=experimenters,
+                         bt_wavelength=wavelength, **kwargs)
+        self._wavelength = wavelength
+        #self.experiments = []
+        self.scanplans = []
+        self.samples = []
+        self._referenced_by = []
+        # used by YamlDict
+        self.setdefault('bt_uid', new_short_uid())
+
+    @property
+    def wavelength(self):
+        return self._wavelength
+
+    @wavelength.setter
+    def wavelength(self, val):
+        self._wavelength = val
+        self.update(bt_wavelength=val)
+
+    def register_scanplan(self, scanplan):
+        sp_name_list = [el.short_summary() for el in self.scanplans]
+        # manage bt.list
+        if scanplan.short_summary() not in sp_name_list:
+            self.scanplans.append(scanplan)
+        else:
+            old_obj = [ obj for obj in self.scanplans
+                      if obj.short_summary() ==scanplan.short_summary()].pop()
+            old_obj_ind = self.scanplans.index(old_obj)
+            self.scanplans.remove(old_obj)
+            self.scanplans.insert(old_obj_ind, scanplan)
+        # yaml sync list
+        self._referenced_by.extend([el for el in self.scanplans if el
+                                    not in self._referenced_by])
+
+    @property
+    def md(self):
+        return dict(self)
+
+    def validate(self):
+        # This is automatically called whenever the contents are changed.
+        missing = set(self._REQUIRED_FIELDS) - set(self)
+        if missing:
+            raise ValueError("Missing required fields: {}".format(missing))
+
+    def default_yaml_path(self):
+        return os.path.join(glbl.yaml_dir,
+                            'bt_bt.yml').format(**self)
+
+    def register_sample(self, sample):
+        # Notify this Beamtime about an Sample that should be re-synced
+        # whenever the contents of the Beamtime are edited. 
+        sa_name_list = [el.get('sample_name', None) for el in self.samples]
+        # manage bt.list
+        if sample.get('sample_name') not in sa_name_list:
+            #print('!!! Got new sample !!!')
+            self.samples.append(sample)
+        else:
+            #print('!!! Overwrite sample !!!')
+            old_obj = [ obj for obj in self.samples if obj.get('sample_name') ==
+                                                  sample.get('sample_name')].pop()
+            old_obj_ind = self.samples.index(old_obj)
+            self.samples.remove(old_obj)
+            self.samples.insert(old_obj_ind, sample)
+        # yaml sync list
+        self._referenced_by.extend([el for el in self.samples if el
+                                    not in self._referenced_by])
+
+    @classmethod
+    def from_yaml(cls, f):
+        d = yaml.load(f)
+        instance = cls.from_dict(d)
+        if not isinstance(f, str):
+            instance.filepath = os.path.abspath(f.name)
+        return instance
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(d.pop('bt_piLast'),
+                   d.pop('bt_safN'),
+                   d.pop('bt_experimenters'),
+                   wavelength=d.pop('bt_wavelength'),
+                   bt_uid=d.pop('bt_uid'),
+                   **d)
+
+    def __str__(self):
+        contents = (['', 'ScanPlans:'] +
+                    ['{i}: {sp!r}'.format(i=i, sp=sp.short_summary())
+                     for i, sp in enumerate(self.scanplans)] +
+                    ['', 'Samples:'] +
+                    ['{i}: {sample_name}'.format(i=i, **s)
+                     for i, s in enumerate(self.samples)])
+        return '\n'.join(contents)
+
+    def list(self):
+        # for back-compat
+        print(self)
+
+
+class Sample(ValidatedDictLike, YamlChainMap):
+    #_REQUIRED_FIELDS = ['sa_name', 'sa_composition']
+    _REQUIRED_FIELDS = ['sample_name', 'sample_composition']
+
+    def __init__(self, beamtime, sample_md, **kwargs):
+        composition = sample_md.get('sample_composition', None)
+        #print("composition of {} is {}".format(sample_md['sample_name'],
+        #                                       sample_md['sample_composition']))
         try:
-            sp_md = self.sp.md
+            super().__init__(sample_md, beamtime) # ChainMap signature
         except:
-            sp_md = {}
-        # create a new dict copy.
-        self.md.update(sp_md)
+            print("At least sample_name and sample_composition is needed.\n"
+                  "For example\n"
+                  ">>> sample_md = {'sample_name':'Ni',"
+                                    "'composition_dict':{'Ni':1}\n"
+                  ">>> Sample(bt, sample_md)\n")
+            return
+        self.setdefault('sa_uid', new_short_uid())
+        beamtime.register_sample(self)
 
-    def _execute_obj_validator(self, input_obj, expect_yml_type, expect_class):
-        parsed_obj = self._object_parser(input_obj, expect_yml_type)
-        output_obj = self._acq_object_validator(parsed_obj, expect_class)
-        return output_obj
+    @property
+    def md(self):
+        return dict(self)
 
-    def _object_parser(self, input_obj, expect_yml_type):
-        '''a priviate parser for arbitrary object input
-        '''
-        FEXT = '.yml'
-        e_msg_str_type = '''Can't find your "{} object {}". Please do bt.list() to make sure you type right name'''.format(expect_yml_type, input_obj)
-        e_msg_ind_type = '''Can't find object with index {}. Please do bt.list() to make sure you type correct index'''.format(input_obj)
-        if isinstance(input_obj, str):
-            yml_list = _get_yaml_list()
-            # note: el.split('_', maxsplit=1) = (yml_type, yml_name)
-            yml_name_found = [el for el in yml_list if el.split('_', maxsplit=1)[0] == expect_yml_type
-                            and el.split('_', maxsplit=1)[1] == input_obj+FEXT]
-            if yml_name_found:
-                with open(os.path.join(glbl.yaml_dir, yml_name_found[-1]), 'r') as f_out:
-                    output_obj = yaml.load(f_out)
-                return output_obj
-            else:
-                # if still can't find it after going over entire list
-                sys.exit(_graceful_exit(e_msg_str_type))
-        elif isinstance(input_obj, int):
-            try:
-                output_obj = self.get(input_obj)
-                return output_obj
-            except IndexError:
-                sys.exit(_graceful_exit(e_msg_ind_type))
-        else:
-            # let xpdAcq object validator deal with other cases
-            return input_obj
-    
-    def _acq_object_validator(self, input_obj, expect_class):
-        ''' filter of object class to Scan
-        '''
-        if isinstance(input_obj, expect_class):
-            return input_obj
-        else:
-            # necessary. using _graceful_exit will burry useful error message
-            # comforting message comes after this TypeError
-            raise TypeError('''Incorrect object assignment on {}.
-Remember xpdAcq like to think "run this Sample(sa) with this ScanPlan(sp)"
-Please do bt.list() to make sure you are handing correct object type'''.format(expect_class))
+    def validate(self):
+        missing = set(self._REQUIRED_FIELDS) - set(self)
+        if missing:
+            raise ValueError("Missing required fields: {}".format(missing))
 
-def _clean_name(name,max_length=25):
-    '''strips a string, but also removes internal whitespace
-    '''
-    if not isinstance(name,str):
-        sys.exit(_graceful_exit('Your input, {}, appears not to be a string. Please try again'.format(str(name))))
-    cleaned = "".join(name.split())
-    if len(cleaned) > max_length:
-        sys.exit(_graceful_exit('Please try a name for your object that is < {} characters long'.format(str(max_length))))
-    return cleaned
+    def default_yaml_path(self):
+        return os.path.join(glbl.yaml_dir, 'samples',
+                            '{sample_name}.yml').format(**self)
 
-def _clean_md_input(obj):
-    ''' strip white space '''
-    if isinstance(obj, str):
-        return obj.strip()
-    elif isinstance(obj, list):
-        clean_list = [_clean_md_input(i) for i in obj]
-        return clean_list
-    elif isinstance(obj, tuple):
-        clean_tuple = tuple([_clean_md_input(i) for i in obj])
-        return clean_tuple
-    # fixme if we need it, but dicts won't be cleaned recursively......
-    elif isinstance(obj, dict):
-        clean_dict = dict()
-        for k,v in obj.items():
-            if isinstance(k, str):
-                clean_key = k.strip()
-            else: # if not string, just pass
-                clean_key = k
-            if isinstance(v, str):
-                clean_val = v.strip()
-            else: # if not string, just pass
-                clean_val = v
-            clean_dict[clean_key] = clean_val
-        return clean_dict
+    @classmethod
+    def from_yaml(cls, f, beamtime=None):
+        map1, map2 = yaml.load(f)
+        instance = cls.from_dicts(map1, map2, beamtime=beamtime)
+        if not isinstance(f, str):
+            instance.filepath = os.path.abspath(f.name)
+        return instance
 
-    else:
-        return obj
+    @classmethod
+    def from_dicts(cls, map1, map2, beamtime=None):
+        if beamtime is None:
+            beamtime = Beamtime.from_dict(map2)
+        #uid = map1.pop('sa_uid')
+        return cls(beamtime, map1,
+                   #sa_uid=uid,
+                   **map1)
+
+class ScanPlan(ValidatedDictLike, YamlChainMap):
+    def __init__(self, beamtime, plan_func, *args, **kwargs):
+        self.plan_func = plan_func
+        plan_name = plan_func.__name__
+        sp_dict = {'sp_plan_name': plan_name , 'sp_args': args,
+                   'sp_kwargs': kwargs}
+        if 'sp_uid' in sp_dict['sp_kwargs']:
+            scanplan_uid = sp_dict['sp_kwargs'].pop('sp_uid')
+            sp_dict.update({'sp_uid':scanplan_uid})
+        super().__init__(sp_dict, beamtime) # ChainMap signature
+        self.setdefault('sp_uid', new_short_uid())
+        beamtime.register_scanplan(self)
+
+    @property
+    def md(self):
+        open_run, = [msg for msg in self.factory() if
+                     msg.command == 'open_run']
+        return open_run.kwargs
+
+    @property
+    def bound_arguments(self):
+        signature = inspect.signature(self.plan_func)
+        # empty list is for [pe1c]  
+        bound_arguments = signature.bind([], *self['sp_args'],
+                                         **self['sp_kwargs'])
+        #bound_arguments.apply_defaults() # only valid in py 3.5
+        complete_kwargs = bound_arguments.arguments
+        # remove place holder for [pe1c]
+        complete_kwargs.popitem(False)
+        return complete_kwargs
+
+    def factory(self):
+        # grab the area detector used in current configuration
+        pe1c = glbl.area_det
+        # pass parameter to plan_func
+        plan = self.plan_func([pe1c], *self['sp_args'], **self['sp_kwargs'])
+        return plan
+
+    def short_summary(self):
+        arg_value_str = map(str, self.bound_arguments.values())
+        fn = '_'.join([self['sp_plan_name']] + list(arg_value_str))
+        return fn
+
+    def __str__(self):
+        return _summarize(self.factory())
+
+    def __eq__(self, other):
+        return self.to_yaml() == other.to_yaml()
+
+
+    @classmethod
+    def from_yaml(cls, f, beamtime=None):
+        map1, map2 = yaml.load(f)
+        instance = cls.from_dicts(map1, map2, beamtime=beamtime)
+        if not isinstance(f, str):
+            instance.filepath = os.path.abspath(f.name)
+        return instance
+
+    @classmethod
+    def from_dicts(cls, map1, map2, beamtime=None):
+        if beamtime is None:
+            beamtime = Beamtime.from_dict(map2)
+        plan_name = map1.pop('sp_plan_name')
+        plan_func = _PLAN_REGISTRY[plan_name]
+        plan_uid = map1.pop('sp_uid')
+        sp_args = map1['sp_args']
+        sp_kwargs = map1['sp_kwargs']
+        sp_kwargs.update({'sp_uid':plan_uid})
+        return cls(beamtime, plan_func, *sp_args, **sp_kwargs)
+
+    def default_yaml_path(self):
+        arg_value_str = map(str, self.bound_arguments.values())
+        fn = '_'.join([self['sp_plan_name']] + list(arg_value_str))
+        return os.path.join(glbl.yaml_dir, 'scanplans',
+                            '%s.yml' % fn)
+
