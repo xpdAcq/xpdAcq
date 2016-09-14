@@ -52,25 +52,29 @@ def _timestampstr(timestamp):
 
 def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
                     detector=None, gaussian=None):
-    """ function to collect calibration image, run calibration process and
-     store calibration parameters into xpdUser/config_base/
+    """ function to run entire calibration process.
+
+    Entire process includes: collect calibration image, trigger pyFAI 
+    calibration process, store calibration parameters as a yaml file 
+    under xpdUser/config_base/ and inject uid of calibration image to
+    following scans, until this function is run again.
 
     Parameters
     ----------
-    exposure : int
-        optional. total exposure time in sec. default is 60s
-    calibrant_name : str
-        optional.name of calibrant used, different calibrants correspond to 
+    exposure : int, optional
+        total exposure time in sec. Default is 60s
+    calibrant_name : str, optional
+        name of calibrant used, different calibrants correspond to 
         different d-spacing profiles. Default is 'Ni'. User can assign 
         different calibrant, given d-spacing file path presents
-    wavelength : flot [unit :angstrom]
-        optional.wavelength of x-ray being used in angstrom Default value is 
+    wavelength : flot, optional
+        current of x-ray wavelength, in angstrom. Default value is 
         read out from existing xpdacq.Beamtime object
-    detector : pyfai.detector.Detector
-        optional. instance of detector which defines pxiel size in x- or
-        y-direction. default is set to Perkin Elmer detector
-    gaussian : int
-        optional. gaussian width between rings, default is 100.
+    detector : pyfai.detector.Detector, optional.
+        instance of detector which defines pxiel size in x- and
+        y-direction. Default is set to Perkin Elmer detector
+    gaussian : int, optional
+        gaussian width between rings, Default is 100.
     """
     # default params
     interactive = True
