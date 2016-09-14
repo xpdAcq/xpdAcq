@@ -81,9 +81,10 @@ def _RE_state_wrapper(RE_obj):
 
 
 def export_userScriptsEtc():
-    """ function that exports user defined objects/scripts stored under config_base and userScript
-        
-        it will create a uncompressed tarball inside xpdUser/Export
+    """ function that exports user defined objects/scripts stored under
+        config_base and userScript.
+
+        This function will create a uncompressed tarball under xpdUser/Export
 
     Return
     ------
@@ -114,10 +115,13 @@ def export_userScriptsEtc():
 
 
 def import_userScriptsEtc():
-    """Import user files that have been placed in xpdUser/Import for use by xpdAcq
+    """Import user files that have been placed in xpdUser/Import
 
-    Allowed files are python user-script files (extension .py), detector-image mask files (.npy) or files containing xpdAcq objects (extension .yml).
-    Files created by running export_userScriptsEtc() are also allowed.  Unallowed files (anything not in the previous list) will be ignored.
+    Allowed files are python user-script files (extension .py),
+    detector-image mask files (.npy) or files containing xpdAcq objects 
+    (extension .yml). Files created by running export_userScriptsEtc() are 
+    also allowed.  Unallowed files (anything not in the previous list) will 
+    be ignored. 
 
     After import, all files in the xpdUser/import directory will be deleted
     The user can run `export_userScriptsEtc` to revert them.
@@ -134,7 +138,7 @@ def import_userScriptsEtc():
         print(
             'INFO: There is no predefined user objects in {}'.format(src_dir))
         return
-        # unpack every archived file in Import/
+    # unpack every archived file in Import/
     for f in f_list:
         try:
             # shutil should handle all compressed cases
@@ -169,16 +173,17 @@ def import_userScriptsEtc():
                 pass
         else:
             # don't expect user to have directory
-            print('''I can only import files, not directories. Please place in the import directory either:
-                (1) all your files such as scripts, masks and xpdAcq object yaml files or 
-                (2) a tar or zipped-tar archive file containing those files.'''.format(
-                f_name))
+            print("I can only import files, not directories."
+                  "Please place in the import directory either:\n"
+                  "(1) all your files such as scripts, masks and xpdAcq "
+                  "object yaml files\n"
+                  "(2) a tar or zipped-tar archive file containing "
+                  "those files".format(f_name))
             failure_list.append(f_name)
             pass
     if failure_list:
-        print(
-            'Finished importing. Failed to move {} but they will leave in Import/'.format(
-                failure_list))
+        print("Finished importing. Failed to move {}"
+              "but they will leave in Import/".format(failure_list))
     return moved_list
 
 
@@ -190,10 +195,12 @@ def _copy_and_delete(f_name, src_full_path, dst_dir):
         os.remove(src_full_path)
         return dst_name
     else:
-        print('''We had a problem moving {}.
-                Most likely it is not a supported file type (e.g., .yml, .py, .npy, .tar, .gz).
-                It will not be available for use in xpdAcq, but it will be left in the xpdUser/Import/ directory'''.format(
-            f_name))
+        print("We had a problem moving {}.\n"
+              "Most likely it is not a supported file type "
+              "(e.g., .yml, .py, .npy, .tar, .gz).\n"
+              "It will not be available for use in xpdAcq, "
+              "but it will be left in the xpdUser/Import/ directory"
+              .format(f_name))
         return
 
 
@@ -430,7 +437,20 @@ excel_to_yaml = ExceltoYaml()
 
 
 def import_sample(saf_num, bt):
-    """ thin wrapper for ExceltoYaml class """
+    """ import sample metadata based on a spreadsheet
+
+    this function expect a prepopulated '<SAF_number>_sample.xls' file 
+    located under `xpdConfig/` directory. Corresponding Sample objects 
+    will be created after information stored being parsed. Please go to 
+    http://xpdacq.github.io for parser rules.
+
+    Parameters
+    ----------
+    saf_num : int
+        Safety Approval Form number of beamtime.
+    bt : xpdacq.beamtime.Beamtime
+        beamtime object that is going to be linked with these samples
+    """
     bt.samples = []
     excel_to_yaml.load(str(saf_num))
     excel_to_yaml.create_yaml(bt)
