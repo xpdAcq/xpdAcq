@@ -76,7 +76,7 @@ install:
 script:
   - coverage run run_tests.py
   - coverage report -m
-  - flake8 $TRAVIS_BUILD_DIR/xpdAcq
+  - flake8 .
 
 after_script:
   - codecov
