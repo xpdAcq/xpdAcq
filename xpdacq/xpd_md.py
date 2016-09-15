@@ -69,8 +69,7 @@ class Experiment(object):
         if env_var:
             env_dict = {}
             if isinstance(env_var, str):
-                env_var_op = []
-                env_var_op.append(env_var)
+                env_var_op = [env_var]
             elif isinstance(env_var, list):
                 env_var_op = env_var
             else:

@@ -177,8 +177,7 @@ class NewBeamtimeTest(unittest.TestCase):
         cwd = os.getcwd()
         os.chdir(src)  # inevitable step for compression
         tar_name = 'HappyMeal'
-        shutil.make_archive(tar_name,
-                            'tar')  # now data should be in xpdUser/Import/
+        shutil.make_archive(tar_name, 'tar')  # now data should be in xpdUser/Import/
         full_tar_name = os.path.join(src, tar_name + '.tar')
         os.chdir(cwd)
         moved_list_1 = import_userScriptsEtc()

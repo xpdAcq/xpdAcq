@@ -13,10 +13,6 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-# from dataportal import DataBroker as db
-# from dataportal import get_events, get_table, get_images
-# from metadatastore.commands import find_run_starts
-
 import os
 import datetime
 from time import strftime
@@ -76,7 +72,7 @@ def _feature_gen(header):
             feature = [ch for ch in list(el) if ch != ' ']
             feature_list.append(''.join(feature))
         except KeyError:
-            pass  # protection to allow missing required fields. This should not happen
+            pass  # allow missing required fields. This should not happen
     feature_list.append(uid)
     f_name = "_".join(feature_list)
     return f_name
@@ -84,8 +80,8 @@ def _feature_gen(header):
 
 def _timestampstr(timestamp):
     """ convert timestamp to strftime formate """
-    timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime(
-        '%Y%m%d-%H%M')
+    timestring = datetime.datetime.fromtimestamp(
+        float(timestamp)).strftime('%Y%m%d-%H%M')
     return timestring
 
 

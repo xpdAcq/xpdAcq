@@ -112,9 +112,10 @@ def periodic_dark(plan):
         # FIXME: should we do "or" or "and"?
         if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
-        if need_dark and (
-                not qualified_dark_uid) and msg.command == 'open_run' and (
-                    'dark_frame' not in msg.kwargs):
+        if need_dark \
+                and (not qualified_dark_uid) \
+                and msg.command == 'open_run' \
+                and ('dark_frame' not in msg.kwargs):
             # We are about to start a new 'run' (e.g., a count or a scan).
             # Insert a dark frame run first.
             need_dark = False
@@ -152,9 +153,9 @@ def _validate_dark(expire_time=None):
     # find fresh and qualified dark
     now = time.time()
     qualified_dark_uid = [el['uid'] for el in dark_dict_list if
-                          abs(el['exposure'] - light_cnt_time) <= acq_time and
-                          abs(el['timestamp'] - now) <= (
-                              expire_time * 60 - acq_time)
+                          abs(el['exposure'] - light_cnt_time) <= acq_time
+                          and abs(el['timestamp'] - now)
+                          <= (expire_time * 60 - acq_time)
                           and (el['acq_time'] == acq_time)
                           ]
     if qualified_dark_uid:

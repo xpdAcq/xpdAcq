@@ -21,7 +21,9 @@ _PLAN_REGISTRY = {}
 
 
 def register_plan(plan_name, plan_func, overwrite=False):
-    """Map between a plan_name (string) and a plan_func (generator function)."""
+    """
+    Map between a plan_name (string) and a plan_func (generator function).
+    """
     if plan_name in _PLAN_REGISTRY and not overwrite:
         raise KeyError("A plan is already registered by this name. Use "
                        "overwrite=True to overwrite it.")
@@ -56,8 +58,9 @@ def _summarize(plan):
 
 
 def _configure_pe1c(exposure):
-    """ priviate function to configure pe1c with continuous acquistion
-    mode"""
+    """
+    priviate function to configure pe1c with continuous acquistion mode
+    """
     # cs studio configuration doesn't propagate to python level
     glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = glbl.area_det.cam.acquire_time.get()
@@ -94,30 +97,30 @@ def ct(dets, exposure, *, md=None):
     yield from plan
 
 
-def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
+def Tramp(dets, exposure, tstart, tstop, tstep, *, md=None):
     pe1c, = dets
     if md is None:
         md = {}
     # setting up area_detector
     (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
     # compute Nsteps
-    (Nsteps, computed_step_size) = _nstep(Tstart, Tstop, Tstep)
+    (Nsteps, computed_step_size) = _nstep(tstart, tstop, tstep)
     # update md
     _md = ChainMap(md, {'sp_time_per_frame': acq_time,
                         'sp_num_frames': num_frame,
                         'sp_requested_exposure': exposure,
                         'sp_computed_exposure': computed_exposure,
                         'sp_type': 'Tramp',
-                        'sp_startingT': Tstart,
-                        'sp_endingT': Tstop,
-                        'sp_requested_Tstep': Tstep,
+                        'sp_startingT': tstart,
+                        'sp_endingT': tstop,
+                        'sp_requested_Tstep': tstep,
                         'sp_computed_Tstep': computed_step_size,
                         'sp_Nsteps': Nsteps,
                         # need a name that shows all parameters values
                         # 'sp_name': 'Tramp_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'Tramp'})
-    plan = bp.scan([glbl.area_det], glbl.temp_controller, Tstart, Tstop,
+    plan = bp.scan([glbl.area_det], glbl.temp_controller, tstart, tstop,
                    Nsteps, md=_md)
     plan = bp.subs_wrapper(plan,
                            LiveTable([glbl.area_det, glbl.temp_controller]))
@@ -156,8 +159,7 @@ def _nstep(start, stop, step_size):
     """
     requested_nsteps = abs((start - stop) / step_size)
 
-    computed_nsteps = int(
-        requested_nsteps) + 1  # round down for finer step size
+    computed_nsteps = int(requested_nsteps) + 1  # round down for a finer step
     computed_step_list = np.linspace(start, stop, computed_nsteps)
     computed_step_size = computed_step_list[1] - computed_step_list[0]
     print("INFO: requested temperature step size = {} ->"
@@ -212,8 +214,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
         if scanplan.short_summary() not in sp_name_list:
             self.scanplans.append(scanplan)
         else:
-            old_obj = [obj for obj in self.scanplans
-                       if
+            old_obj = [obj for obj in self.scanplans if
                        obj.short_summary() == scanplan.short_summary()].pop()
             old_obj_ind = self.scanplans.index(old_obj)
             self.scanplans.remove(old_obj)
