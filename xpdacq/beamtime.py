@@ -97,30 +97,30 @@ def ct(dets, exposure, *, md=None):
     yield from plan
 
 
-def Tramp(dets, exposure, tstart, tstop, tstep, *, md=None):
+def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
     pe1c, = dets
     if md is None:
         md = {}
     # setting up area_detector
     (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
     # compute Nsteps
-    (Nsteps, computed_step_size) = _nstep(tstart, tstop, tstep)
+    (Nsteps, computed_step_size) = _nstep(Tstart, Tstop, Tstep)
     # update md
     _md = ChainMap(md, {'sp_time_per_frame': acq_time,
                         'sp_num_frames': num_frame,
                         'sp_requested_exposure': exposure,
                         'sp_computed_exposure': computed_exposure,
                         'sp_type': 'Tramp',
-                        'sp_startingT': tstart,
-                        'sp_endingT': tstop,
-                        'sp_requested_Tstep': tstep,
+                        'sp_startingT': Tstart,
+                        'sp_endingT': Tstop,
+                        'sp_requested_Tstep': Tstep,
                         'sp_computed_Tstep': computed_step_size,
                         'sp_Nsteps': Nsteps,
                         # need a name that shows all parameters values
                         # 'sp_name': 'Tramp_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'Tramp'})
-    plan = bp.scan([glbl.area_det], glbl.temp_controller, tstart, tstop,
+    plan = bp.scan([glbl.area_det], glbl.temp_controller, Tstart, Tstop,
                    Nsteps, md=_md)
     plan = bp.subs_wrapper(plan,
                            LiveTable([glbl.area_det, glbl.temp_controller]))
