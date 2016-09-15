@@ -114,6 +114,7 @@ _EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
 class Glbl:
     _is_simulation = simulation
     beamline_host_name = BEAMLINE_HOST_NAME
+    # directory names
     base = BASE_DIR
     home = HOME_DIR
     _export_tar_dir = _EXPORT_TAR_DIR
@@ -130,16 +131,19 @@ class Glbl:
     scanplan_dir = SCANPLAN_DIR
     allfolders = ALL_FOLDERS
     archive_dir = USER_BACKUP_DIR
-    dk_window = DARK_WINDOW
-    #frame_acq_time = FRAME_ACQUIRE_TIME
+    # on/off and attributes for functionality
     auto_dark = True
+    dk_window = DARK_WINDOW
+    _dark_dict_list = [] # initiate a new one every time
     shutter_control = True
+    auto_load_calib = True
+    calib_config_name = CALIB_CONFIG_NAME
+    # beamline name
     owner = OWNER
     beamline_id = BEAMLINE_ID
     group = GROUP
-    _dark_dict_list = [] # initiate a new one every time
+    # instrument config
     det_image_field = IMAGE_FIELD
-    calib_config_name = CALIB_CONFIG_NAME
 
     # logic to assign correct objects depends on simulation or real experiment
     if not simulation:
