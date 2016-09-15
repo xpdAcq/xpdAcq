@@ -160,11 +160,22 @@ class PrunTest(unittest.TestCase):
         # trust file-based config_dict
         self.assertEqual(re_auto_calibration_md_dict, config_from_file)
         self.assertFalse('new_field' in re_auto_calibration_md_dict)
-        # test with prun
+        # test with prun : auto_load_calib = False -> nothing happpen
         msg_list = []
         def msg_rv(msg):
             msg_list.append(msg)
         self.prun.msg_hook = msg_rv
+        glbl.auto_load_calib = False
+        prun_uid = self.prun(0,0)
+        open_run = [el.kwargs for el in msg_list
+                    if el.command=='open_run'][0]
+        self.assertFalse('sc_calibration_md' in open_run)
+        # test with prun : auto_load_calib = True -> full calib_md
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.prun.msg_hook = msg_rv
+        glbl.auto_load_calib = True
         prun_uid = self.prun(0,0)
         open_run = [el.kwargs for el in msg_list
                     if el.command=='open_run'][0]
