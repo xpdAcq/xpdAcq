@@ -155,27 +155,44 @@ class PrunTest(unittest.TestCase):
                          0.0002)
         self.assertEqual(auto_calibration_md_dict['file_name'],
                          'pyFAI_calib_Ni_20160813-1659.poni')
+        self.assertEqual(auto_calibration_md_dict['time'],
+                        '20160813-1815')
         # file-based config_dict is different from glbl.calib_config_dict
         self.assertTrue(os.path.isfile(cfg_dst))
         glbl.calib_config_dict = dict(auto_calibration_md_dict)
-        glbl.calib_config_dict['new_filed'] = 'i am new'
-        re_auto_calibration_md_dict = _auto_load_calibration_file()
-        # trust file-based config_dict
-        self.assertEqual(re_auto_calibration_md_dict, config_from_file)
-        self.assertFalse('new_field' in re_auto_calibration_md_dict)
-        # test with prun
+        glbl.calib_config_dict['new_filed']='i am new'
+        reload_auto_calibration_md_dict = _auto_load_calibration_file()
+        # trust file-based solution
+        self.assertEqual(reload_auto_calibration_md_dict, config_from_file)
+        self.assertFalse('new_field' in reload_auto_calibration_md_dict)
+        # test with prun : auto_load_calib = False -> nothing happpen
         msg_list = []
-
         def msg_rv(msg):
             msg_list.append(msg)
-
         self.prun.msg_hook = msg_rv
-        prun_uid = self.prun(0, 0)
+        glbl.auto_load_calib = False
+        prun_uid = self.prun(0,0)
+        open_run = [el.kwargs for el in msg_list
+                    if el.command =='open_run'][0]
+        self.assertFalse('calibration_md' in open_run)
+        # test with prun : auto_load_calib = True -> full calib_md
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.prun.msg_hook = msg_rv
+        glbl.auto_load_calib = True
+        prun_uid = self.prun(0,0)
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'][0]
-        self.assertTrue('sc_calibration_md' in open_run)
-        self.assertEqual(open_run['sc_calibration_md'],
-                         re_auto_calibration_md_dict)
+        # modify in place
+        reload_auto_calibration_md_dict.pop('calibration_collection_uid')
+        # test assertion
+        self.assertTrue('calibration_md' in open_run)
+        self.assertEqual(open_run['calibration_md'],
+                         reload_auto_calibration_md_dict)
+        # specific info encoded in test file
+        self.assertEqual(open_run['calibration_collection_uid'],
+                         'uuid1234')
 
     def test_open_collection(self):
         # no collection
