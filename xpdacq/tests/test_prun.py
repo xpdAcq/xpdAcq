@@ -160,7 +160,6 @@ class PrunTest(unittest.TestCase):
         # file-based config_dict is different from glbl.calib_config_dict
         self.assertTrue(os.path.isfile(cfg_dst))
         glbl.calib_config_dict = dict(auto_calibration_md_dict)
-        # trust file-based config_dict
         glbl.calib_config_dict['new_filed']='i am new'
         reload_auto_calibration_md_dict = _auto_load_calibration_file()
         # trust file-based solution
@@ -168,15 +167,13 @@ class PrunTest(unittest.TestCase):
         self.assertFalse('new_field' in reload_auto_calibration_md_dict)
         # test with prun : auto_load_calib = False -> nothing happpen
         msg_list = []
-
         def msg_rv(msg):
             msg_list.append(msg)
-
         self.prun.msg_hook = msg_rv
         glbl.auto_load_calib = False
         prun_uid = self.prun(0,0)
         open_run = [el.kwargs for el in msg_list
-                    if el.command=='open_run'][0]
+                    if el.command =='open_run'][0]
         self.assertFalse('calibration_md' in open_run)
         # test with prun : auto_load_calib = True -> full calib_md
         msg_list = []
