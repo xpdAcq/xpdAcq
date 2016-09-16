@@ -185,13 +185,14 @@ class PrunTest(unittest.TestCase):
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'][0]
         # modify in place
-        reload_auto_calibration_md_dict.pop('calibration_uid')
+        reload_auto_calibration_md_dict.pop('calibration_collection_uid')
         # test assertion
         self.assertTrue('calibration_md' in open_run)
         self.assertEqual(open_run['calibration_md'],
                          reload_auto_calibration_md_dict)
         # specific info encoded in test file
-        self.assertEqual(open_run['calibration_uid'], 'uuid1234')
+        self.assertEqual(open_run['calibration_collection_uid'],
+                         'uuid1234')
 
     def test_open_collection(self):
         # no collection

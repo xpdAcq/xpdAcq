@@ -1,4 +1,4 @@
-calibration_uid: uuid1234
+calibration_collection_uid: uuid1234
 centerX: !!python/object/apply:numpy.core.multiarray.scalar
 - !!python/object/apply:numpy.dtype
   args: [f8, 0, 1]
