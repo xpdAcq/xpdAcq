@@ -155,7 +155,8 @@ class PrunTest(unittest.TestCase):
                          0.0002)
         self.assertEqual(auto_calibration_md_dict['file_name'],
                          'pyFAI_calib_Ni_20160813-1659.poni')
-        self.aseertEqual('time', '20160813-1815')
+        self.assertEqual(auto_calibration_md_dict['time'],
+                        '20160813-1815')
         # file-based config_dict is different from glbl.calib_config_dict
         self.assertTrue(os.path.isfile(cfg_dst))
         glbl.calib_config_dict = dict(auto_calibration_md_dict)
@@ -190,7 +191,7 @@ class PrunTest(unittest.TestCase):
         self.assertEqual(open_run['sc_calibration_md'],
                          reload_auto_calibration_md_dict)
         self.assertEqual(open_run['calibration_uid'],
-                         reload_auto_calibration_md.get('calibration_uid'))
+                         reload_auto_calibration_md_dict.get('calibration_uid'))
 
     def test_open_collection(self):
         # no collection
