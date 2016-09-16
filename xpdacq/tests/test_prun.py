@@ -177,7 +177,7 @@ class PrunTest(unittest.TestCase):
         prun_uid = self.prun(0,0)
         open_run = [el.kwargs for el in msg_list
                     if el.command=='open_run'][0]
-        self.assertFalse('sc_calibration_md' in open_run)
+        self.assertFalse('calibration_md' in open_run)
         # test with prun : auto_load_calib = True -> full calib_md
         msg_list = []
         def msg_rv(msg):
@@ -187,11 +187,14 @@ class PrunTest(unittest.TestCase):
         prun_uid = self.prun(0,0)
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'][0]
-        self.assertTrue('sc_calibration_md' in open_run)
-        self.assertEqual(open_run['sc_calibration_md'],
+        # modify in place
+        reload_auto_calibration_md_dict.pop('calibration_uid')
+        # test assertion
+        self.assertTrue('calibration_md' in open_run)
+        self.assertEqual(open_run['calibration_md'],
                          reload_auto_calibration_md_dict)
-        self.assertEqual(open_run['calibration_uid'],
-                         reload_auto_calibration_md_dict.get('calibration_uid'))
+        # specific info encoded in test file
+        self.assertEqual(open_run['calibration_uid'], 'uuid1234')
 
     def test_open_collection(self):
         # no collection
