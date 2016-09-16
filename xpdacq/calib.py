@@ -1,5 +1,6 @@
 """ Script to perform pyFAI calibration in pure Python """
 import os
+import uuid
 import time
 import yaml
 import logging
@@ -149,7 +150,10 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     glbl.calib_config_dict.update(Fit2D_dict)
     glbl.calib_config_dict.update({'file_name':basename})
     glbl.calib_config_dict.update({'time':timestr})
-    glbl.calib_config_dict.update({'calibration_uid':prun_uid[-1]})
+    # FIXME: need a solution for selecting desired calibration image
+    # based on calibration_collection_uid later
+    glbl.calib_config_dict.update({'calibration_collection_uid':
+                                   str(uuid.uuid4())})
     # write yaml
     yaml_name = glbl.calib_config_name
     with open(os.path.join(glbl.config_base, yaml_name), 'w') as f:

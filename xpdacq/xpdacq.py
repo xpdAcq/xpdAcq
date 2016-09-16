@@ -217,9 +217,10 @@ def _inject_calibration_md(msg):
         calibration_md = _auto_load_calibration_file()
         if calibration_md:
             injected_calib_dict = dict(calibration_md)
-            injected_calib_uid = injected_calib_dict.pop('calibration_uid')
+            injected_calib_uid = injected_calib_dict.pop(
+                                 'calibration_collection_uid')
             msg.kwargs['calibration_md'] = injected_calib_dict
-            msg.kwargs['calibration_uid'] = injected_calib_uid
+            msg.kwargs['calibration_collection_uid'] = injected_calib_uid
     return msg
 
 
