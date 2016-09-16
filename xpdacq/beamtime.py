@@ -15,13 +15,15 @@ from .glbl import glbl
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 
-
 # This is used to map plan names (strings in the YAML file) to actual
 # plan functions in Python.
 _PLAN_REGISTRY = {}
 
+
 def register_plan(plan_name, plan_func, overwrite=False):
-    "Map between a plan_name (string) and a plan_func (generator function)."
+    """
+    Map between a plan_name (string) and a plan_func (generator function).
+    """
     if plan_name in _PLAN_REGISTRY and not overwrite:
         raise KeyError("A plan is already registered by this name. Use "
                        "overwrite=True to overwrite it.")
@@ -33,7 +35,7 @@ def unregister_plan(plan_name):
 
 
 def _summarize(plan):
-    "based on bluesky.utils.print_summary"
+    """based on bluesky.utils.print_summary"""
     output = []
     read_cache = []
     for msg in plan:
@@ -56,21 +58,22 @@ def _summarize(plan):
 
 
 def _configure_pe1c(exposure):
-    """ priviate function to configure pe1c with continuous acquistion
-    mode"""
-    #cs studio configuration doesn't propagate to python level
+    """
+    priviate function to configure pe1c with continuous acquistion mode
+    """
+    # cs studio configuration doesn't propagate to python level
     glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = glbl.area_det.cam.acquire_time.get()
     # compute number of frames
     num_frame = np.ceil(exposure / acq_time)
     if num_frame == 0:
         num_frame = 1
-    computed_exposure = num_frame*acq_time
+    computed_exposure = num_frame * acq_time
     glbl.area_det.images_per_set.put(num_frame)
     # print exposure time
     print("INFO: requested exposure time = {} - > computed exposure time"
           "= {}".format(exposure, computed_exposure))
-    return (num_frame, acq_time, computed_exposure)
+    return num_frame, acq_time, computed_exposure
 
 
 def ct(dets, exposure, *, md=None):
@@ -86,10 +89,10 @@ def ct(dets, exposure, *, md=None):
                         'sp_computed_exposure': computed_exposure,
                         'sp_type': 'ct',
                         # need a name that shows all parameters values
-                        #'sp_name': 'ct_<exposure_time>',
+                        # 'sp_name': 'ct_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'ct'})
-    plan = bp.count([glbl.area_det], md = _md)
+    plan = bp.count([glbl.area_det], md=_md)
     plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
     yield from plan
 
@@ -114,15 +117,17 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
                         'sp_computed_Tstep': computed_step_size,
                         'sp_Nsteps': Nsteps,
                         # need a name that shows all parameters values
-                        #'sp_name': 'Tramp_<exposure_time>',
+                        # 'sp_name': 'Tramp_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'Tramp'})
-    plan = bp.scan([glbl.area_det], glbl.temp_controller, Tstart, Tstop, Nsteps, md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det, glbl.temp_controller]))
+    plan = bp.scan([glbl.area_det], glbl.temp_controller, Tstart, Tstop,
+                   Nsteps, md=_md)
+    plan = bp.subs_wrapper(plan,
+                           LiveTable([glbl.area_det, glbl.temp_controller]))
     yield from plan
 
 
-def tseries(dets, exposure, delay, num, *, md = None):
+def tseries(dets, exposure, delay, num, *, md=None):
     pe1c, = dets
     if md is None:
         md = {}
@@ -150,17 +155,17 @@ def tseries(dets, exposure, delay, num, *, md = None):
 
 
 def _nstep(start, stop, step_size):
-    ''' helper function to compute number of steps and step_size
-    '''
+    """ helper function to compute number of steps and step_size
+    """
     requested_nsteps = abs((start - stop) / step_size)
 
-    computed_nsteps = int(requested_nsteps)+1 # round down for finer step size
+    computed_nsteps = int(requested_nsteps) + 1  # round down for a finer step
     computed_step_list = np.linspace(start, stop, computed_nsteps)
-    computed_step_size = computed_step_list[1]- computed_step_list[0]
+    computed_step_size = computed_step_list[1] - computed_step_list[0]
     print("INFO: requested temperature step size = {} ->"
           "computed temperature step size = {}"
-          .format(step_size,computed_step_size))
-    return (computed_nsteps, computed_step_size)
+          .format(step_size, computed_step_size))
+    return computed_nsteps, computed_step_size
 
 
 register_plan('ct', ct)
@@ -187,7 +192,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
                          bt_experimenters=experimenters,
                          bt_wavelength=wavelength, **kwargs)
         self._wavelength = wavelength
-        #self.experiments = []
+        # self.experiments = []
         self.scanplans = []
         self.samples = []
         self._referenced_by = []
@@ -209,8 +214,8 @@ class Beamtime(ValidatedDictLike, YamlDict):
         if scanplan.short_summary() not in sp_name_list:
             self.scanplans.append(scanplan)
         else:
-            old_obj = [ obj for obj in self.scanplans
-                      if obj.short_summary() ==scanplan.short_summary()].pop()
+            old_obj = [obj for obj in self.scanplans if
+                       obj.short_summary() == scanplan.short_summary()].pop()
             old_obj_ind = self.scanplans.index(old_obj)
             self.scanplans.remove(old_obj)
             self.scanplans.insert(old_obj_ind, scanplan)
@@ -238,12 +243,12 @@ class Beamtime(ValidatedDictLike, YamlDict):
         sa_name_list = [el.get('sample_name', None) for el in self.samples]
         # manage bt.list
         if sample.get('sample_name') not in sa_name_list:
-            #print('!!! Got new sample !!!')
+            # print('!!! Got new sample !!!')
             self.samples.append(sample)
         else:
-            #print('!!! Overwrite sample !!!')
-            old_obj = [ obj for obj in self.samples if obj.get('sample_name') ==
-                                                  sample.get('sample_name')].pop()
+            # print('!!! Overwrite sample !!!')
+            old_obj = [obj for obj in self.samples if obj.get('sample_name') ==
+                       sample.get('sample_name')].pop()
             old_obj_ind = self.samples.index(old_obj)
             self.samples.remove(old_obj)
             self.samples.insert(old_obj_ind, sample)
@@ -283,20 +288,20 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
 
 class Sample(ValidatedDictLike, YamlChainMap):
-    #_REQUIRED_FIELDS = ['sa_name', 'sa_composition']
+    # _REQUIRED_FIELDS = ['sa_name', 'sa_composition']
     _REQUIRED_FIELDS = ['sample_name', 'sample_composition']
 
     def __init__(self, beamtime, sample_md, **kwargs):
         composition = sample_md.get('sample_composition', None)
-        #print("composition of {} is {}".format(sample_md['sample_name'],
+        # print("composition of {} is {}".format(sample_md['sample_name'],
         #                                       sample_md['sample_composition']))
         try:
-            super().__init__(sample_md, beamtime) # ChainMap signature
+            super().__init__(sample_md, beamtime)  # ChainMap signature
         except:
             print("At least sample_name and sample_composition is needed.\n"
                   "For example\n"
                   ">>> sample_md = {'sample_name':'Ni',"
-                                    "'composition_dict':{'Ni':1}\n"
+                  "'composition_dict':{'Ni':1}\n"
                   ">>> Sample(bt, sample_md)\n")
             return
         self.setdefault('sa_uid', new_short_uid())
@@ -327,21 +332,22 @@ class Sample(ValidatedDictLike, YamlChainMap):
     def from_dicts(cls, map1, map2, beamtime=None):
         if beamtime is None:
             beamtime = Beamtime.from_dict(map2)
-        #uid = map1.pop('sa_uid')
+        # uid = map1.pop('sa_uid')
         return cls(beamtime, map1,
-                   #sa_uid=uid,
+                   # sa_uid=uid,
                    **map1)
+
 
 class ScanPlan(ValidatedDictLike, YamlChainMap):
     def __init__(self, beamtime, plan_func, *args, **kwargs):
         self.plan_func = plan_func
         plan_name = plan_func.__name__
-        sp_dict = {'sp_plan_name': plan_name , 'sp_args': args,
+        sp_dict = {'sp_plan_name': plan_name, 'sp_args': args,
                    'sp_kwargs': kwargs}
         if 'sp_uid' in sp_dict['sp_kwargs']:
             scanplan_uid = sp_dict['sp_kwargs'].pop('sp_uid')
-            sp_dict.update({'sp_uid':scanplan_uid})
-        super().__init__(sp_dict, beamtime) # ChainMap signature
+            sp_dict.update({'sp_uid': scanplan_uid})
+        super().__init__(sp_dict, beamtime)  # ChainMap signature
         self.setdefault('sp_uid', new_short_uid())
         beamtime.register_scanplan(self)
 
@@ -357,7 +363,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         # empty list is for [pe1c]  
         bound_arguments = signature.bind([], *self['sp_args'],
                                          **self['sp_kwargs'])
-        #bound_arguments.apply_defaults() # only valid in py 3.5
+        # bound_arguments.apply_defaults() # only valid in py 3.5
         complete_kwargs = bound_arguments.arguments
         # remove place holder for [pe1c]
         complete_kwargs.popitem(False)
@@ -381,7 +387,6 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
     def __eq__(self, other):
         return self.to_yaml() == other.to_yaml()
 
-
     @classmethod
     def from_yaml(cls, f, beamtime=None):
         map1, map2 = yaml.load(f)
@@ -399,7 +404,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         plan_uid = map1.pop('sp_uid')
         sp_args = map1['sp_args']
         sp_kwargs = map1['sp_kwargs']
-        sp_kwargs.update({'sp_uid':plan_uid})
+        sp_kwargs.update({'sp_uid': plan_uid})
         return cls(beamtime, plan_func, *sp_args, **sp_kwargs)
 
     def default_yaml_path(self):
@@ -407,4 +412,3 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         fn = '_'.join([self['sp_plan_name']] + list(arg_value_str))
         return os.path.join(glbl.yaml_dir, 'scanplans',
                             '%s.yml' % fn)
-

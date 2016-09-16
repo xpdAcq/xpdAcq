@@ -11,7 +11,6 @@ if not glbl._is_simulation:
     glbl.temp_controller = cs700
     # let NameError handle missing object
 
-
 # beamtime reload happen in xpdacq
 from xpdacq.xpdacq import *
 
@@ -28,7 +27,7 @@ if bt is not None:
     prun.beamtime = bt
 
 # gonna seperate analysis from collection
-#from xpdacq.analysis import *
+# from xpdacq.analysis import *
 
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
@@ -43,5 +42,6 @@ else:
 from xpdacq.calib import run_calibration
 # analysis functions
 from xpdan.data_reduction import *
+
 print('OK, ready to go.  To continue, follow the steps in the xpdAcq')
 print('documentation at http://xpdacq.github.io/xpdacq')

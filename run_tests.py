@@ -4,9 +4,8 @@ import pytest
 
 if __name__ == '__main__':
     # show output results from every test function
-    args = ['-v']
+    args = ['-v', '-vrxs']
     # show the message output for skipped and expected failure tests
-    args.append('-vrxs')
     if len(sys.argv) > 1:
         args.extend(sys.argv[1:])
     print('pytest arguments: {}'.format(args))

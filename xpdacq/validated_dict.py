@@ -1,5 +1,6 @@
 from collections import ChainMap
 
+
 class ValidatedDictLike:
     """
     This a dict with a `validate` method that may raise any exception.
@@ -9,6 +10,7 @@ class ValidatedDictLike:
     from `validate` is raised. Thus, it is impossible to put the dict
     into an invalid state.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.validate()
