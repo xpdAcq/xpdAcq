@@ -214,11 +214,12 @@ def _inject_qualified_dark_frame_uid(msg):
 def _inject_calibration_md(msg):
     if msg.command == 'open_run':
         calibration_md = _auto_load_calibration_file()
+        # it user has run a calibration set before
         if calibration_md:
-            msg.kwargs['sc_calibration_md'] = calibration_md
-            calib_uid = calibration_md['calibration_uid']
-            # flat dict, make search earsier in the future
-            msg.kwargs['calibration_uid'] = calib_uid
+            injected_calib_dict = dict(calibration_md)
+            injected_calib_uid = injected_calib_dict.pop('calibration_uid')
+            msg.kwargs['calibration_md'] = injected_calib_dict
+            msg.kwargs['calibration_uid'] = injected_calib_uid
     return msg
 
 
