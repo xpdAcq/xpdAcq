@@ -1,14 +1,10 @@
 import os
 import uuid
-import time
 import yaml
 import inspect
-from mock import MagicMock
 from collections import ChainMap
 import bluesky.plans as bp
 import numpy as np
-from bluesky import RunEngine
-from bluesky.utils import normalize_subs_input
 from bluesky.callbacks import LiveTable
 
 from .glbl import glbl
