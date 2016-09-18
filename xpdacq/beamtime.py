@@ -77,7 +77,8 @@ def _configure_pe1c(exposure):
 
 
 def ct(dets, exposure, *, md=None):
-    """ Take one reading from area detectors with given exposure time
+    """
+    Take one reading from area detectors with given exposure time
 
     Parameters
     ----------
@@ -115,9 +116,11 @@ def ct(dets, exposure, *, md=None):
 
 
 def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
-    """ Scan over temeprature controller in steps.
+    """
+    Scan over temeprature controller in steps.
 
-    temeprature steps are defined by starting point, stoping point and step size
+    temeprature steps are defined by starting point,
+    stoping point and step size
 
     Parameters
     ----------
@@ -247,7 +250,8 @@ def _clean_info(obj):
 
 
 class Beamtime(ValidatedDictLike, YamlDict):
-    """ class that carries necessary information for a beamtime
+    """
+    class that carries necessary information for a beamtime
 
     Parameters
     ----------
@@ -396,6 +400,9 @@ class Sample(ValidatedDictLike, YamlChainMap):
     """
     class that carries sample-related metadata
 
+    after creation, this Sample object will be related to Beamtime
+    object given as argument and will be available in bt.list()
+
     Parameters
     ----------
     beamtime : xpdacq.beamtime.Beamtime
@@ -404,6 +411,15 @@ class Sample(ValidatedDictLike, YamlChainMap):
         dictionary contains all sample related metadata
     kwargs :
         keyword arguments for extr metadata
+
+    Examples
+    --------
+    >>> Sample(bt, {'samle_name': 'Ni', 'sample_composition':{'Ni': 1}})
+
+    >>> Sample(bt, {'samle_name': 'TiO2',
+                    'sample_composition':{'Ti': 1, 'O': 2}})
+
+    Please refer to http://xpdacq.github.io for more examples.
     """
 
     _REQUIRED_FIELDS = ['sample_name', 'sample_composition']
@@ -457,7 +473,11 @@ class Sample(ValidatedDictLike, YamlChainMap):
 
 
 class ScanPlan(ValidatedDictLike, YamlChainMap):
-    """ class that carries scan plan with corresponding experimental arguements
+    """
+    class that carries scan plan with corresponding experimental arguements
+
+    after creation, this Sample object will be related to Beamtime
+    object given as argument and will be available in bt.list()
 
     Parameters
     ----------
