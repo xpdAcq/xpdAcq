@@ -8,6 +8,8 @@ import datetime
 import numpy as np
 from IPython import get_ipython
 
+#FIXME : this import is intentionally left as we will save calib_img
+#FIXME : leave for separate PR
 import tifffile as tif
 
 from .glbl import glbl
