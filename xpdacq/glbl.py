@@ -1,14 +1,9 @@
 import os
 import socket
-import yaml
 import time
-import numpy as np
 from unittest.mock import MagicMock
 from time import strftime, sleep
 
-from bluesky import RunEngine
-from bluesky.utils import normalize_subs_input
-from bluesky.callbacks import LiveTable
 import bluesky.examples as be
 
 
@@ -150,8 +145,6 @@ class Glbl:
 
     # logic to assign correct objects depends on simulation or real experiment
     if not simulation:
-        from bluesky.run_engine import RunEngine
-        from bluesky.utils import normalize_subs_input
         from bluesky.callbacks import LiveTable as lvt
         # import other names to avoid possible self-referencing later
         from databroker import DataBroker
