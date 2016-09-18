@@ -108,7 +108,7 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     calib_collection_uid = str(uuid.uuid4())
     calibration_dict = {'sample_name':calibrant_name,
                         'sample_composition':{calibrant_name :1},
-                        'is_calibration': True
+                        'is_calibration': True,
                         'calibration_collection_uid': calib_collection_uid}
     prun_uid = prun(calibration_dict, ScanPlan(bto, ct, exposure))
     light_header = glbl.db[prun_uid[-1]]  # last one is always light
@@ -158,7 +158,7 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     # FIXME: need a solution for selecting desired calibration image
     # based on calibration_collection_uid later
     glbl.calib_config_dict.update({'calibration_collection_uid':
-                                   calib_collection_uid)})
+                                   calib_collection_uid})
     # write yaml
     yaml_name = glbl.calib_config_name
     with open(os.path.join(glbl.config_base, yaml_name), 'w') as f:
