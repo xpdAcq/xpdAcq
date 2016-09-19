@@ -147,7 +147,7 @@ class Glbl:
     if not simulation:
         from bluesky.callbacks import LiveTable as lvt
         # import other names to avoid possible self-referencing later
-        from databroker import DataBroker
+        from databroker.broker import DataBroker
         from databroker import get_images as getImages
         from databroker import get_events as getEvents
         from bluesky.callbacks.broker import verify_files_saved as verifyFiles
