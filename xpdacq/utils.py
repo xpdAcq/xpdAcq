@@ -1,6 +1,5 @@
 import os
 import sys
-import yaml
 import shutil
 import tarfile as tar
 from time import strftime
