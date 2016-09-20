@@ -3,15 +3,67 @@
 ``xpdAcq`` features
 ====================
 
+.. _auto_dark:
+
 Automated dark collection
 --------------------------
 
-* describe dark criteria
+you might have found something weird when you running a ``prun`` command:
+
+*I only requested one ``prun`` but program runs two scans*
+
+So what happen?
+
+That is actually a feature called auto-dark subtraction of ``xpdAcq``.
+When you are running your experiment, ``xpdAcq`` actually checks if you have
+collected a **fresh and appropriate** dark frame every time it collects a scan.
+The definition of **fresh and appropriate** is:
+
+.. code-block:: none
+
+  Given a certain period T (``dark window``), there exists a dark frame
+  with the same **total exposure time** and exactly the same **acquisition time**
+  as the light frame we are about collect.
+
+.. note::
+
+  At **XPD**, area detector is running in ``continuous acquisition`` mode,
+  which means detector keeps **reading** but only **saves** image when ``xpdAcq``
+  tells it to with desired exposure time. In short,
+
+  * acquisition time defines how fast is detector reading time,
+    ranged from 0.1s to 5s.
+
+  * exposure time means total exposure time, which user defined.
+
+Automated dark collection is enabled by default and it can be turned off by:
+
+.. code-block:: python
+
+  glbl.auto_dark = False
+  glbl.shutter_control = False
+
+And period of dark window can be modified by:
+
+.. code-block:: python
+
+  glbl.dk_window = 200 # in minutes. default is 3000 minutes
+
+Having ``auto_dark`` set to ``True`` is strongly recommended as this enables
+``xpdAcq`` to do automated dark frame subtraction when you pull out data from
+centralized **NSLSL-II** server.
+
+.. _auto_calib:
 
 Automated calibration capture
 -----------------------------
 
-* describe calibration criteria
+Often times, keeping track with which calibration file is associated with
+certain scan is very tiring. ``xpdAcq`` makes this easier for you. Before every
+scan is being collected, program goes to grab the most recent calibration
+parameters in ``/home/xf28id1/xpdUser/config_base`` and load them as part of
+metadata so that you can reference them whenever you want and make in-situ data
+reduction possible!
 
 .. _calib_manual:
 

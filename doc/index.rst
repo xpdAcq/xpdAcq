@@ -24,8 +24,6 @@ Every syntax started from psychological motivation, like the most important one 
 
   run this Sample with this ScanPlan
 
-To find more, please go to :ref:`xpdu`
-
 What's new?
 +++++++++++
 
@@ -57,11 +55,9 @@ Additional built-in scan types will be added in future releases.
 
 ``v0.5`` supports following automated logics :
 
-.. code-block:: none
+  * :ref:`automated dark subtraction <auto_dark>`
 
-  automated dark subtraction.
-
-  automated calibration capture.
+  * :ref:`automated calibration capture <auto_calib>`
 
 This version is fully documented and extensively tested.
 
