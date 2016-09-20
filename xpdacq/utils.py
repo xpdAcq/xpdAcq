@@ -393,9 +393,12 @@ class ExceltoYaml:
         Returns
         -------
         composition_dict : dict
-            a dictionary contains {element: stoichiometry}
+            a dictionary contains {element: stoichiometry}.
         phase_dict : dict
-            a dictionary contains relative ratio of phases
+            a dictionary contains relative ratio of phases.
+        transform_dict : dict
+            a dictionary contains string with the format PDF 
+            transfomation software takes. default is pdfgetx
 
         Examples
         --------
@@ -411,23 +414,29 @@ class ExceltoYaml:
 
         phase_dict = {}
         composition_dict = {}
+        transform_dict = {}
+
         compound_meta = phase_str.split(',')
         for el in compound_meta:
-            if len(el.split(':')) == 1:
+            _el = el.strip()
+            # there is no ":" in the string
+            if len(_el.split(':')) == 1:
                 com = el.split(':').pop()
-                amount = '1'  # capture default
+                amount = '1'  # default set to 1
             else:
-                com, amount = el.split(':')  # expect [<com>, <amount>]
-            phase_dict.update({com.strip(): float(amount.strip())})
+                com, amount = _el.split(':')  # expect [<com>, <amount>]
             parsed_tuple = composition_analysis(com.strip())
-            # expect: ([elment_1, element_2, ...], [sto_1, sto_2,...])
+            # return: ([elment_1, element_2, ...], [sto_1, sto_2,...])
+            # iterate over element
             for i in range(len(parsed_tuple[0])):
+                # parsed_tuple[0] is a list of element
                 composition_dict.update({parsed_tuple[0][i]:
-                                             parsed_tuple[1][i]})
+                                         parsed_tuple[1][i]})
+            phase_dict.update({com.strip(): float(amount.strip())})
         # normalized phase_dict
         total = sum(phase_dict.values())
         for k, v in phase_dict.items():
-            ratio = "{0:.2f}".format(v / total)
+            ratio = "{:.2f}".format(v / total)
             phase_dict[k] = float(ratio)
         return composition_dict, phase_dict
 
