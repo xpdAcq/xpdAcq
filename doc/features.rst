@@ -1,7 +1,22 @@
+.. _feature:
+
+``xpdAcq`` features
+====================
+
+Automated dark collection
+--------------------------
+
+* describe dark criteria
+
+Automated calibration capture
+-----------------------------
+
+* describe calibration criteria
+
 .. _calib_manual:
 
 Quick guide of calibration steps with pyFAI
--------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. First you will see an image window like this:
 
@@ -49,3 +64,13 @@ After supplying all indices, you should have a window to show your calibration:
 
 Alright, you are done then! With ```automated calibration capture`` feature, ``xpdAcq``
 will load calibration parameters from the most recent config file.
+
+metadata imported from spreadsheet
+-----------------------------------
+
+* spreadsheet parser rule
+
+Auto-masking
+-------------
+
+* auto-masking

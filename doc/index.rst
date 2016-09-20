@@ -76,6 +76,12 @@ This version is fully documented and extensively tested.
    :hidden:
    :maxdepth: 3
 
+   features
+
+.. toctree::
+   :hidden:
+   :maxdepth: 3
+
    troubleshooting
 
 .. toctree::
