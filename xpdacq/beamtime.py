@@ -72,7 +72,7 @@ def _configure_pe1c(exposure):
     return num_frame, acq_time, computed_exposure
 
 
-def ct(dets, exposure, *, md=None):
+def ct(detectors, exposure, *, md=None):
     """ Take one reading from area detectors with given exposure time
 
     Parameters
@@ -90,7 +90,7 @@ def ct(dets, exposure, *, md=None):
     global state. Please refer to http://xpdacq.github.io for more information
     """
 
-    pe1c, = dets
+    pe1c, = detectors
     if md is None:
         md = {}
     # setting up area_detector
@@ -110,7 +110,7 @@ def ct(dets, exposure, *, md=None):
     yield from plan
 
 
-def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
+def Tramp(detectors, exposure, Tstart, Tstop, Tstep, *, md=None):
     """ Scan over temperature controller in steps.
 
     temperature steps are defined by starting point, stooping point and step size
@@ -136,7 +136,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
     global state. Please refer to http://xpdacq.github.io for more information
     """
 
-    pe1c, = dets
+    pe1c, = detectors
     if md is None:
         md = {}
     # setting up area_detector
@@ -165,7 +165,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
     yield from plan
 
 
-def tseries(dets, exposure, delay, num, *, md=None):
+def tseries(detectors, exposure, delay, num, *, md=None):
     """
     time series scan with area detector.
 
@@ -188,7 +188,7 @@ def tseries(dets, exposure, delay, num, *, md=None):
     global state. Please refer to http://xpdacq.github.io for more information
     """
 
-    pe1c, = dets
+    pe1c, = detectors
     if md is None:
         md = {}
     # setting up area_detector
