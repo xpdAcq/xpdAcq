@@ -12,10 +12,24 @@ from .utils import _graceful_exit
 
 
 def _start_beamtime(PI_last, saf_num, experimenters=[], *,
-                    wavelength=None):
-    """ function for start beamtime """
-    # TODO - allow config file later
+                    wavelength=None, **kwargs):
+    """ function for start beamtime
 
+    Parameters
+    ----------
+    PI_last : str
+        last name of PI to this beamtime.
+    saf_num : int
+        Safety Approval Form number to current beamtime.
+    experimenters : list, optional
+        list of experimenter names. Each of experimenter name is
+        expected to be comma separated as `first_name', `last_name`.
+    wavelength : float, optional
+        wavelength of current beamtime, in angstrom.
+    kwargs :
+        extra keyword arguments for current beamtime.
+    """
+    # TODO - allow config file later
     if not os.path.exists(glbl.home):
         raise RuntimeError("WARNING: fundamental directory {} does not"
                            "exist. Please contact beamline staff immediately"
@@ -28,9 +42,9 @@ def _start_beamtime(PI_last, saf_num, experimenters=[], *,
                               .format(glbl.home))
     elif len(dir_list) == 0:
         _make_clean_env()
-        print("INFO: initiated requried directories for experiment")
+        print("INFO: initiated required directories for experiment")
         bt = Beamtime(PI_last, saf_num, experimenters,
-                      wavelength=wavelength)
+                      wavelength=wavelength, **kwargs)
         os.chdir(glbl.home)
         print("INFO: to link newly created beamtime object to prun, "
               "please do `prun.beamtime = bt`")
@@ -118,7 +132,7 @@ def load_beamtime(directory=None):
 
 def load_yaml(f, known_uids=None):
     """
-    Recreate a ScanPlan, Experiment, or Beamtime object from a YAML file.
+    Recreate a ScanPlan, Sample, or Beamtime object from a YAML file.
 
     If its linked objects have already been created, re-link to them.
     If they have not yet been created, create them now.
@@ -152,10 +166,23 @@ def load_yaml(f, known_uids=None):
     return obj
 
 
-def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
+def _end_beamtime(base_dir=None, archive_dir=None, bto=None):
     """ funciton to end a beamtime.
 
     It check if directory structure is correct and flush directories
+    under xpdUser/
+
+    Parameters
+    ----------
+    base_dir : str, optional
+        base directory of archived file. default is xpdUser/
+    archive_dir : str, optional
+        remote backup path. default is configured by
+        ``glbl.archive_dir``.
+    bto : xpdacq.beamtime.Beamtime, optional
+        beamtime object that provides information for files that is
+        going to be archived. default is beamtime object in current
+        ipython session.
     """
     _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']
     if archive_dir is None:
@@ -201,7 +228,7 @@ def _load_bt_info(bt_obj, required_fields):
         if bt_info is None:
             print("WARNING: required beamtime information {} doesn't exist. "
                   "User might have edited it during experiment. "
-                  "Please contact user for further inforamtion".format(el))
+                  "Please contact user for further information".format(el))
             sys.exit()
         bt_info_list.append(_clean_info(bt_info))
     bt_info_list.append(strftime('%Y-%m-%d-%H%M'))
@@ -219,7 +246,7 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
     try:
         os.chdir(glbl.base)
         print("INFO: Archiving your data now. That may take several"
-              "minutes. please be patient :)")
+              "minutes. Please be patient :)")
         tar_return = shutil.make_archive(archive_full_name,
                                          archive_format, root_dir=glbl.base,
                                          base_dir='xpdUser', verbose=1,
@@ -234,7 +261,7 @@ def _load_bt(bt_yaml_path):
     if not os.path.isfile(btoname):
         sys.exit(_graceful_exit("{} does not exist in {}. User might have"
                                 "deleted it accidentally.Please create it"
-                                "based on user information or contect user"
+                                "based on user information or contact user"
                                 .format(os.path.basename(btoname),
                                         glbl.yaml_dir)))
     with open(btoname, 'r') as fi:
@@ -270,7 +297,7 @@ def _delete_home_dir_tree():
     return
 
 
-""" hodding place
+""" holding place
 # advanced version, allowed multiple beamtime. but not used for now
 def _start_xpdacq():
     dirs = [d for d in os.listdir(glbl.yaml_dir) if os.path.isdir(d)]

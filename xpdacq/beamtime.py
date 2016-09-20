@@ -248,10 +248,10 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     Parameters
     ----------
-    pi_last : str
-        last name of PI to this beamtime.
+    PI_last : str
+        PI last name to this beamtime.
     saf_num : int
-        Safety Approval Form number to current beamtime.
+        Safety Approval Form number to this beamtime.
     experimenters : list, optional
         list of experimenter names. Each of experimenter name is
         expected to be comma separated as `first_name', `last_name`.
@@ -281,9 +281,9 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     _REQUIRED_FIELDS = ['bt_piLast', 'bt_safN']
 
-    def __init__(self, pi_last, saf_num, experimenters=[], *,
+    def __init__(self, PI_last, saf_num, experimenters=[], *,
                  wavelength=None, **kwargs):
-        super().__init__(bt_piLast=_clean_info(pi_last),
+        super().__init__(bt_piLast=_clean_info(PI_last),
                          bt_safN=_clean_info(saf_num),
                          bt_experimenters=experimenters,
                          bt_wavelength=wavelength, **kwargs)
