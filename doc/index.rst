@@ -29,7 +29,7 @@ To find more, please go to :ref:`xpdu`
 What's new?
 +++++++++++
 
-current version : ``v0.4``
+current version : ``v0.5``
 """""""""""""""""""""""""""
 
 This is a stable release of ``xpdAcq`` software.
@@ -45,7 +45,7 @@ New features introduced to this version:
     * azimuthal integration using ``pyFAI`` as the back-end
     * auto-masking based on statistics on pixel counts
 
-``v0.4`` supports three kinds of built-in scans:
+``v0.5`` supports three kinds of built-in scans:
 
 .. code-block:: none
 
@@ -55,7 +55,7 @@ New features introduced to this version:
 
 Additional built-in scan types will be added in future releases.
 
-``v0.4`` supports following automated logics :
+``v0.5`` supports following automated logics :
 
 .. code-block:: none
 

@@ -53,7 +53,7 @@ calibration
   run_calibration(exposure=60)
 
 .. note::
-  * this function will run a calibration shot.
+  * this function will run a calibration shot, for a short tutorial about calibration here :ref:`calib_manual`
 
   * default behavior assume **Ni** as the calibrant and default ``exposure`` time is 60 seconds.
 
@@ -72,7 +72,7 @@ Example:
 
 .. note::
 
-  * ``sample name`` and ``sample_composition`` are both required.
+  * ``sample_name`` and ``sample_composition`` are both required.
 
   * ``sample_name`` needs to be a string and ``sample_composition`` needs to be a dictionary, namely in a {`key`: `value`} form.
 
