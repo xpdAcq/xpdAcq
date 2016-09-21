@@ -37,6 +37,8 @@ class xrunTest(unittest.TestCase):
         import_sample_info(self.saf_num, self.bt)
         self.xrun = CustomizedRunEngine(self.bt)
         open_collection('unittest')
+        Sample(self.bt, {'sample_name': 'unittest',
+                         'sample_composition':{'unittest': 1}})
 
     def tearDown(self):
         os.chdir(self.base_dir)
