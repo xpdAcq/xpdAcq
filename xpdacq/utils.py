@@ -281,16 +281,19 @@ class ExceltoYaml:
                 # sample fields
                 elif k in self._SAMPLE_FIELD:
                     try:
-                        composition_dict, phase_dict = self._phase_parser(v)
+                        (composition_dict,
+                         phase_dict,
+                         composition_str) = self._phase_parser(v)
                     except ValueError:
                         composition_dict = v
                         phase_dict = v
                     finally:
                         parsed_sa_md.update({'sample_composition':
-                                                 composition_dict})
-
+                                             composition_dict})
                         parsed_sa_md.update({'sample_phase':
-                                                 phase_dict})
+                                             phase_dict})
+                        parsed_sa_md.update({'composition_string':
+                                             composition_str})
 
                 # comma separated fields
                 elif k in self._COMMA_SEP_FIELD:
@@ -396,15 +399,16 @@ class ExceltoYaml:
             a dictionary contains {element: stoichiometry}.
         phase_dict : dict
             a dictionary contains relative ratio of phases.
-        transform_dict : dict
-            a dictionary contains string with the format PDF 
-            transfomation software takes. default is pdfgetx
+        composition_str : str
+            a string with the format PDF transfomation software 
+            takes. default is pdfgetx
 
         Examples
         --------
-        rv = _phase_parser('NaCl:1, Si:1')
-        rv[0] # {'Na':1, 'Cl':1, 'Si':1}
-        rv[1] # {'Nacl':0.5, 'Si':0.5}
+        rv = cls._phase_parser('NaCl:1, Si:2')
+        rv[0] # {'Na':0.33, 'Cl':0.33, 'Si':0.67}
+        rv[1] # {'Nacl':0.33, 'Si':0.67}
+        rv[2] # 'Na0.33Cl0.5Si0.5'
 
         Raises:
         -------
@@ -414,32 +418,47 @@ class ExceltoYaml:
 
         phase_dict = {}
         composition_dict = {}
-        transform_dict = {}
+        composition_str = ''
 
         compound_meta = phase_str.split(',')
+        # figure out ratio between phases
         for el in compound_meta:
             _el = el.strip()
-            # there is no ":" in the string
-            if len(_el.split(':')) == 1:
-                com = el.split(':').pop()
-                amount = '1'  # default set to 1
+            meta = _el.split(':')
+            # there is no ":" in the string or there is a ":"
+            # but nothing follows
+            if ':' not in _el or len(meta[1]) == 0:
+                # take whatever letters to be the chemical element
+                chr_list = [el for el in _el if el.isalpha()]
+                com = ''.join(chr_list)
+                amount = 1
             else:
-                com, amount = _el.split(':')  # expect [<com>, <amount>]
-            parsed_tuple = composition_analysis(com.strip())
-            # return: ([elment_1, element_2, ...], [sto_1, sto_2,...])
-            # iterate over element
-            for i in range(len(parsed_tuple[0])):
-                # parsed_tuple[0] is a list of element
-                composition_dict.update({parsed_tuple[0][i]:
-                                         parsed_tuple[1][i]})
+                com, amount = _el.split(':')
+            # construct phase_dict, eg. {'Ni':0.5, 'NaCl':0.5}
             phase_dict.update({com.strip(): float(amount.strip())})
-        # normalized phase_dict
+
         total = sum(phase_dict.values())
         for k, v in phase_dict.items():
-            ratio = "{:.2f}".format(v / total)
-            phase_dict[k] = float(ratio)
-        return composition_dict, phase_dict
+            ratio = round(v/total, 2)
+            phase_dict[k] = ratio
+            # construct composition_dict
+            smbl, cnt = composition_analysis(k.strip())
+            for i in range(len(smbl)):
+                # element appears in differnt phases, add up
+                if smbl[i] in composition_dict:
+                    val = composition_dict.get(smbl[i])
+                    val += cnt[i] * ratio
+                    composition_dict.update({smbl[i]: val})
+                else:
+                    # otherwise, just update it
+                    composition_dict.update({smbl[i]:
+                                             cnt[i] * ratio})
+        # construct composition_str
+        for k,v in composition_dict.items():
+            composition_str += str(k)
+            composition_str += str(v)
 
+        return composition_dict, phase_dict, composition_str
 
 excel_to_yaml = ExceltoYaml()
 
