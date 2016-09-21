@@ -52,10 +52,53 @@ class ImportSampleTest(unittest.TestCase):
         rv = excel_to_yaml._phase_parser(test_str)
         self.assertEqual(rv[0], expect_result[0])
         self.assertEqual(rv[1], expect_result[1])
-        # edge cases
+        # edge case: nothing follows ':'
         test_str = 'TiO2:, H2O:, Ni:1'
         expect_result = ({'H': 0.66, 'O': 0.99, 'Ti': 0.33, 'Ni': 0.33},
                          {'TiO2': 0.33, 'H2O': 0.33, 'Ni': 0.33})
         rv = excel_to_yaml._phase_parser(test_str)
         self.assertEqual(rv[0], expect_result[0])
         self.assertEqual(rv[1], expect_result[1])
+        # edge case: ':' not in str, non alpha numeric symbols instead
+        test_str = 'TiO2;, H2O:, Ni^1'
+        expect_result = ({'H': 0.66, 'O': 0.99, 'Ti': 0.33, 'Ni': 0.33},
+                         {'TiO2': 0.33, 'H2O': 0.33, 'Ni': 0.33})
+        rv = excel_to_yaml._phase_parser(test_str)
+        self.assertEqual(rv[0], expect_result[0])
+        self.assertEqual(rv[1], expect_result[1])
+        # edge case: not comma separated -> ValueError
+        test_str = 'TiO2; H2O: Ni^1'
+        self.assertRaises(ValueError,
+                          lambda: excel_to_yaml._phase_parser(test_str))
+
+    def test_comma_separate_parser(self):
+        # normal case
+        test_str = 'New Order, Joy Division, Smashing Pumpkins'
+        expect_result = ['New Order', 'Joy Division',
+                         'Smashing Pumpkins']
+        rv = excel_to_yaml._comma_separate_parser(test_str)
+        self.assertEqual(rv, expect_result)
+        # no comma -> whole str as list
+        test_str = 'New Order Joy Division Smashing Pumpkins      '
+        self.assertEqual([test_str.strip()],
+                         excel_to_yaml._comma_separate_parser(test_str))
+
+    def test_name_parser(self):
+        # normal case
+        test_str = 'New Order, Joy Division, Smashing Pumpkins'
+        expect_result = ['New', 'Order', 'Joy', 'Division',
+                         'Smashing', 'Pumpkins']
+        name_list = []
+        parsed_list = excel_to_yaml._comma_separate_parser(test_str)
+        for el in parsed_list:
+            name_list.extend(excel_to_yaml._name_parser(el))
+        self.assertEqual(name_list, expect_result)
+        # edge case: no comma between firt and last, still can parse
+        test_str = 'New Order Joy Division Smashing Pumpkins'
+        expect_result = ['New', 'Order', 'Joy', 'Division',
+                         'Smashing', 'Pumpkins']
+        name_list = []
+        parsed_list = excel_to_yaml._comma_separate_parser(test_str)
+        for el in parsed_list:
+            name_list.extend(excel_to_yaml._name_parser(el))
+        self.assertEqual(name_list, expect_result)

@@ -363,11 +363,6 @@ class ExceltoYaml:
         -------
         output_list : list
             a list contains comma separated element parsed strings.
-
-        Raises:
-        -------
-        ValueError
-            if ',' is not specified between names
         """
         element_list = input_str.split(',')
         output_list = list(map(lambda x: x.strip(), element_list))
@@ -425,17 +420,23 @@ class ExceltoYaml:
         for el in compound_meta:
             _el = el.strip()
             meta = _el.split(':')
-            # there is no ":" in the string or there is a ":"
-            # but nothing follows
-            if ':' not in _el or len(meta[1]) == 0:
-                # take whatever letters to be the chemical element
-                chr_list = [el for el in _el if el.isalpha()]
-                com = ''.join(chr_list)
+            # there is no ":" in the string            
+            if ':' not in _el:
+                # take whatever alpha numeric string before symbol
+                # to be the chemical element
+                symbl = [el for el in _el if not el.isalnum()]
+                symbl_ind = _el.find(symbl[0]) # take the first symbol
+                com = _el[:symbl_ind]
+                amount = 1.0
+                phase_dict.update({com: amount})
+            # there is a ":" but nothing follows
+            elif len(meta[1]) == 0:
+                com = meta[0]
                 amount = 1.0
                 phase_dict.update({com: amount})
             else:
                 com, amount = _el.split(':')
-            # construct phase_dict, eg. {'Ni':0.5, 'NaCl':0.5}
+                # construct phase_dict, eg. {'Ni':0.5, 'NaCl':0.5}
                 phase_dict.update({com.strip(): float(amount.strip())})
 
         total = sum(phase_dict.values())
