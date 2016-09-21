@@ -431,11 +431,12 @@ class ExceltoYaml:
                 # take whatever letters to be the chemical element
                 chr_list = [el for el in _el if el.isalpha()]
                 com = ''.join(chr_list)
-                amount = 1
+                amount = 1.0
+                phase_dict.update({com: amount})
             else:
                 com, amount = _el.split(':')
             # construct phase_dict, eg. {'Ni':0.5, 'NaCl':0.5}
-            phase_dict.update({com.strip(): float(amount.strip())})
+                phase_dict.update({com.strip(): float(amount.strip())})
 
         total = sum(phase_dict.values())
         for k, v in phase_dict.items():
