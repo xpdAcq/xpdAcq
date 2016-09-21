@@ -30,10 +30,9 @@ class ImportSampleTest(unittest.TestCase):
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
-        xlf = '30079_sample.xlsx'
+        xlf = '30079_sample.xls'
         src = os.path.join(os.path.dirname(__file__), xlf)
         shutil.copyfile(src, os.path.join(glbl.xpdconfig, xlf))
-        import_sample(self.saf_num, self.bt)
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -102,3 +101,33 @@ class ImportSampleTest(unittest.TestCase):
         for el in parsed_list:
             name_list.extend(excel_to_yaml._name_parser(el))
         self.assertEqual(name_list, expect_result)
+
+    def test_load_excel(self):
+        excel_to_yaml.load(self.saf_num)
+        self.assertEqual(len(excel_to_yaml.sa_md_list), 34) #34 rows
+        # wrong saf_num, FileNotFoundError
+        self.assertRaises(FileNotFoundError,
+                          lambda: excel_to_yaml.load(7777))
+        # multiple files start with <saf_num>_sample
+        xlf = '30079_sample.xls'
+        src = os.path.join(os.path.dirname(__file__), xlf)
+        incorrect_file_name ='30079_sample_modified.xls'
+        shutil.copyfile(src, os.path.join(glbl.xpdconfig,
+                                          incorrect_file_name))
+
+    def test_import_sample(self):
+       import_sample(self.saf_num, self.bt)
+       sa_name_linked = [el['sample_name'] for el in self.bt.samples]
+       self.assertTrue('Ni_calibrant' in sa_name_linked)
+       target_sa = [el for el in self.bt._referenced_by 
+               if el['sample_name'] == 'Ni_calibrant'].pop() # only one
+       # is bt info correctly linked?
+       for k,v in target_sa.items():
+           if k.startswith('bt_'):
+               self.assertEqual(v, self.bt[k])
+       # is md as expected?
+       expected_tag = ['standard']
+       expected_sample_maker = ['beamline', 'calibrant']
+       self.assertEqual(target_sa['tags'], expected_tag)
+       self.assertEqual(target_sa['sample_maker'],
+                        expected_sample_maker)

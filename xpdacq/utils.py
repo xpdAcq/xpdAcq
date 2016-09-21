@@ -245,7 +245,7 @@ class ExceltoYaml:
 
         Parameters
         ----------
-        bt : xpdacq.Beamtime object
+        bt : xpdacq.beamtime.Beamtime object
             an object carries SAF, PI_last and other information
 
         Returns
@@ -262,7 +262,6 @@ class ExceltoYaml:
                 k = k.strip().replace(' ', '_')
                 v = v.replace('/', '_')  # yaml path
                 # mapped_key = self.MAPPING.get(k, None) # no mapping
-
                 # name fields
                 if k in self._NAME_FIELD:
                     try:
@@ -425,8 +424,13 @@ class ExceltoYaml:
                 # take whatever alpha numeric string before symbol
                 # to be the chemical element
                 symbl = [el for el in _el if not el.isalnum()]
-                symbl_ind = _el.find(symbl[0]) # take the first symbol
-                com = _el[:symbl_ind]
+                if symbl:
+                    # take the first symbol
+                    symbl_ind = _el.find(symbl[0])
+                    com = _el[:symbl_ind]
+                else:
+                    # simply take whole string
+                    com = _el
                 amount = 1.0
                 phase_dict.update({com: amount})
             # there is a ":" but nothing follows
