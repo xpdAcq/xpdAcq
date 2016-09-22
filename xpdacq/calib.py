@@ -16,8 +16,12 @@ from .glbl import glbl
 from .beamtime import ScanPlan, ct
 
 # Hot fix at beamline
-if not glbl._is_simulation:
-    from databroker import get_images
+#if not glbl._is_simulation:
+#    from databroker import get_images
+
+# local test
+from databroker import get_images, get_events
+from databroker import db
 
 from pyFAI.gui_utils import update_fig
 from pyFAI.detectors import Perkin, Detector
@@ -113,16 +117,19 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
                         'is_calibration': True,
                         'calibration_collection_uid': calib_collection_uid}
     prun_uid = prun(calibration_dict, ScanPlan(bto, ct, exposure))
-    light_header = glbl.db[prun_uid[-1]]  # last one is always light
+    # FIXME: local test, remove/ edit after finished
+    #light_header = glbl.db[prun_uid[-1]]  # last one is always light
+    light_header = db[-1]
     dark_uid = light_header.start['sc_dk_field_uid']
     dark_header = glbl.db[dark_uid]
     # unknown signature of get_images
-    dark_img = np.asarray(
-        get_images(dark_header, glbl.det_image_field)).squeeze()
+    # FIXME: local test, remove/ edit after finished
+    #dark_img = np.asarray(
+    #    get_images(dark_header, glbl.det_image_field)).squeeze()
     # dark_img = np.asarray(glbl.get_images(dark_header, glbl.det_image_field)).squeeze()
-    for ev in glbl.get_events(light_header, fill=True):
+    for ev in get_events(light_header, fill=True):
         img = ev['data'][glbl.det_image_field]
-        img -= dark_img
+        #img -= dark_img
     # calibration
     timestr = _timestampstr(time.time())
     basename = '_'.join(['pyFAI_calib', calibrant_name, timestr])
