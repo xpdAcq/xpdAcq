@@ -19,6 +19,9 @@ When you are running your experiment, ``xpdAcq`` actually checks if you have
 collected a **fresh and appropriate** dark frame every time it collects a scan.
 The definition of **fresh and appropriate** is:
 
+**Nice and fresh**
+^^^^^^^^^^^^^^^^^^
+
 .. code-block:: none
 
   Given a certain period T (``dark window``), there exists a dark frame

@@ -27,6 +27,9 @@ link bt to prun
 
   prun.beamtime = bt
 
+.. note::
+
+   this is to notice ``prun`` for current beamtime. concept of ``prun`` will be introduced later
 
 open a collection
 """""""""""""""""
@@ -60,7 +63,7 @@ calibration
   * use ``run_calibration?`` to find out more information
 
 
-setup ``Sample`` objects
+set up ``Sample`` objects
 """"""""""""""""""""""""
 
 Example:
@@ -80,7 +83,7 @@ Example:
 
 
 
-setup ``ScanPlan`` objects
+set up ``ScanPlan`` objects
 """"""""""""""""""""""""""
 
 Example:
@@ -90,7 +93,7 @@ command
 ======================================= ===================================================================================
 ``ScanPlan(bt, ct, 5)``                  a count scan for 5s
 
-``ScanPlan(bt, tseries, 5, 50, 15)``     time series with 5s count time, 50s delay and 5 repeats
+``ScanPlan(bt, tseries, 5, 50, 15)``     time series with 5s count time, 50s delay and 15 repeats
 
 ``ScanPlan(bt, Tramp, 5, 300, 200, 5)``  temperature series with 5s count time, starting from 300k to 200k with 5k per step
 ======================================= ===================================================================================
@@ -100,7 +103,8 @@ list objects by categories
 
 .. code-block:: python
 
-  bt.list()
+  in[1]: bt.list()
+  Out[1]:
   ScanPlans:
   0: 'ct_5'
   1: 'Tramp_5_300_200_5'
@@ -136,31 +140,85 @@ running scan with acquire objects
 
   remember to change the index according to your bt.list() result!
 
+interrupt
+"""""""""
 
-saving image from your scans
-""""""""""""""""""""""""""""
+we are not living in a ideal world, so things can go wrong. The most common one
+is you want to abort your current scan. Here is a useful table from
+`original package <http://nsls-ii.github.io/bluesky/state-machine.html#interactive-pause-summary>`_
 
-**last scan:**
+
+Interactively Interrupt Execution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+======================= ===========
+Command                 Outcome
+======================= ===========
+Ctrl+C                  Pause soon.
+Ctrl+C twice            Pause now.
+Ctrl+C three times fast (Shortcut) Pause now and abort.
+======================= ===========
+
+From a paused state
+^^^^^^^^^^^^^^^^^^^
+
+============== ===========
+Command        Outcome
+============== ===========
+prun.resume()    Safely resume plan.
+prun.abort()     Perform cleanup. Mark as aborted.
+prun.stop()      Perform cleanup. Mark as success.
+prun.halt()      Do not perform cleanup --- just stop.
+prun.state       Check if 'paused' or 'idle'.
+============== ===========
+
+For more complicated situations, please go to :ref:`troubleshooting`
+
+
+Saving images from your scans
+"""""""""""""""""""""""""""""
+
+most of analysis functionalities operate on ``header`` level, for the concept of it,
+please refer to `here <http://nsls-ii.github.io/databroker/headers.html>`_
+
+**save images from last scan:**
 
 .. code-block:: python
 
   save_last_tiff()
 
-**last n headers to now:**
+.. note::
+
+   * dark subtracted images from last ``header`` will be saved under directory with ``sample_name``
+     defined in ``Sample`` object you feed to ``prun``.
+
+You can also issue a commend to save all images from desired ``header`` or a bunch of ``headers``
+
+**save images from last 5 scans till now:**
 
 .. code-block:: python
 
-  h = db[-n:]
+  h = db[-5:]
   save_tiff(h)
 
-**p headers away from now:**
+.. note::
+
+  ``-5:`` is Python syntax, which means *the last 5 till now*.
+  It gives you **multiple** objects. You can always do ``-7:``, ``-10:``....e.t.c.
+
+**save 5 headers away from now:**
 
 .. code-block:: python
 
-  h = db[-p]
+  h = db[-P]
   save_tiff(h)
 
-end a beamtime
+.. note::
+
+  ``-5`` is Python syntax, which means *the last 5 from now*.
+  It gives you **single** object. You can always do ``-2``, ``-23``....e.t.c.
+
+End a beamtime
 """"""""""""""
 
 .. code-block:: python
