@@ -120,12 +120,35 @@ After supplying all indices, you should have a window to show your calibration:
 Alright, you are done then! With ```automated calibration capture`` feature, ``xpdAcq``
 will load calibration parameters from the most recent config file.
 
+.. _import_sample:
+
 metadata imported from spreadsheet
 -----------------------------------
 
-* spreadsheet parser rule
+In order to facilitate , we suggest you to enter
+as much information as you can and that is the main philosophy behind ``xpdAcq``.
+
+Typing in sample metadata during beamtime is always less efficient and it wastes
+your time so a pre-populated excel sheet with all metadata entered beforehand
+turns out to be the solution.
+
+
+parsing rules
+^^^^^^^^^^^^^
+
+* **comma separated fields**: information entities are separated by a comma.
+
+    * ``cif name``: pointer of potential structures for your sampel, if any.
+
+    * ``Tags``: any comment you want to put on for this measurement.
+
+* **name fields**:
+
+* **phase string**:
+
+.. _auto_mask:
 
 Auto-masking
 -------------
 
-* auto-masking
+* auto-masking with user defined beamstop mask

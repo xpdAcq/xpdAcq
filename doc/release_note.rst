@@ -1,7 +1,7 @@
 .. _release_note:
 
-Release Note
--------------
+Release Notes
+--------------
 
 
 ``v0.3``

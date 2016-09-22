@@ -59,6 +59,8 @@ Additional built-in scan types will be added in future releases.
 
   * :ref:`automated calibration capture <auto_calib>`
 
+  * :ref:`automated mask per image <auto_mask>`
+
 This version is fully documented and extensively tested.
 
 
@@ -72,13 +74,7 @@ This version is fully documented and extensively tested.
    :hidden:
    :maxdepth: 3
 
-   features
-
-.. toctree::
-   :hidden:
-   :maxdepth: 3
-
-   troubleshooting
+   quickstart
 
 .. toctree::
    :maxdepth: 3
@@ -90,10 +86,16 @@ This version is fully documented and extensively tested.
    :maxdepth: 3
    :hidden:
 
-   release_note
+   beamlinestaff
+
+.. toctree::
+   :hidden:
+   :maxdepth: 3
+
+   troubleshooting
 
 .. toctree::
    :maxdepth: 3
    :hidden:
 
-   beamlinestaff
+   release_note
