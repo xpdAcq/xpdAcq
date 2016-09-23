@@ -2,7 +2,6 @@ import os
 import yaml
 import shutil
 import unittest
-from mock import MagicMock
 
 from xpdacq.glbl import glbl
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
@@ -10,9 +9,6 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
 from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
 from xpdacq.utils import import_sample_info, _import_sample_info
-
-from xpdacq.simulation import pe1c, cs700, shctl1
-
 
 # print messages for debugging
 #xrun.msg_hook = print
@@ -30,10 +26,6 @@ class ImportSamplTest(unittest.TestCase):
                               ('Terban ',' Max',2)]
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
-        # set simulation objects
-        glbl.area_det = pe1c
-        glbl.temp_controller = cs700
-        glbl.shutter = shctl1
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -44,7 +36,6 @@ class ImportSamplTest(unittest.TestCase):
         if os.path.isdir(os.path.join(self.base_dir,'pe2_data')):
             shutil.rmtree(os.path.join(self.base_dir,'pe2_data'))
 
-
     def test_import_sample_info_core_function(self):
         # no bt, default argument will fail
         self.assertRaises(TypeError, lambda: _import_sample_info(bt=None))
@@ -53,6 +44,9 @@ class ImportSamplTest(unittest.TestCase):
                                   self.experimenters,
                                   wavelength=self.wavelength)
         # expect FileNotFoundError as no spreadsheet
+        xlf = '300000_sample.xlsx'
+        self.assertFalse(os.path.isfile(os.path.join(glbl.import_dir,
+                                                     xlf)))
         self.assertRaises(FileNotFoundError,
                           lambda: _import_sample_info(bt=self.bt))
         # copy spreadsheet
@@ -75,4 +69,5 @@ class ImportSamplTest(unittest.TestCase):
                           lambda: _import_sample_info(300000, self.bt))
 
         # expct TypeError with incorrect beamtime
-        self.assertRaises(TypeError, lambda: _import_sample_info(bt=set()))
+        self.assertRaises(TypeError, lambda:
+                          _import_sample_info(bt=set()))

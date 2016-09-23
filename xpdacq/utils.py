@@ -255,7 +255,7 @@ class ExceltoYaml:
     COMMA_SEP_FIELD = ['cif name', 'Tags']
     PHASE_FIELD = ['Phase Info [required]']
     SAMPLE_NAME_FIELD = ['Sample Name [required]']
-    BKGD_NAME_FIELD = ['Bkgd Sample Name']
+    BKGD_SAMPLE_NAME_FIELD = ['Bkgd Sample Name']
     GEOMETRY_FIELD = ['Geometry']
     DICT_LIKE_FIELD = ['database id'] # return a dict
     # special key for high-dimensional sample phase mapping
@@ -268,8 +268,8 @@ class ExceltoYaml:
                                 COMMA_SEP_FIELD))
     _SAMPLE_NAME_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
                                   SAMPLE_NAME_FIELD))
-    _BKGD_NAME_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
-                                BKGD_NAME_FIELD))
+    _BKGD_SAMPLE_NAME_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
+                                       BKGD_SAMPLE_NAME_FIELD))
     _PHASE_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
                             PHASE_FIELD))
     _GEOMETRY_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
@@ -287,9 +287,9 @@ class ExceltoYaml:
                 f in (str(saf_num)+'_sample.xls',
                       str(saf_num)+'_sample.xlsx')]
         if not xl_f:
-            raise FileNotFoundError("file {} doesn't exist, have "
-                                    "you put it into {} with correct "
-                                    "naming scheme '<SAF_num>_sample.xlsx'"
+            raise FileNotFoundError("no spreadsheet exists in {}\n"
+                                    "have you put it in with correct "
+                                    "naming scheme: '<SAF_num>_sample.xlsx'"
                                     "yet?".format(self.src_dir))
 
         self.pd_dict = pd.read_excel(os.path.join(self.src_dir,
@@ -547,13 +547,12 @@ class ExceltoYaml:
                     composition_dict.update({smbl[i]:
                                              cnt[i] * ratio})
         # construct composition_str
-        for k,v in composition_dict.items():
-            composition_str += str(k)
-            composition_str += str(v)
+        for k,v in sorted(composition_dict.items()):
+            composition_str += str(k)+str(v)
 
         return composition_dict, phase_dict, composition_str
 
-excel_to_yaml = ExceltoYaml()
+excel_to_yaml = ExceltoYaml(glbl.import_dir)
 
 
 def import_sample_info(saf_num=None, bt=None):
@@ -641,6 +640,7 @@ def _import_sample_info(saf_num=None, bt=None):
     # logic: only update Sample objects that are currently in bt.list
     sp_ref = [el for el in bt._referenced_by if isinstance(el, ScanPlan)]
     bt._referenced_by = sp_ref
+    print("USING SAF_NUM = {}".format(saf_num))
     excel_to_yaml.load(saf_num)
     excel_to_yaml.parse_sample_md()
     excel_to_yaml.create_yaml(bt)
