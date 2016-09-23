@@ -198,7 +198,6 @@ def _auto_load_calibration_file():
 
 
 def _inject_qualified_dark_frame_uid(msg):
-    # print('!!!! INJECT dark uid !!!')
     if msg.command == 'open_run' and msg.kwargs.get('dark_frame') != True:
         dark_uid = _validate_dark(glbl.dk_window)
         msg.kwargs['sc_dk_field_uid'] = dark_uid
@@ -326,7 +325,6 @@ class CustomizedRunEngine(RunEngine):
             # print("INFO: beam dump suspender has been created."
             #      "To check, type prun.suspenders")
         else:
-            # print('set suspender method has been called') # debug line
             pass
 
     def __call__(self, sample, plan, subs=None, *,
@@ -335,11 +333,13 @@ class CustomizedRunEngine(RunEngine):
         # The CustomizedRunEngine knows about a Beamtime object, and it
         # interprets integers for 'sample' as indexes into the Beamtime's
         # lists of Samples from all its Experiments.
-        if getattr(glbl, 'collection', None) is None:
-            raise RuntimeError("No collection has been linked to current "
-                               "experiment yet.\nPlease do\n"
-                               ">>> open_collection(<collection_name>)\n"
-                               "before you run any prun")
+
+        # deprecated from v0.5 release
+        #if getattr(glbl, 'collection', None) is None:
+        #    raise RuntimeError("No collection has been linked to current "
+        #                       "experiment yet.\nPlease do\n"
+        #                       ">>> open_collection(<collection_name>)\n"
+        #                       "before you run any prun")
 
         if isinstance(sample, int):
             try:
@@ -389,8 +389,9 @@ class CustomizedRunEngine(RunEngine):
                          raise_if_interrupted=raise_if_interrupted,
                          **metadata_kw)
 
+        # deprecated from v0.5 release
         # insert collection
-        _insert_collection(glbl.collection_name, glbl.collection,
-                           self._run_start_uids)
+        #_insert_collection(glbl.collection_name, glbl.collection,
+        #                   self._run_start_uids)
 
         return self._run_start_uids
