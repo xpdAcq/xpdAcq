@@ -27,7 +27,7 @@ software team. For more information, please see
 Automated dark subtraction
 """"""""""""""""""""""""""
 
-Like we have mentioned at :ref:`auto_dark_collect`, ``xpdAcq``
+Like we have mentioned at :ref:`auto_dark`, ``xpdAcq``
 helps you keep track if appropriate dark frames have been collected, if you
 allow it. With ``auto_dark`` set to True, ``xpdAcq`` can automatically subtract
 your light frames from corresponding dark frames when you save your tiffs.
