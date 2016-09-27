@@ -19,37 +19,43 @@ Check your data collection environment is correctly set up
 should return a list of metadata about your experiment, such as PI last name.  If not
 please get your beamtime environment set up by the instrument scientist before proceeding.
 
-Running your experiment
--------------------
+Setting up your experiment
+--------------------------
 
-calibration
-"""""""""""
+1. calibration
+""""""""""""""
 run this first, then each time the geometry of your measurement changes.  Place the
-Ni calibrant at the sample position then type:
+Ni calibrant at the sample position, type
 
 .. code-block:: python
 
   run_calibration(exposure=60) # assume calibrant is Ni
 
-short tutorial about calibration here :ref:`calib_manual`
+and follow the on-screen instructions. 
+
+More information here :ref:`calib_manual`
 
 .. autofunction::
 
   xpdacq.calib.run_calibration
 
-set up ``Sample`` objects
-""""""""""""""""""""""""
+2. set up ``Sample`` objects
+""""""""""""""""""""""""""""
 
-Example:
+Your sample information should be loaded in an excel spreadsheet.  Type
 
 .. code-block:: python
 
-  Sample(bt, {'sample_name':'Ni', 'sample_composition':{'Ni':1}} )
-  Sample(bt, {'sample_name':'TiO2', 'sample_composition':{'Ti':1, 'O':2}})
   import_sample(saf_num=300064, bt)
 
-set up ``ScanPlan`` objects
-"""""""""""""""""""""""""""
+and follow instructions FIXME: I don't know the workflow...
+
+Additional samples may be added by adding samples to the excel file and rerunning.
+
+More information here :ref:`???`
+
+3. set up ``ScanPlan`` objects
+""""""""""""""""""""""""""""""
 
 Example:
 
@@ -62,6 +68,8 @@ command
 
 ``ScanPlan(bt, Tramp, 5, 300, 200, 5)``  temperature series with 5s count time, starting from 300k to 200k with 5k per step
 ======================================= ===================================================================================
+
+More information here :ref:`???`
 
 list objects by categories
 """""""""""""""""""""""""""
