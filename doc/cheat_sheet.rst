@@ -3,19 +3,29 @@
 Cheat Sheet
 ===========
 
-Please use this page as a reminder and copy&paste code snippets into your  ``ipython`` terminals.
+This cheat-sheet contains no explanation of how the ``xpdAcq`` software works.
+to understand this, please go :ref:`qs` or :ref:`xpdu`
 
-To understand what the code does, please go :ref:`qs` or :ref:`xpdu`
+Please use this page as a reminder of the workflow and to copy & paste code snippets into your  
+active ``collection-dev`` ipython environment (then hit return).
 
-Running experiment
+Check your data collection environment is correctly set up
+----------------------------------------------------------
+
+.. code-block:: python
+
+  bt.md
+  
+should return a list of metadata about your experiment, such as PI last name.  If not
+please get your beamtime environment set up by the instrument scientist before proceeding.
+
+Running your experiment
 -------------------
-
-.. note::
-
-  commands realted to *collection* must be executed under ``collection-dev`` profile
 
 calibration
 """""""""""
+run this first, then each time the geometry of your measurement changes.  Place the
+Ni calibrant at the sample position then type:
 
 .. code-block:: python
 
