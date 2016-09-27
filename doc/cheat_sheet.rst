@@ -19,21 +19,19 @@ Check your data collection environment is correctly set up
 should return a list of metadata about your experiment, such as PI last name.  If not
 please get your beamtime environment set up by the instrument scientist before proceeding.
 
-Setting up your experiment
---------------------------
+Set up your experiment
+----------------------
 
 1. calibration
 """"""""""""""
-run this first, then each time the geometry of your measurement changes.  Place the
+run this first, then run it again each time the geometry of your measurement changes.  Place the
 Ni calibrant at the sample position, type
 
 .. code-block:: python
 
   run_calibration(exposure=60) # assume calibrant is Ni
 
-and follow the on-screen instructions. 
-
-More information here :ref:`calib_manual`
+and follow the instructions in :ref:`calib_manual`
 
 .. autofunction::
 
@@ -57,8 +55,6 @@ More information here :ref:`???`
 3. set up ``ScanPlan`` objects
 """"""""""""""""""""""""""""""
 
-Example:
-
 ======================================= ===================================================================================
 command
 ======================================= ===================================================================================
@@ -71,8 +67,12 @@ command
 
 More information here :ref:`???`
 
-list objects by categories
-"""""""""""""""""""""""""""
+4. set up the file for saving output
+""""""""""""""""""""""""""""""""""""
+FIXME
+
+5. list objects by categories
+"""""""""""""""""""""""""""""
 
 .. code-block:: python
 
@@ -89,47 +89,55 @@ list objects by categories
   1: TiO2
 
 
-interrogating metadata in objects
+6. interrogate metadata in objects
 """"""""""""""""""""""""""""""""""
 
 .. code-block:: python
 
-  bt.samples[1].md
-  bt.scanplans [5].md
+  bt.samples[1].md        # returns metadata for item 1 in Sample list, i.e., TiO2
+  bt.scanplans[5].md      # returns metadata for item 5 in scanplans list
 
-running scan with acquire objects
-""""""""""""""""""""""""""""""""""
+Run your experiment
+-------------------
 
-*on this sample, run this scan plan*
+1. A scan is a scanplan executed on a sample
+""""""""""""""""""""""""""""""""""""""""""""
 
-**production run engine**
+**on this sample run this scanplan**
 
 .. code-block:: python
 
-  prun(bt.samples[2],  bt.scanplan[5]) # indexing object explicitly
+  prun(bt.samples[2],bt.scanplan[5]) # referencing objects explicitly
+  prun(2,5)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan`` 
+                                     # index from the ``bt`` list
 
-  prun(2,5)  # inexplicit give ``Sample`` and ``ScanPlan`` index
+other scan-types are available
 
+.. code-block:: python
 
-interrupt
-"""""""""
+  background(3,8)             # tags the run as a background scan
+  setupscan(2,5)              # tags the run as a setup.  It will be saved 
+                              # but easy to separate from your production runs later 
+  dryrun(2,5)                 # scan is not run, but returns some information about scan
+
+2. Interrupt your scan
+""""""""""""""""""""""
 
 table from `original package <http://nsls-ii.github.io/bluesky/state-machine.html#interactive-pause-summary>`_
 
-
-Interactively Interrupt Execution
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+a) Interactively Interrupt Execution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ======================= ===========
 Command                 Outcome
 ======================= ===========
-Ctrl+C                  Pause soon.
-Ctrl+C twice            Pause now.
-Ctrl+C three times fast (Shortcut) Pause now and abort.
+Ctrl+C                  Pause soon
+Ctrl+C twice            Pause now
+Ctrl+C three times fast (Shortcut) Pause now and abort
 ======================= ===========
 
-From a paused state
-^^^^^^^^^^^^^^^^^^^
+b) Recovering from the paused state caused by an interrupt
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ============== ===========
 Command        Outcome
@@ -141,17 +149,13 @@ prun.halt()      Do not perform cleanup --- just stop.
 prun.state       Check if 'paused' or 'idle'.
 ============== ===========
 
-Access to your data
--------------------
-
-.. note::
-
-  commands realted to *analysis* must be executed under ``analysis`` profile
+Get your data
+-------------
 
 Save images and metadata from scans
-"""""""""""""""""""""""""""""""""""""
-
-``header`` concept `here <http://nsls-ii.github.io/databroker/headers.html>`_
+"""""""""""""""""""""""""""""""""""
+These commands can be run in the ``collection-dev`` or the ``analysis`` ipython environments.
+Data are saved in the directory defined in `set_experiment` FIXME (see :ref:`4. set up the file for saving output`)
 
 **save images from last scan:**
 
@@ -159,19 +163,22 @@ Save images and metadata from scans
 
   save_last_tiff()
 
-**save images from last 5 scans till now:**
+**save images from last 5 scans:**
 
 .. code-block:: python
 
   h = db[-5:]
   save_tiff(h)
 
-**save 5 scans away from now:**
+**save the scan 5 scans ago:**
 
 .. code-block:: python
 
   h = db[-5]
   save_tiff(h)
+
+``header`` concept `here <http://nsls-ii.github.io/databroker/headers.html>`_
+
 
 Azimuthal integration
 """""""""""""""""""""
