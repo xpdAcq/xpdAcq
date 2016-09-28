@@ -3,16 +3,13 @@
 Cheat Sheet
 ===========
 
-Please use this page as a reminder and copy&paste code snippets into your  ``ipython`` terminals.
+Please use this page as a reminder and copy&paste code snippets into your ``collection-dev``
+and ``analysis`` ``ipython`` terminals.
 
 To understand what the code does, please go :ref:`qs` or :ref:`xpdu`
 
 Running experiment
 -------------------
-
-.. note::
-
-  commands realted to *collection* must be executed under ``collection-dev`` profile
 
 calibration
 """""""""""
@@ -22,10 +19,6 @@ calibration
   run_calibration(exposure=60) # assume calibrant is Ni
 
 short tutorial about calibration here :ref:`calib_manual`
-
-.. autofunction::
-
-  xpdacq.calib.run_calibration
 
 set up ``Sample`` objects
 """"""""""""""""""""""""
@@ -39,7 +32,7 @@ Example:
   import_sample(saf_num=300064, bt)
 
 set up ``ScanPlan`` objects
-"""""""""""""""""""""""""""
+""""""""""""""""""""""""""
 
 Example:
 
@@ -123,15 +116,9 @@ prun.halt()      Do not perform cleanup --- just stop.
 prun.state       Check if 'paused' or 'idle'.
 ============== ===========
 
-Access to your data
--------------------
 
-.. note::
-
-  commands realted to *analysis* must be executed under ``analysis`` profile
-
-Save images and metadata from scans
-"""""""""""""""""""""""""""""""""""""
+Saving images from your scans
+"""""""""""""""""""""""""""""
 
 ``header`` concept `here <http://nsls-ii.github.io/databroker/headers.html>`_
 
@@ -148,40 +135,12 @@ Save images and metadata from scans
   h = db[-5:]
   save_tiff(h)
 
-**save 5 scans away from now:**
+**save 5 headers away from now:**
 
 .. code-block:: python
 
-  h = db[-5]
+  h = db[-P]
   save_tiff(h)
-
-Azimuthal integration
-"""""""""""""""""""""
-
-**integrate and save image(s) along with metadata from scans:**
-
-.. code-block:: python
-
-  integrate_and_save_last()
-
-.. autofunction::
-
-  xpdan.data_reduction.integrate_and_save_last
-
-**integrate and save images from last 5 scans till now:**
-
-.. code-block:: python
-
-  h = db[-5:]
-  integrate_and_save(h)
-
-**save 5 scans away from now:**
-
-.. code-block:: python
-
-  h = db[-5]
-  integrate_and_save_(h)
-
 
 Global options
 --------------
