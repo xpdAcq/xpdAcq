@@ -270,18 +270,92 @@ your time so a pre-populated excel sheet with all metadata entered beforehand
 turns out to be the solution.
 
 
-parsing rules
-^^^^^^^^^^^^^
+comma separated fields
+^^^^^^^^^^^^^^^^^^^^^^
 
-* **comma separated fields**: information entities are separated by a comma.
+  Files with information entities are separated by a comma ``,``.
 
-    * ``cif name``: pointer of potential structures for your sampel, if any.
+  Each separated by ``,`` will be individually searchable later.
 
-    * ``Tags``: any comment you want to put on for this measurement.
+  Fields following this parsing rule are:
 
-* **name fields**:
+  ============= ========================================================
+  ``cif name``  pointer of potential structures for your sample, if any.
+  ``Tags``      any comment you want to put on for this measurement.
+  ============= ========================================================
 
-* **phase string**:
+  Example on ``Tags``:
+
+  .. code-block:: none
+
+    background, standard --> background, standard
+
+  And a search on either ``background`` or``standard`` later on will include
+  this header.
+
+
+name fields
+^^^^^^^^^^^
+
+  Fields used to store a person's name in ``first name last name`` format.
+
+  Each person's first and last name will be searchable later on.
+
+  Fields following this parsing rule are:
+
+  ======================    =========================================================
+  ``Collaborators``         name of your collaborators
+  ``Sample Maker``          name of your sample maker
+  ``Lead Experimenters``    a person who is going to lead this experiment at beamline
+  ======================    =========================================================
+
+  Example on name fields:
+
+  .. code-block:: none
+
+    Maxwell Terban, Benjamin Frandsen ----> Maxwell, Terban, Benjamin, Frandsen
+
+  A search on either ``Maxwell`` or ``Terban`` or ``Benjamin`` or ``Frandsen``
+  later will include this header.
+
+
+phase string
+^^^^^^^^^^^^
+
+  Field used to specify the phase information and chemical composition of your
+  sample. It's important to enter this field correctly so that we can have
+  accelerated data reduction workflow.
+
+  Fields follows this parsing rule are:
+
+  ==============  ==============================================================
+  ``Phase Info``  field to specify phase information and chemical composition of
+                  your sample
+  ==============  ==============================================================
+
+  phase string will be expect to be enter in a form as
+  ``phase_1: amount, phase_2: amount``.
+
+  An handy example of 0.9%  sodium chloride water will be:
+
+  .. code-block:: none
+
+    Nacl: 0.09, H20: 0.91
+
+  This ``Phase Info`` will be parsed as:
+
+  .. code-block:: python
+
+    {'sample_composition': {'Na':0.09, 'Cl':0.09, `H`:1.82, `O`:0.91},
+     'sample_phase': {'NaCl':0.09, 'H20':0.91},
+     'composition_string': 'Na0.09Cl0.09H1.82O0.91'}
+
+  ``composition_string`` is designed for data reduction software going to be
+  used. Under ``xpdAcq`` framework, we will assume
+  `pdfgetx3 <http://www.diffpy.org/products/pdfgetx3.html>`_
+
+  As before, a search on ``Na`` or ``Cl`` or ``H`` or ``O`` will include this
+  header. Also a search on ``Nacl=0.09`` will include this header as well.
 
 .. _auto_mask:
 
