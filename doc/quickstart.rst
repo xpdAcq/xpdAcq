@@ -179,110 +179,42 @@ User scripts
 There is much more to the ``xpdAcq`` software that will give you superpowers in rapid and flexible data collection, data retrieval and processing.
 This was just the quick start, but much more information is in the full documentation in the **XPD user** section of the documentation
 
-Code Samples
-++++++++++++
 
-Here is a sample code covering the entire process from defining ``Experiment``,
-``Sample`` and ``ScanPlan`` objects to running ``ScanPlans`` with different kinds of run.
-Please replace the name and parameters in each function depending your needs.  To
-understand the logic in greater detail see the full user documentation.
+Global options
+--------------
 
-**Pro Tip**: copy-and-paste is your good friend
+``glbl`` class has several attributes that control the overall behavior of ``xpdacq`` software.
 
-.. code-block:: python
+Possible scenarios
+""""""""""""""""""
 
-  # bt list method to see all objects we have available for data collection
-  bt.list()
-  
-  # bt list of all the Sample objects but no other object types
-  bt.list('sa')
-  
-  # bt list of all the ScanPlan objects but no other object types
-  bt.list('sp')
+    **No automated dark collection logic at all:**
 
-  # define addtional acquire objects
-  Experiment('myExperiment', 
-             bt, 
-             {'<mynewkeys>':'<mynewvalues>',
-              'examples':'follow',
-              'students':['sbanerjee','mterban'],
-              'collaborators':['Sample Maker','Sam Student']
-             }
-            )  
-  bt.list()    # returns 'myExperiment' object at position (index) 11 in the list 
-  Sample('myLazySample', bt.get(11))    # it will inherit all metadata in the bt and 'myExperiment' objects but we were lazy, we didn't save any sample info!
+    .. code-block:: python
 
-  # here is a more useful sample description.  Ideally, make these at home before you come, 
-  # then export them as yaml files ('export_user_metadata' [FIXME]), bring them to the beamtime on a flash drive
-  # then import them when your experiment is set up ('import')
-  Sample('NaCl_0.1', 
-         bt.get(11),
-         {'phases':[{'composition':'NaCl',
-                     'mass_fraction':0.1,
-                     'cif':'NACL.cif',
-                     'ICSD-ID':'2439d-13'
-                     'form':'powder'
-                    },
-                    {'composition':'CaCO4.H2O',
-                     'mass_fraction':0.9,
-                     'cif':'hydratedCalciumCarbonate.cif',
-                     'form':'nanopowder'
-                    }
-                   ],
-          'holder':{'shape':'capillary','ID':'1 mm','madeOf':'kapton'},
-          'notes':['looked kinda green','dropped on the floor during loading'],
-          '<anythingElseIwant>':'<description>',
-          '<andSoOn>':'<etc>'
-         }  # this one will be much more useful later!
+      glbl.auto_dark = False
+      glbl.shutter_control = False
 
-.. code-block:: python
+    **Want a fresh dark frame every time ``prun`` is triggered:**
 
-  # define "ct" scanplan with exp = 0.5
-  ScanPlan('ct_0.5','ct',{'exposure':0.5})
+    .. code-block:: python
 
-  # define "Tramp" scanplan with exp = 0.5, startingT = 300, endingT = 310, Tstep = 2
-  # define "Tramp" scanplan with exp = 0.5, startingT = 310, endingT = 300, Tstep = 2
-  ScanPlan('Tramp_0.5_300_310_2','Tramp',{'exposure':0.5, 'startingT': 300, 'endingT': 310, 'Tstep':2})
-  ScanPlan('Tramp_0.5_310_300_2','Tramp',{'exposure':0.5, 'startingT': 310, 'endingT': 300, 'Tstep':2})
-  
-  # or use the short-form
-  ScanPlan('Tramp_0.5_300_310_2') # which builds the scan parameters from the name itself (but don't get them in the wrong order!)
+      glbl.dk_window = 0.001 # dark window is 0.001 min = 0.06 secs
 
-  # define a "time series" scanplan with exp = 0.5, num=10, delay = 2
-  ScanPlan('tseries_0.5_2_5', 'tseries', {'exposure':0.5, 'num':5, 'delay':2})
-  # or
-  ScanPlan('tseries_0.5_2_5')
 
-  # do a dry-run to see what the program will do, and what metadata it will save
-  dryrun('NaCl_0.1', 'ct_0.5')
+    **Want a 0.2 exposure time per frame instead of 0.1s:**
 
-  # Then let's do a calibration run and save the image in order to open it in calibration software
-  calibration([FIXME])
-  save_last_tiff()
+    .. code-block:: python
 
-  # Use setupscan to check image quality under current scan parameters
-  setupscan([FIXME])
-  save_last_tiff()
+      glbl.frame_acq_time = 0.2
 
-  # Everything looks right. Let's do prun with different ScanPlans and save the tiffs
-  prun('NaCl_0.1','ct_0.5')
-  # or
-  bt.list() # returns the 'NaCl_0.1' sample object at position 17 and the 'ct_0.5' ScanPlan object at position 20
-  prun(17,20)
-  
-  # the data are saved into the NSLS-II database (don't worry) but we want to get the image so
-  # type:
-  save_last_tiff() # save tiffs from last scan
-  
-  # now we have everything set up, it is super-easy to sequence lots of interesting scans
-  # this does a series of different scans on the same sample
-  prun(17,21)   # or prun(17,'Tramp_0.5_300_310_5'), whichever you are more comfortable with.
-  prun(17,22)   # or prun('NaCl_0.1','Tramp_0.5_310_300_5'), or whatever
-  prun(17,23)
-  save_tiff(db[-3:]) # save tiffs from last three scans
+    **Want to run temperature ramp with different device and use alternative shutter:**
 
-  # this does the same scan on a series of samples
-  prun(17,21)   # or prun('NaCl_0.1,'Tramp_0.5_300_310_5'), whichever you are more comfortable with.
-  prun(18,21)   # or prun('NaCl_0.2','Tramp_0.5_300_310_5'), or whatever,
-  prun(19,21)   # or prun('NaCl_0.3',21),
-  save_tiff(db[-3:]) # save tiffs from last three scans
+    .. code-block:: python
+
+      glbl.temp_controller = eurotherm
+      glbl.shutter = shctl2
+
+    .. note::
+
+      desired objects should be properly *configured*. For more details, please contact beamline staff.
