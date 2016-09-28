@@ -6,7 +6,7 @@ Cheat Sheet
 This cheat-sheet contains no explanation of how the ``xpdAcq`` software works.
 to understand this, please go :ref:`qs` or :ref:`xpdu`
 
-Please use this page as a reminder of the workflow and to copy & paste code snippets into your  
+Please use this page as a reminder of the workflow and to copy & paste code snippets into your
 active ``collection-dev`` ipython environment (then hit return).
 
 Check your data collection environment is correctly set up
@@ -44,16 +44,13 @@ Your sample information should be loaded in an excel spreadsheet. Type
 
 .. code-block:: python
 
-  import_sample(300064, bt) # SAF number is 300064 for example
+  import_sample(300564, bt) # SAF number is 300564 to current beamtime
+                            # beamtime object , bt, with SAF number 300564 has created
+                            # file with 300564_sample.xls exists in ``xpdConfig`` directory
 
-your spreadsheet should located inside ``xpdConfig`` directory with name as ``<saf_number>_sample.xls``.
-
-``Sample`` objects corresponding each row of your spreadsheet will be
-created, along with corresponding background object. for the parsing rule, please see :ref:`import_sample`
+For the details of how we parse your information and create sample objects, please see :ref:`import_sample`.
 
 Additional samples may be added by adding samples to the excel file and rerunning.
-
-More information here :ref:`???`
 
 3. set up ``ScanPlan`` objects
 """"""""""""""""""""""""""""""
@@ -70,11 +67,7 @@ command
 
 More information here :ref:`???`
 
-4. set up the file for saving output
-""""""""""""""""""""""""""""""""""""
-FIXME
-
-5. list objects by categories
+4. list objects by categories
 """""""""""""""""""""""""""""
 
 .. code-block:: python
@@ -92,7 +85,7 @@ FIXME
   1: TiO2
 
 
-6. interrogate metadata in objects
+5. interrogate metadata in objects
 """"""""""""""""""""""""""""""""""
 
 .. code-block:: python
@@ -106,22 +99,31 @@ Run your experiment
 1. A scan is a scanplan executed on a sample
 """"""""""""""""""""""""""""""""""""""""""""
 
-**on this sample run this scanplan**
+The main philosophy of ``xpdAcq`` is : **on this sample run this scanplan**
+
+background scan
+^^^^^^^^^^^^^^^
+
+Running scans with ``Sample`` objects tagged as ``is_background``.
+
+Please see :ref:`background_obj` for more information.
+
+.. code-block:: python
+
+  prun(48, 1) # sample 98 is ``bkg_0.5mm_OD_capillary``
+  prun(49, 1) # sample 98 is ``bkg_0.9mm_OD_capillary``
+
+
+.. code
+
+production run
+^^^^^^^^^^^^^^
 
 .. code-block:: python
 
   prun(bt.samples[2],bt.scanplan[5]) # referencing objects explicitly
-  prun(2,5)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan`` 
+  prun(2,5)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
                                      # index from the ``bt`` list
-
-other scan-types are available
-
-.. code-block:: python
-
-  background(3,8)             # tags the run as a background scan
-  setupscan(2,5)              # tags the run as a setup.  It will be saved 
-                              # but easy to separate from your production runs later 
-  dryrun(2,5)                 # scan is not run, but returns some information about scan
 
 
 Get your data
@@ -131,7 +133,10 @@ Get your data
 """""""""""""""""""""""""""""""""""""
 
 These commands can be run in the ``collection-dev`` or the ``analysis`` ipython environments.
-Data are saved in the directory defined in `set_experiment` FIXME (see :ref:`4. set up the file for saving output`)
+
+Data are saved in the directory named after ``sample_name`` metdata you type in to ``Sample`` object.
+
+After each command, you should see where data have been saved.
 
 **save images from last scan:**
 
@@ -178,12 +183,13 @@ more information on headers is `here <http://nsls-ii.github.io/databroker/header
   :nosignatures:
 
   integrate_and_save_last
-  
+
 Code for Sample Experiment
 --------------------------
 
-Here is a sample code covering the entire process from defining ``Experiment``,
-``Sample`` and ``ScanPlan`` objects to running ``ScanPlans`` with different kinds of run.
+Here is a sample code covering the entire process from defining Sample`` and
+``ScanPlan`` objects to running different kinds of runs.
+
 Please replace the name and parameters in each function depending your needs.  To
 understand the logic in greater detail see the full user documentation.
 
@@ -193,44 +199,17 @@ understand the logic in greater detail see the full user documentation.
 
   # bt list method to see all objects we have available for data collection
   bt.list()
-  
-  # bt list of all the Sample objects but no other object types
-  bt.list('sa')
-  
-  # bt list of all the ScanPlan objects but no other object types
-  bt.list('sp')
 
-  # define addtional acquire objects
-  Experiment('myExperiment', 
-             bt, 
-             {'<mynewkeys>':'<mynewvalues>',
-              'examples':'follow',
-              'students':['sbanerjee','mterban'],
-              'collaborators':['Sample Maker','Sam Student']
-             }
-            )  
-  bt.list()    # returns 'myExperiment' object at position (index) 11 in the list 
-  Sample('myLazySample', bt.get(11))    # it will inherit all metadata in the bt and 'myExperiment' objects but we were lazy, we didn't save any sample info!
 
-  # here is a more useful sample description.  Ideally, make these at home before you come, 
-  # then export them as yaml files ('export_user_metadata' [FIXME]), bring them to the beamtime on a flash drive
-  # then import them when your experiment is set up ('import')
-  Sample('NaCl_0.1', 
-         bt.get(11),
-         {'phases':[{'composition':'NaCl',
-                     'mass_fraction':0.1,
-                     'cif':'NACL.cif',
-                     'ICSD-ID':'2439d-13'
-                     'form':'powder'
-                    },
-                    {'composition':'CaCO4.H2O',
-                     'mass_fraction':0.9,
-                     'cif':'hydratedCalciumCarbonate.cif',
-                     'form':'nanopowder'
-                    }
-                   ],
+  # Ideally, Sample information should be filled before you come.
+  # you can fill out the spreadsheet and then use ``import_sample`` function.
+  # Let's still have an example here.
+  Sample(bt, 'sammple_name':'NaCl',
+         {'sample_composition': {'Na':0.5, 'Cl':0.5},
+          'sample_phase': {'NaCl':1},
+          'composition_string': 'Na0.09Cl0.09H1.82O0.91',
           'holder':{'shape':'capillary','ID':'1 mm','madeOf':'kapton'},
-          'notes':['looked kinda green','dropped on the floor during loading'],
+          'tags':['looked kinda green','dropped on the floor during loading'],
           '<anythingElseIwant>':'<description>',
           '<andSoOn>':'<etc>'
          }  # this one will be much more useful later!
@@ -239,53 +218,36 @@ understand the logic in greater detail see the full user documentation.
 .. code-block:: python
 
   # define "ct" scanplan with exp = 0.5
-  ScanPlan('ct_0.5','ct',{'exposure':0.5})
+  ScanPlan(bt, ct, 0.5)
 
   # define "Tramp" scanplan with exp = 0.5, startingT = 300, endingT = 310, Tstep = 2
-  # define "Tramp" scanplan with exp = 0.5, startingT = 310, endingT = 300, Tstep = 2
-  ScanPlan('Tramp_0.5_300_310_2','Tramp',{'exposure':0.5, 'startingT': 300, 'endingT': 310, 'Tstep':2})
-  ScanPlan('Tramp_0.5_310_300_2','Tramp',{'exposure':0.5, 'startingT': 310, 'endingT': 300, 'Tstep':2})
-  
-  # or use the short-form
-  ScanPlan('Tramp_0.5_300_310_2') # which builds the scan parameters from the name itself (but don't get them in the wrong order!)
+  ScanPlan(bt, Tramp , 0.5, 300, 310, 2)
+  # define "Tramp" scanplan with exp = 0.5, startingT = 310, endingT = 250, Tstep = 5
+  ScanPlan(bt, Tramp, 0.5, 310, 250, 5)
 
   # define a "time series" scanplan with exp = 0.5, num=10, delay = 2
-  ScanPlan('tseries_0.5_2_5', 'tseries', {'exposure':0.5, 'num':5, 'delay':2})
-  # or
-  ScanPlan('tseries_0.5_2_5')
+  ScanPlan(bt, tseries, 0.5, 2, 10)
 
-  # do a dry-run to see what the program will do, and what metadata it will save
-  dryrun('NaCl_0.1', 'ct_0.5')
+  # Then let's do a calibration run with Ni, exposure time = 60s, and perform calibration in calibration software
+  run_calibration()
 
-  # Then let's do a calibration run and save the image in order to open it in calibration software
-  calibration([FIXME])
-  save_last_tiff()
-
-  # Use setupscan to check image quality under current scan parameters
-  setupscan([FIXME])
-  save_last_tiff()
-
-  # Everything looks right. Let's do prun with different ScanPlans and save the tiffs
-  prun('NaCl_0.1','ct_0.5')
-  # or
-  bt.list() # returns the 'NaCl_0.1' sample object at position 17 and the 'ct_0.5' ScanPlan object at position 20
+  bt.list() # returns the 'NaCl' sample object at position 17 and the 'ct_0.5' ScanPlan object at position 20
   prun(17,20)
-  
+
   # the data are saved into the NSLS-II database (don't worry) but we want to get the image so
   # type:
   save_last_tiff() # save tiffs from last scan
-  
+
   # now we have everything set up, it is super-easy to sequence lots of interesting scans
   # this does a series of different scans on the same sample
-  prun(17,21)   # or prun(17,'Tramp_0.5_300_310_5'), whichever you are more comfortable with.
-  prun(17,22)   # or prun('NaCl_0.1','Tramp_0.5_310_300_5'), or whatever
-  prun(17,23)
+  prun(17,21)   # assume 'Tramp_0.5_300_310_2' ScanPlan object at position 21
+  prun(17,22)   # assume 'Tramp_0.5_310_250_5' ScanPlan object at position 23
   save_tiff(db[-3:]) # save tiffs from last three scans
 
   # this does the same scan on a series of samples
-  prun(17,21)   # or prun('NaCl_0.1,'Tramp_0.5_300_310_5'), whichever you are more comfortable with.
-  prun(18,21)   # or prun('NaCl_0.2','Tramp_0.5_300_310_5'), or whatever,
-  prun(19,21)   # or prun('NaCl_0.3',21),
+  prun(17,21)   # running sample at index 17 with 'Tramp_0.5_300_310_2' ScanPlan
+  prun(18,21)   # running sample at index 18 with 'Tramp_0.5_300_310_2' ScanPlan
+  prun(19,21)   # running sample at index 19 with 'Tramp_0.5_300_310_2' ScanPlan
   save_tiff(db[-3:]) # save tiffs from last three scans
 
 
@@ -317,5 +279,3 @@ prun.stop()      Perform cleanup. Mark as success.
 prun.halt()      Do not perform cleanup --- just stop.
 prun.state       Check if 'paused' or 'idle'.
 ============== ===========
-
-

@@ -259,15 +259,25 @@ will load calibration parameters from the most recent config file.
 
 .. _import_sample:
 
-metadata imported from spreadsheet
-""""""""""""""""""""""""""""""""""
+Sample metadata imported from spreadsheet
+"""""""""""""""""""""""""""""""""""""""""
 
-In order to facilitate , we suggest you to enter
+In order to facilitate retrospective operation on data, we suggest you to enter
 as much information as you can and that is the main philosophy behind ``xpdAcq``.
 
 Typing in sample metadata during beamtime is always less efficient and it wastes
 your time so a pre-populated excel sheet with all metadata entered beforehand
 turns out to be the solution.
+
+In order import sample metadata from spreadsheet, we would need you to have a
+pre-filled spreadsheet with name ``<saf_number>_sample.xls`` sit in ``xpdConfig``
+directory. Then the import process is simply:
+
+.. code-block:: python
+
+  import_sample(300564, bt) # SAF number is 300564 to current beamtime
+                            # beamtime object , bt, with SAF number 300564 has created
+                            # file with 300564_sample.xls exists in ``xpdConfig`` directory
 
 
 comma separated fields
@@ -356,6 +366,62 @@ phase string
 
   As before, a search on ``Na`` or ``Cl`` or ``H`` or ``O`` will include this
   header. Also a search on ``Nacl=0.09`` will include this header as well.
+
+.. _background_obj:
+
+Sample objects going to be generated
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* **Sample**:
+
+  Each row in your spreadsheet will be taken as one valid Sample and metadata
+  will be parsed based on the contents you type in with above parsing rule.
+
+
+* **background**:
+
+  In additional to ``Sample`` objects parsed from rows, ``xpdAcq`` also create
+  background objects with information you type in at ``Geometry`` field.
+
+  background objects will automatically tagged as ``is_background`` in metadata.
+
+Generally, after successfully importing sample from spreadsheet, that is what
+you would see:
+
+.. code-block:: python
+
+  In [1]: import_sample(300564, bt)
+  *** End of import Sample object ***
+  Out[1]: <xpdacq.utils.ExceltoYaml at 0x7fae8ab659b0>
+
+  In [2]: bt.list()
+
+  ScanPlans:
+
+
+  Samples:
+  0: P2S
+  1: Ni_calibrant
+  2: activated_carbon_1
+  3: activated_carbon_2
+  4: activated_carbon_3
+  5: activated_carbon_4
+  6: activated_carbon_5
+  7: activated_carbon_6
+  8: FeF3(4,4-bipyridyl)
+  9: Zn_MOF
+  ...
+
+  41: ITO_glass_noFilm
+  42: ITO_glass_1hrHeatUpTo250C_1hrhold250C_airdry
+  43: ITO_glass_1hrHeatUpTo450C_1hrhold450C_airdry
+  44: ITO_glass_30minHeatUpTo150C_1.5hrhold150C_airdry
+  45: CeO2_film_calibrant
+  46: bkg_1mm_OD_capillary
+  47: bkg_0.9mm_OD_capillary
+  48: bkg_0.5mm_OD_capillary
+  49: bkg_film_on_substrate
+
 
 .. _auto_mask:
 

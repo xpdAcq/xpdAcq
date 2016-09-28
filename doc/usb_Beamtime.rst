@@ -97,4 +97,4 @@ environment setup that need to be fixed, but if you ever do have to create
 
   >>> bt = Beamtime('Billinge',300256,0.1818,[('Simon','Billinge'),('Chia-Hao','Liu')])
 
-We will assume that ``bt`` exists.  Now we move on to the next step, :ref:`usb_experiment` within our beamtime. 
+We will assume that ``bt`` exists.  Now we move on to the next step, :ref:`usb_experiment` within our beamtime.

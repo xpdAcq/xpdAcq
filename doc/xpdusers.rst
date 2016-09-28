@@ -9,7 +9,6 @@ XPD Users
    sb_overview
    sb_icollection
    usb_Beamtime
-   usb_Experiment
    usb_Where
    usb_Scan
    usb_Running
