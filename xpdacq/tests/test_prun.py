@@ -1,6 +1,7 @@
 import unittest
 import os
 import shutil
+import time
 import yaml
 import uuid
 from configparser import ConfigParser
@@ -194,12 +195,13 @@ class PrunTest(unittest.TestCase):
         self.assertEqual(open_run['calibration_collection_uid'],
                          'uuid1234')
 
-    def test_open_collection(self):
-        # no collection
-        delattr(glbl, 'collection')
-        self.assertRaises(RuntimeError, lambda: self.prun(0, 0))
-        # test collection num
-        open_collection('unittest_collection')
-        self.assertEqual(glbl.collection, [])
-        self.prun(0, 0)
-        self.assertEqual(glbl.collection_num, 1)
+    # deprecate from v0.5 release
+    #def test_open_collection(self):
+    #    # no collection
+    #    delattr(glbl, 'collection')
+    #    self.assertRaises(RuntimeError, lambda: self.prun(0, 0))
+    #    # test collection num
+    #    open_collection('unittest_collection')
+    #    self.assertEqual(glbl.collection, [])
+    #    self.prun(0, 0)
+    #    self.assertEqual(glbl.collection_num, 1)

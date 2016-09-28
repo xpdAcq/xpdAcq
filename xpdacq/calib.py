@@ -8,6 +8,8 @@ import datetime
 import numpy as np
 from IPython import get_ipython
 
+#FIXME : this import is intentionally left as we will save calib_img
+#FIXME : leave for separate PR
 import tifffile as tif
 
 from .glbl import glbl
@@ -52,25 +54,29 @@ def _timestampstr(timestamp):
 
 def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
                     detector=None, gaussian=None):
-    """ function to collect calibration image, run calibration process and
-     store calibration parameters into xpdUser/config_base/
+    """ function to run entire calibration process.
+
+    Entire process includes: collect calibration image, trigger pyFAI 
+    calibration process, store calibration parameters as a yaml file 
+    under xpdUser/config_base/ and inject uid of calibration image to
+    following scans, until this function is run again.
 
     Parameters
     ----------
-    exposure : int
-        optional. total exposure time in sec. default is 60s
-    calibrant_name : str
-        optional.name of calibrant used, different calibrants correspond to 
+    exposure : int, optional
+        total exposure time in sec. Default is 60s
+    calibrant_name : str, optional
+        name of calibrant used, different calibrants correspond to 
         different d-spacing profiles. Default is 'Ni'. User can assign 
         different calibrant, given d-spacing file path presents
-    wavelength : flot [unit :angstrom]
-        optional.wavelength of x-ray being used in angstrom Default value is 
+    wavelength : flot, optional
+        current of x-ray wavelength, in angstrom. Default value is 
         read out from existing xpdacq.Beamtime object
-    detector : pyfai.detector.Detector
-        optional. instance of detector which defines pxiel size in x- or
-        y-direction. default is set to Perkin Elmer detector
-    gaussian : int
-        optional. gaussian width between rings, default is 100.
+    detector : pyfai.detector.Detector, optional.
+        instance of detector which defines pxiel size in x- and
+        y-direction. Default is set to Perkin Elmer detector
+    gaussian : int, optional
+        gaussian width between rings, Default is 100.
     """
     # default params
     interactive = True
@@ -104,7 +110,7 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     calib_collection_uid = str(uuid.uuid4())
     calibration_dict = {'sample_name':calibrant_name,
                         'sample_composition':{calibrant_name :1},
-                        'is_calibration': True
+                        'is_calibration': True,
                         'calibration_collection_uid': calib_collection_uid}
     prun_uid = prun(calibration_dict, ScanPlan(bto, ct, exposure))
     light_header = glbl.db[prun_uid[-1]]  # last one is always light
@@ -154,7 +160,7 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     # FIXME: need a solution for selecting desired calibration image
     # based on calibration_collection_uid later
     glbl.calib_config_dict.update({'calibration_collection_uid':
-                                   calib_collection_uid)})
+                                   calib_collection_uid})
     # write yaml
     yaml_name = glbl.calib_config_name
     with open(os.path.join(glbl.config_base, yaml_name), 'w') as f:

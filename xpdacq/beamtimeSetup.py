@@ -1,24 +1,14 @@
 import os
 import sys
-import uuid
-import time
 import yaml
 import shutil
-import inspect
-import datetime
-import numpy as np
 from time import strftime
-from mock import MagicMock
 from IPython import get_ipython
-from collections import ChainMap
 
-import bluesky.plans as bp
 
 from .glbl import glbl
-from .yamldict import YamlDict, YamlChainMap
-from .validated_dict import ValidatedDictLike
 from .beamtime import *
-from .utils import _graceful_exit, import_sample
+from .utils import _graceful_exit
 
 
 def _start_beamtime(PI_last, saf_num, experimenters=[], *,
@@ -49,7 +39,8 @@ def _start_beamtime(PI_last, saf_num, experimenters=[], *,
         dst = os.path.join(glbl.usrAnalysis_dir, 'Ni24.D')
         shutil.copy(src, dst)
         # import sample
-        # import_sample(saf_num, bt)
+        # FIXME: leave for user?
+        # import_sample(bt, saf_num)
         return bt
 
 

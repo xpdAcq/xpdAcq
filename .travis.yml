@@ -76,8 +76,8 @@ install:
 script:
   - coverage run run_tests.py
   - coverage report -m
-  - flake8 .
 
 after_script:
+  - flake8 .
   - codecov
   - coveralls

@@ -15,7 +15,7 @@ Check your data collection environment is correctly set up
 .. code-block:: python
 
   bt.md
-  
+
 should return a list of metadata about your experiment, such as PI last name.  If not
 please get your beamtime environment set up by the instrument scientist before proceeding.
 
@@ -40,13 +40,16 @@ and follow the instructions in :ref:`calib_manual`
 2. set up ``Sample`` objects
 """"""""""""""""""""""""""""
 
-Your sample information should be loaded in an excel spreadsheet.  Type
+Your sample information should be loaded in an excel spreadsheet. Type
 
 .. code-block:: python
 
-  import_sample(saf_num=300064, bt)
+  import_sample(300064, bt) # SAF number is 300064 for example
 
-and follow instructions FIXME: I don't know the workflow...
+your spreadsheet should located inside ``xpdConfig`` directory with name as ``<saf_number>_sample.xls``.
+
+``Sample`` objects corresponding each row of your spreadsheet will be
+created, along with corresponding background object. for the parsing rule, please see :ref:`import_sample`
 
 Additional samples may be added by adding samples to the excel file and rerunning.
 
@@ -120,40 +123,13 @@ other scan-types are available
                               # but easy to separate from your production runs later 
   dryrun(2,5)                 # scan is not run, but returns some information about scan
 
-2. Interrupt your scan
-""""""""""""""""""""""
-
-table from `original package <http://nsls-ii.github.io/bluesky/state-machine.html#interactive-pause-summary>`_
-
-a) Interactively Interrupt Execution
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-======================= ===========
-Command                 Outcome
-======================= ===========
-Ctrl+C                  Pause soon
-Ctrl+C twice            Pause now
-Ctrl+C three times fast (Shortcut) Pause now and abort
-======================= ===========
-
-b) Recovering from the paused state caused by an interrupt
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-============== ===========
-Command        Outcome
-============== ===========
-prun.resume()    Safely resume plan.
-prun.abort()     Perform cleanup. Mark as aborted.
-prun.stop()      Perform cleanup. Mark as success.
-prun.halt()      Do not perform cleanup --- just stop.
-prun.state       Check if 'paused' or 'idle'.
-============== ===========
 
 Get your data
 -------------
 
-Save images and metadata from scans
-"""""""""""""""""""""""""""""""""""
+1. Save images and metadata from scans
+"""""""""""""""""""""""""""""""""""""
+
 These commands can be run in the ``collection-dev`` or the ``analysis`` ipython environments.
 Data are saved in the directory defined in `set_experiment` FIXME (see :ref:`4. set up the file for saving output`)
 
@@ -170,7 +146,7 @@ Data are saved in the directory defined in `set_experiment` FIXME (see :ref:`4. 
   h = db[-5:]
   save_tiff(h)
 
-**save the scan 5 scans ago:**
+**save images from scan 5 scans ago:**
 
 .. code-block:: python
 
@@ -182,6 +158,10 @@ This is a software object that contains all the information about your scan and 
 be passed to different functions to do analysis.
 more information on headers is `here <http://nsls-ii.github.io/databroker/headers.html>`_
 
+
+2. Save images and also integrate images to a 1D patterns
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
 **save your images and also integrate to a 1D pattern:**
 
 .. code-block:: python
@@ -189,12 +169,15 @@ more information on headers is `here <http://nsls-ii.github.io/databroker/header
   integrate_and_save_last()   # the most recent scan
   h = db[-5:]
   integrate_and_save(h)       # the last 5 scans
-  h = db[-5]                 
+  h = db[-5]
   integrate_and_save_(h)      # the scan 5 ago
 
-.. autofunction::
 
-  xpdan.data_reduction.integrate_and_save_last
+.. autosummary::
+  :toctree:
+  :nosignatures:
+
+  integrate_and_save_last
   
 Code for Sample Experiment
 --------------------------
@@ -252,6 +235,7 @@ understand the logic in greater detail see the full user documentation.
           '<andSoOn>':'<etc>'
          }  # this one will be much more useful later!
 
+
 .. code-block:: python
 
   # define "ct" scanplan with exp = 0.5
@@ -303,3 +287,35 @@ understand the logic in greater detail see the full user documentation.
   prun(18,21)   # or prun('NaCl_0.2','Tramp_0.5_300_310_5'), or whatever,
   prun(19,21)   # or prun('NaCl_0.3',21),
   save_tiff(db[-3:]) # save tiffs from last three scans
+
+
+Interrupt your scan
+--------------------
+
+table from `original package <http://nsls-ii.github.io/bluesky/state-machine.html#interactive-pause-summary>`_
+
+a) Interactively Interrupt Execution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+======================= ===========
+Command                 Outcome
+======================= ===========
+Ctrl+C                  Pause soon
+Ctrl+C twice            Pause now
+Ctrl+C three times fast (Shortcut) Pause now and abort
+======================= ===========
+
+b) Recovering from the paused state caused by an interrupt
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+============== ===========
+Command        Outcome
+============== ===========
+prun.resume()    Safely resume plan.
+prun.abort()     Perform cleanup. Mark as aborted.
+prun.stop()      Perform cleanup. Mark as success.
+prun.halt()      Do not perform cleanup --- just stop.
+prun.state       Check if 'paused' or 'idle'.
+============== ===========
+
+

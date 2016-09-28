@@ -26,9 +26,6 @@ if bt is not None:
     print("INFO: Reload beamtime objects:\n{}\n".format(bt))
     prun.beamtime = bt
 
-# gonna seperate analysis from collection
-# from xpdacq.analysis import *
-
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
 YAML_DIR = glbl.yaml_dir

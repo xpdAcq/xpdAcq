@@ -2,12 +2,8 @@ import os
 import uuid
 import time
 import yaml
-import inspect
 import datetime
-import numpy as np
 from itertools import count
-from collections import ChainMap
-from configparser import ConfigParser
 
 import bluesky.plans as bp
 from bluesky import RunEngine
@@ -16,8 +12,6 @@ from bluesky.suspenders import SuspendFloor
 
 from .glbl import glbl
 from .yamldict import YamlDict, YamlChainMap
-from .validated_dict import ValidatedDictLike
-from .beamtimeSetup import start_xpdacq
 from .beamtime import *
 
 
@@ -204,7 +198,6 @@ def _auto_load_calibration_file():
 
 
 def _inject_qualified_dark_frame_uid(msg):
-    # print('!!!! INJECT dark uid !!!')
     if msg.command == 'open_run' and msg.kwargs.get('dark_frame') != True:
         dark_uid = _validate_dark(glbl.dk_window)
         msg.kwargs['sc_dk_field_uid'] = dark_uid
@@ -227,20 +220,17 @@ def _inject_calibration_md(msg):
 def open_collection(collection_name):
     """ function to open a collection of your following scans
 
-        collection is a list of uid of your scans. Only one collection will 
-        be alive in collection environment. This set of uids will be
-        saved as a yaml file and desired operations can be applied later.
+    collection is a list of uid of executed scans. 
+    Only one collection will be alive in collection environment. 
+    This set of uids will be saved as a yaml file and desired operations 
+    can be applied later.
 
-        Parameters
-        ----------
-        collection_name : str
-            name of your collection, advised to have discernible name
-
-        Returns
-        -------
-        collection : list
-            attribute of glbl
+    Parameters
+    ----------
+    collection_name : str
+        name of your collection, suggested to have discernible name
     """
+
     print("INFO: open collection")
     glbl._cnt = count()
     glbl.collection_num = next(glbl._cnt)
@@ -280,37 +270,19 @@ def _insert_collection(collection_name, collection_obj, new_uid=None):
 
 class CustomizedRunEngine(RunEngine):
     def __init__(self, beamtime, *args, **kwargs):
-        """
-        A RunEngine customized for XPD workflows.
+        """ A RunEngine customized for XPD workflows.
 
         Parameters
         ----------
-        beamtime : Beamtime or None
+        beamtime : xpdacq.beamtime.Beamtime or None
+            current beamtime object
 
         Examples
         --------
-        Automatic configuration during startup process...
-        >>> bt = load_beamtime('some/directory/pi_name')
-        >>> prun = CustomizedRunEngine(bt)
-
         Basic usage...
-
-        Inspect avaiable experiments, samples, plans.
-        >>> print(bt)
-        Experiments:
-        0: another_test
-
-        ScanPlans:
-        0: (...summary of scanplan...)
-
-        Samples:
-        0: name
 
         Run samples and plans by number...
         >>> prun(0, 0)
-
-        ... or by name.
-        >>> prun(3, 'ct')  # Do an XPD count ('ct') plan on Sample 3.
 
         Advanced usage...
 
@@ -320,9 +292,6 @@ class CustomizedRunEngine(RunEngine):
         Or custom sample info --- sample just has to be dict-like
         and contain the required keys.
         >>> prun(custom_sample_dict, custom_plan)
-
-        Customize dark frame period
-        >>> prun(3, 'ct', dark_strategy=partial(periodic_dark, period=1000)
 
         Or use completely custom dark frame logic
         >>> prun(3, 'ct', dark_strategy=some_custom_func)
@@ -356,7 +325,6 @@ class CustomizedRunEngine(RunEngine):
             # print("INFO: beam dump suspender has been created."
             #      "To check, type prun.suspenders")
         else:
-            # print('set suspender method has been called') # debug line
             pass
 
     def __call__(self, sample, plan, subs=None, *,
@@ -365,11 +333,13 @@ class CustomizedRunEngine(RunEngine):
         # The CustomizedRunEngine knows about a Beamtime object, and it
         # interprets integers for 'sample' as indexes into the Beamtime's
         # lists of Samples from all its Experiments.
-        if getattr(glbl, 'collection', None) is None:
-            raise RuntimeError("No collection has been linked to current "
-                               "experiment yet.\nPlease do\n"
-                               ">>> open_collection(<collection_name>)\n"
-                               "before you run any prun")
+
+        # deprecated from v0.5 release
+        #if getattr(glbl, 'collection', None) is None:
+        #    raise RuntimeError("No collection has been linked to current "
+        #                       "experiment yet.\nPlease do\n"
+        #                       ">>> open_collection(<collection_name>)\n"
+        #                       "before you run any prun")
 
         if isinstance(sample, int):
             try:
@@ -419,8 +389,9 @@ class CustomizedRunEngine(RunEngine):
                          raise_if_interrupted=raise_if_interrupted,
                          **metadata_kw)
 
+        # deprecated from v0.5 release
         # insert collection
-        _insert_collection(glbl.collection_name, glbl.collection,
-                           self._run_start_uids)
+        #_insert_collection(glbl.collection_name, glbl.collection,
+        #                   self._run_start_uids)
 
         return self._run_start_uids
