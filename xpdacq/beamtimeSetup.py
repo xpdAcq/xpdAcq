@@ -1,106 +1,215 @@
-#!/usr/bin/env python
-##############################################################################
-#
-# xpdacq            by Billinge Group
-#                   Simon J. L. Billinge sb2896@columbia.edu
-#                   (c) 2016 trustees of Columbia University in the City of
-#                        New York.
-#                   All rights reserved
-#
-# File coded by:    Timothy Liu, Simon Billinge, Tom Caswell
-#
-# See AUTHORS.txt for a list of people who contributed.
-# See LICENSE.txt for license information.
-#
-##############################################################################
-import sys
 import os
-import datetime
-import shutil
+import sys
 import yaml
+import shutil
 from time import strftime
-from xpdacq.utils import _graceful_exit
-from xpdacq.beamtime import Beamtime, XPD, Experiment, Sample, ScanPlan
-from xpdacq.beamtime import _clean_md_input, _get_hidden_list
-from xpdacq.glbl import glbl
-from shutil import ReadError
+from IPython import get_ipython
 
-home_dir = glbl.home
-all_folders = glbl.allfolders
 
-def _any_input_method(inp_func):
-    return inp_func()
+from .glbl import glbl
+from .beamtime import *
+from .utils import _graceful_exit
+
+
+def _start_beamtime(PI_last, saf_num, experimenters=[], *,
+                    wavelength=None):
+    """ function for start beamtime """
+    # TODO - allow config file later
+
+    if not os.path.exists(glbl.home):
+        raise RuntimeError("WARNING: fundamental directory {} does not"
+                           "exist. Please contact beamline staff immediately"
+                           .format(glbl.home))
+
+    dir_list = os.listdir(glbl.home)
+    if len(dir_list) != 0:
+        raise FileExistsError("There are more than one files/directories"
+                              "under {}, have you 'run _end_beamtime()' yet?"
+                              .format(glbl.home))
+    elif len(dir_list) == 0:
+        _make_clean_env()
+        print("INFO: initiated requried directories for experiment")
+        bt = Beamtime(PI_last, saf_num, experimenters,
+                      wavelength=wavelength)
+        os.chdir(glbl.home)
+        print("INFO: to link newly created beamtime object to prun, "
+              "please do `prun.beamtime = bt`")
+        # copy default Ni24.D to xpdUser/user_analysis
+        src = os.path.join(os.path.dirname(__file__), 'Ni24.D')
+        dst = os.path.join(glbl.usrAnalysis_dir, 'Ni24.D')
+        shutil.copy(src, dst)
+        # import sample
+        # FIXME: leave for user?
+        # import_sample(bt, saf_num)
+        return bt
+
 
 def _make_clean_env():
-    '''Make a clean environment for a new user
-
-    3. look for a <PIname>_<saf#>_config.yml and load it.  Ask the user if
-       this is the right one before loading it.  If yes, load, if no exit
-       telling user to manually delete the yml file stall the correct one in
-       dUser directory, if it exists.
-
-    4. ask a series of questions to help set up the environment. Save them
-       in the <PIname>_<saf#>_config.yml file.  Create this if it does not
-       already exist.
-
-    Parameters
-    ----------
-    datapath : ??
-        Base directory to work in
-    '''
+    """Make a clean environment for a new user
+    """
     out = []
-    for d in all_folders:
+    for d in glbl.allfolders:
         os.makedirs(d, exist_ok=True)
         out.append(d)
     return out
 
-def _end_beamtime(base_dir=None,archive_dir=None,bto=None, usr_confirm = 'y'):
-    _required_bt_info = ['bt_piLast', 'bt_safN', 'bt_uid']
+
+def start_xpdacq():
+    """ function to reload beamtime """
+    try:
+        bt_list = [f for f in os.listdir(glbl.yaml_dir) if
+                   f.startswith('bt') and
+                   os.path.isfile(os.path.join(glbl.yaml_dir, f))]
+    except FileNotFoundError:
+        return _no_beamtime()
+
+    if len(bt_list) == 1:
+        bt_f = bt_list[-1]
+        bt = load_beamtime()
+        return bt
+
+    elif len(bt_list) > 1:
+        print("WARNING: There are more than one beamtime objects:"
+              "{}".format(bt_list))
+        print("Please contact beamline staff immediately")
+
+    else:
+        return _no_beamtime()
+
+
+def _no_beamtime():
+    print("INFO: No beamtime object has been found")
+    print("INFO: Please run 'bt=_start_beamtime(<PI_last>, <saf_num>,"
+          "<experimenter_list>, wavelength=<wavelength_num>)'"
+          "to initiate beamtime")
+
+
+def load_beamtime(directory=None):
+    """
+    Load a Beamtime and associated objects.
+
+    Expected directory structure:
+
+    <glbl.yaml_dir>/
+      bt_bt.yml
+      samples/
+      scanplans/
+    """
+    if directory is None:
+        directory = glbl.yaml_dir  # leave room for future multi-beamtime
+    known_uids = {}
+    beamtime_fn = os.path.join(directory, 'bt_bt.yml')
+    sample_fns = os.listdir(os.path.join(directory, 'samples'))
+    scanplan_fns = os.listdir(os.path.join(directory, 'scanplans'))
+
+    with open(beamtime_fn, 'r') as f:
+        bt = load_yaml(f, known_uids)
+
+    for fn in scanplan_fns:
+        with open(os.path.join(directory, 'scanplans', fn), 'r') as f:
+            load_yaml(f, known_uids)
+
+    for fn in sample_fns:
+        with open(os.path.join(directory, 'samples', fn), 'r') as f:
+            load_yaml(f, known_uids)
+
+    return bt
+
+
+def load_yaml(f, known_uids=None):
+    """
+    Recreate a ScanPlan, Experiment, or Beamtime object from a YAML file.
+
+    If its linked objects have already been created, re-link to them.
+    If they have not yet been created, create them now.
+    """
+    if known_uids is None:
+        known_uids = {}
+    data = yaml.load(f)
+    # If f is a file handle, 'rewind' it so we can read it again.
+    if not isinstance(f, str):
+        f.seek(0)
+    if isinstance(data, dict) and 'bt_uid' in data:
+        obj = Beamtime.from_yaml(f)
+        known_uids[obj['bt_uid']] = obj
+        return obj
+    # Experiment is deprecated
+    # elif isinstance(data, list) and 'ex_uid' in data[0]:
+    #    beamtime = known_uids.get(data[1]['bt_uid'])
+    #    obj = Experiment.from_yaml(f, beamtime=beamtime)
+    #    known_uids[obj['ex_uid']] = obj
+    elif isinstance(data, list) and 'sa_uid' in data[0]:
+        beamtime = known_uids.get(data[1]['bt_uid'])
+        obj = Sample.from_yaml(f, beamtime=beamtime)
+        known_uids[obj['sa_uid']] = obj
+    elif isinstance(data, list) and len(data) == 2:
+        # elif isinstance(data, list) and 'sp_uid' in data[0]:
+        beamtime = known_uids.get(data[1]['bt_uid'])
+        obj = ScanPlan.from_yaml(f, beamtime=beamtime)
+        known_uids[obj['sp_uid']] = obj
+    else:
+        raise ValueError("File does not match a recognized specification.")
+    return obj
+
+
+def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
+    """ funciton to end a beamtime.
+
+    It check if directory structure is correct and flush directories
+    """
+    _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']
     if archive_dir is None:
         archive_dir = glbl.archive_dir
     if base_dir is None:
         base_dir = glbl.base
-    os.makedirs(glbl.home, exist_ok = True)
+    os.makedirs(glbl.home, exist_ok=True)
     # check env
     files = os.listdir(glbl.home)
-    if len(files)==0:
-        sys.exit(_graceful_exit('It appears that end_beamtime may have been run.  If so, do not run again but proceed to _start_beamtime'))
+    if len(files) == 0:
+        raise FileNotFoundError("It appears that end_beamtime may have been"
+                                "run. If so, do not run again but proceed to\n"
+                                ">>> bt = _start_beamtime(pi_last, saf_num,"
+                                "experimenters, wavelength=<value>)\n")
+    ips = get_ipython()
     # laod bt yaml
-    if not bto: 
-        bto = _load_bt(glbl.yaml_dir)
-    try:
-        bt_md = bto.md
-    except AttributeError:
-        # worst situation, user didn't even instantiate bt object with xpdAcq
-        _graceful_exit('''There is no metadata attribute in beamtime object "{}".
-                        User might have gone throgh entirely different workflow.
-                        Reconmend to contact user before executing end_beamtime''')
-    if 'bt_piLast' in bt_md.keys():
-        piname = bto.md['bt_piLast']
-    else:
-        piname = input('Please enter PI last name for this beamtime: ')
-    if 'bt_safN' in bt_md.keys():
-        safn = bto.md['bt_safN']
-    else:
-        safn = input('Please enter your SAF number to this beamtime: ')
-    if 'bt_uid' in bt_md.keys():
-        btuid = bto.md['bt_uid'][:7]
-    else:
-        btuid = ''
-    archive_full_name = _execute_end_beamtime(piname, safn, btuid, base_dir)
+    if not bto:
+        # bto = _load_bt(glbl.yaml_dir)
+        bto = ips.ns_table['user_global']['bt']
+    # load bt info
+    archive_name = _load_bt_info(bto, _required_info)
+    # archive file
+    archive_full_name = _tar_user_data(archive_name)
+    # confirm archive
     _confirm_archive(archive_full_name)
+    # flush
     _delete_home_dir_tree()
+    # delete bt
+    del ips.ns_table['user_global']['bt']
 
-def _load_bt(bt_yaml_path):
-    btoname = os.path.join(glbl.yaml_dir,'bt_bt.yml')
-    if not os.path.isfile(btoname):
-        sys.exit(_graceful_exit('''{} does not exist in {}. User might have deleted it accidentally.
-Please create it based on user information or contect user'''.format(os.path.basename(btoname), glbl.yaml_dir)))
-    with open(btoname, 'r') as fi:
-        bto = yaml.load(fi)
-    return bto
-    
-def _tar_user_data(archive_name, root_dir = None, archive_format ='tar'):
+
+def _clean_info(obj):
+    """ stringtify and replace space"""
+    return str(obj).strip().replace(' ', '')
+
+
+def _load_bt_info(bt_obj, required_fields):
+    # grab information
+    bt_info_list = []
+    for el in required_fields:
+        # print('loaded bt info = {}'.format(dict(bt_obj)))
+        bt_info = bt_obj.get(el)
+        if bt_info is None:
+            print("WARNING: required beamtime information {} doesn't exist. "
+                  "User might have edited it during experiment. "
+                  "Please contact user for further inforamtion".format(el))
+            sys.exit()
+        bt_info_list.append(_clean_info(bt_info))
+    bt_info_list.append(strftime('%Y-%m-%d-%H%M'))
+    archive_name = '_'.join(bt_info_list)
+    return archive_name
+
+
+def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
     """ Create a remote tarball of all user folders under xpdUser directory
     """
     archive_full_name = os.path.join(glbl.archive_dir, archive_name)
@@ -109,158 +218,82 @@ def _tar_user_data(archive_name, root_dir = None, archive_format ='tar'):
     cur_path = os.getcwd()
     try:
         os.chdir(glbl.base)
-        print('Archiving your data now. That may take several minutes, please be patient :)' )
-        tar_return = shutil.make_archive(archive_full_name, archive_format, root_dir=glbl.base,
-                base_dir='xpdUser', verbose=1, dry_run=False)
+        print("INFO: Archiving your data now. That may take several"
+              "minutes. please be patient :)")
+        tar_return = shutil.make_archive(archive_full_name,
+                                         archive_format, root_dir=glbl.base,
+                                         base_dir='xpdUser', verbose=1,
+                                         dry_run=False)
     finally:
         os.chdir(cur_path)
     return archive_full_name
 
-def _execute_end_beamtime(piname, safn, btuid, base_dir):
-    '''cleans up at the end of a beamtime
 
-    Function takes all the user-generated tifs and config files, etc.,
-    and archives them to a directory in the remote file-store with
-    filename B_DIR/useriD
-    '''
-    os.makedirs(glbl.archive_dir, exist_ok=True)
-    archive_name = '_'.join([piname.strip().replace(' ', ''),
-                            str(safn).strip(), strftime('%Y-%m-%d-%H%M'), btuid]
-                            )
-    archive_full_name = _tar_user_data(archive_name)
-    return archive_full_name
+def _load_bt(bt_yaml_path):
+    btoname = os.path.join(glbl.yaml_dir, 'bt_bt.yml')
+    if not os.path.isfile(btoname):
+        sys.exit(_graceful_exit("{} does not exist in {}. User might have"
+                                "deleted it accidentally.Please create it"
+                                "based on user information or contect user"
+                                .format(os.path.basename(btoname),
+                                        glbl.yaml_dir)))
+    with open(btoname, 'r') as fi:
+        bto = yaml.load(fi)
+    return bto
 
-def  _get_user_confirmation():
-    conf = input("Please confirm data are backed up. Are you ready to continue with xpdUser directory contents deletion (y,[n])?: ")
+
+def _get_user_confirmation():
+    conf = input("Please confirm data are backed up. Are you ready to continue"
+                 "with xpdUser directory contents deletion (y,[n])?: ")
     return conf
+
+
+def _any_input_method(inp_func):
+    return inp_func()
+
 
 def _confirm_archive(archive_f_name):
     print("tarball archived to {}".format(archive_f_name))
     conf = _any_input_method(_get_user_confirmation)
-    if conf in ('y','Y'):
+    if conf in ('y', 'Y'):
         return
     else:
-        sys.exit(_graceful_exit('xpdUser directory delete operation cancelled at Users request'))
+        sys.exit(_graceful_exit("xpdUser directory delete operation cancelled."
+                                "at Users request"))
+
 
 def _delete_home_dir_tree():
-    os.chdir(glbl.base) # move out from xpdUser before deletion
+    os.chdir(glbl.base)  # move out from xpdUser before deletion
     shutil.rmtree(glbl.home)
     os.makedirs(glbl.home, exist_ok=True)
     os.chdir(glbl.home)  # now move back into xpdUser
     return
 
-def get_full_ext(path, post_ext=''):
-    path, ext = os.path.splitext(path)
-    if ext:
-        return get_full_ext(path, ext + post_ext)
-    return post_ext
 
-def _check_empty_environment(base_dir=None):
-    if base_dir is None:
-        base_dir = glbl.base
-    if os.path.exists(home_dir):
-        if not os.path.isdir(home_dir):
-            sys.exit(_graceful_exit("Expected a folder, got a file.  "
-                               "Please Talk to beamline staff"))
-        files = os.listdir(home_dir) # that also list dirs that have been created
-        if len(files) > 0:
-            sys.exit(_graceful_exit("Unexpected files in {}, you need to run _end_beamtime(). Please Talk to beamline staff".format(home_dir)))
+""" hodding place
+# advanced version, allowed multiple beamtime. but not used for now
+def _start_xpdacq():
+    dirs = [d for d in os.listdir(glbl.yaml_dir) if os.path.isdir(d)]
+    # create sample dir if it doesn't exist yet
+    if 'samples' not in dirs:
+        sample_dir = os.path.join(glbl.xpdconfig, 'samples')
+        os.makedirs(sample_dir, exist_ok=True)
     else:
-        sys.exit(_graceful_exit("The xpdUser directory appears not to exist "
-                               "Please Talk to beamline staff"))
+        dirs.remove('samples')
+    # now we have all dirs that are not samples;
+    # only PI_name dirs left
 
-def _init_dark_yaml():
-    dark_scan_list = []
-    with open(glbl.dk_yaml, 'w') as f:
-        yaml.dump(dark_scan_list, f)
+    if len(dirs) == 1:
+        load_dirs = dirs[-1]
+        bt = load_beamtime(load_dirs)
 
-def _start_beamtime(safn,home_dir=None):
-    ''' priviate function for beamline scientist
-    
-    This function will start a beamtime for user 
-    It does following:
-    1) checks if previous beamtime is properly ended.
-    2) create default directories
-    3) instantiate a bt object with information encoded in saf<saf_num>.yml file 
-    4) instantiate lazy user Sample, ScanPlan objects
-    
-    Parameters:
-    -----------
-    safn : str
-        string to saf number of current beamtime. 
-        This function requires to have a `saf<saf_num>.yml' in xpdUser/config_base
-    '''
-    if home_dir is None:
-        home_dir = glbl.home
-    if not os.path.exists(home_dir):
-        os.makedirs(home_dir)
-    _check_empty_environment()
-    configfile = os.path.join(glbl.xpdconfig,'saf{}.yml'.format(str(safn)))
-    if os.path.isfile(configfile):
-        with open(configfile, 'r') as fin:
-            setup_dict = yaml.load(fin)
+    elif len(dirs) > 1:
+        print("INFO: There are more than one PI_name dirs:"
+              "{}".format(dirs))
+        print("Please choose the one you want to use and run:"
+              "bt = load_beamtime(<path to the PI name dir>)")
+
     else:
-        sys.exit(_graceful_exit('the saf config file {} appears to be missing'.format(configfile)))
-    try:
-        piname = setup_dict['PI last name']
-        safn = setup_dict['saf number']
-        explist = setup_dict['experimenter list']
-    except KeyError:
-        sys.exit(_graceful_exit('Cannot load input info. File syntax in {} maybe corrupted.'.format(configfile)))
-    bt = _execute_start_beamtime(piname, safn, explist, home_dir=home_dir)
-    _init_dark_yaml()
+        print("INFO: No PI_name has been found")
 
-    return bt
-
-def _execute_start_beamtime(piname,safn,explist,wavelength=None,home_dir=None):
-    PI_name = piname
-    saf_num = safn
-    _make_clean_env()
-    os.chdir(home_dir)
-    bt = Beamtime(PI_name,saf_num,experimenters=explist)
-
-    # now populate the database with some lazy-user objects
-    ex = Experiment('l-user',bt)
-    sa = Sample('l-user',ex)
-    sc01 = ScanPlan('ct',{'exposure':0.1})
-    sc05 = ScanPlan('ct',{'exposure':0.5})
-    sc1 = ScanPlan('ct',{'exposure':1.0})
-    sc5 = ScanPlan('ct',{'exposure':5.0})
-    sc10 = ScanPlan('ct',{'exposure':10.0})
-    sc30 = ScanPlan('ct',{'exposure':30.0})
-    return bt
-
-#FIXME this function should be revisited later
-def import_yaml():
-    '''
-    import user pre-defined files from ~/xpdUser/Import
-
-    Files can be compreesed or .yml, once imported, bt.list() should show updated acquire object list
-    '''
-    src_dir = glbl.import_dir
-    dst_dir = glbl.yaml_dir
-    f_list = os.listdir(src_dir)
-    if len(f_list) == 0:
-        print('INFO: There is no pre-defined user objects in {}'.format(src_dir))
-        return 
-    # two possibilites: .yml or compressed files; shutil should handle all compressed cases
-    moved_f_list = []
-    for f in f_list:
-        full_path = os.path.join(src_dir, f)
-        (root, ext) = os.path.splitext(f)
-        if ext == '.yml':
-            shutil.copy(full_path, dst_dir)
-            moved_f_list.append(f)
-            os.remove(full_path)
-        else:
-            try:
-                shutil.unpack_archive(full_path, dst_dir)
-                moved_f_list.append(f)
-                os.remove(full_path)
-            except ReadError:
-                print('Unrecongnized file type {} is found inside {}'.format(f, src_dir))
-                pass
-    return moved_f_list
-
-if __name__ == '__main__':
-    print(glbl.home)
+"""

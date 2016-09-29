@@ -13,8 +13,8 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-'''Configuration of python object and gloabal constents
-'''
+"""Configuration of python object and global constants
+"""
 
 import os
 from xpdacq.glbl import glbl
@@ -31,18 +31,20 @@ except NameError:
 
 from xpdacq.xpdacq import *
 from xpdacq.analysis import *
+
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
 YAML_DIR = glbl.yaml_dir
 
-print('Initializing the XPD data acquisition simulation environment') 
+print('Initializing the XPD data acquisition simulation environment')
 if os.path.isdir(HOME_DIR):
     os.chdir(HOME_DIR)
 else:
     os.chdir(BASE_DIR)
 
-#if there is a yml file in the normal place, then this was an existing experiment that was interrupted.
-#if os.path.isdir(YAML_DIR):
+# if there is a yml file in the normal place,
+# then this was an existing experiment that was interrupted.
+# if os.path.isdir(YAML_DIR):
 bt_fname = os.path.join(YAML_DIR, "bt_bt.yml")
 if os.path.isfile(bt_fname):
     print("loading bt_bt.yml")
