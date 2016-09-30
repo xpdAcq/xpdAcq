@@ -125,8 +125,6 @@ def run_calibration(exposure=60, dark_sub=True, calibrant_file=None,
     # masking
     print('INFO: create mask')
     mask = get_mask(img, ai, glbl.mask_dict, save_name=None)
-    # add attribute to glbl
-    glbl.mask = mask
 
     return ai
 
@@ -153,8 +151,12 @@ def get_mask(img, geometry_object, mask_dict, save_name=None):
     xpdan.tools.mask_img
     """
     mask = mask_img(img, geometry_object, **mask_dict)
+    print("INFO: add mask to global state")
+    glbl.mask = mask
+
     if save_name is not None:
         np.save(mask, save_name)
+
     return mask
 
 
