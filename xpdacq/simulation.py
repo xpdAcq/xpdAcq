@@ -1,22 +1,17 @@
 import os
 import sys
 import uuid
-import shutil
 import time
-import tarfile as tar
 import tempfile
 import numpy as np
 from time import strftime
-from shutil import ReadError
-
-import pandas as pd
-
+from tifffile import imread
 from unittest.mock import MagicMock
-from uuid import uuid4
 
-import bluesky.examples as be
 
 from .glbl import glbl
+import bluesky.examples as be
+
 
 
 def start_simulation(glbl=glbl):
@@ -94,7 +89,7 @@ def build_pymongo_backed_broker():
     fs.register_handler('npy', NpyHandler)
 
     db = Broker(mds, fs)
-    insert_imgs(db.mds, db.fs, 1, (200,200))
+    insert_imgs(db.mds, db.fs, 1, (2048,2048))
 
     return db
 
@@ -117,8 +112,8 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
     """
     # Insert the dark images
     dark_img = np.zeros(shape)
-    dark_uid = str(uuid4())
-    run_start = mds.insert_run_start(uid=str(uuid4()), time=time.time(),
+    dark_uid = str(uuid.uuid4())
+    run_start = mds.insert_run_start(uid=str(uuid.uuid4()), time=time.time(),
                                      name='test-dark', dark_uid=dark_uid,
                                      is_dark_img=True)
     data_keys = {
@@ -126,10 +121,10 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
                     dtype='array')}
     data_hdr = dict(run_start=run_start,
                     data_keys=data_keys,
-                    time=time.time(), uid=str(uuid4()))
+                    time=time.time(), uid=str(uuid.uuid4()))
     descriptor = mds.insert_descriptor(**data_hdr)
     for i, img in enumerate([dark_img]):
-        fs_uid = str(uuid4())
+        fs_uid = str(uuid.uuid4())
         fn = os.path.join(save_dir, fs_uid + '.npy')
         np.save(fn, img)
         # insert into FS
@@ -137,16 +132,16 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
         fs.insert_datum(fs_res, fs_uid, datum_kwargs={})
         mds.insert_event(
             descriptor=descriptor,
-            uid=str(uuid4()),
+            uid=str(uuid.uuid4()),
             time=time.time(),
-            data={'img': fs_uid},
+            data={'pe1_img': fs_uid},
             timestamps={},
             seq_num=i)
     mds.insert_run_stop(run_start=run_start,
-                        uid=str(uuid4()),
+                        uid=str(uuid.uuid4()),
                         time=time.time())
     imgs = [np.ones(shape)] * n
-    run_start = mds.insert_run_start(uid=str(uuid4()), time=time.time(),
+    run_start = mds.insert_run_start(uid=str(uuid.uuid4()), time=time.time(),
                                      name='test', dark_uid=dark_uid,
                                      sc_dk_field_uid=dark_uid)
     data_keys = {
@@ -154,23 +149,28 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
                           dtype='array')}
     data_hdr = dict(run_start=run_start,
                     data_keys=data_keys,
-                    time=time.time(), uid=str(uuid4()))
+                    time=time.time(), uid=str(uuid.uuid4()))
     descriptor = mds.insert_descriptor(**data_hdr)
-    for i, img in enumerate(imgs):
-        fs_uid = str(uuid4())
+    # FIXME: dirty load
+    exp_img_path = os.path.join(os.path.dirname(__file__),
+                                'examples', 'sub_Ni_60.tif')
+    exp_img = imread(exp_img_path)
+    print(exp_img)
+    for i, light_img in enumerate([exp_img]):
+        fs_uid = str(uuid.uuid4())
         fn = os.path.join(save_dir, fs_uid + '.npy')
-        np.save(fn, img)
+        np.save(fn, light_img)
         # insert into FS
         fs_res = fs.insert_resource('npy', fn, resource_kwargs={})
         fs.insert_datum(fs_res, fs_uid, datum_kwargs={})
         mds.insert_event(
             descriptor=descriptor,
-            uid=str(uuid4()),
+            uid=str(uuid.uuid4()),
             time=time.time(),
             data={'pe1_image': fs_uid},
             timestamps={'pe1_image': time.time()},
             seq_num=i)
     mds.insert_run_stop(run_start=run_start,
-                        uid=str(uuid4()),
+                        uid=str(uuid.uuid4()),
                         time=time.time())
     return save_dir
