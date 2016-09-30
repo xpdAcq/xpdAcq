@@ -217,6 +217,17 @@ def _inject_calibration_md(msg):
     return msg
 
 
+def _inject_mask(msg):
+    if msg.command == 'open_run':
+        mask = getattr(glbl, 'mask', None)
+        if mask:
+            print("INFO: insert mask into your header")
+            mask_md = compress_mask(mask)
+            msg.kwargs['mask'] = mask_md
+        else:
+            print("INFO: no mask has been associated with current glbl."
+
+
 def open_collection(collection_name):
     """ function to open a collection of your following scans
 
@@ -384,6 +395,8 @@ class CustomizedRunEngine(RunEngine):
         # Load calibration file
         if glbl.auto_load_calib:
             plan = bp.msg_mutator(plan, _inject_calibration_md)
+        # Insert glbl mask
+        plan = bp.msg_mutator(plan, _inject_mask)
         # Execute
         super().__call__(plan, subs,
                          raise_if_interrupted=raise_if_interrupted,
