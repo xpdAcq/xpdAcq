@@ -14,6 +14,8 @@ from .glbl import glbl
 from .yamldict import YamlDict, YamlChainMap
 from .beamtime import *
 
+from xpdan.tools import compress_mask
+
 
 def _summarize(plan):
     """based on bluesky.utils.print_summary"""
@@ -220,13 +222,14 @@ def _inject_calibration_md(msg):
 def _inject_mask(msg):
     if msg.command == 'open_run':
         mask = getattr(glbl, 'mask', None)
-        if mask:
+        if mask is not None:
             print("INFO: insert mask into your header")
             mask_md = compress_mask(mask)
             msg.kwargs['mask'] = mask_md
         else:
-            print("INFO: no mask has been associated with current glbl."
+            print("INFO: no mask has been associated with current glbl")
 
+    return msg
 
 def open_collection(collection_name):
     """ function to open a collection of your following scans
@@ -325,12 +328,12 @@ class CustomizedRunEngine(RunEngine):
         print("INFO: beamtime object has been linked\n")
         # from xpdacq.calib import run_calibration
         if not glbl._is_simulation:
-            self.subscribe('all', mds.insert)
+            self.subscribe('all', glbl.db.mds.insert)
             # let user deal with suspender
-            beamdump_sus = SuspendFloor(glbl.ring_current, 50,
-                                        resume_thresh=glbl.ring_current.get() * 0.9,
-                                        sleep=1200)
-            glbl.suspender = beamdump_sus
+            #beamdump_sus = SuspendFloor(glbl.ring_current, 50,
+            #                            resume_thresh=glbl.ring_current.get() * 0.9,
+            #                            sleep=1200)
+            #glbl.suspender = beamdump_sus
             # FIXME : print info for user
             # self.install_suspender(beamdump_sus)
             # print("INFO: beam dump suspender has been created."

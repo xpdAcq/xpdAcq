@@ -14,6 +14,7 @@ import tifffile as tif
 
 from .glbl import glbl
 from .beamtime import ScanPlan, Sample, ct
+from xpdan.tools import mask_img
 
 from pyFAI.gui_utils import update_fig
 from pyFAI.detectors import Perkin, Detector
@@ -102,7 +103,7 @@ def run_calibration(exposure=60, dark_sub=True, calibrant_file=None,
     light_header = glbl.db[-1]
     if dark_sub:
         dark_uid = light_header.start['sc_dk_field_uid']
-        dark_header = glbl.db(**{'sc_dk_field_uid':dark_uid})
+        dark_header = glbl.db[dark_uid]
         dark_img = np.asarray(glbl.db.get_images(dark_header,
                                 glbl.det_image_field)).squeeze()
     for ev in glbl.db.get_events(light_header, fill=True):
@@ -110,18 +111,27 @@ def run_calibration(exposure=60, dark_sub=True, calibrant_file=None,
         if dark_sub:
             img -= dark_img
 
+    print('{:=^20}'.format("INFO: you are able to calib, please refer"
+                           "to guid here:\n"))
+    print('{:^20}'
+          .format("http://xpdacq.github.io/usb_Running.html#calib-manual"))
+    print()
     # calibration, return a azimuthal integrator
     ai = calibration(img, calibrant_file=calibrant_file,
+                     calib_collection_uid=calib_collection_uid,
                      wavelength=wavelength, detector=detector,
                      gaussian=gaussian)
 
     # masking
-    mask = get_mask(img, ai, save_name=None, mask_dict=glbl.mask_dict)
+    print('INFO: create mask')
+    mask = get_mask(img, ai, glbl.mask_dict, save_name=None)
     # add attribute to glbl
     glbl.mask = mask
 
+    return ai
 
-def get_mask(img, geometry_object, save_name=None, mask_dict=None):
+
+def get_mask(img, geometry_object, mask_dict, save_name=None):
     """ function to generate mask
 
     Parameters
@@ -142,14 +152,15 @@ def get_mask(img, geometry_object, save_name=None, mask_dict=None):
     --------
     xpdan.tools.mask_img
     """
-    mask = mask_img(img, geometry_object, **kwargs)
+    mask = mask_img(img, geometry_object, **mask_dict)
     if save_name is not None:
         np.save(mask, save_name)
     return mask
 
 
 def calibration(img, calibrant_file=None, wavelength=None,
-                save_file_name=None, detector=None, gaussian=None):
+                calib_collection_uid=None, save_file_name=None,
+                detector=None, gaussian=None):
     """ run calibration process on a image. current backend is pyFAI
 
     resultant parameters will be stored a yaml file under xpdUser/
@@ -166,6 +177,9 @@ def calibration(img, calibrant_file=None, wavelength=None,
     wavelength : flot, optional
         current of x-ray wavelength, in angstrom. Default value is 
         read out from existing xpdacq.Beamtime object
+    calibration_collection_uid : str, optional
+        uid of calibration collection. default is generated from run
+        calibration
     save_file_name : str, optional
         file name for yaml that carries resultant calibration parameters
     detector : pyfai.detector.Detector, optional.
