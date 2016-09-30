@@ -2,13 +2,12 @@ import os
 import sys
 import shutil
 import tarfile as tar
+import uuid
 from time import strftime
 from shutil import ReadError
 
 import pandas as pd
 
-from .glbl import glbl
-from .beamtime import Sample
 
 
 def _graceful_exit(error_message):
@@ -454,3 +453,4 @@ def import_sample(saf_num, bt):
     excel_to_yaml.load(str(saf_num))
     excel_to_yaml.create_yaml(bt)
     return excel_to_yaml
+

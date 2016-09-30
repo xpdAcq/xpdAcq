@@ -13,15 +13,7 @@ from IPython import get_ipython
 import tifffile as tif
 
 from .glbl import glbl
-from .beamtime import ScanPlan, ct
-
-# Hot fix at beamline
-#if not glbl._is_simulation:
-#    from databroker import get_images
-
-# local test
-from databroker import get_images, get_events
-from databroker import db
+from .beamtime import ScanPlan, Sample, ct
 
 from pyFAI.gui_utils import update_fig
 from pyFAI.detectors import Perkin, Detector
@@ -56,8 +48,9 @@ def _timestampstr(timestamp):
     return timestring
 
 
-def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
-                    detector=None, gaussian=None):
+def run_calibration(exposure=60, dark_sub=True, calibrant_file=None,
+                    wavelength=None, detector=None, gaussian=None):
+
     """ function to run entire calibration process.
 
     Entire process includes: collect calibration image, trigger pyFAI 
@@ -69,13 +62,112 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     ----------
     exposure : int, optional
         total exposure time in sec. Default is 60s
-    calibrant_name : str, optional
-        name of calibrant used, different calibrants correspond to 
-        different d-spacing profiles. Default is 'Ni'. User can assign 
-        different calibrant, given d-spacing file path presents
+    dark_sub : bool, optional
+        option of turn on/off dark subtraction on this calibration
+        image. default is True.
+    calibrant_file : str, optional
+        calibrant file being used, default is 'Ni.D' under 
+        xpdUser/userAnalysis/. File name except for extention will be 
+        used as sample name.
     wavelength : flot, optional
         current of x-ray wavelength, in angstrom. Default value is 
         read out from existing xpdacq.Beamtime object
+    detector : pyfai.detector.Detector, optional.
+        instance of detector which defines pxiel size in x- and
+        y-direction. Default is set to Perkin Elmer detector
+    gaussian : int, optional
+        gaussian width between rings, Default is 100.
+    """
+
+    _check_obj(_REQUIRED_OBJ_LIST)
+    ips = get_ipython()
+    bto = ips.ns_table['user_global']['bt']
+    prun = ips.ns_table['user_global']['prun']
+
+    # d-spacing
+    if calibrant_file is not None:
+        calibrant_name = os.path.split(calibrant_file)[1]
+        calibrant_name = os.path.splitext(calibrant_name)[0]
+    else:
+        calibrant_name = 'Ni'
+
+    # scan
+    calib_collection_uid = str(uuid.uuid4())
+    calibration_dict = {'sample_name':calibrant_name,
+                        'sample_composition':{calibrant_name :1},
+                        'is_calibration': True,
+                        'calibration_collection_uid': calib_collection_uid}
+    sa = Sample(bto, calibration_dict)
+    prun_uid = prun(calibration_dict, ScanPlan(bto, ct, exposure))
+    light_header = glbl.db[-1]
+    if dark_sub:
+        dark_uid = light_header.start['sc_dk_field_uid']
+        dark_header = glbl.db(**{'sc_dk_field_uid':dark_uid})
+        dark_img = np.asarray(glbl.db.get_images(dark_header,
+                                glbl.det_image_field)).squeeze()
+    for ev in glbl.db.get_events(light_header, fill=True):
+        img = ev['data'][glbl.det_image_field]
+        if dark_sub:
+            img -= dark_img
+
+    # calibration, return a azimuthal integrator
+    ai = calibration(img, calibrant_file=calibrant_file,
+                     wavelength=wavelength, detector=detector,
+                     gaussian=gaussian)
+
+    # masking
+    mask = get_mask(img, ai, save_name=None, mask_dict=glbl.mask_dict)
+    # add attribute to glbl
+    glbl.mask = mask
+
+
+def get_mask(img, geometry_object, save_name=None, mask_dict=None):
+    """ function to generate mask
+
+    Parameters
+    ----------
+    img : ndarray
+        image that going to be masked
+    geometry_object : pyFAI.geometry.Geometry
+        The pyFAI description of the detector orientation or any
+        subclass of pyFAI.geometry.Geometry class
+    save_name : str, optional
+        full path for this mask going to be saved. if it is None, 
+        only mask will be returned, no file will be saved locally.
+    mask_dict : dict, optional
+        dictionary for arguments in masking function. for more details, 
+        please see docstring of xpdan.tools.mask_img
+
+    See also
+    --------
+    xpdan.tools.mask_img
+    """
+    mask = mask_img(img, geometry_object, **kwargs)
+    if save_name is not None:
+        np.save(mask, save_name)
+    return mask
+
+
+def calibration(img, calibrant_file=None, wavelength=None,
+                save_file_name=None, detector=None, gaussian=None):
+    """ run calibration process on a image. current backend is pyFAI
+
+    resultant parameters will be stored a yaml file under xpdUser/
+    config_base/ and inject uid of calibration image to following scans, 
+    until this function is run again.
+
+    Parameters
+    ----------
+    img : ndarray
+        image to be calibrated
+    calibrant_file : str, optional
+        calibrant file being used, default is 'Ni.D' under 
+        xpdUser/userAnalysis/
+    wavelength : flot, optional
+        current of x-ray wavelength, in angstrom. Default value is 
+        read out from existing xpdacq.Beamtime object
+    save_file_name : str, optional
+        file name for yaml that carries resultant calibration parameters
     detector : pyfai.detector.Detector, optional.
         instance of detector which defines pxiel size in x- and
         y-direction. Default is set to Perkin Elmer detector
@@ -90,7 +182,7 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     ips = get_ipython()
     bto = ips.ns_table['user_global']['bt']
     prun = ips.ns_table['user_global']['prun']
-    # print('*** current beamtime info = {} ***'.format(bto.md))
+
     calibrant = Calibrant()
     # d-spacing
     if calibrant_file is not None:
@@ -109,27 +201,6 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     # detector
     if detector is None:
         detector = Perkin()
-    # scan
-    # simplified version of Sample object
-    calib_collection_uid = str(uuid.uuid4())
-    calibration_dict = {'sample_name':calibrant_name,
-                        'sample_composition':{calibrant_name :1},
-                        'is_calibration': True,
-                        'calibration_collection_uid': calib_collection_uid}
-    prun_uid = prun(calibration_dict, ScanPlan(bto, ct, exposure))
-    # FIXME: local test, remove/ edit after finished
-    #light_header = glbl.db[prun_uid[-1]]  # last one is always light
-    light_header = db[-1]
-    dark_uid = light_header.start['sc_dk_field_uid']
-    dark_header = glbl.db[dark_uid]
-    # unknown signature of get_images
-    # FIXME: local test, remove/ edit after finished
-    #dark_img = np.asarray(
-    #    get_images(dark_header, glbl.det_image_field)).squeeze()
-    # dark_img = np.asarray(glbl.get_images(dark_header, glbl.det_image_field)).squeeze()
-    for ev in get_events(light_header, fill=True):
-        img = ev['data'][glbl.det_image_field]
-        #img -= dark_img
     # calibration
     timestr = _timestampstr(time.time())
     basename = '_'.join(['pyFAI_calib', calibrant_name, timestr])

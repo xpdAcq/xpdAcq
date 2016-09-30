@@ -4,37 +4,6 @@ import time
 from unittest.mock import MagicMock
 from time import strftime, sleep
 
-import bluesky.examples as be
-
-
-# define simulated PE1C
-class SimulatedPE1C(be.Reader):
-    """Subclass the bluesky plain detector examples ('Reader'); add attributes."""
-
-    def __init__(self, name, read_fields):
-        self.images_per_set = MagicMock()
-        self.images_per_set.get = MagicMock(return_value=5)
-        self.number_of_sets = MagicMock()
-        self.number_of_sets.put = MagicMock(return_value=1)
-        self.number_of_sets.get = MagicMock(return_value=1)
-        self.cam = MagicMock()
-        self.cam.acquire_time = MagicMock()
-        self.cam.acquire_time.put = MagicMock(return_value=0.1)
-        self.cam.acquire_time.get = MagicMock(return_value=0.1)
-        self._staged = False
-
-        super().__init__(name, read_fields)
-
-        self.ready = True  # work around a hack in Reader
-
-    def stage(self):
-        if self._staged:
-            raise RuntimeError("Device is already staged.")
-        self._staged = True
-        return [self]
-
-    def unstage(self):
-        self._staged = False
 
 
 # better to get this from a config file in the fullness of time
@@ -50,6 +19,7 @@ BEAMLINE_ID = 'xpd'
 GROUP = 'XPD'
 IMAGE_FIELD = 'pe1_image'
 CALIB_CONFIG_NAME = 'pyFAI_calib.yml'
+
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()
@@ -76,7 +46,6 @@ config_base/
             yaml/
                 bt_bt.yaml
                 samples/
-                experiments/
                 scanplnas/
 """
 BT_DIR = YAML_DIR
@@ -145,44 +114,28 @@ class Glbl:
 
     # logic to assign correct objects depends on simulation or real experiment
     if not simulation:
-        from bluesky.callbacks import LiveTable as lvt
-        # import other names to avoid possible self-referencing later
-        from databroker.broker import DataBroker
-        from databroker import get_images as getImages
-        from databroker import get_events as getEvents
-        from bluesky.callbacks.broker import verify_files_saved as verifyFiles
+        # FIXME: it seems to be unused, confirm and delete
+        #from bluesky.callbacks.broker import verify_files_saved as verifyFiles
         from ophyd import EpicsSignalRO, EpicsSignal
         from bluesky.suspenders import SuspendFloor
         ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
                                      name='ring_current')
-        # real imports
-        db = DataBroker
-        LiveTable = lvt
-        get_events = getEvents
-        get_images = getImages
-        verify_files_saved = verifyFiles
-        # real collection objects will be loaded during start_up
-        area_det = None
-        temp_controller = None
-        shutter = None
-
+        #verify_files_saved = verifyFiles
     else:
-        simulation = True
-        # shutter = motor  # this passes as a fake shutter
         archive_dir = os.path.join(BASE_DIR, 'userSimulationArchive')
-        # mock imports
-        db = MagicMock()
-        get_events = MagicMock()
-        get_images = MagicMock()
-        verify_files_saved = MagicMock()
-        # mock collection objects
-        area_det = SimulatedPE1C('pe1c', {'intensity': lambda: 5})
-        temp_controller = be.motor
-        shutter = MagicMock()
-        ring_current = MagicMock()
-        print('==== Simulation being created in current directory:{} ===='
-              .format(BASE_DIR))
-        os.makedirs(home, exist_ok=True)
+
+    # object should be handled by ipython profile
+    db = None
+    area_det = None
+    temp_controller = None
+    shutter = None
+    verify_files_saved = None
+
+    # default masking dict
+    mask_dict = {'edge': 30, 'lower_thresh': 0.0,
+                 'upper_thresh': None, 'bs_width': 13,
+                 'tri_offset': 13, 'v_asym': 0,
+                 'alpha': 2.5, 'tmsk': None}
 
     def __init__(self, frame_acq_time=FRAME_ACQUIRE_TIME):
         self._frame_acq_time = frame_acq_time

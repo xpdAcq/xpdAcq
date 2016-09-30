@@ -5,11 +5,29 @@ from xpdacq.utils import import_sample
 from xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
                                   _end_beamtime)
 
-if not glbl._is_simulation:
-    glbl.area_det = pe1c
-    glbl.shutter = shctl1
-    glbl.temp_controller = cs700
-    # let NameError handle missing object
+# experiment device being used in current plan
+try:
+    device_list = [pe1c, shctl1, cs700]
+    attribute_name = ['area_det', 'shutter', 'temp_controler']
+
+    for attr, device in zip(attribute_name, device_list):
+        try:
+            setattr(glbl, attr, device)
+        except NameError:
+            # NameError -> simulation
+            pass
+except NameError:
+    # NameError -> simulation
+    pass
+
+
+# databroker
+try:
+    setattr(glbl, 'db', db)
+except NameError:
+    # NameError -> simulation
+    pass
+
 
 # beamtime reload happen in xpdacq
 from xpdacq.xpdacq import *
@@ -37,8 +55,9 @@ else:
     os.chdir(BASE_DIR)
 
 from xpdacq.calib import run_calibration
-# analysis functions
-from xpdan.data_reduction import *
+
+# analysis functions, only at beamline
+#from xpdan.data_reduction import *
 
 print('OK, ready to go.  To continue, follow the steps in the xpdAcq')
 print('documentation at http://xpdacq.github.io/xpdacq')
