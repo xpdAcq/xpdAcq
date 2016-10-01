@@ -98,8 +98,8 @@ def run_calibration(exposure=60, dark_sub=True, calibrant_file=None,
                         'sample_composition':{calibrant_name :1},
                         'is_calibration': True,
                         'calibration_collection_uid': calib_collection_uid}
-    sa = Sample(bto, calibration_dict)
-    prun_uid = prun(calibration_dict, ScanPlan(bto, ct, exposure))
+    sample = Sample(bto, calibration_dict)
+    prun_uid = prun(sample, ScanPlan(bto, ct, exposure))
     light_header = glbl.db[-1]
     if dark_sub:
         dark_uid = light_header.start['sc_dk_field_uid']
@@ -122,35 +122,103 @@ def run_calibration(exposure=60, dark_sub=True, calibrant_file=None,
                      wavelength=wavelength, detector=detector,
                      gaussian=gaussian)
 
-    # masking
-    print('INFO: create mask')
-    mask = get_mask(img, ai, glbl.mask_dict, save_name=None)
+    # save glbl attribute for xpdAcq
+    timestr = _timestampstr(time.time())
+    basename = '_'.join(['pyFAI_calib', calibrant_name, timestr])
+    glbl.calib_config_dict = ai.getPyFAI()
+    Fit2D_dict = ai.getFit2D()
+    glbl.calib_config_dict.update(Fit2D_dict)
+    glbl.calib_config_dict.update({'file_name':basename})
+    glbl.calib_config_dict.update({'time':timestr})
+    # FIXME: need a solution for selecting desired calibration image
+    # based on calibration_collection_uid later
+    glbl.calib_config_dict.update({'calibration_collection_uid':
+                                   calib_collection_uid})
+    # save yaml dict used for xpdAcq
+    yaml_name = glbl.calib_config_name
+    with open(os.path.join(glbl.config_base, yaml_name), 'w') as f:
+        yaml.dump(glbl.calib_config_dict, f)
 
     return ai
 
 
-def get_mask(img, geometry_object, mask_dict, save_name=None):
+def run_mask_builder(exposure=60, dark_sub=True,
+                     sample_name=None, calib_dict=None,
+                     mask_dict=None, save_name=None):
     """ function to generate mask
+
+    this function will execute a count scan and generate a mask based on
+    image collected from this scan.
 
     Parameters
     ----------
-    img : ndarray
-        image that going to be masked
-    geometry_object : pyFAI.geometry.Geometry
-        The pyFAI description of the detector orientation or any
-        subclass of pyFAI.geometry.Geometry class
-    save_name : str, optional
-        full path for this mask going to be saved. if it is None, 
-        only mask will be returned, no file will be saved locally.
+    exposure : float, optional
+        exposure time of this scan. default is 60s.
+    dark_sub : bool, optional
+        turn on/off of dark subtraction. default is True.
+    sample_name : str, optional
+        name of sample that new mask is going to be generated from.
+        default is 'mask_target'
+    calib_dict : dict, optional
+        dictionary with parameters for geometry correction
+        software. default is read out from glbl attribute (parameters
+        from the most recent calibration)
     mask_dict : dict, optional
-        dictionary for arguments in masking function. for more details, 
-        please see docstring of xpdan.tools.mask_img
+        dictionary for arguments in masking function. for more details,
+        please check docstring from ``xpdan.tools.mask_img``
+    save_name : str, optional
+        full path for this mask going to be saved. if it is None, only
+        the mask object will be returned, no file will be saved locally.
+
+    Note
+    ----
+    current software dealing with geometry correction is ``pyFAI``
 
     See also
     --------
     xpdan.tools.mask_img
     """
-    mask = mask_img(img, geometry_object, **mask_dict)
+
+    _check_obj(_REQUIRED_OBJ_LIST)
+    ips = get_ipython()
+    bto = ips.ns_table['user_global']['bt']
+    prun = ips.ns_table['user_global']['prun']
+
+    # default behavior
+    if sample_name is None:
+        sample_name = 'mask_target'
+
+    if mask_dict is None:
+        mask_dict = glbl.mask_dict
+
+    if calib_dict is None:
+        calib_dict = glbl.calib_config_dict
+
+    # setting up geometry parameters
+    ai = AzimuthalIntegrator()
+    ai.setPyFAI(**calib_dict)
+
+    # scan
+    mask_collection_uid = str(uuid.uuid4())
+    mask_builder_dict = {'sample_name':sample_name,
+                        'sample_composition':{sample_name :1},
+                        'is_mask': True,
+                        'mask_collection_uid': mask_collection_uid}
+    sample = Sample(bto, mask_builder_dict)
+    prun_uid = prun(sample, ScanPlan(bto, ct, exposure))
+    light_header = glbl.db[-1]
+    if dark_sub:
+        dark_uid = light_header.start['sc_dk_field_uid']
+        dark_header = glbl.db[dark_uid]
+        dark_img = np.asarray(glbl.db.get_images(dark_header,
+                                glbl.det_image_field)).squeeze()
+    for ev in glbl.db.get_events(light_header, fill=True):
+        img = ev['data'][glbl.det_image_field]
+        if dark_sub:
+            img -= dark_img
+
+    print("INFO: masking you image ....")
+    mask = mask_img(img, ai, **mask_dict)
     print("INFO: add mask to global state")
     glbl.mask = mask
 
@@ -163,11 +231,10 @@ def get_mask(img, geometry_object, mask_dict, save_name=None):
 def calibration(img, calibrant_file=None, wavelength=None,
                 calib_collection_uid=None, save_file_name=None,
                 detector=None, gaussian=None):
-    """ run calibration process on a image. current backend is pyFAI
+    """ run calibration process on a image with geometry correction
+    software
 
-    resultant parameters will be stored a yaml file under xpdUser/
-    config_base/ and inject uid of calibration image to following scans, 
-    until this function is run again.
+    current backend is ``pyFAI``.
 
     Parameters
     ----------
@@ -185,7 +252,7 @@ def calibration(img, calibrant_file=None, wavelength=None,
     save_file_name : str, optional
         file name for yaml that carries resultant calibration parameters
     detector : pyfai.detector.Detector, optional.
-        instance of detector which defines pxiel size in x- and
+        instance of detector which defines pixel size in x- and
         y-direction. Default is set to Perkin Elmer detector
     gaussian : int, optional
         gaussian width between rings, Default is 100.
@@ -206,7 +273,7 @@ def calibration(img, calibrant_file=None, wavelength=None,
         calibrant_name = os.path.split(calibrant_file)[1]
         calibrant_name = os.path.splitext(calibrant_name)[0]
     else:
-        calibrant.load_file(os.path.join(glbl.usrAnalysis_dir, 'Ni24.D'))
+        calibrant.load_file(os.path.join(glbl.usrAnalysis_dir, 'Ni.D'))
         calibrant_name = 'Ni'
     # wavelength
     if wavelength is None:
@@ -245,19 +312,5 @@ def calibration(img, calibrant_file=None, wavelength=None,
     c.gui_peakPicker()
     c.ai.setPyFAI(**c.geoRef.getPyFAI())
     c.ai.wavelength = c.geoRef.wavelength
-    # update until next time
-    glbl.calib_config_dict = c.ai.getPyFAI()
-    Fit2D_dict = c.ai.getFit2D()
-    glbl.calib_config_dict.update(Fit2D_dict)
-    glbl.calib_config_dict.update({'file_name':basename})
-    glbl.calib_config_dict.update({'time':timestr})
-    # FIXME: need a solution for selecting desired calibration image
-    # based on calibration_collection_uid later
-    glbl.calib_config_dict.update({'calibration_collection_uid':
-                                   calib_collection_uid})
-    # write yaml
-    yaml_name = glbl.calib_config_name
-    with open(os.path.join(glbl.config_base, yaml_name), 'w') as f:
-        yaml.dump(glbl.calib_config_dict, f)
 
     return c.ai
