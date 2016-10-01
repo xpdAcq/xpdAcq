@@ -8,7 +8,7 @@ from xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
 # experiment device being used in current plan
 try:
     device_list = [pe1c, shctl1, cs700]
-    attribute_name = ['area_det', 'shutter', 'temp_controler']
+    attribute_name = ['area_det', 'shutter', 'temp_controller']
 
     for attr, device in zip(attribute_name, device_list):
         try:
@@ -54,7 +54,7 @@ if os.path.isdir(HOME_DIR):
 else:
     os.chdir(BASE_DIR)
 
-from xpdacq.calib import run_calibration
+from xpdacq.calib import *
 
 # analysis functions, only at beamline
 #from xpdan.data_reduction import *
