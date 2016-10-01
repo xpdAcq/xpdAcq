@@ -245,7 +245,7 @@ class ExceltoYaml:
 
         Parameters
         ----------
-        bt : xpdacq.Beamtime object
+        bt : xpdacq.beamtime.Beamtime object
             an object carries SAF, PI_last and other information
 
         Returns
@@ -262,7 +262,6 @@ class ExceltoYaml:
                 k = k.strip().replace(' ', '_')
                 v = v.replace('/', '_')  # yaml path
                 # mapped_key = self.MAPPING.get(k, None) # no mapping
-
                 # name fields
                 if k in self._NAME_FIELD:
                     try:
@@ -281,16 +280,19 @@ class ExceltoYaml:
                 # sample fields
                 elif k in self._SAMPLE_FIELD:
                     try:
-                        composition_dict, phase_dict = self._phase_parser(v)
+                        (composition_dict,
+                         phase_dict,
+                         composition_str) = self._phase_parser(v)
                     except ValueError:
                         composition_dict = v
                         phase_dict = v
                     finally:
                         parsed_sa_md.update({'sample_composition':
-                                                 composition_dict})
-
+                                             composition_dict})
                         parsed_sa_md.update({'sample_phase':
-                                                 phase_dict})
+                                             phase_dict})
+                        parsed_sa_md.update({'composition_string':
+                                             composition_str})
 
                 # comma separated fields
                 elif k in self._COMMA_SEP_FIELD:
@@ -360,11 +362,6 @@ class ExceltoYaml:
         -------
         output_list : list
             a list contains comma separated element parsed strings.
-
-        Raises:
-        -------
-        ValueError
-            if ',' is not specified between names
         """
         element_list = input_str.split(',')
         output_list = list(map(lambda x: x.strip(), element_list))
@@ -393,15 +390,19 @@ class ExceltoYaml:
         Returns
         -------
         composition_dict : dict
-            a dictionary contains {element: stoichiometry}
+            a dictionary contains {element: stoichiometry}.
         phase_dict : dict
-            a dictionary contains relative ratio of phases
+            a dictionary contains relative ratio of phases.
+        composition_str : str
+            a string with the format PDF transfomation software 
+            takes. default is pdfgetx
 
         Examples
         --------
-        rv = _phase_parser('NaCl:1, Si:1')
-        rv[0] # {'Na':1, 'Cl':1, 'Si':1}
-        rv[1] # {'Nacl':0.5, 'Si':0.5}
+        rv = cls._phase_parser('NaCl:1, Si:2')
+        rv[0] # {'Na':0.33, 'Cl':0.33, 'Si':0.67}
+        rv[1] # {'Nacl':0.33, 'Si':0.67}
+        rv[2] # 'Na0.33Cl0.5Si0.5'
 
         Raises:
         -------
@@ -411,26 +412,59 @@ class ExceltoYaml:
 
         phase_dict = {}
         composition_dict = {}
+        composition_str = ''
+
         compound_meta = phase_str.split(',')
+        # figure out ratio between phases
         for el in compound_meta:
-            if len(el.split(':')) == 1:
-                com = el.split(':').pop()
-                amount = '1'  # capture default
+            _el = el.strip()
+            meta = _el.split(':')
+            # there is no ":" in the string            
+            if ':' not in _el:
+                # take whatever alpha numeric string before symbol
+                # to be the chemical element
+                symbl = [el for el in _el if not el.isalnum()]
+                if symbl:
+                    # take the first symbol
+                    symbl_ind = _el.find(symbl[0])
+                    com = _el[:symbl_ind]
+                else:
+                    # simply take whole string
+                    com = _el
+                amount = 1.0
+                phase_dict.update({com: amount})
+            # there is a ":" but nothing follows
+            elif len(meta[1]) == 0:
+                com = meta[0]
+                amount = 1.0
+                phase_dict.update({com: amount})
             else:
-                com, amount = el.split(':')  # expect [<com>, <amount>]
-            phase_dict.update({com.strip(): float(amount.strip())})
-            parsed_tuple = composition_analysis(com.strip())
-            # expect: ([elment_1, element_2, ...], [sto_1, sto_2,...])
-            for i in range(len(parsed_tuple[0])):
-                composition_dict.update({parsed_tuple[0][i]:
-                                             parsed_tuple[1][i]})
-        # normalized phase_dict
+                com, amount = _el.split(':')
+                # construct phase_dict, eg. {'Ni':0.5, 'NaCl':0.5}
+                phase_dict.update({com.strip(): float(amount.strip())})
+
         total = sum(phase_dict.values())
         for k, v in phase_dict.items():
-            ratio = "{0:.2f}".format(v / total)
-            phase_dict[k] = float(ratio)
-        return composition_dict, phase_dict
+            ratio = round(v/total, 2)
+            phase_dict[k] = ratio
+            # construct composition_dict
+            smbl, cnt = composition_analysis(k.strip())
+            for i in range(len(smbl)):
+                # element appears in differnt phases, add up
+                if smbl[i] in composition_dict:
+                    val = composition_dict.get(smbl[i])
+                    val += cnt[i] * ratio
+                    composition_dict.update({smbl[i]: val})
+                else:
+                    # otherwise, just update it
+                    composition_dict.update({smbl[i]:
+                                             cnt[i] * ratio})
+        # construct composition_str
+        for k,v in composition_dict.items():
+            composition_str += str(k)
+            composition_str += str(v)
 
+        return composition_dict, phase_dict, composition_str
 
 excel_to_yaml = ExceltoYaml()
 

@@ -31,14 +31,15 @@ class PrunTest(unittest.TestCase):
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
-        xlf = '30079_sample.xlsx'
+        xlf = '30079_sample.xls'
         src = os.path.join(os.path.dirname(__file__), xlf)
         shutil.copyfile(src, os.path.join(glbl.xpdconfig, xlf))
-        import_sample(self.saf_num, self.bt)
         self.sp = ScanPlan(self.bt, ct, 5)
         glbl.shutter_control = False
         self.prun = CustomizedRunEngine(self.bt)
         open_collection('unittest')
+        Sample(self.bt, {'sample_name': 'unittest',
+                         'sample_composition':{'unittest': 1}})
 
     def tearDown(self):
         os.chdir(self.base_dir)
