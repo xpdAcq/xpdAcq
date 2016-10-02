@@ -224,9 +224,9 @@ def _inject_mask(msg):
         mask = getattr(glbl, 'mask', None)
         if mask is not None:
             print("INFO: insert mask into your header")
-            data, indicies, indptr = compress_mask(mask)
-            msg.kwargs['mask'] = (data.tolist(), indicies.tolist(),
-                                  indptr.tolist())
+            data, indicies, indptr = compress_mask(mask)  # rv are lists
+            msg.kwargs['mask'] = (data, indicies,
+                                  indptr)
         else:
             print("INFO: no mask has been associated with current glbl")
 
