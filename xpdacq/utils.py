@@ -8,7 +8,8 @@ from shutil import ReadError
 
 import pandas as pd
 
-
+from .glbl import glbl
+from .beamtime import Sample
 
 def _graceful_exit(error_message):
     try:

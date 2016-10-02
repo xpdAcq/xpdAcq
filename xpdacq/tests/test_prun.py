@@ -4,6 +4,7 @@ import shutil
 import time
 import yaml
 import uuid
+from unittest.mock import MagicMock
 from configparser import ConfigParser
 from time import strftime
 
@@ -14,7 +15,9 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
 from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
                            _auto_load_calibration_file,
                            open_collection)
+from xpdacq.simulation import SimulatedPE1C
 
+import bluesky.examples as be
 
 class PrunTest(unittest.TestCase):
     def setUp(self):
@@ -39,6 +42,12 @@ class PrunTest(unittest.TestCase):
         glbl.shutter_control = False
         self.prun = CustomizedRunEngine(self.bt)
         open_collection('unittest')
+        # simulation objects
+        glbl.area_det = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
+        glbl.temp_controller = be.motor
+        glbl.shutter = MagicMock()
+
+
 
     def tearDown(self):
         os.chdir(self.base_dir)
