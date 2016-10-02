@@ -35,8 +35,9 @@ and follow the instructions in :ref:`calib_manual`
 
 2. set up mask
 """"""""""""""
-put in a sample that you want your mask being generated from. the choice of sample depends on your
-experiment. FIXME: I don't know what to write...
+put in a sample that you want your mask to be generated from. You may use any
+sample that is relevant to your experiment, but we recommend using a weak scattering
+sample such as an empty kapton tube.
 
 Then type
 
@@ -44,27 +45,49 @@ Then type
 
   run_mask_builder()
 
-A mask will be generated based on image collected from this sample. For how we generate this mask,
-please go to :ref:`auto_mask`.
+A mask will be generated based on image collected from this sample. This mask
+will be saved for use with all future datasets until you run ``run_mask_builder()``
+again.  
+
+For more info: :ref:`auto_mask`.
 
 
-3. set up ``Sample`` objects
-""""""""""""""""""""""""""""
+3. set up ``Sample`` objects to use later
+"""""""""""""""""""""""""""""""""""""""""
 
-Your sample information should be loaded in an excel spreadsheet. Type
+Your sample information should be loaded in an excel spreadsheet, with a well
+defined format (a template file may be found here FIXME). If the IS didn't already
+do it, save your sample xls file the ``xpdConfig`` directory using the name 
+``<saf_number>_sample.xls``, where you replace ``<saf_number>`` with the number
+of the safety approval form associated with you experiment.  If you are not sure
+what your ``saf_number`` is you can get it by typing [Tim, FIXME]:
 
 .. code-block:: python
 
-  import_sample(300564, bt) # SAF number is 300564 to current beamtime
-                            # beamtime object , bt, with SAF number 300564 has created
-                            # file with 300564_sample.xls exists in ``xpdConfig`` directory
+  bt.md.saf_number
 
-For the details of how we parse your information and create sample objects, please see :ref:`import_sample`.
+To load the sample information and have the sample objects available in the current beamtime:
 
-Additional samples may be added by adding samples to the excel file and rerunning.
+.. code-block:: python
 
-4. set up ``ScanPlan`` objects
-""""""""""""""""""""""""""""""
+  import_sample(<saf_number>, bt) 
+
+updates and additions may be added by adding more samples to the excel file and rerunning ``import_sample()``
+at any time during the experiment.
+
+For more info :ref:`import_sample`.
+
+
+4. set up ``ScanPlan`` objects to use later
+"""""""""""""""""""""""""""""""""""""""""""
+
+use an xpdAcq template
+^^^^^^^^^^^^^^^^^^^^^^
+
+``xpdAcq`` has templates for three common scans (more will follow, please request yours at ``xpd-users`` Google group!): a
+simple count, a series of counts, and a temperature scan.  Use the template to create specific Plans (that include specific start and
+stop temperatures, count times and so on) using the following table as a template.  These can be created now (to save time later) or
+later when you need them.
 
 ======================================= ===================================================================================
 command
@@ -91,6 +114,10 @@ a specific list of points while collecting read-back value from ``area detector`
 
 For more details about how to write a ``bluesky`` scan plan,
 please see `here <http://nsls-ii.github.io/bluesky/plans.html>`_.
+
+It is recommended that you use the ``xpdAcq`` templates unless your experiment needs its own special
+bluesky plan, because the autoreduction of data is not currently supported for bluesky pass-through plans.
+Also, metadata capture in bluesky passthrough plans must be explicitly coded into the plan.
 
 5. list objects by categories
 """""""""""""""""""""""""""""
@@ -129,20 +156,22 @@ The main philosophy of ``xpdAcq`` is : **on this sample run this scanplan**
 background scan
 ^^^^^^^^^^^^^^^
 
-Running scans with ``Sample`` objects tagged as ``is_background``.
+It is recommended to run a background scan before your sample so it is available for
+the automated data reduction steps.  It also allows you to see problems with the experimental
+setup, for example, crystlline peaks due to the beam hitting a shutter, for example.
+
+ 1. Load the background sample (e.g., empty kapton tube) on the instrument
+ 2. list your sample objects and find the ones tagged as backgrounds in the excel spreadsheet
+ 3. run prun (see below) on the background sample with a ``ct`` ScanPlan object of the desired exposure
 
 Please see :ref:`background_obj` for more information.
 
-.. code-block:: python
-
-  prun(48, 1) # sample 98 is ``bkg_0.5mm_OD_capillary``
-  prun(49, 1) # sample 98 is ``bkg_0.9mm_OD_capillary``
-
-
-.. code
-
 production run
 ^^^^^^^^^^^^^^
+
+ 1. Load your sample
+ 2. List your sample objects to find the right one
+ 3. type prun with the desired sample object and ScanPlan (see below)
 
 .. code-block:: python
 
@@ -150,6 +179,7 @@ production run
   prun(2,5)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
                                      # index from the ``bt`` list
 
+For more info: FIXME
 
 Get your data
 -------------
@@ -159,15 +189,20 @@ Get your data
 
 These commands can be run in the ``collection-dev`` or the ``analysis`` ipython environments.
 
-Data are saved in the directory named after ``sample_name`` metdata you type in to ``Sample`` object.
-
-After each command, you should see where data have been saved.
+Data are saved in the directory ``~/tiff_base/<sample_name>`` where ``<sample_name>`` is the name of the 
+sample that you used in the sample spreadsheet, and is the name of the ``Sample`` object.
 
 **save images from last scan:**
 
 .. code-block:: python
 
   save_last_tiff()
+  
+**Pro Tip**: this function is often typed just after ``prun()`` in the collection environment,
+so that the data are extracted out of the NSLS-II database and delivered to you automatically when
+the scan finishes.  You can then play around with them and take them home as you like.  The following
+functions are more useful for running in the ``analysis`` environment to fetch scans from the database
+selectively if you don't want a dump of every scan.
 
 **save images from last 5 scans:**
 
@@ -197,10 +232,10 @@ more information on headers is `here <http://nsls-ii.github.io/databroker/header
 .. code-block:: python
 
   integrate_and_save_last()   # the most recent scan
-  h = db[-5:]
-  integrate_and_save(h)       # the last 5 scans
-  h = db[-5]
-  integrate_and_save_(h)      # the scan 5 ago
+  h = db[-5:]                 # the last 5 scans
+  integrate_and_save(h)       
+  h = db[-5]                  # the scan 5 ago
+  integrate_and_save_(h)      
 
 
 .. autosummary::
@@ -212,7 +247,7 @@ more information on headers is `here <http://nsls-ii.github.io/databroker/header
 Code for Sample Experiment
 --------------------------
 
-Here is a sample code covering the entire process from defining Sample`` and
+Here is a sample code covering the entire process from defining ``Sample`` and
 ``ScanPlan`` objects to running different kinds of runs.
 
 Please replace the name and parameters in each function depending your needs.  To
@@ -228,7 +263,7 @@ understand the logic in greater detail see the full user documentation.
 
   # Ideally, Sample information should be filled before you come.
   # you can fill out the spreadsheet and then use ``import_sample`` function.
-  # Let's still have an example here.
+  # Let's still have an example here of how to do it explicitly
   Sample(bt, 'sammple_name':'NaCl',
          {'sample_composition': {'Na':0.5, 'Cl':0.5},
           'sample_phase': {'NaCl':1},
@@ -237,7 +272,7 @@ understand the logic in greater detail see the full user documentation.
           'tags':['looked kinda green','dropped on the floor during loading'],
           '<anythingElseIwant>':'<description>',
           '<andSoOn>':'<etc>'
-         }  # this one will be much more useful later!
+         }  # rich metadata will save a lot of time later!
 
 
 .. code-block:: python
@@ -275,6 +310,7 @@ understand the logic in greater detail see the full user documentation.
   prun(19,21)   # running sample at index 19 with 'Tramp_0.5_300_310_2' ScanPlan
   save_tiff(db[-3:]) # save tiffs from last three scans
 
+FIXME: if we have a ``view_last_image()`` function, document this one too.
 
 Interrupt your scan
 --------------------
