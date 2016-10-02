@@ -33,11 +33,22 @@ Ni calibrant at the sample position, type
 
 and follow the instructions in :ref:`calib_manual`
 
-.. autofunction::
+2. set up mask
+""""""""""""""
+put in a sample that you want your mask being generated from. the choice of sample depends on your
+experiment. FIXME: I don't know what to write...
 
-  xpdacq.calib.run_calibration
+Then type
 
-2. set up ``Sample`` objects
+.. code-block:: python
+
+  run_mask_builder()
+
+A mask will be generated based on image collected from this sample. For how we generate this mask,
+please go to :ref:`auto_mask`.
+
+
+3. set up ``Sample`` objects
 """"""""""""""""""""""""""""
 
 Your sample information should be loaded in an excel spreadsheet. Type
@@ -52,7 +63,7 @@ For the details of how we parse your information and create sample objects, plea
 
 Additional samples may be added by adding samples to the excel file and rerunning.
 
-3. set up ``ScanPlan`` objects
+4. set up ``ScanPlan`` objects
 """"""""""""""""""""""""""""""
 
 ======================================= ===================================================================================
@@ -65,9 +76,23 @@ command
 ``ScanPlan(bt, Tramp, 5, 300, 200, 5)``  temperature series with 5s count time, starting from 300k to 200k with 5k per step
 ======================================= ===================================================================================
 
-More information here :ref:`???`
+write your own scan plan
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-4. list objects by categories
+``xpdAcq`` also consumes any scan plan from ``bluesky``. For example, a scan that drives a ``motor`` through
+a specific list of points while collecting read-back value from ``area detector`` can be defined and run as below:
+
+.. code-block:: python
+
+  from bluesky.plans import list_scan
+  myplan = list_scan([area_detector], motor, [1,3,5,7,9]) # drives motor to postion 1,3,5,7,9
+  prun(56, myplan) # run this scanplan on sample 56
+
+
+For more details about how to write a ``bluesky`` scan plan,
+please see `here <http://nsls-ii.github.io/bluesky/plans.html>`_.
+
+5. list objects by categories
 """""""""""""""""""""""""""""
 
 .. code-block:: python
@@ -85,7 +110,7 @@ More information here :ref:`???`
   1: TiO2
 
 
-5. interrogate metadata in objects
+6. interrogate metadata in objects
 """"""""""""""""""""""""""""""""""
 
 .. code-block:: python
