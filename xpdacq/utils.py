@@ -10,6 +10,23 @@ import pandas as pd
 from .glbl import glbl
 from .beamtime import Sample, ScanPlan
 
+def _check_obj(required_obj_list):
+    """ function to check if object(s) exist
+
+    Parameter
+    ---------
+    required_obj_list : list
+        a list of strings refering to object names
+
+    """
+    ips = get_ipython()
+    for obj_str in required_obj_list:
+        if not ips.ns_table['user_global'].get(obj_str, None):
+            raise NameError("Required object {} doesn't exist in"
+                            "namespace".format(obj_str))
+    return
+
+
 def _graceful_exit(error_message):
     try:
         raise RuntimeError(error_message)
@@ -449,6 +466,23 @@ def import_sample(saf_num, bt):
     bt : xpdacq.beamtime.Beamtime
         beamtime object that is going to be linked with these samples
     """
+    if bt is None:
+        # NameError will rise in _check_obj
+        _check_obj(['bt'])
+        ips = get_ipython()
+        bt = ips.ns_table['user_global']['bt']
+    if saf_num is None:
+        try:
+            saf_num = bt['bt_safN']
+        except NameError:
+            print("WARNING: there is no beamtime object (bt) exists in "
+                  "current namespace.\n Have you started a beamtime ? ")
+            return
+        except KeyError:
+            print("WARNING: there is no SAF number information in this "
+                  "beamtime objec.\n Do you feed in a valid beamtime "
+                  "object?")
+            return
     bt.samples = []
     # exclude Sample objects from reference list
     # logic: only update Sample objects that are currently in bt.list
