@@ -122,6 +122,7 @@ Types of scan available.
   
   5. ``calibration()`` - the same as ``prun()`` , but the data are tagged as calibration data.
   6. ``dark()`` - you shouldn't have to use this as dark scans (shutter closed) and dark subtractions of your data are done automatically, but it is here in case you do it is there.  It ensure the shutter is closed and tags the scan as being a dark.
+  7. ``run_mask_builder()`` - take data and produce a mask for the image, the mask is then inserted into the metadata
 
 Types of ScanPlan objects available:
   * ``'ct'`` just exposes the the detector for a number of seconds. e.g.,  ``ScanPlan('ct17.5s','ct',{'exposure':17.5})``, or ``ScanPlan('ct_17.5')`` for short, is a scan plan that just exposes the detector for 17.5 seconds.
