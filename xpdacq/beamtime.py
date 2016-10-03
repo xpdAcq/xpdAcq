@@ -73,8 +73,7 @@ def _configure_pe1c(exposure):
 
 
 def ct(dets, exposure, *, md=None):
-    """
-    Take one reading from area detectors with given exposure time
+    """ Take one reading from area detectors with given exposure time
 
     Parameters
     ----------
@@ -112,8 +111,7 @@ def ct(dets, exposure, *, md=None):
 
 
 def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
-    """
-    Scan over temeprature controller in steps.
+    """ Scan over temeprature controller in steps.
 
     temeprature steps are defined by starting point,
     stoping point and step size
