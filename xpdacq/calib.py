@@ -31,10 +31,10 @@ _REQUIRED_OBJ_LIST = ['prun', 'bt']
 def _check_obj(required_obj_list):
     """ function to check if object(s) exist
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     required_obj_list : list
-        a list of strings refering to object names
+        a list of strings referring to object names
 
     """
     ips = get_ipython()
@@ -46,13 +46,13 @@ def _check_obj(required_obj_list):
 
 
 def _timestampstr(timestamp):
-    """ convert timestamp to strftime formate """
+    """ convert timestamp to strftime format """
     timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime(
         '%Y%m%d-%H%M')
     return timestring
 
 
-def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
+def run_calibration(exposure=10, calibrant_file=None, wavelength=None,
                     detector=None, gaussian=None):
     """ function to run entire calibration process.
 
@@ -64,14 +64,14 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     Parameters
     ----------
     exposure : int, optional
-        total exposure time in sec. Default is 60s
-    calibrant_name : str, optional
-        name of calibrant used, different calibrants correspond to 
-        different d-spacing profiles. Default is 'Ni'. User can assign 
-        different calibrant, given d-spacing file path presents
+        total exposure time in sec. Default is 10s
+    calibrant_file : str, optional
+        calibrant file used. Default is 'Ni.D'. User can provide
+        different calibrant file. file name except for extension will be
+        saved as metadata.
     wavelength : flot, optional
-        current of x-ray wavelength, in angstrom. Default value is 
-        read out from existing xpdacq.Beamtime object
+        x-ray wavelength, in angstrom. Default value is read out 
+        from beamtime object in current ipython session.
     detector : pyfai.detector.Detector, optional.
         instance of detector which defines pxiel size in x- and
         y-direction. Default is set to Perkin Elmer detector
@@ -91,11 +91,11 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     # d-spacing
     if calibrant_file is not None:
         calibrant.load_file(calibrant_file)
-        calibrant_name = os.path.split(calibrant_file)[1]
-        calibrant_name = os.path.splitext(calibrant_name)[0]
+        calibrant_fn = os.path.split(calibrant_file)[1]
     else:
-        calibrant.load_file(os.path.join(glbl.usrAnalysis_dir, 'Ni24.D'))
-        calibrant_name = 'Ni'
+        calibrant.load_file(os.path.join(glbl.usrAnalysis_dir, 'Ni.D'))
+        calibrant_fn = 'Ni.D'
+    calibrant_name, ext = os.path.splitext(calibrant_fn)
     # wavelength
     if wavelength is None:
         _wavelength = bto['bt_wavelength']
@@ -118,8 +118,8 @@ def run_calibration(exposure=60, calibrant_file=None, wavelength=None,
     dark_header = glbl.db[dark_uid]
     # unknown signature of get_images
     dark_img = np.asarray(
-        get_images(dark_header, glbl.det_image_field)).squeeze()
-    # dark_img = np.asarray(glbl.get_images(dark_header, glbl.det_image_field)).squeeze()
+            get_images(dark_header, glbl.det_image_field)).squeeze()
+    #dark_img = np.asarray(glbl.get_images(dark_header, glbl.det_image_field)).squeeze()
     for ev in glbl.get_events(light_header, fill=True):
         img = ev['data'][glbl.det_image_field]
         img -= dark_img

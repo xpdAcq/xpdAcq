@@ -134,8 +134,7 @@ def import_userScriptsEtc():
     src_dir = glbl.import_dir
     f_list = os.listdir(src_dir)
     if len(f_list) == 0:
-        print(
-            'INFO: There is no predefined user objects in {}'.format(src_dir))
+        print('INFO: There is no predefined user objects in {}'.format(src_dir))
         return
     # unpack every archived file in Import/
     for f in f_list:

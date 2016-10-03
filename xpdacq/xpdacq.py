@@ -186,7 +186,7 @@ def _auto_load_calibration_file():
               "Scan will still keep going on")
         return
     config_dict = getattr(glbl, 'calib_config_dict', None)
-    # prviate test: equality
+    # private test: equality
     with open(calib_yaml_name) as f:
         yaml_reload_dict = yaml.load(f)
     if config_dict != yaml_reload_dict:
@@ -222,8 +222,8 @@ def open_collection(collection_name):
 
     collection is a list of uid of executed scans. 
     Only one collection will be alive in collection environment. 
-    This set of uids will be saved as a yaml file and desired operations 
-    can be applied later.
+    This set of uids will be saved as a yaml file and desired 
+    operations can be applied later.
 
     Parameters
     ----------
@@ -274,8 +274,14 @@ class CustomizedRunEngine(RunEngine):
 
         Parameters
         ----------
-        beamtime : xpdacq.beamtime.Beamtime or None
-            current beamtime object
+        beamtime : xpdacq.beamtime.Beamtime
+            beamtime object that want to be linked to this run_engine.
+            if no beamtime object is linked, Sample and ScanPlan should
+            be passed explicitly.
+        args :
+            positional arguments of this RunEngine class
+        kargs :
+            keword arguments of this RunEngine class
 
         Examples
         --------
@@ -303,7 +309,8 @@ class CustomizedRunEngine(RunEngine):
     def beamtime(self):
         if self._beamtime is None:
             raise RuntimeError("This CustomizedRunEngine was not "
-                               "assigned a beamtime object, so integer-based lookup is not "
+                               "assigned a beamtime object, "
+                               "so integer-based lookup is not "
                                "available.")
         return self._beamtime
 
@@ -332,7 +339,6 @@ class CustomizedRunEngine(RunEngine):
                  raise_if_interrupted=False, **metadata_kw):
         # The CustomizedRunEngine knows about a Beamtime object, and it
         # interprets integers for 'sample' as indexes into the Beamtime's
-        # lists of Samples from all its Experiments.
 
         # deprecated from v0.5 release
         #if getattr(glbl, 'collection', None) is None:
@@ -349,7 +355,6 @@ class CustomizedRunEngine(RunEngine):
                       ", please do `bt.list()` to check if it exists yet"
                       .format(sample))
                 return
-        # If a plan is given as a string, look in up in the global registry.
         if isinstance(plan, int):
             try:
                 plan = self.beamtime.scanplans[plan]

@@ -57,7 +57,7 @@ def _configure_pe1c(exposure):
     """
     priviate function to configure pe1c with continuous acquistion mode
     """
-    # cs studio configuration doesn't propagate to python level
+    #cs studio configuration doesn't propagate to python level
     glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = glbl.area_det.cam.acquire_time.get()
     # compute number of frames
@@ -72,18 +72,21 @@ def _configure_pe1c(exposure):
     return num_frame, acq_time, computed_exposure
 
 
-def ct(dets, exposure, *, md=None):
-    """
-    Take one reading from area detectors with given exposure time
+def ct(detectors, exposure, *, md=None):
+    """ Take one reading from area detectors with given exposure time
 
     Parameters
     ----------
     detectors : list
         list of 'readable' objects
     exposure : float
-        total time of exposrue in seconds
+        total time of exposure in seconds
     md : dict, optional
-        extra metadata
+        extra metadata to this scan plan. this is to aligned with
+        ``bluesky`` signature, however it is not used in ``xpdAcq``.
+        metadata will be handled by ``Beamtime``, ``Sample`` objects and
+        keyword argument to ``prun``. please refer to
+        http://xpdacq.github.io for more information
 
     Note
     ----
@@ -91,7 +94,7 @@ def ct(dets, exposure, *, md=None):
     global state. Please refer to http://xpdacq.github.io for more information
     """
 
-    pe1c, = dets
+    pe1c, = detectors
     if md is None:
         md = {}
     # setting up area_detector
@@ -111,35 +114,36 @@ def ct(dets, exposure, *, md=None):
     yield from plan
 
 
-def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
-    """
-    Scan over temeprature controller in steps.
+def Tramp(detectors, exposure, Tstart, Tstop, Tstep, *, md=None):
+    """ Scan over temperature controller in steps.
 
-    temeprature steps are defined by starting point,
-    stoping point and step size
+    temperature steps are defined by starting point, stooping point and step size
 
     Parameters
     ----------
     detectors : list
         list of 'readable' objects
     exposure : float
-        exposure time at each temeprature step in seconds
+        exposure time at each temperature step in seconds
     Tstart : float
         starting point of temperature sequence
     Tstop : float
-        stoping point of temperature sequence
+        stooping point of temperature sequence
     Tstep : float
         step size between Tstart and Tstop of this sequence
     md : dict, optional
-        extra metadata
-
+        extra metadata to this scan plan. this is to aligned with
+        ``bluesky`` signature, however it is not used in ``xpdAcq``.
+        metadata will be handled by ``Beamtime``, ``Sample`` objects and
+        keyword argument to ``prun``. please refer to
+        http://xpdacq.github.io for more information
     Note
     ----
-    temeprature controller that is driven will always be the one configured in
+    temperature controller that is driven will always be the one configured in
     global state. Please refer to http://xpdacq.github.io for more information
     """
 
-    pe1c, = dets
+    pe1c, = detectors
     if md is None:
         md = {}
     # setting up area_detector
@@ -168,7 +172,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
     yield from plan
 
 
-def tseries(dets, exposure, delay, num, *, md=None):
+def tseries(detectors, exposure, delay, num, *, md=None):
     """
     time series scan with area detector.
 
@@ -179,19 +183,22 @@ def tseries(dets, exposure, delay, num, *, md=None):
     exposure : float
         exposure time at each reading from area detector in seconds
     delay : float
-        delay between two adjustant reading from area detector in seconds
+        delay between two consecutive reading from area detector in seconds
     num : int
         total number of readings
     md : dict, optional
-        metadata
-
+        extra metadata to this scan plan. this is to aligned with
+        ``bluesky`` signature, however it is not used in ``xpdAcq``.
+        metadata will be handled by ``Beamtime``, ``Sample`` objects and
+        keyword argument to ``prun``. please refer to
+        http://xpdacq.github.io for more information
     Note
     ----
     area detector that is triggered will always be the one configured in
     global state. Please refer to http://xpdacq.github.io for more information
     """
 
-    pe1c, = dets
+    pe1c, = detectors
     if md is None:
         md = {}
     # setting up area_detector
@@ -251,10 +258,10 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     Parameters
     ----------
-    pi_last : str
-        last name of PI to this beamtime.
+    PI_last : str
+        PI last name to this beamtime.
     saf_num : int
-        Safty Approval Form number to current beamtime.
+        Safety Approval Form number to this beamtime.
     experimenters : list, optional
         list of experimenter names. Each of experimenter name is
         expected to be comma separated as `first_name', `last_name`.
@@ -265,7 +272,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     Examples
     --------
-    Inspect avaiable samples, plans.
+    Inspect available samples, plans.
     >>> print(bt)
     ScanPlans:
     0: (...summary of scanplan...)
@@ -284,9 +291,9 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     _REQUIRED_FIELDS = ['bt_piLast', 'bt_safN']
 
-    def __init__(self, pi_last, saf_num, experimenters=[], *,
+    def __init__(self, PI_last, saf_num, experimenters=[], *,
                  wavelength=None, **kwargs):
-        super().__init__(bt_piLast=_clean_info(pi_last),
+        super().__init__(bt_piLast=_clean_info(PI_last),
                          bt_safN=_clean_info(saf_num),
                          bt_experimenters=experimenters,
                          bt_wavelength=wavelength, **kwargs)
@@ -481,7 +488,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         object representing current beamtime.
     plan_func :
         predefined plan function. For complete list of available functions,
-        please refere to http://xpdacq.github.io for more information.
+        please refer to http://xpdacq.github.io for more information.
     args :
         positional arguments corresponding to plan function in used.
     kwargs :
