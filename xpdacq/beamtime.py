@@ -82,7 +82,11 @@ def ct(detectors, exposure, *, md=None):
     exposure : float
         total time of exposure in seconds
     md : dict, optional
-        extra metadata
+        extra metadata to this scan plan. this is to aligned with
+        ``bluesky`` signature, however it is not used in ``xpdAcq``.
+        metadata will be handled by ``Beamtime``, ``Sample`` objects and
+        keyword argument to ``prun``. please refer to
+        http://xpdacq.github.io for more information
 
     Note
     ----
@@ -128,8 +132,11 @@ def Tramp(detectors, exposure, Tstart, Tstop, Tstep, *, md=None):
     Tstep : float
         step size between Tstart and Tstop of this sequence
     md : dict, optional
-        extra metadata
-
+        extra metadata to this scan plan. this is to aligned with
+        ``bluesky`` signature, however it is not used in ``xpdAcq``.
+        metadata will be handled by ``Beamtime``, ``Sample`` objects and
+        keyword argument to ``prun``. please refer to
+        http://xpdacq.github.io for more information
     Note
     ----
     temperature controller that is driven will always be the one configured in
@@ -180,8 +187,11 @@ def tseries(detectors, exposure, delay, num, *, md=None):
     num : int
         total number of readings
     md : dict, optional
-        metadata
-
+        extra metadata to this scan plan. this is to aligned with
+        ``bluesky`` signature, however it is not used in ``xpdAcq``.
+        metadata will be handled by ``Beamtime``, ``Sample`` objects and
+        keyword argument to ``prun``. please refer to
+        http://xpdacq.github.io for more information
     Note
     ----
     area detector that is triggered will always be the one configured in
