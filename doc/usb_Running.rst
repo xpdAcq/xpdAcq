@@ -483,4 +483,15 @@ Applied masks
     mask aims to remove many of the dead/hot pixels and streaks. The default
     alpha is 3 standard deviations.
 
+Using the auto-masker
+^^^^^^^^^^^^^^^^^^^^^
+To use the auto-masker once, creating masks used for subsequent images,
+ just run the command:
+.. code-block:: python
+    run_mask_builder()
+This will take a shot and mask it. This mask will then be saved and loaded
+into subsequent experiment `run_headers` allowing them to be used for the next
+images.
+
+
 Let's :ref:`take a quick look at our data <usb_quickassess>`
