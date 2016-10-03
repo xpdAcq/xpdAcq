@@ -142,7 +142,7 @@ def run_calibration(exposure=60, dark_sub=True, calibrant_file=None,
     return ai
 
 
-def run_mask_builder(exposure=60, dark_sub=True,
+def run_mask_builder(exposure=300, dark_sub=True,
                      poloarization_factor=0.99,
                      sample_name=None, calib_dict=None,
                      mask_dict=None, save_name=None):
@@ -154,7 +154,7 @@ def run_mask_builder(exposure=60, dark_sub=True,
     Parameters
     ----------
     exposure : float, optional
-        exposure time of this scan. default is 60s.
+        exposure time of this scan. default is 300s.
     dark_sub : bool, optional
         turn on/off of dark subtraction. default is True.
     poloarization_factor: float, optional.
