@@ -14,7 +14,7 @@ import tifffile as tif
 
 from .glbl import glbl
 from .beamtime import ScanPlan, Sample, ct
-from xpdan.tools import mask_img
+from xpdan.tools import mask_img, compress_mask
 
 from pyFAI.gui_utils import update_fig
 from pyFAI.detectors import Perkin, Detector
@@ -143,7 +143,7 @@ def run_calibration(exposure=60, dark_sub=True, calibrant_file=None,
 
 
 def run_mask_builder(exposure=60, dark_sub=True,
-                     poloarization_factor=0.99,
+                     polarization_factor=0.99,
                      sample_name=None, calib_dict=None,
                      mask_dict=None, save_name=None):
     """ function to generate mask
@@ -157,7 +157,7 @@ def run_mask_builder(exposure=60, dark_sub=True,
         exposure time of this scan. default is 60s.
     dark_sub : bool, optional
         turn on/off of dark subtraction. default is True.
-    poloarization_factor: float, optional.
+    polarization_factor: float, optional.
         polarization correction factor, ranged from -1(vertical) to +1
         (horizontal). default is 0.99. set to None for no correction.
     sample_name : str, optional
@@ -171,8 +171,9 @@ def run_mask_builder(exposure=60, dark_sub=True,
         dictionary for arguments in masking function. for more details,
         please check docstring from ``xpdan.tools.mask_img``
     save_name : str, optional
-        full path for this mask going to be saved. if it is None, only
-        the mask object will be returned, no file will be saved locally.
+        full path for this mask going to be saved. if it is None,
+        default name 'xpdacq_mask.npy' will be saved inside
+        xpdUser/config_base/
 
     Note
     ----
@@ -194,9 +195,15 @@ def run_mask_builder(exposure=60, dark_sub=True,
 
     if mask_dict is None:
         mask_dict = glbl.mask_dict
+    print("INFO: use mask options: {}".format(mask_dict))
 
     if calib_dict is None:
-        calib_dict = glbl.calib_config_dict
+        calib_dict = getattr(glbl, 'calib_config_dict', None)
+        if calib_dict is None:
+            print("INFO: there is no glbl calibration dictionary linked\n"
+                  "Please do ``run_calibration()`` or provide your own"
+                  "calibration parameter set")
+            return
 
     # setting up geometry parameters
     ai = AzimuthalIntegrator()
@@ -227,8 +234,10 @@ def run_mask_builder(exposure=60, dark_sub=True,
     print("INFO: add mask to global state")
     glbl.mask = mask
 
-    if save_name is not None:
-        np.save(mask, save_name)
+    if save_name is None:
+        save_name = os.path.join(glbl.config_base, glbl.mask_md_name)
+    # still save the most recent mask, as we are in file-based
+    np.save(save_name, mask)
 
     return mask
 
