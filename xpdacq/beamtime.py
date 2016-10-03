@@ -361,6 +361,8 @@ class Beamtime(ValidatedDictLike, YamlDict):
         # filtering logic is handle when importing sample
         #self._referenced_by.extend([el for el in self.samples if el
         #                            not in self._referenced_by])
+        # simply append object to list to increase speed
+        # filtering logic is handle when importing sample
         self._referenced_by.append(sample)
 
     @classmethod
