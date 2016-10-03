@@ -57,7 +57,7 @@ def _configure_pe1c(exposure):
     """
     priviate function to configure pe1c with continuous acquistion mode
     """
-    # cs studio configuration doesn't propagate to python level
+    #cs studio configuration doesn't propagate to python level
     glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
     acq_time = glbl.area_det.cam.acquire_time.get()
     # compute number of frames
@@ -80,7 +80,7 @@ def ct(dets, exposure, *, md=None):
     detectors : list
         list of 'readable' objects
     exposure : float
-        total time of exposrue in seconds
+        total time of exposure in seconds
     md : dict, optional
         extra metadata
 
@@ -111,21 +111,20 @@ def ct(dets, exposure, *, md=None):
 
 
 def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
-    """ Scan over temeprature controller in steps.
+    """ Scan over temperature controller in steps.
 
-    temeprature steps are defined by starting point,
-    stoping point and step size
+    temperature steps are defined by starting point, stooping point and step size
 
     Parameters
     ----------
     detectors : list
         list of 'readable' objects
     exposure : float
-        exposure time at each temeprature step in seconds
+        exposure time at each temperature step in seconds
     Tstart : float
         starting point of temperature sequence
     Tstop : float
-        stoping point of temperature sequence
+        stooping point of temperature sequence
     Tstep : float
         step size between Tstart and Tstop of this sequence
     md : dict, optional
@@ -133,7 +132,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
 
     Note
     ----
-    temeprature controller that is driven will always be the one configured in
+    temperature controller that is driven will always be the one configured in
     global state. Please refer to http://xpdacq.github.io for more information
     """
 
@@ -177,7 +176,7 @@ def tseries(dets, exposure, delay, num, *, md=None):
     exposure : float
         exposure time at each reading from area detector in seconds
     delay : float
-        delay between two adjustant reading from area detector in seconds
+        delay between two consecutive reading from area detector in seconds
     num : int
         total number of readings
     md : dict, optional
@@ -252,7 +251,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
     pi_last : str
         last name of PI to this beamtime.
     saf_num : int
-        Safty Approval Form number to current beamtime.
+        Safety Approval Form number to current beamtime.
     experimenters : list, optional
         list of experimenter names. Each of experimenter name is
         expected to be comma separated as `first_name', `last_name`.
@@ -263,7 +262,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     Examples
     --------
-    Inspect avaiable samples, plans.
+    Inspect available samples, plans.
     >>> print(bt)
     ScanPlans:
     0: (...summary of scanplan...)
@@ -479,7 +478,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         object representing current beamtime.
     plan_func :
         predefined plan function. For complete list of available functions,
-        please refere to http://xpdacq.github.io for more information.
+        please refer to http://xpdacq.github.io for more information.
     args :
         positional arguments corresponding to plan function in used.
     kwargs :
