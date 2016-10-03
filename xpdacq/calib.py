@@ -143,6 +143,7 @@ def run_calibration(exposure=60, dark_sub=True, calibrant_file=None,
 
 
 def run_mask_builder(exposure=60, dark_sub=True,
+                     poloarization_factor=0.99,
                      sample_name=None, calib_dict=None,
                      mask_dict=None, save_name=None):
     """ function to generate mask
@@ -156,6 +157,9 @@ def run_mask_builder(exposure=60, dark_sub=True,
         exposure time of this scan. default is 60s.
     dark_sub : bool, optional
         turn on/off of dark subtraction. default is True.
+    poloarization_factor: float, optional.
+        polarization correction factor, ranged from -1(vertical) to +1
+        (horizontal). default is 0.99. set to None for no correction.
     sample_name : str, optional
         name of sample that new mask is going to be generated from.
         default is 'mask_target'
@@ -218,6 +222,7 @@ def run_mask_builder(exposure=60, dark_sub=True,
             img -= dark_img
 
     print("INFO: masking you image ....")
+    img /= ai.polarization(img.shape, polarization_factor)
     mask = mask_img(img, ai, **mask_dict)
     print("INFO: add mask to global state")
     glbl.mask = mask
