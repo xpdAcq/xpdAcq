@@ -9,6 +9,9 @@ xpdAcq documentation
 Introduction
 ++++++++++++
 
+To post questions about anything XPD, including software, and to see archived answers, please join the `XPD-Users Google group 
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_
+
 ``xpdAcq`` is a Python package that helps data collection at XPD beamlime. It is built on top of and augments the NSLS-II data acquisition Python
 package `bluesky <http://nsls-ii.github.io/bluesky/>`_ .
 

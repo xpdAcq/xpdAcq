@@ -9,6 +9,9 @@ to understand this, please go :ref:`qs` or :ref:`xpdu`
 Please use this page as a reminder of the workflow and to copy & paste code snippets into your
 active ``collection-dev`` ipython environment (then hit return).
 
+Remember, to post questions about anything XPD, including software, and to see archived answers, please visit the `XPD-Users Google group 
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_
+
 Check your data collection environment is correctly set up
 ----------------------------------------------------------
 
@@ -21,6 +24,20 @@ please get your beamtime environment set up by the instrument scientist before p
 
 Set up your experiment
 ----------------------
+0. general
+""""""""""
+
+If you want to query any xpdAcq function, type the function name with a `?` at the end and hit
+return.  Documentation for what paramters the function takes, and any default values, and what
+the function returns will be printed.  For example, type:
+
+.. code-block:: python
+
+  run_calibration?
+
+If you can't remember what functions are available, but can remember the first letter or first few
+letters, type those letters and hit `tab` to see a list of all available functions that begin with 
+those letters.
 
 1. calibration
 """"""""""""""
@@ -29,23 +46,22 @@ Ni calibrant at the sample position, type
 
 .. code-block:: python
 
-  run_calibration(exposure=60) # assume calibrant is Ni
+  run_calibration() # default values: calibrant_file='Ni.D' and exposure=60
 
 and follow the instructions in :ref:`calib_manual`
 
 2. set up mask
 """"""""""""""
-put in a sample that you want your mask to be generated from. You may use any
-sample that is relevant to your experiment, but we recommend using a weak scattering
-sample such as an empty kapton tube.
 
-Then type
+The automasking has been extensively tested on a low-scattering sample so our mask 
+building function has been designed to run on data from an empty kapton tube.  
+Load an empty kapton tube on the diffractometer, then type
 
 .. code-block:: python
 
-  run_mask_builder()
+  run_mask_builder() # be patient, the process takes 10 minutes!
 
-A mask will be generated based on image collected from this sample. This mask
+A mask will be generated based on the image collected from this sample. This mask
 will be saved for use with all future datasets until you run ``run_mask_builder()``
 again.
 
