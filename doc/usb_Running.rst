@@ -288,6 +288,11 @@ directory. Then the import process is simply:
                             # beamtime object , bt, with SAF number 300564 has created
                             # file with 300564_sample.xls exists in ``xpdConfig`` directory
 
+.. note::
+
+  Usually ``xpdAcq`` will grab the ``saf_number`` and ``bt`` to current beamtime for you,
+  so you can simply run ``import_sample()``. However, if you want to load in different
+  spreadsheets, you can also import it by explicitly typing in ``saf_number``.
 
 comma separated fields
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -488,7 +493,9 @@ Using the auto-masker
 To use the auto-masker once, creating masks used for subsequent images,
  just run the command:
 .. code-block:: python
-    run_mask_builder()
+
+  run_mask_builder()
+
 This will take a shot and mask it. This mask will then be saved and loaded
 into subsequent experiment `run_headers` allowing them to be used for the next
 images.

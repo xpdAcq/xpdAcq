@@ -47,7 +47,7 @@ Then type
 
 A mask will be generated based on image collected from this sample. This mask
 will be saved for use with all future datasets until you run ``run_mask_builder()``
-again.  
+again.
 
 For more info: :ref:`auto_mask`.
 
@@ -57,20 +57,29 @@ For more info: :ref:`auto_mask`.
 
 Your sample information should be loaded in an excel spreadsheet, with a well
 defined format (a template file may be found here FIXME). If the IS didn't already
-do it, save your sample xls file the ``xpdConfig`` directory using the name 
+do it, save your sample xls file to the ``xpdConfig`` directory using the name
 ``<saf_number>_sample.xls``, where you replace ``<saf_number>`` with the number
 of the safety approval form associated with you experiment.  If you are not sure
-what your ``saf_number`` is you can get it by typing [Tim, FIXME]:
+what your ``saf_number`` is you can get it by typing:
 
 .. code-block:: python
 
-  bt.md.saf_number
+  In[1] bt
+  Out[1]:
+  {'bt_experimenters': ['Tim', 'Liu'],
+   'bt_piLast': 'Billinge',
+   'bt_safN': '300564',
+   'bt_uid': 'f4eda7ec',
+   'bt_wavelength': 0.1832}
+
+Here you can see your saf_number under ``bt_safN`` field. In this code example,
+``saf_number`` is ``300564``.
 
 To load the sample information and have the sample objects available in the current beamtime:
 
 .. code-block:: python
 
-  import_sample(<saf_number>, bt) 
+  import_sample()
 
 updates and additions may be added by adding more samples to the excel file and rerunning ``import_sample()``
 at any time during the experiment.
@@ -189,7 +198,7 @@ Get your data
 
 These commands can be run in the ``collection-dev`` or the ``analysis`` ipython environments.
 
-Data are saved in the directory ``~/tiff_base/<sample_name>`` where ``<sample_name>`` is the name of the 
+Data are saved in the directory ``~/tiff_base/<sample_name>`` where ``<sample_name>`` is the name of the
 sample that you used in the sample spreadsheet, and is the name of the ``Sample`` object.
 
 **save images from last scan:**
@@ -197,7 +206,7 @@ sample that you used in the sample spreadsheet, and is the name of the ``Sample`
 .. code-block:: python
 
   save_last_tiff()
-  
+
 **Pro Tip**: this function is often typed just after ``prun()`` in the collection environment,
 so that the data are extracted out of the NSLS-II database and delivered to you automatically when
 the scan finishes.  You can then play around with them and take them home as you like.  The following
@@ -233,9 +242,9 @@ more information on headers is `here <http://nsls-ii.github.io/databroker/header
 
   integrate_and_save_last()   # the most recent scan
   h = db[-5:]                 # the last 5 scans
-  integrate_and_save(h)       
+  integrate_and_save(h)
   h = db[-5]                  # the scan 5 ago
-  integrate_and_save_(h)      
+  integrate_and_save_(h)
 
 
 .. autosummary::
