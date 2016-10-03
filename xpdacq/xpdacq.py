@@ -320,10 +320,11 @@ class CustomizedRunEngine(RunEngine):
                                         resume_thresh=glbl.ring_current.get() * 0.9,
                                         sleep=1200)
             glbl.suspender = beamdump_sus
-            #FIXME : print info for user
-            #self.install_suspender(beamdump_sus)
-            #print("INFO: beam dump suspender has been created."
-            #      "To check, type prun.suspenders")
+            # FIXME : print info for user
+            # self.install_suspender(beamdump_sus)
+            # print("INFO: beam dump suspender has been created."
+            #        " to check, please do\n:"
+            #        ">>> prun.suspenders")
         else:
             pass
 

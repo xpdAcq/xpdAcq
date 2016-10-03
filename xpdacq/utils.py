@@ -9,6 +9,24 @@ import pandas as pd
 
 from .glbl import glbl
 from .beamtime import Sample, ScanPlan
+from IPython import get_ipython
+
+def _check_obj(required_obj_list):
+    """ function to check if object(s) exist
+
+    Parameter
+    ---------
+    required_obj_list : list
+        a list of strings refering to object names
+
+    """
+    ips = get_ipython()
+    for obj_str in required_obj_list:
+        if not ips.ns_table['user_global'].get(obj_str, None):
+            raise NameError("Required object {} doesn't exist in"
+                            "namespace".format(obj_str))
+    return
+
 
 def _check_obj(required_obj_list):
     """ function to check if object(s) exist
