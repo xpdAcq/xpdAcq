@@ -484,17 +484,10 @@ def import_sample(saf_num=None, bt=None):
                   "object?")
             return
     bt.samples = []
-<<<<<<< HEAD
     # exclude Sample objects from reference list
     # logic: only update Sample objects that are currently in bt.list
     sp_ref = [el for el in bt._referenced_by if isinstance(el, ScanPlan)]
     bt._referenced_by = sp_ref
-=======
-    ## !! this test needs to be treated carefully !!! ##
-    sp_ref = [el for el in bt._referenced_by if isinstance(el, ScanPlan)]
-    bt._referenced_by = sp_ref
-    ##
->>>>>>> fc845bb... ENH: select ScanPlan from  bt._referenced_by list before cleaning
     excel_to_yaml.load(str(saf_num))
     excel_to_yaml.create_yaml(bt)
     return excel_to_yaml
