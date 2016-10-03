@@ -436,8 +436,62 @@ you would see:
 
 Auto-masking
 """"""""""""
+Masking can be a tedious process, requireing long hours judging which pixels
+are good and which need to be removed. The our automated masking software aims
+to alleviate this by applying a set of masks in sequence to return better
+quality data.
 
-* auto-masking with user defined beamstop mask
+Masks can be created/used in two ways. The default procedure is a mask is
+created for a low scattering sample (usually kapton). Then this mask is reused
+for each subsequent image taken with the same detector position. The second
+modality is that each image gets is own bespoke mask, potentially derived from
+the low scattering mask.
+
+
+Applied masks
+^^^^^^^^^^^^^
+
+0. Any mask passed in to the software:
+    If you have any preexisting masks, we will use those as a starting position
+    to add upon.
+
+1. Edge mask:
+    A default of 30 pixels from the edge of the detector are masked out.
+    These pixels are usually faulty as the detector edge has lower than
+    expected intensity.
+
+2. Lower threshold mask:
+    A lower threshold mask, which removes all pixels who's intensities are
+    lower than a certain value is applied. The default theshold is 0.0
+
+3. Upper threshold mask:
+    An upper threshold mask, which removes all pixels who's intensities are
+    higher than a certain value is applied. This mask is not applied in the
+    default settings.
+
+4. Beamstop holder mask:
+    A beamstop holder mask, which removes pixels underneath a straight
+    beamstop holder is applied. The beamstop holder is masked by finding the
+    beamcenter and drawing a pencil like shape from the beamcenter to the edge
+    of the detector. All the pixels within this polygon are masked. The default
+    settings are to mask out 30 pixels on either side of the line connecting
+    the beamcenter and the detector edge
+
+5. Binned outlier mask:
+    Lastly a binned outlier mask is applied, removing pixels which are alpha
+    standard deviations away from the mean intensity as a function of Q. This
+    mask aims to remove many of the dead/hot pixels and streaks. The default
+    alpha is 3 standard deviations.
+
+Using the auto-masker
+^^^^^^^^^^^^^^^^^^^^^
+To use the auto-masker once, creating masks used for subsequent images,
+ just run the command:
+.. code-block:: python
+    run_mask_builder()
+This will take a shot and mask it. This mask will then be saved and loaded
+into subsequent experiment `run_headers` allowing them to be used for the next
+images.
 
 
 Let's :ref:`take a quick look at our data <usb_quickassess>`
