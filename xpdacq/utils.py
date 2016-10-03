@@ -114,7 +114,6 @@ def export_userScriptsEtc():
 
 
 def import_userScriptsEtc():
-<<<<<<< HEAD
     """Import user files that have been placed in xpdUser/Import
 
     Allowed files are python user-script files (extension .py),
