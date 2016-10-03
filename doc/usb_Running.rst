@@ -167,14 +167,16 @@ The definition of **fresh and appropriate** is:
 
   .. note::
 
-    At **XPD**, area detector is running in ``continuous acquisition`` mode,
+    At **XPD**, area detector is running in the ``continuous acquisition`` mode,
     which means detector keeps **reading** but only **saves** image when ``xpdAcq``
-    tells it to with desired exposure time. In short,
+    tells it to save, with desired exposure time.
 
-    * acquisition time defines how fast is detector reading time,
+    In short,
+
+    * acquisition time defines how fast is the detector reading time,
       ranged from 0.1s to 5s.
 
-    * exposure time means total exposure time, which user defined.
+    * exposure time means total exposure time, which is user defined.
 
   Automated dark collection is enabled by default and it can be turned off by:
 
@@ -217,15 +219,22 @@ Quick guide of calibration steps with pyFAI
     :align: center
     :height: 300px
 
-  That is the image we want to perform azimuthal calibration with. Use magnify
-  tool at the tool bar to zoom in and **right click** rings. Starting from
-  the first, inner ring and to outer rings. Usually a few rings (~5) should be
+  That is the image we want to perform azimuthal calibration with. Use **magnify
+  tool** at the tool bar to zoom in and **right click** on rings. Starting from
+  the inner ring and to the outer rings. Usually a few rings (~5) should be
   enough.
 
   .. image:: ./img/calib_07.png
     :width: 400px
     :align: center
     :height: 300px
+
+
+  .. note::
+
+    * For a better calibration, we suggest you to select rings that are
+      **well separated** from its neighbors.
+    * Also, we suggest you to zoom in more for better accuracy when selecting rings.
 
 2. After selecting rings, click on the *original* terminal and hit ``<enter>``.
   Then you will be requested to supply indices of rings you just selected.
@@ -237,9 +246,9 @@ Quick guide of calibration steps with pyFAI
     :align: center
     :height: 300px
 
-  Program will ask you if you want to modify parameters, in most of case, you
-  don't have to. So just hit ``<enter>`` in the terminal and integration will be
-  done.
+  Program will ask you if you want to modify parameters. In most of cases, you
+  don't have to change the parameters, so just type ``done`` in the terminal and
+  calibration process will be done.
 
 3. Finally 1D integration and 2D regrouping results will pop out:
 
@@ -259,36 +268,237 @@ will load calibration parameters from the most recent config file.
 
 .. _import_sample:
 
-metadata imported from spreadsheet
-""""""""""""""""""""""""""""""""""
+Sample metadata imported from spreadsheet
+"""""""""""""""""""""""""""""""""""""""""
 
-In order to facilitate , we suggest you to enter
+In order to facilitate retrospective operation on data, we suggest you to enter
 as much information as you can and that is the main philosophy behind ``xpdAcq``.
 
 Typing in sample metadata during beamtime is always less efficient and it wastes
 your time so a pre-populated excel sheet with all metadata entered beforehand
 turns out to be the solution.
 
+In order import sample metadata from spreadsheet, we would need you to have a
+pre-filled spreadsheet with name ``<saf_number>_sample.xls`` sit in ``xpdConfig``
+directory. Then the import process is simply:
 
-parsing rules
-^^^^^^^^^^^^^
+.. code-block:: python
 
-* **comma separated fields**: information entities are separated by a comma.
+  import_sample(300564, bt) # SAF number is 300564 to current beamtime
+                            # beamtime object , bt, with SAF number 300564 has created
+                            # file with 300564_sample.xls exists in ``xpdConfig`` directory
 
-    * ``cif name``: pointer of potential structures for your sampel, if any.
+.. note::
 
-    * ``Tags``: any comment you want to put on for this measurement.
+  Usually ``xpdAcq`` will grab the ``saf_number`` and ``bt`` to current beamtime for you,
+  so you can simply run ``import_sample()``. However, if you want to load in different
+  spreadsheets, you can also import it by explicitly typing in ``saf_number``.
 
-* **name fields**:
+comma separated fields
+^^^^^^^^^^^^^^^^^^^^^^
 
-* **phase string**:
+  Files with information entities are separated by a comma ``,``.
+
+  Each separated by ``,`` will be individually searchable later.
+
+  Fields following this parsing rule are:
+
+  ============= ========================================================
+  ``cif name``  pointer of potential structures for your sample, if any.
+  ``Tags``      any comment you want to put on for this measurement.
+  ============= ========================================================
+
+  Example on ``Tags``:
+
+  .. code-block:: none
+
+    background, standard --> background, standard
+
+  And a search on either ``background`` or``standard`` later on will include
+  this header.
+
+
+name fields
+^^^^^^^^^^^
+
+  Fields used to store a person's name in ``first name last name`` format.
+
+  Each person's first and last name will be searchable later on.
+
+  Fields following this parsing rule are:
+
+  ======================    =========================================================
+  ``Collaborators``         name of your collaborators
+  ``Sample Maker``          name of your sample maker
+  ``Lead Experimenters``    a person who is going to lead this experiment at beamline
+  ======================    =========================================================
+
+  Example on name fields:
+
+  .. code-block:: none
+
+    Maxwell Terban, Benjamin Frandsen ----> Maxwell, Terban, Benjamin, Frandsen
+
+  A search on either ``Maxwell`` or ``Terban`` or ``Benjamin`` or ``Frandsen``
+  later will include this header.
+
+
+phase string
+^^^^^^^^^^^^
+
+  Field used to specify the phase information and chemical composition of your
+  sample. It's important to enter this field correctly so that we can have
+  accelerated data reduction workflow.
+
+  Fields follows this parsing rule are:
+
+  ==============  ==============================================================
+  ``Phase Info``  field to specify phase information and chemical composition of
+                  your sample
+  ==============  ==============================================================
+
+  phase string will be expect to be enter in a form as
+  ``phase_1: amount, phase_2: amount``.
+
+  An example of 0.9% sodium chloride water will be:
+
+  .. code-block:: none
+
+    Nacl: 0.09, H20: 0.91
+
+  This ``Phase Info`` will be parsed as:
+
+  .. code-block:: python
+
+    {'sample_composition': {'Na':0.09, 'Cl':0.09, `H`:1.82, `O`:0.91},
+     'sample_phase': {'NaCl':0.09, 'H20':0.91},
+     'composition_string': 'Na0.09Cl0.09H1.82O0.91'}
+
+  ``composition_string`` is designed for data reduction software going to be
+  used. Under ``xpdAcq`` framework, we will assume
+  `pdfgetx3 <http://www.diffpy.org/products/pdfgetx3.html>`_
+
+  As before, a search on ``Na`` or ``Cl`` or ``H`` or ``O`` will include this
+  header. Also a search on ``Nacl=0.09`` will include this header as well.
+
+.. _background_obj:
+
+Sample objects going to be generated
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* **Sample**:
+
+  Each row in your spreadsheet will be taken as one valid Sample and metadata
+  will be parsed based on the contents you type in with above parsing rule.
+
+
+* **background**:
+
+  In additional to ``Sample`` objects parsed from rows, ``xpdAcq`` also create
+  background objects with information you type in at ``Geometry`` field.
+
+  background objects will automatically tagged as ``is_background`` in metadata.
+
+Generally, after successfully importing sample from spreadsheet, that is what
+you would see:
+
+.. code-block:: python
+
+  In [1]: import_sample(300564, bt)
+  *** End of import Sample object ***
+  Out[1]: <xpdacq.utils.ExceltoYaml at 0x7fae8ab659b0>
+
+  In [2]: bt.list()
+
+  ScanPlans:
+
+
+  Samples:
+  0: P2S
+  1: Ni_calibrant
+  2: activated_carbon_1
+  3: activated_carbon_2
+  4: activated_carbon_3
+  5: activated_carbon_4
+  6: activated_carbon_5
+  7: activated_carbon_6
+  8: FeF3(4,4-bipyridyl)
+  9: Zn_MOF
+  ...
+
+  41: ITO_glass_noFilm
+  42: ITO_glass_1hrHeatUpTo250C_1hrhold250C_airdry
+  43: ITO_glass_1hrHeatUpTo450C_1hrhold450C_airdry
+  44: ITO_glass_30minHeatUpTo150C_1.5hrhold150C_airdry
+  45: CeO2_film_calibrant
+  46: bkg_1mm_OD_capillary
+  47: bkg_0.9mm_OD_capillary
+  48: bkg_0.5mm_OD_capillary
+  49: bkg_film_on_substrate
+
 
 .. _auto_mask:
 
 Auto-masking
 """"""""""""
+Masking can be a tedious process, requireing long hours judging which pixels
+are good and which need to be removed. The our automated masking software aims
+to alleviate this by applying a set of masks in sequence to return better
+quality data.
 
-* auto-masking with user defined beamstop mask
+Masks can be created/used in two ways. The default procedure is a mask is
+created for a low scattering sample (usually kapton). Then this mask is reused
+for each subsequent image taken with the same detector position. The second
+modality is that each image gets is own bespoke mask, potentially derived from
+the low scattering mask.
+
+
+Applied masks
+^^^^^^^^^^^^^
+
+0. Any mask passed in to the software:
+    If you have any preexisting masks, we will use those as a starting position
+    to add upon.
+
+1. Edge mask:
+    A default of 30 pixels from the edge of the detector are masked out.
+    These pixels are usually faulty as the detector edge has lower than
+    expected intensity.
+
+2. Lower threshold mask:
+    A lower threshold mask, which removes all pixels who's intensities are
+    lower than a certain value is applied. The default theshold is 0.0
+
+3. Upper threshold mask:
+    An upper threshold mask, which removes all pixels who's intensities are
+    higher than a certain value is applied. This mask is not applied in the
+    default settings.
+
+4. Beamstop holder mask:
+    A beamstop holder mask, which removes pixels underneath a straight
+    beamstop holder is applied. The beamstop holder is masked by finding the
+    beamcenter and drawing a pencil like shape from the beamcenter to the edge
+    of the detector. All the pixels within this polygon are masked. The default
+    settings are to mask out 30 pixels on either side of the line connecting
+    the beamcenter and the detector edge
+
+5. Binned outlier mask:
+    Lastly a binned outlier mask is applied, removing pixels which are alpha
+    standard deviations away from the mean intensity as a function of Q. This
+    mask aims to remove many of the dead/hot pixels and streaks. The default
+    alpha is 3 standard deviations.
+
+Using the auto-masker
+^^^^^^^^^^^^^^^^^^^^^
+To use the auto-masker once, creating masks used for subsequent images,
+ just run the command:
+.. code-block:: python
+
+  run_mask_builder()
+
+This will take a shot and mask it. This mask will then be saved and loaded
+into subsequent experiment `run_headers` allowing them to be used for the next
+images.
 
 
 Let's :ref:`take a quick look at our data <usb_quickassess>`
