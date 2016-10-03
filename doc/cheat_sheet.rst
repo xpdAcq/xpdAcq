@@ -194,11 +194,11 @@ Get your data
 -------------
 
 1. Save images and metadata from scans
-"""""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""
 
-These commands can be run in the ``collection-dev`` or the ``analysis`` ipython environments.
+These commands can be run in the ``collection`` or the ``analysis`` ipython environments.
 
-Data are saved in the directory ``~/tiff_base/<sample_name>`` where ``<sample_name>`` is the name of the
+Data are saved in the directory ``xpdUser/tiff_base/<sample_name>`` where ``<sample_name>`` is the name of the
 sample that you used in the sample spreadsheet, and is the name of the ``Sample`` object.
 
 **save images from last scan:**
@@ -247,11 +247,22 @@ more information on headers is `here <http://nsls-ii.github.io/databroker/header
   integrate_and_save_(h)
 
 
-.. autosummary::
-  :toctree:
-  :nosignatures:
 
-  integrate_and_save_last
+during this integration/saving process, you can choose if you want to apply
+``mask`` to your image by option ``auto_mask``
+
+.. code-block:: python
+
+  # the most recent scan with mask applied
+  integrate_and_save_last()
+  # the most recent scan, no mask applied
+  integrate_and_save_last(auto_mask=False)
+
+.. note::
+
+  image saved will **NOT** be masked, mask is only handed in during integration
+  step. masked used will be saved separately.
+
 
 Code for Sample Experiment
 --------------------------
