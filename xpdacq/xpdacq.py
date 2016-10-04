@@ -338,7 +338,8 @@ class CustomizedRunEngine(RunEngine):
             # FIXME : print info for user
             # self.install_suspender(beamdump_sus)
             # print("INFO: beam dump suspender has been created."
-            #      "To check, type prun.suspenders")
+            #        " to check, please do\n:"
+            #        ">>> prun.suspenders")
         else:
             pass
 

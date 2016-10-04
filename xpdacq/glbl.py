@@ -4,8 +4,6 @@ import time
 from unittest.mock import MagicMock
 from time import strftime, sleep
 
-
-
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
 BLCONFIG_DIR_NAME = 'xpdConfig'

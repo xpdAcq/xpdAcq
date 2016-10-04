@@ -9,7 +9,41 @@ from shutil import ReadError
 import pandas as pd
 
 from .glbl import glbl
-from .beamtime import Sample
+from .beamtime import Sample, ScanPlan
+from IPython import get_ipython
+
+def _check_obj(required_obj_list):
+    """ function to check if object(s) exist
+
+    Parameter
+    ---------
+    required_obj_list : list
+        a list of strings refering to object names
+
+    """
+    ips = get_ipython()
+    for obj_str in required_obj_list:
+        if not ips.ns_table['user_global'].get(obj_str, None):
+            raise NameError("Required object {} doesn't exist in"
+                            "namespace".format(obj_str))
+    return
+
+
+def _check_obj(required_obj_list):
+    """ function to check if object(s) exist
+
+    Parameter
+    ---------
+    required_obj_list : list
+        a list of strings refering to object names
+
+    """
+    ips = get_ipython()
+    for obj_str in required_obj_list:
+        if not ips.ns_table['user_global'].get(obj_str, None):
+            raise NameError("Required object {} doesn't exist in"
+                            "namespace".format(obj_str))
+    return
 
 def _graceful_exit(error_message):
     try:
@@ -205,35 +239,43 @@ def _copy_and_delete(f_name, src_full_path, dst_dir):
 
 class ExceltoYaml:
     # maintain in place, aligned with spreadsheet header
-    NAME_FIELD = ['Collaborators', 'Sample Maker', 'Lead Experimenters', ]
+    NAME_FIELD = ['Collaborators', 'Sample Maker', 'Lead Experimenter', ]
     COMMA_SEP_FIELD = ['cif name', 'Tags']
-    SAMPLE_FIELD = ['Phase Info']
+    PHASE_FIELD = ['Phase Info [required]']
+    SAMPLE_NAME_FIELD = ['Sample Name [required]']
     GEOMETRY_FIELD = ['Geometry']
+    DICT_LIKE_FIELD = ['database id'] # return a dict
 
     # real fields goes into metadata store
     _NAME_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
                            NAME_FIELD))
     _COMMA_SEP_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
                                 COMMA_SEP_FIELD))
-    _SAMPLE_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
-                             SAMPLE_FIELD))
+    _SAMPLE_NAME_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
+                                  SAMPLE_NAME_FIELD))
+    _PHASE_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
+                            PHASE_FIELD))
     _GEOMETRY_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
                                GEOMETRY_FIELD))
+    _DICT_LIKE_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
+                                DICT_LIKE_FIELD))
 
     def __init__(self):
         self.pd_dict = None
         self.sa_md_list = None
+        self.src_dir = glbl.import_dir
 
     def load(self, saf_num):
-        xl_f = [f for f in os.listdir(glbl.xpdconfig) if
-                f.startswith(str(saf_num) + '_sample')]
+        xl_f = [f for f in os.listdir(self.src_dir) if
+                f in (str(saf_num)+'_sample.xls',
+                      str(saf_num)+'_sample.xlsx')]
         if not xl_f:
-            raise FileNotFoundError("assigned file doesn't exist")
-        if len(xl_f) > 1:
-            raise ValueError("Found more than one file, please make sure"
-                             "there is only one in {}"
-                             .format(glbl.xpdconfig))
-        self.pd_dict = pd.read_excel(os.path.join(glbl.xpdconfig,
+            raise FileNotFoundError("assigned file doesn't exist, have "
+                                    "you put it into {} with correct "
+                                    "naming scheme yet?"
+                                    .format(self.src_dir))
+
+        self.pd_dict = pd.read_excel(os.path.join(self.src_dir,
                                                   xl_f.pop()),
                                      skiprows=0)
 
@@ -278,8 +320,8 @@ class ExceltoYaml:
                     parsed_sa_md.setdefault(k, [])
                     parsed_sa_md.get(k).extend(parsed_name)
 
-                # sample fields
-                elif k in self._SAMPLE_FIELD:
+                # phase fields
+                elif k in self._PHASE_FIELD:
                     try:
                         composition_dict, phase_dict = self._phase_parser(v)
                     except ValueError:
@@ -303,6 +345,15 @@ class ExceltoYaml:
                     parsed_sa_md.setdefault(k, [])
                     parsed_sa_md.get(k).extend(comma_sep_list)
 
+                # sample name field
+                elif k in self._SAMPLE_NAME_FIELD:
+                    _k = 'sample_name'
+                    parsed_sa_md.update({_k: v.replace(' ','_')})
+
+                # dict-like field
+                elif k in self._DICT_LIKE_FIELD:
+                    parsed_sa_md.update({k: self._dict_like_parser(v)})
+
                 # other fields dont need to be pased
                 else:
                     parsed_sa_md.update({k: v.replace(' ', '_')})
@@ -314,12 +365,14 @@ class ExceltoYaml:
         for el in self.parsed_sa_md_list:
             Sample(bt, el)
         # separate so that bkg is in the back
-        for el in self.parsed_sa_md_list:
-            bkg_name = el['geometry']  # bkg
-            bkg_dict = {'sample_name': 'bkg_' + bkg_name,
+        bkg_name_list = [el['sample_name']
+                         for el in self.parsed_sa_md_list if
+                         el['sample_name'].startswith('bkgd')]
+        for bkg_name in set(bkg_name_list):
+            bkg_dict = {'sample_name': bkg_name,
                         'sample_composition': {bkg_name: 1},
                         'is_background': True}
-            Sample(bt, bkg_dict)  # bk sample object, overwrite
+            Sample(bt, bkg_dict)
 
         print("*** End of import Sample object ***")
 
@@ -346,6 +399,20 @@ class ExceltoYaml:
             sa_md_list.append(sa_md)
 
         return sa_md_list
+
+    def _dict_like_parser(self, input_str):
+        """ parser for dictionary output"""
+        output_dict = {}
+        dict_meta = input_str.split(',')
+        for el in dict_meta:
+            if len(el.split(':')) == 1:
+                key = el.split(':').pop()
+                val = 'N/A'  # capture default
+            else:
+                key, val = el.split(':')
+            output_dict.update({key.strip(): val.strip()})
+
+        return output_dict
 
     def _comma_separate_parser(self, input_str):
         """ parser for comma separated fields
@@ -379,6 +446,8 @@ class ExceltoYaml:
             a list of strings in [<first_name>, <last_name>] form
         """
         name_list = name_str.split(' ')
+        if len(name_list) > 2:
+            name_list = [name_str]
         return name_list  # [first, last]
 
     def _phase_parser(self, phase_str):
@@ -418,6 +487,7 @@ class ExceltoYaml:
                 amount = '1'  # capture default
             else:
                 com, amount = el.split(':')  # expect [<com>, <amount>]
+                amount = amount.replace('%','')
             phase_dict.update({com.strip(): float(amount.strip())})
             parsed_tuple = composition_analysis(com.strip())
             # expect: ([elment_1, element_2, ...], [sto_1, sto_2,...])
@@ -435,7 +505,7 @@ class ExceltoYaml:
 excel_to_yaml = ExceltoYaml()
 
 
-def import_sample(saf_num, bt):
+def import_sample(saf_num=None, bt=None):
     """ import sample metadata based on a spreadsheet
 
     this function expect a prepopulated '<SAF_number>_sample.xls' file 
@@ -450,7 +520,29 @@ def import_sample(saf_num, bt):
     bt : xpdacq.beamtime.Beamtime
         beamtime object that is going to be linked with these samples
     """
+    if bt is None:
+        # NameError will rise in _check_obj
+        _check_obj(['bt'])
+        ips = get_ipython()
+        bt = ips.ns_table['user_global']['bt']
+    if saf_num is None:
+        try:
+            saf_num = bt['bt_safN']
+        except NameError:
+            print("WARNING: there is no beamtime object (bt) exists in "
+                  "current namespace.\n Have you started a beamtime ? ")
+            return
+        except KeyError:
+            print("WARNING: there is no SAF number information in this "
+                  "beamtime objec.\n Do you feed in a valid beamtime "
+                  "object?")
+            return
+    print('INFO: using SAF_number = {}'.format(saf_num))
     bt.samples = []
+    # exclude Sample objects from reference list
+    # logic: only update Sample objects that are currently in bt.list
+    sp_ref = [el for el in bt._referenced_by if isinstance(el, ScanPlan)]
+    bt._referenced_by = sp_ref
     excel_to_yaml.load(str(saf_num))
     excel_to_yaml.create_yaml(bt)
     return excel_to_yaml
