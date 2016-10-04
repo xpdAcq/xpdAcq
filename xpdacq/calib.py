@@ -49,7 +49,7 @@ def _timestampstr(timestamp):
     return timestring
 
 
-def run_calibration(exposure=60, dark_sub=True, calibrant_file=None,
+def run_calibration(exposure=60, dark_sub_bool=True, calibrant_file=None,
                     wavelength=None, detector=None, gaussian=None):
 
     """ function to run entire calibration process.
@@ -63,7 +63,7 @@ def run_calibration(exposure=60, dark_sub=True, calibrant_file=None,
     ----------
     exposure : int, optional
         total exposure time in sec. Default is 60s
-    dark_sub : bool, optional
+    dark_sub_bool : bool, optional
         option of turn on/off dark subtraction on this calibration
         image. default is True.
     calibrant_file : str, optional
@@ -101,14 +101,14 @@ def run_calibration(exposure=60, dark_sub=True, calibrant_file=None,
     sample = Sample(bto, calibration_dict)
     prun_uid = prun(sample, ScanPlan(bto, ct, exposure))
     light_header = glbl.db[-1]
-    if dark_sub:
+    if dark_sub_bool:
         dark_uid = light_header.start['sc_dk_field_uid']
         dark_header = glbl.db[dark_uid]
         dark_img = np.asarray(glbl.db.get_images(dark_header,
                                 glbl.det_image_field)).squeeze()
     for ev in glbl.db.get_events(light_header, fill=True):
         img = ev['data'][glbl.det_image_field]
-        if dark_sub:
+        if dark_sub_bool:
             img -= dark_img
 
     print('{:=^20}'.format("INFO: you are able to calib, please refer"
@@ -142,7 +142,7 @@ def run_calibration(exposure=60, dark_sub=True, calibrant_file=None,
     return ai
 
 
-def run_mask_builder(exposure=300, dark_sub=True,
+def run_mask_builder(exposure=300, dark_sub_bool=True,
                      poloarization_factor=0.99,
                      sample_name=None, calib_dict=None,
                      mask_dict=None, save_name=None):
@@ -155,7 +155,7 @@ def run_mask_builder(exposure=300, dark_sub=True,
     ----------
     exposure : float, optional
         exposure time of this scan. default is 300s.
-    dark_sub : bool, optional
+    dark_sub_bool : bool, optional
         turn on/off of dark subtraction. default is True.
     polarization_factor: float, optional.
         polarization correction factor, ranged from -1(vertical) to +1
@@ -218,17 +218,16 @@ def run_mask_builder(exposure=300, dark_sub=True,
     sample = Sample(bto, mask_builder_dict)
     prun_uid = prun(sample, ScanPlan(bto, ct, exposure))
     light_header = glbl.db[-1]
-    if dark_sub:
+    if dark_sub_bool:
         dark_uid = light_header.start['sc_dk_field_uid']
         dark_header = glbl.db[dark_uid]
         dark_img = np.asarray(glbl.db.get_images(dark_header,
                                 glbl.det_image_field)).squeeze()
     for ev in glbl.db.get_events(light_header, fill=True):
         img = ev['data'][glbl.det_image_field]
-        if dark_sub:
+        if dark_sub_bool:
             img -= dark_img
 
-    print("INFO: masking you image ....")
     img /= ai.polarization(img.shape, polarization_factor)
     mask = mask_img(img, ai, **mask_dict)
     print("INFO: add mask to global state")
