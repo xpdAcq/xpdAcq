@@ -4,10 +4,10 @@ Cheat Sheet
 ===========
 
 This cheat-sheet contains no explanation of how the ``xpdAcq`` software works.
-to understand this, please go to :ref:`qs` or :ref:`xpdu`
+To understand this, please refer to the detailed documentation in :ref:`xpdu`
 
 Please use this page as a reminder of the workflow and to copy & paste code snippets into your
-active ``collection`` and ``analysis`` ipython environments (then hit return).
+active ``collection`` and ``analysis-dev`` ipython environments (then hit return).
 
 Remember, to post questions about anything XPD, including software, and to see archived answers, please visit the `XPD-Users Google group 
 <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_
@@ -15,7 +15,17 @@ Remember, to post questions about anything XPD, including software, and to see a
 Check your data collection environment is correctly set up
 ----------------------------------------------------------
 
-In ``collection`` type:
+1. Make sure you are working in the correct environment. For data acquisition you should be
+in the ``collection`` ipython environment (look for ``(collection)`` at the beginning
+of the command prompt).  If you can't find a terminal with ``collection`` running, then
+start it by opening a new terminal and typing 
+
+.. code-block:: python
+
+  icollection
+
+2. Make sure that the software has been properly configured for your beamtime. In
+your ``collection`` environment, type:
 
 .. code-block:: python
 
@@ -27,17 +37,35 @@ please get your beamtime environment set up by the instrument scientist before p
 Check that your data analysis environment is correctly set up
 -------------------------------------------------------------
 
-In your ``analysis`` environment type:
+1. Analysis is done in a separate (but very similar) environment to acquisition. 
+For data analysis you should be
+in the ``analysis-dev`` ipython environment (look for ``(analysis-dev)`` at the beginning
+of the command prompt).  Ideally, this should be running on a different computer than the
+acquisition, but looking at a shared hard-drive so that it can find files.
 
-FIXME
+If you can't find a terminal with ``(analysis-dev)`` running, then
+start it by opening a new terminal and typing 
 
-This should return FIXME.  If not
+.. code-block:: python
+
+  ianalysis
+
+2. Make sure that the software has been properly configured for your beamtime. In
+your ``analysis`` environment, type:
+
+.. code-block:: python
+
+  an.md
+
+This should return a list of metadata about your experiment, such as PI last name.  If not
 please get your analysis environment set up by the instrument scientist before proceeding.
 
-We will use XPDsuite for visualizing data.  Check that XPDsuite is running by finding 
-a window that looks like:
+3. Make sure the visualization software is running. We will use XPDsuite for visualizing data.  
+Check that it is running by finding a window that looks like:
 
 FIXME
+
+If you can't find it, contact your IS to get it running correctly.
 
 Set up your experiment
 ----------------------
@@ -318,6 +346,18 @@ The metadata associated with the image will be saved to a ``.yml`` file which is
 text file and can be opened with a text editor.  Masking and calibration behavior
 can be modified by changing the default function arguments.  Type ``integrate_and_save_last?``
 to see the allowed values.
+
+User scripts
+------------
+
+  Your ``scanplan`` objects can be sequenced into scripts, executing one after the other as you desire.  To set this up, write a sequence of commands into a text file, save it with the extension ``.py`` in the ``userScripts`` directory with a memorable name, like ``myNightShiftScript.py``.  Double and triple check your script, then when you are ready to execute it, in ``ipython`` session type:
+
+
+  .. code-block:: python
+
+    %run -i ~/xpdUser/userScripts/myNightShiftScript.py
+
+  Stay there for a while to make sure everything is running as expected and then go to bed!
 
 Code for Example Experiment
 --------------------------

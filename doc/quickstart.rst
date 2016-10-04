@@ -182,7 +182,7 @@ This was just the quick start, but much more information is in the full document
 
 
 Global options
---------------
+++++++++++++++
 
 ``glbl`` class has several attributes that control the overall behavior of ``xpdacq`` software.
 

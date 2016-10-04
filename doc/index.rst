@@ -74,12 +74,6 @@ This version is fully documented and extensively tested.
    cheat_sheet
 
 .. toctree::
-   :hidden:
-   :maxdepth: 3
-
-   quickstart
-
-.. toctree::
    :maxdepth: 3
    :hidden:
 

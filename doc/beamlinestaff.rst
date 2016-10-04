@@ -1,7 +1,7 @@
 .. _bls:
 
-Beamline Staff
-**************
+For Beamline Staff
+******************
 
 .. toctree::
    :maxdepth: 2
