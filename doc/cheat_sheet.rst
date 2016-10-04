@@ -4,10 +4,10 @@ Cheat Sheet
 ===========
 
 This cheat-sheet contains no explanation of how the ``xpdAcq`` software works.
-to understand this, please go :ref:`qs` or :ref:`xpdu`
+to understand this, please go to :ref:`qs` or :ref:`xpdu`
 
 Please use this page as a reminder of the workflow and to copy & paste code snippets into your
-active ``collection-dev`` ipython environment (then hit return).
+active ``collection`` and ``analysis`` ipython environments (then hit return).
 
 Remember, to post questions about anything XPD, including software, and to see archived answers, please visit the `XPD-Users Google group 
 <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_
@@ -15,12 +15,29 @@ Remember, to post questions about anything XPD, including software, and to see a
 Check your data collection environment is correctly set up
 ----------------------------------------------------------
 
+In ``collection`` type:
+
 .. code-block:: python
 
   bt.md
 
-should return a list of metadata about your experiment, such as PI last name.  If not
+This should return a list of metadata about your experiment, such as PI last name.  If not
 please get your beamtime environment set up by the instrument scientist before proceeding.
+
+Check that your data analysis environment is correctly set up
+-------------------------------------------------------------
+
+In your ``analysis`` environment type:
+
+FIXME
+
+This should return FIXME.  If not
+please get your analysis environment set up by the instrument scientist before proceeding.
+
+We will use XPDsuite for visualizing data.  Check that XPDsuite is running by finding 
+a window that looks like:
+
+FIXME
 
 Set up your experiment
 ----------------------
@@ -41,8 +58,19 @@ those letters.
 
 1. calibration
 """"""""""""""
-run this first, then run it again each time the geometry of your measurement changes.  Place the
-Ni calibrant at the sample position, type
+run this first, then run it again each time the geometry of your measurement changes.  
+
+Place the Ni calibrant at the sample position.  Let's make sure we are getting a nice
+Ni diffraction pattern. Type:
+
+.. code-block:: python
+
+  prun(0,0) # will run an exposure of 60 seconds on your Ni sample
+  save_last_tiff()
+  
+Navigate to XPDsuite, click on the 2D image plotter (green button that looks like FIXME).
+In the image plotter, called SrXplanar, select open_files FIXME naviage to the ``Ni_calibrant``
+directory and look for the latest tiff image. FIXME
 
 .. code-block:: python
 
@@ -72,7 +100,9 @@ For more info: :ref:`auto_mask`.
 """""""""""""""""""""""""""""""""""""""""
 
 Your sample information should be loaded in an excel spreadsheet, with a well
-defined format (a template file may be found here FIXME). If the IS didn't already
+defined format (a template file may be found `here 
+<https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_ 
+). If the IS didn't already
 do it, save your sample xls file to the ``xpdConfig`` directory using the name
 ``<saf_number>_sample.xls``, where you replace ``<saf_number>`` with the number
 of the safety approval form associated with you experiment.  If you are not sure
@@ -88,8 +118,7 @@ what your ``saf_number`` is you can get it by typing:
    'bt_uid': 'f4eda7ec',
    'bt_wavelength': 0.1832}
 
-Here you can see your saf_number under ``bt_safN`` field. In this code example,
-``saf_number`` is ``300564``.
+where the ``saf_number`` is ``300564``.
 
 To load the sample information and have the sample objects available in the current beamtime:
 
@@ -97,7 +126,7 @@ To load the sample information and have the sample objects available in the curr
 
   import_sample()
 
-updates and additions may be added by adding more samples to the excel file and rerunning ``import_sample()``
+updates and additions may be made by adding more samples to the excel file and rerunning ``import_sample()``
 at any time during the experiment.
 
 For more info :ref:`import_sample`.
@@ -109,7 +138,8 @@ For more info :ref:`import_sample`.
 use an xpdAcq template
 ^^^^^^^^^^^^^^^^^^^^^^
 
-``xpdAcq`` has templates for three common scans (more will follow, please request yours at ``xpd-users`` Google group!): a
+``xpdAcq`` has templates for three common scans (more will follow, please request yours at `xpd-users Google group! 
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ ): a
 simple count, a series of counts, and a temperature scan.  Use the template to create specific Plans (that include specific start and
 stop temperatures, count times and so on) using the following table as a template.  These can be created now (to save time later) or
 later when you need them.
@@ -128,21 +158,24 @@ write your own scan plan
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``xpdAcq`` also consumes any scan plan from ``bluesky``. For example, a scan that drives a ``motor`` through
-a specific list of points while collecting read-back value from ``area detector`` can be defined and run as below:
+a specific list of points while collecting an image at each point from ``area_detector``, which uses a bluesky
+predefined plan, ``list_scan``, can be run as below:
 
 .. code-block:: python
 
   from bluesky.plans import list_scan
+  
+  glbl.area_det.images_per_set.put(600)  # 60s exposure if continuous acquisition with 0.1s framerate
   myplan = list_scan([area_detector], motor, [1,3,5,7,9]) # drives motor to postion 1,3,5,7,9
+  myplan = subs_wrapper(myplan, LiveTable([area_detector])) # LiveTable will give updates on how the scan is progressing
   prun(56, myplan) # run this scanplan on sample 56
 
-
+You may also write your own bluesky plans and run them similar to the above.
 For more details about how to write a ``bluesky`` scan plan,
 please see `here <http://nsls-ii.github.io/bluesky/plans.html>`_.
 
-It is recommended that you use the ``xpdAcq`` templates unless your experiment needs its own special
-bluesky plan, because the autoreduction of data is not currently supported for bluesky pass-through plans.
-Also, metadata capture in bluesky passthrough plans must be explicitly coded into the plan.
+It is recommended to use xpdAcq template ScanPlans where you can so that metadata is saved in a
+standardized way for easier later searching.
 
 5. list objects by categories
 """""""""""""""""""""""""""""
@@ -183,13 +216,16 @@ background scan
 
 It is recommended to run a background scan before your sample so it is available for
 the automated data reduction steps.  It also allows you to see problems with the experimental
-setup, for example, crystlline peaks due to the beam hitting a shutter, for example.
+setup, for example, crystalline peaks due to the beam hitting a shutter, for example.
 
  1. Load the background sample (e.g., empty kapton tube) on the instrument
  2. list your sample objects and find the ones tagged as backgrounds in the excel spreadsheet
  3. run prun (see below) on the background sample with a ``ct`` ScanPlan object of the desired exposure
 
 Please see :ref:`background_obj` for more information.
+
+How long should you run your background scan for? See discussion 
+`here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
 
 production run
 ^^^^^^^^^^^^^^
@@ -223,9 +259,17 @@ sample that you used in the sample spreadsheet, and is the name of the ``Sample`
 
   save_last_tiff()
 
+With this function, the image will be saved to a ``.tiff`` file.
+The metadata associated with the image will be saved to a ``.yml`` file which is a
+text file and can be opened with a text editor.  Saving behavior
+can be modified by changing the default function arguments.  Type ``save_last_tiff?``
+to see the allowed values.
+
 **Pro Tip**: this function is often typed just after ``prun()`` in the collection environment,
 so that the data are extracted out of the NSLS-II database and delivered to you automatically when
-the scan finishes.  You can then play around with them and take them home as you like.  The following
+the scan finishes.  You can then play around with them and take them home as you like.  
+
+The following
 functions are more useful for running in the ``analysis`` environment to fetch scans from the database
 selectively if you don't want a dump of every scan.
 
@@ -243,7 +287,7 @@ selectively if you don't want a dump of every scan.
   h = db[-5]
   save_tiff(h)
 
-We use "h" for the thing given back by databroker (``db``) to be short for "header".
+We use "h", short for "header", for the object given back by the NSLS-II databroker (``db``) data-fetching software.
 This is a software object that contains all the information about your scan and can
 be passed to different functions to do analysis.
 more information on headers is `here <http://nsls-ii.github.io/databroker/headers.html>`_
@@ -263,24 +307,19 @@ more information on headers is `here <http://nsls-ii.github.io/databroker/header
   integrate_and_save_(h)
 
 
-
-during this integration/saving process, you can choose if you want to apply
-``mask`` to your image by option ``auto_mask``
-
 .. code-block:: python
 
   # the most recent scan with mask applied
   integrate_and_save_last()
-  # the most recent scan, no mask applied
-  integrate_and_save_last(auto_mask=False)
 
-.. note::
+With this function, the image will be saved to a ``.tiff`` file, the mask will be saved
+to a ``.npy`` file, and the masked-image will be integrated and saved to a ``.chi`` file.
+The metadata associated with the image will be saved to a ``.yml`` file which is a
+text file and can be opened with a text editor.  Masking and calibration behavior
+can be modified by changing the default function arguments.  Type ``integrate_and_save_last?``
+to see the allowed values.
 
-  image saved will **NOT** be masked, mask is only handed in during integration
-  step. masked used will be saved separately.
-
-
-Code for Sample Experiment
+Code for Example Experiment
 --------------------------
 
 Here is a sample code covering the entire process from defining ``Sample`` and
@@ -288,8 +327,6 @@ Here is a sample code covering the entire process from defining ``Sample`` and
 
 Please replace the name and parameters in each function depending your needs.  To
 understand the logic in greater detail see the full user documentation.
-
-**Pro Tip**: copy-and-paste is your good friend
 
 .. code-block:: python
 
