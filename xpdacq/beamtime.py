@@ -310,6 +310,8 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self.update(bt_wavelength=val)
 
     def register_scanplan(self, scanplan):
+        # Notify this Beamtime about an ScanPlan that should be re-synced
+        # whenever the contents of the Beamtime are edited. 
         sp_name_list = [el.short_summary() for el in self.scanplans]
         # manage bt.list
         if scanplan.short_summary() not in sp_name_list:
@@ -321,8 +323,10 @@ class Beamtime(ValidatedDictLike, YamlDict):
             self.scanplans.remove(old_obj)
             self.scanplans.insert(old_obj_ind, scanplan)
         # yaml sync list
-        self._referenced_by.extend([el for el in self.scanplans if el
-                                    not in self._referenced_by])
+        # simply append object to list to increase speed
+        #self._referenced_by.extend([el for el in self.scanplans if el
+        #                            not in self._referenced_by])
+        self._referenced_by.append(scanplan)
 
     @property
     def md(self):
@@ -345,18 +349,21 @@ class Beamtime(ValidatedDictLike, YamlDict):
         sa_name_list = [el.get('sample_name', None) for el in self.samples]
         # manage bt.list
         if sample.get('sample_name') not in sa_name_list:
-            # print('!!! Got new sample !!!')
             self.samples.append(sample)
         else:
-            # print('!!! Overwrite sample !!!')
             old_obj = [obj for obj in self.samples if obj.get('sample_name') ==
                        sample.get('sample_name')].pop()
             old_obj_ind = self.samples.index(old_obj)
             self.samples.remove(old_obj)
             self.samples.insert(old_obj_ind, sample)
         # yaml sync list
-        self._referenced_by.extend([el for el in self.samples if el
-                                    not in self._referenced_by])
+        # simply append object to list to increase speed
+        # filtering logic is handle when importing sample
+        #self._referenced_by.extend([el for el in self.samples if el
+        #                            not in self._referenced_by])
+        # simply append object to list to increase speed
+        # filtering logic is handle when importing sample
+        self._referenced_by.append(sample)
 
     @classmethod
     def from_yaml(cls, f):
