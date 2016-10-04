@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import tarfile as tar
+import uuid
 from time import strftime
 from shutil import ReadError
 
@@ -43,7 +44,6 @@ def _check_obj(required_obj_list):
             raise NameError("Required object {} doesn't exist in"
                             "namespace".format(obj_str))
     return
-
 
 def _graceful_exit(error_message):
     try:
@@ -546,3 +546,4 @@ def import_sample(saf_num=None, bt=None):
     excel_to_yaml.load(str(saf_num))
     excel_to_yaml.create_yaml(bt)
     return excel_to_yaml
+

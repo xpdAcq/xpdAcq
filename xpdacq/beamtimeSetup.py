@@ -36,7 +36,7 @@ def _start_beamtime(PI_last, saf_num, experimenters=[], *,
               "please do `prun.beamtime = bt`")
         # copy default Ni24.D to xpdUser/user_analysis
         src = os.path.join(os.path.dirname(__file__), 'Ni24.D')
-        dst = os.path.join(glbl.usrAnalysis_dir, 'Ni24.D')
+        dst = os.path.join(glbl.usrAnalysis_dir, 'Ni.D')
         shutil.copy(src, dst)
         # import sample
         # FIXME: leave for user?
