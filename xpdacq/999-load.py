@@ -5,14 +5,29 @@ from xpdacq.utils import import_sample
 from xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
                                   _end_beamtime)
 
-if not glbl._is_simulation:
-    glbl.area_det = pe1c
-    glbl.shutter = shctl1
-    glbl.temp_controller = cs700
-    from xpdacq.new_xpdacq.tiff_export import XpdAcqSubtractedTiffExporter
-    tiff_template = "/home/xf28id1/xpdUser/tiff_base/{start.sa_name}/{start.time}_{start.uid}_step{event.seq_num}.tif"
-    tiff_export = XpdAcqSubtractedTiffExporter('pe1_image', tiff_template)
-    # let NameError handle missing object
+# experiment device being used in current plan
+try:
+    device_list = [pe1c, shctl1, cs700]
+    attribute_name = ['area_det', 'shutter', 'temp_controller']
+
+    for attr, device in zip(attribute_name, device_list):
+        try:
+            setattr(glbl, attr, device)
+        except NameError:
+            # NameError -> simulation
+            pass
+except NameError:
+    # NameError -> simulation
+    pass
+
+
+# databroker
+try:
+    setattr(glbl, 'db', db)
+except NameError:
+    # NameError -> simulation
+    pass
+
 
 # beamtime reload happen in xpdacq
 from xpdacq.xpdacq import *
@@ -39,9 +54,10 @@ if os.path.isdir(HOME_DIR):
 else:
     os.chdir(BASE_DIR)
 
-from xpdacq.calib import run_calibration
-# analysis functions
-from xpdan.data_reduction import *
+from xpdacq.calib import *
+
+# analysis functions, only at beamline
+#from xpdan.data_reduction import *
 
 print('OK, ready to go.  To continue, follow the steps in the xpdAcq')
 print('documentation at http://xpdacq.github.io/xpdacq')
