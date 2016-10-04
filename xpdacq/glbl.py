@@ -19,7 +19,7 @@ BEAMLINE_ID = 'xpd'
 GROUP = 'XPD'
 IMAGE_FIELD = 'pe1_image'
 CALIB_CONFIG_NAME = 'pyFAI_calib.yml'
-
+MASK_MD_NAME = 'xpdacq_mask_md.npy'
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()
@@ -111,6 +111,7 @@ class Glbl:
     group = GROUP
     # instrument config
     det_image_field = IMAGE_FIELD
+    mask_md_name = MASK_MD_NAME
 
     # logic to assign correct objects depends on simulation or real experiment
     if not simulation:
