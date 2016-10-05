@@ -1,6 +1,6 @@
-.. _cheat_sheet:
+.. _quick_start:
 
-Cheat Sheet
+Quick Start
 ===========
 
 This cheat-sheet contains no explanation of how the ``xpdAcq`` software works.
@@ -9,8 +9,11 @@ To understand this, please refer to the detailed documentation in :ref:`xpdu`
 Please use this page as a reminder of the workflow and to copy & paste code snippets into your
 active ``collection`` and ``analysis-dev`` ipython environments (then hit return).
 
-Remember, to post questions about anything XPD, including software, and to see archived answers, please visit the `XPD-Users Google group 
-<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_
+Remember, to post questions about anything XPD, including software, and to see archived answers, at the `XPD-Users Google group 
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ .  If you are not already a member please request to join
+the community
+
+OK, let's get started.
 
 Check your data collection environment is correctly set up
 ----------------------------------------------------------
@@ -31,8 +34,17 @@ your ``collection`` environment, type:
 
   bt.md
 
-This should return a list of metadata about your experiment, such as PI last name.  If not
-please get your beamtime environment set up by the instrument scientist before proceeding.
+This should return a list of metadata about your experiment, such as PI last name.  If not,
+or if the metadata is wrong, please get your beamtime environment properly
+set up by the instrument scientist (IS) before proceeding.
+
+.. note::
+
+  Only create and work on files within the ``xpdUser`` directory tree.  At the end of your
+  experiment, everything written in there will be permanently archived in a remote store 
+  and then deleted from the xpd computer leaving
+  a clean environment for the next user.  You can, of course, take anything home from within ``xpdUser``,
+  or if you forgot something have the IS fetch it for you from the archive later.
 
 Check that your data analysis environment is correctly set up
 -------------------------------------------------------------
