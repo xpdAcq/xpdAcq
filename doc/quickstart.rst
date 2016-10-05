@@ -3,7 +3,7 @@
 Quick Start
 ===========
 
-This cheat-sheet contains no explanation of how the ``xpdAcq`` software works.
+This quick-start contains little explanation of how the ``xpdAcq`` software works.
 To understand this, please refer to the detailed documentation in :ref:`xpdu`
 
 Please use this page as a reminder of the workflow and to copy & paste code snippets into your
@@ -72,19 +72,19 @@ your ``analysis`` environment, type:
 This should return a list of metadata about your experiment, such as PI last name.  If not
 please get your analysis environment set up by the instrument scientist before proceeding.
 
-3. Make sure the visualization software is running. We will use XPDsuite for visualizing data.  
-Check that it is running by finding a window that looks like:
+3. Make sure the visualization software is running. We will use ``SrXplanar`` and ``XPDsuite`` for visualizing data.  
+Check that they are running by finding windows that looks like:
 
 FIXME
 
-If you can't find it, contact your IS to get it running correctly.
+If you can't find them, contact your IS to get them running correctly.
 
 Set up your experiment
 ----------------------
 0. general
 """"""""""
 
-If you want to query any xpdAcq function, type the function name with a `?` at the end and hit
+If you want to query any ``xpdAcq`` function, type the function name with a `?` at the end and hit
 return.  Documentation for what paramters the function takes, and any default values, and what
 the function returns will be printed.  For example, type:
 
@@ -93,34 +93,45 @@ the function returns will be printed.  For example, type:
   run_calibration?
 
 If you can't remember what functions are available, but can remember the first letter or first few
-letters, type those letters and hit `tab` to see a list of all available functions that begin with 
+letters, type those letters and hit ``tab`` to see a list of all available functions that begin with 
 those letters.
+
+0.5 quick look
+""""""""""""""
+
+Place any sample, but maybe the Ni calibrant, at the sample position.  Let's make sure we are getting a nice
+Ni diffraction pattern. Type:
+
+.. code-block:: python
+
+  prun(0,0) # will run an exposure of 60 seconds on your setup sample
+  save_last_tiff() # will save the image in the tiff_base/setup directory
+  
+Navigate to the SrXplanar image viewer. Click on the folder icon and navigate to
+the ``tiff_base/setup`` folder and look for a list of one or more tiff files.
+Double-click on one to view it.
+
 
 1. calibration
 """"""""""""""
 run this first, then run it again each time the geometry of your measurement changes.  
 
-Place the Ni calibrant at the sample position.  Let's make sure we are getting a nice
-Ni diffraction pattern. Type:
-
-.. code-block:: python
-
-  prun(0,0) # will run an exposure of 60 seconds on your Ni sample
-  save_last_tiff()
-  
-Navigate to XPDsuite, click on the 2D image plotter (green button that looks like FIXME).
-In the image plotter, called SrXplanar, select open_files FIXME naviage to the ``Ni_calibrant``
-directory and look for the latest tiff image. FIXME
+Place the Ni calibrant at the sample position, close the hutch and open the shutter then type:
 
 .. code-block:: python
 
   run_calibration() # default values: calibrant_file='Ni.D' and exposure=60
 
-and follow the instructions in :ref:`calib_manual`
+and follow the instructions in :ref:`calib_manual`.
 
-2. set up mask
-""""""""""""""
+The calibration parameters will be saved in the header of every scan you run until you
+run ``run_calibration()`` again.
 
+2. set up a mask
+""""""""""""""""
+
+The standard mask removes problematic pixels at the edge of the detector, shadows
+the beamstop, and uses an auto-masking scheme to get rid of outlier pixels.
 The automasking has been extensively tested on a low-scattering sample so our mask 
 building function has been designed to run on data from an empty kapton tube.  
 Load an empty kapton tube on the diffractometer, then type
@@ -130,11 +141,14 @@ Load an empty kapton tube on the diffractometer, then type
   run_mask_builder() # be patient, the process takes 10 minutes!
 
 A mask will be generated based on the image collected from this sample. This mask
-will be saved for use with all future datasets until you run ``run_mask_builder()``
-again.
+will be saved in the header of all future scans until you run ``run_mask_builder()``
+again.  You will always be able to extract your data unmasked, or apply a different mask,
+at analysis time, but if this mask works well, it will save you a lot of time later.
+
+You can look at the 2D image with and without the mask in SrXplanar. Look for the 
+most recent file named FIXME in ``tiff_base/FIXME``.
 
 For more info: :ref:`auto_mask`.
-
 
 3. set up ``Sample`` objects to use later
 """""""""""""""""""""""""""""""""""""""""
@@ -143,9 +157,9 @@ Your sample information should be loaded in an excel spreadsheet, with a well
 defined format (a template file may be found `here 
 <https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_ 
 ). If the IS didn't already
-do it, save your sample xls file to the ``xpdConfig`` directory using the name
+do it, save your sample xls file to the ``import`` directory FIXME using the name
 ``<saf_number>_sample.xls``, where you replace ``<saf_number>`` with the number
-of the safety approval form associated with you experiment.  If you are not sure
+of the safety approval form associated with your experiment.  If you are not sure
 what your ``saf_number`` is you can get it by typing:
 
 .. code-block:: python
@@ -154,20 +168,23 @@ what your ``saf_number`` is you can get it by typing:
   Out[1]:
   {'bt_experimenters': ['Tim', 'Liu'],
    'bt_piLast': 'Billinge',
-   'bt_safN': '300564',
-   'bt_uid': 'f4eda7ec',
+   'bt_safN': '300336',
+   'bt_uid': 'f4ewjf9c',
    'bt_wavelength': 0.1832}
 
-where the ``saf_number`` is ``300564``.
+where the ``saf_number`` is ``300336``.
 
-To load the sample information and have the sample objects available in the current beamtime:
+Next type:
 
 .. code-block:: python
 
   import_sample()
 
+which loads the sample information and makes all the sample objects available in the current beamtime.
+
 updates and additions may be made by adding more samples to the excel file and rerunning ``import_sample()``
-at any time during the experiment.
+at any time during the experiment.  No existing sample objects will be removed during this process, only new ones
+added, though existing samples will be updated (overwritten) by samples in the spreadsheet with the same name.  
 
 For more info :ref:`import_sample`.
 
@@ -180,9 +197,9 @@ use an xpdAcq template
 
 ``xpdAcq`` has templates for three common scans (more will follow, please request yours at `xpd-users Google group! 
 <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ ): a
-simple count, a series of counts, and a temperature scan.  Use the template to create specific Plans (that include specific start and
-stop temperatures, count times and so on) using the following table as a template.  These can be created now (to save time later) or
-later when you need them.
+simple count, a series of counts, and a temperature scan.  You can create ``ScanPlans`` now to use later, or you can create
+them when you need them (and reuse them after that).  Examples of what to type to create different example ``ScanPlans`` are shown 
+in the table below.  Adapt these as you need to by changing the numbers in the arguments.
 
 ======================================= ===================================================================================
 command
@@ -192,25 +209,35 @@ command
 ``ScanPlan(bt, tseries, 5, 50, 15)``     time series with 5s count time, 50s delay and 15 repeats
 
 ``ScanPlan(bt, Tramp, 5, 300, 200, 5)``  temperature series with 5s count time, starting from 300k to 200k with 5k per step
+
+``ScanPlan(Tramp, [listof[lists]]FIXME)  Not sure if this is finished but please include if it is!
 ======================================= ===================================================================================
 
 write your own scan plan
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``xpdAcq`` also consumes any scan plan from ``bluesky``. For example, a scan that drives a ``motor`` through
-a specific list of points while collecting an image at each point from ``area_detector``, which uses a bluesky
-predefined plan, ``list_scan``, can be run as below:
+a specific list of points while collecting an image at each point from the detector ``area_detector``, which uses a bluesky
+predefined plan, ``list_scan``, can be set up as:
 
 .. code-block:: python
 
   from bluesky.plans import list_scan
   
-  glbl.area_det.images_per_set.put(600)  # 60s exposure if continuous acquisition with 0.1s framerate
-  myplan = list_scan([area_detector], motor, [1,3,5,7,9]) # drives motor to postion 1,3,5,7,9
-  myplan = subs_wrapper(myplan, LiveTable([area_detector])) # LiveTable will give updates on how the scan is progressing
-  prun(56, myplan) # run this scanplan on sample 56
+  glbl.area_det.images_per_set.put(600)  # set detector to collect 600 frames, so 60s exposure if continuous acquisition with 0.1s framerate
+  myplan = list_scan([area_detector], motor, [1,3,5,7,9]) # drives motor to postion 1,3,5,7,9 and fires area_detector
+  myplan = subs_wrapper(myplan, LiveTable([area_detector])) # set up the scan so LiveTable will give updates on how the scan is progressing
+
+run as below:
+
+.. code-block:: python
+
+  prun(56, myplan) # run the myplan ScanPlan on sample 56
+
 
 You may also write your own bluesky plans and run them similar to the above.
+There is a somewhat steep learning curve, but you should be able to get help
+setting these up from your local contact.
 For more details about how to write a ``bluesky`` scan plan,
 please see `here <http://nsls-ii.github.io/bluesky/plans.html>`_.
 
@@ -249,7 +276,8 @@ Run your experiment
 1. A scan is a scanplan executed on a sample
 """"""""""""""""""""""""""""""""""""""""""""
 
-The main philosophy of ``xpdAcq`` is : **on this sample run this scanplan**
+The main philosophy of ``xpdAcq`` is : **on this sample run this scanplan** which 
+is typed as ``prun(<Sample.object>,<ScanPlan-object>)``
 
 background scan
 ^^^^^^^^^^^^^^^
@@ -259,13 +287,20 @@ the automated data reduction steps.  It also allows you to see problems with the
 setup, for example, crystalline peaks due to the beam hitting a shutter, for example.
 
  1. Load the background sample (e.g., empty kapton tube) on the instrument
- 2. list your sample objects and find the ones tagged as backgrounds in the excel spreadsheet
+ 2. type ``FIXME`` to list your sample objects tagged as backgrounds (that was done originally in your excel spreadsheet).
  3. run prun (see below) on the background sample with a ``ct`` ScanPlan object of the desired exposure
+
+.. code-block:: python
+
+  prun(bt.samples[2],bt.scanplan[5]) # referencing objects explicitly...or...
+  prun(2,5)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
+                                     # index from the ``bt`` list
 
 Please see :ref:`background_obj` for more information.
 
 How long should you run your background scan for? See discussion 
 `here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
+but for kapton we often do it for 15-30 minutes.
 
 production run
 ^^^^^^^^^^^^^^
@@ -276,8 +311,8 @@ production run
 
 .. code-block:: python
 
-  prun(bt.samples[2],bt.scanplan[5]) # referencing objects explicitly
-  prun(2,5)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
+  prun(bt.samples[5],bt.scanplan[5]) # referencing objects explicitly
+  prun(5,5)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
                                      # index from the ``bt`` list
 
 For more info: FIXME
@@ -347,11 +382,6 @@ more information on headers is `here <http://nsls-ii.github.io/databroker/header
   integrate_and_save_(h)
 
 
-.. code-block:: python
-
-  # the most recent scan with mask applied
-  integrate_and_save_last()
-
 With this function, the image will be saved to a ``.tiff`` file, the mask will be saved
 to a ``.npy`` file, and the masked-image will be integrated and saved to a ``.chi`` file.
 The metadata associated with the image will be saved to a ``.yml`` file which is a
@@ -370,72 +400,6 @@ User scripts
     %run -i ~/xpdUser/userScripts/myNightShiftScript.py
 
   Stay there for a while to make sure everything is running as expected and then go to bed!
-
-Code for Example Experiment
---------------------------
-
-Here is a sample code covering the entire process from defining ``Sample`` and
-``ScanPlan`` objects to running different kinds of runs.
-
-Please replace the name and parameters in each function depending your needs.  To
-understand the logic in greater detail see the full user documentation.
-
-.. code-block:: python
-
-  # bt list method to see all objects we have available for data collection
-  bt.list()
-
-
-  # Ideally, Sample information should be filled before you come.
-  # you can fill out the spreadsheet and then use ``import_sample`` function.
-  # Let's still have an example here of how to do it explicitly
-  Sample(bt, 'sammple_name':'NaCl',
-         {'sample_composition': {'Na':0.5, 'Cl':0.5},
-          'sample_phase': {'NaCl':1},
-          'composition_string': 'Na0.09Cl0.09H1.82O0.91',
-          'holder':{'shape':'capillary','ID':'1 mm','madeOf':'kapton'},
-          'tags':['looked kinda green','dropped on the floor during loading'],
-          '<anythingElseIwant>':'<description>',
-          '<andSoOn>':'<etc>'
-         }  # rich metadata will save a lot of time later!
-
-
-.. code-block:: python
-
-  # define "ct" scanplan with exp = 0.5
-  ScanPlan(bt, ct, 0.5)
-
-  # define "Tramp" scanplan with exp = 0.5, startingT = 300, endingT = 310, Tstep = 2
-  ScanPlan(bt, Tramp , 0.5, 300, 310, 2)
-  # define "Tramp" scanplan with exp = 0.5, startingT = 310, endingT = 250, Tstep = 5
-  ScanPlan(bt, Tramp, 0.5, 310, 250, 5)
-
-  # define a "time series" scanplan with exp = 0.5, num=10, delay = 2
-  ScanPlan(bt, tseries, 0.5, 2, 10)
-
-  # Then let's do a calibration run with Ni, exposure time = 60s, and perform calibration in calibration software
-  run_calibration()
-
-  bt.list() # returns the 'NaCl' sample object at position 17 and the 'ct_0.5' ScanPlan object at position 20
-  prun(17,20)
-
-  # the data are saved into the NSLS-II database (don't worry) but we want to get the image so
-  # type:
-  save_last_tiff() # save tiffs from last scan
-
-  # now we have everything set up, it is super-easy to sequence lots of interesting scans
-  # this does a series of different scans on the same sample
-  prun(17,21)   # assume 'Tramp_0.5_300_310_2' ScanPlan object at position 21
-  prun(17,22)   # assume 'Tramp_0.5_310_250_5' ScanPlan object at position 23
-  save_tiff(db[-3:]) # save tiffs from last three scans
-
-  # this does the same scan on a series of samples
-  prun(17,21)   # running sample at index 17 with 'Tramp_0.5_300_310_2' ScanPlan
-  prun(18,21)   # running sample at index 18 with 'Tramp_0.5_300_310_2' ScanPlan
-  prun(19,21)   # running sample at index 19 with 'Tramp_0.5_300_310_2' ScanPlan
-  save_tiff(db[-3:]) # save tiffs from last three scans
-
-FIXME: if we have a ``view_last_image()`` function, document this one too.
 
 Interrupt your scan
 --------------------
