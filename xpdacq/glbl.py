@@ -29,7 +29,8 @@ else:
 if simulation:
     BASE_DIR = os.getcwd()
 else:
-    BASE_DIR = os.path.expanduser('~/')
+    #BASE_DIR = os.path.expanduser('~/')
+    BASE_DIR = os.path.abspath('/direct/XF28ID1/pe1_data')
 
 # top directories
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
