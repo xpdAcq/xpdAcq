@@ -72,7 +72,7 @@ your ``analysis`` environment, type:
 This should return a list of metadata about your experiment, such as PI last name.  If not
 please get your analysis environment set up by the instrument scientist before proceeding.
 
-3. Make sure the visualization software is running. We will use ``SrXplanar`` and ``XPDsuite`` for visualizing data.
+3. Make sure the visualization software is running. We will use ``SrXgui`` and ``XPDsuite`` for visualizing data.
 Check that they are running by finding windows that looks like:
 
 **XPDsuite**
@@ -82,7 +82,7 @@ Check that they are running by finding windows that looks like:
   :align: center
   :height: 300px
 
-**SrXplanar**
+**SrXgui**
 
 .. image:: ./img/srxgui.png
   :width: 400px
@@ -96,7 +96,7 @@ Set up your experiment
 0. general
 """"""""""
 
-If you want to query any ``xpdAcq`` function, type the function name with a `?` at the end and hit
+If you want to query any ``xpdAcq`` function, type the function name with a ``?`` at the end and hit
 return.  Documentation for what paramters the function takes, and any default values, and what
 the function returns will be printed.  For example, type:
 
@@ -106,7 +106,7 @@ the function returns will be printed.  For example, type:
 
 If you can't remember what functions are available, but can remember the first letter or first few
 letters, type those letters and hit ``tab`` to see a list of all available functions that begin with
-those letters.
+those letters. This will include Python imported and built-in functions as well as xpdAcq ones.
 
 0.5 quick look
 """"""""""""""
@@ -119,9 +119,9 @@ Ni diffraction pattern. Type:
   prun(0,0) # will run an exposure of 60 seconds on your setup sample
   save_last_tiff() # will save the image in the tiff_base/setup directory
 
-Navigate to the SrXplanar image viewer. Click on the folder icon and navigate to
+Navigate to the SrXgui image viewer. Click on the folder icon and navigate to
 the ``tiff_base/setup`` folder and look for a list of one or more tiff files.
-Double-click on one to view it.
+Double-click on the most recent one to view the one you just collected.
 
 
 1. calibration
@@ -132,11 +132,11 @@ Place the Ni calibrant at the sample position, close the hutch and open the shut
 
 .. code-block:: python
 
-  run_calibration() # default values: calibrant_file='Ni.D' and exposure=60
+  run_calibration() # default values (calibrant_file='Ni.D' and exposure=60) don't need to be typed
 
 and follow the instructions in :ref:`calib_manual`.
 
-The calibration parameters will be saved in the header of every scan you run until you
+The resulting calibration parameters will be saved in the header of every scan you run until you
 run ``run_calibration()`` again.
 
 2. set up a mask
@@ -155,11 +155,12 @@ Load an empty kapton tube on the diffractometer, then type
 A mask will be generated based on the image collected from this sample. This mask
 will be saved in the header of all future scans until you run ``run_mask_builder()``
 again.  You will always be able to extract your data unmasked, or apply a different mask,
-at analysis time, but if this mask works well, it will save you a lot of time later.
+at analysis time, but if this mask works well, it will save you a lot of time later if
+you do this step now.
 
-You can look at the 2D image with and without the mask in SrXplanar.
-The most recent mask file will be placed in ``config_base`` directory with file
-name as ``xpdacq_mask.py``. You can load in with by clicking the 'folder' icon in SrXplanar.
+You can look at the 2D image with and without the mask in SrXgui.
+FIXME The most recent mask file will be placed in ``config_base`` directory with file
+name as ``xpdacq_mask.py``. You can load in with by clicking the 'folder' icon in SrXgui.
 
 .. image:: ./img/select_mask_00.png
   :width: 400px
@@ -197,7 +198,7 @@ what your ``saf_number`` is you can get it by typing:
    'bt_uid': 'f4ewjf9c',
    'bt_wavelength': 0.1832}
 
-where the ``saf_number`` is ``300336``.
+where the ``saf_number`` in this case is ``300336``.
 
 Next type:
 
@@ -207,9 +208,9 @@ Next type:
 
 which loads the sample information and makes all the sample objects available in the current beamtime.
 
-updates and additions may be made by adding more samples to the excel file and rerunning ``import_sample()``
-at any time during the experiment.  No existing sample objects will be removed during this process, only new ones
-added, though existing samples will be updated (overwritten) by samples in the spreadsheet with the same name.
+Updates and additions may be made by editing existing sample information, and by adding more samples, in the excel file and rerunning ``import_sample()``
+at any time during the experiment.  The existing sample objects will be overwritten by this new sheet so
+we recommend to just edit existing or add new samples to the sheet but not to delete any.
 
 For more info :ref:`import_sample`.
 
@@ -248,14 +249,14 @@ predefined plan, ``list_scan``, can be set up as:
   from bluesky.plans import list_scan
 
   glbl.area_det.images_per_set.put(600)  # set detector to collect 600 frames, so 60s exposure if continuous acquisition with 0.1s framerate
-  myplan = list_scan([glbl.area_dete], motor, [1,3,5,7,9]) # drives motor to postion 1,3,5,7,9 and fires area_detector
-  myplan = subs_wrapper(myplan, LiveTable([area_detector])) # set up the scan so LiveTable will give updates on how the scan is progressing
+  myplan = list_scan([glbl.area_det], motor, [1,3,5,7,9]) # drives motor to postions 1,3,5,7,9 and fires area_detector at each position
+  myplan = subs_wrapper(myplan, LiveTable([glbl.area_det])) # set up the scan so LiveTable will give updates on how the scan is progressing
 
 run as below:
 
 .. code-block:: python
 
-  prun(56, myplan) # run the myplan ScanPlan on sample 56
+  prun(56, myplan) # run the myplan ScanPlan on sample-object at position 56 in the sample-object list.
 
 
 You may also write your own bluesky plans and run them similar to the above.
@@ -290,8 +291,8 @@ standardized way for easier later searching.
 
 .. code-block:: python
 
-  bt.samples[1].md        # returns metadata for item 1 in Sample list, i.e., TiO2
-  bt.scanplans[5].md      # returns metadata for item 5 in scanplans list
+  bt.samples[0].md        # returns metadata for item 0 in the sample list, i.e., the dummy ``setup`` sample
+  bt.scanplans[5].md      # returns metadata for item 5 in the scanplans list
 
 Run your experiment
 -------------------
