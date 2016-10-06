@@ -125,7 +125,7 @@ def periodic_dark(plan):
                              bp.stage(glbl.area_det),
                              bp.single_gen(msg),
                              bp.abs_set(glbl.shutter, 60, wait=True)), None
-        elif msg.command == 'open_run':
+        elif msg.command == 'open_run' and 'dark_frame' not in msg.kwargs:
             return bp.pchain(bp.single_gen(msg), bp.abs_set(glbl.shutter, 60, wait=True)), None
         else:
             # do nothing if (not need_dark)
@@ -398,7 +398,6 @@ class CustomizedRunEngine(RunEngine):
 
         # Alter the plan to incorporate dark frames.
         if glbl.auto_dark:
-            #plan = open_shutter_wrapper(plan)
             plan = dark_strategy(plan)
             plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
         
