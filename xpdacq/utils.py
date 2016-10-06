@@ -505,7 +505,7 @@ class ExceltoYaml:
 excel_to_yaml = ExceltoYaml()
 
 
-def import_sample(saf_num=None, bt=None):
+def import_sample_info(saf_num=None, bt=None):
     """ import sample metadata based on a spreadsheet
 
     this function expect a prepopulated '<SAF_number>_sample.xls' file 
