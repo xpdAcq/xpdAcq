@@ -1,7 +1,7 @@
 import os
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import *
-from xpdacq.utils import import_sample
+from xpdacq.utils import import_sample_info
 from xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
                                   _end_beamtime)
 
