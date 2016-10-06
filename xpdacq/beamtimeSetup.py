@@ -40,9 +40,9 @@ def _start_beamtime(PI_last, saf_num, experimenters=[], *,
         shutil.copy(src, dst)
         
         # pre-populated scan plan
-        ScanPlan(bt, ct, 60)
+        ScanPlan(bt, ct, 5)
         ScanPlan(bt, ct, 30)
-        ScanPlan(bt, ct, 10)
+        ScanPlan(bt, ct, 60)
 
         return bt
 
