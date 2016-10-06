@@ -310,7 +310,7 @@ the automated data reduction steps.  It also allows you to see problems with the
 setup, for example, crystalline peaks due to the beam hitting a shutter, for example.
 
  1. Load the background sample (e.g., empty kapton tube) on the instrument
- 2. type ``FIXME`` to list your sample objects tagged as backgrounds (that was done originally in your excel spreadsheet).
+ 2. type ``bt.list_bkg()`` to list your sample objects tagged as backgrounds (that was done originally in your excel spreadsheet).
  3. run prun (see below) on the background sample with a ``ct`` ScanPlan object of the desired exposure
 
 .. code-block:: python
