@@ -191,7 +191,7 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
 
     # default behavior
     if sample_name is None:
-        sample_name = 'mask_target'
+        sample_name = 'kapton'
 
     if mask_dict is None:
         mask_dict = glbl.mask_dict
@@ -282,7 +282,8 @@ def calibration(img, calibrant_file=None, wavelength=None,
     calibrant = Calibrant()
     # d-spacing
     if calibrant_file is not None:
-        calibrant.load_file(calibrant_file)
+        calibrant.load_file(os.path.join(glbl.usrAnalysis_dir,
+                                         calibrant_file))
         calibrant_name = os.path.split(calibrant_file)[1]
         calibrant_name = os.path.splitext(calibrant_name)[0]
     else:
