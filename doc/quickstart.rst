@@ -72,7 +72,7 @@ your ``analysis`` environment, type:
 This should return a list of metadata about your experiment, such as PI last name.  If not
 please get your analysis environment set up by the instrument scientist before proceeding.
 
-3. Make sure the visualization software is running. We will use ``SrXplanar`` and ``XPDsuite`` for visualizing data.
+3. Make sure the visualization software is running. We will use ``SrXgui`` and ``XPDsuite`` for visualizing data.
 Check that they are running by finding windows that looks like:
 
 **XPDsuite**
@@ -82,7 +82,7 @@ Check that they are running by finding windows that looks like:
   :align: center
   :height: 300px
 
-**SrXplanar**
+**SrXgui**
 
 .. image:: ./img/srxgui.png
   :width: 400px
@@ -96,9 +96,9 @@ Set up your experiment
 0. general
 """"""""""
 
-If you want to query any ``xpdAcq`` function, type the function name with a `?` at the end and hit
+If you want to query any ``xpdAcq`` function, type the function name with a ``?`` at the end and hit
 return.  Documentation for what paramters the function takes, and any default values, and what
-the function returns will be printed.  For example, type:
+the function returns will be printed.  For example, in your ``collection`` terminal type:
 
 .. code-block:: python
 
@@ -106,37 +106,37 @@ the function returns will be printed.  For example, type:
 
 If you can't remember what functions are available, but can remember the first letter or first few
 letters, type those letters and hit ``tab`` to see a list of all available functions that begin with
-those letters.
+those letters. This will include Python imported and built-in functions as well as xpdAcq ones.
 
 0.5 quick look
 """"""""""""""
 
 Place any sample, but maybe the Ni calibrant, at the sample position.  Let's make sure we are getting a nice
-Ni diffraction pattern. Type:
+Ni diffraction pattern. In your ``collection`` terminal type:
 
 .. code-block:: python
 
   prun(0,0) # will run an exposure of 60 seconds on your setup sample
-  save_last_tiff() # will save the image in the tiff_base/setup directory
+  save_last_tiff() # will save the image in the tiff_base/Setup directory
 
-Navigate to the SrXplanar image viewer. Click on the folder icon and navigate to
-the ``tiff_base/setup`` folder and look for a list of one or more tiff files.
-Double-click on one to view it.
+Navigate to the ``SrXgui`` image viewer. Click on the folder icon and navigate to
+the ``tiff_base/Setup`` folder and look for a list of one or more tiff files.
+Double-click on the most recent one to view the one you just collected.
 
 
 1. calibration
 """"""""""""""
 run this first, then run it again each time the geometry of your measurement changes.
 
-Place the Ni calibrant at the sample position, close the hutch and open the shutter then type:
+Place the Ni calibrant at the sample position, close the hutch and open the shutter then type in your ``collection`` terminal:
 
 .. code-block:: python
 
-  run_calibration() # default values: calibrant_file='Ni.D' and exposure=60
+  run_calibration() # default values (calibrant_file='Ni.D' and exposure=60) don't need to be typed
 
 and follow the instructions in :ref:`calib_manual`.
 
-The calibration parameters will be saved in the header of every scan you run until you
+The resulting calibration parameters will be saved in the header of every scan you run until you
 run ``run_calibration()`` again.
 
 2. set up a mask
@@ -146,7 +146,7 @@ The standard mask removes problematic pixels at the edge of the detector, shadow
 the beamstop, and uses an auto-masking scheme to get rid of outlier pixels.
 The automasking has been extensively tested on a low-scattering sample so our mask
 building function has been designed to run on data from an empty kapton tube.
-Load an empty kapton tube on the diffractometer, then type
+Load an empty kapton tube on the diffractometer, then in your ``collection`` terminal type
 
 .. code-block:: python
 
@@ -155,11 +155,12 @@ Load an empty kapton tube on the diffractometer, then type
 A mask will be generated based on the image collected from this sample. This mask
 will be saved in the header of all future scans until you run ``run_mask_builder()``
 again.  You will always be able to extract your data unmasked, or apply a different mask,
-at analysis time, but if this mask works well, it will save you a lot of time later.
+at analysis time, but if this mask works well, it will save you a lot of time later if
+you do this step now.
 
-You can look at the 2D image with and without the mask in SrXplanar.
+You can look at the 2D image with and without the mask in SrXgui.
 The most recent mask file will be placed in ``config_base`` directory with file
-name as ``xpdacq_mask.py``. You can load in with by clicking the 'folder' icon in SrXplanar.
+name as ``xpdacq_mask.py``. You can load in with by clicking the 'folder' icon in SrXgui.
 
 .. image:: ./img/select_mask_00.png
   :width: 400px
@@ -183,9 +184,9 @@ defined format (a template file may be found `here
 <https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_
 ). If the IS didn't already
 do it, save your sample xls file to the ``xpdUser/import`` directory using the name
-``<saf_number>_sample.xls``, where you replace ``<saf_number>`` with the number
+``<saf_number>_sample.xlsx``, where you replace ``<saf_number>`` with the number
 of the safety approval form associated with your experiment.  If you are not sure
-what your ``saf_number`` is you can get it by typing:
+what your ``saf_number`` is you can get it by typing following command in your ``collection`` terminal:
 
 .. code-block:: python
 
@@ -197,19 +198,19 @@ what your ``saf_number`` is you can get it by typing:
    'bt_uid': 'f4ewjf9c',
    'bt_wavelength': 0.1832}
 
-where the ``saf_number`` is ``300336``.
+where the ``saf_number`` in this case is ``300336``.
 
 Next type:
 
 .. code-block:: python
 
-  import_sample()
+  import_sample_info()
 
 which loads the sample information and makes all the sample objects available in the current beamtime.
 
-updates and additions may be made by adding more samples to the excel file and rerunning ``import_sample()``
-at any time during the experiment.  No existing sample objects will be removed during this process, only new ones
-added, though existing samples will be updated (overwritten) by samples in the spreadsheet with the same name.
+Updates and additions may be made by editing existing sample information, and by adding more samples, in the excel file and rerunning ``import_sample_info()``
+at any time during the experiment.  The ``Sample`` object list will be updated based on contents of this new sheet so
+we recommend to just edit existing or add new samples to the sheet but not to delete any.
 
 For more info :ref:`import_sample`.
 
@@ -239,8 +240,11 @@ command
 write your own scan plan
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-``xpdAcq`` also consumes any scan plan from ``bluesky``. For example, a scan that drives a ``motor`` through
-a specific list of points while collecting an image at each point from the detector ``area_detector``, which uses a bluesky
+``xpdAcq`` also consumes any scan plan from ``bluesky``. We will show a brief example in next paragraph
+but it is for illustration. you *do not* have to follow.
+
+A scan that drives a ``motor`` through a specific list of points while collecting
+an image at each point from the detector ``area_detector``, which uses a bluesky
 predefined plan, ``list_scan``, can be set up as:
 
 .. code-block:: python
@@ -248,14 +252,14 @@ predefined plan, ``list_scan``, can be set up as:
   from bluesky.plans import list_scan
 
   glbl.area_det.images_per_set.put(600)  # set detector to collect 600 frames, so 60s exposure if continuous acquisition with 0.1s framerate
-  myplan = list_scan([glbl.area_dete], motor, [1,3,5,7,9]) # drives motor to postion 1,3,5,7,9 and fires area_detector
-  myplan = subs_wrapper(myplan, LiveTable([area_detector])) # set up the scan so LiveTable will give updates on how the scan is progressing
+  myplan = list_scan([glbl.area_det], motor, [1,3,5,7,9]) # drives motor to postions 1,3,5,7,9 and fires area_detector at each position
+  myplan = subs_wrapper(myplan, LiveTable([glbl.area_det])) # set up the scan so LiveTable will give updates on how the scan is progressing
 
 run as below:
 
 .. code-block:: python
 
-  prun(56, myplan) # run the myplan ScanPlan on sample 56
+  prun(56, myplan) # run the myplan ScanPlan on sample-object at position 56 in the sample-object list.
 
 
 You may also write your own bluesky plans and run them similar to the above.
@@ -264,16 +268,20 @@ setting these up from your local contact.
 For more details about how to write a ``bluesky`` scan plan,
 please see `here <http://nsls-ii.github.io/bluesky/plans.html>`_.
 
-It is recommended to use xpdAcq template ScanPlans where you can so that metadata is saved in a
-standardized way for easier later searching.
 
 5. list objects by categories
 """""""""""""""""""""""""""""
+
+To list out currently available ``Sample`` and ``ScanPlan`` objects you can do:
 
 .. code-block:: python
 
   in[1]: bt.list()
   Out[1]:
+
+and you should similar output as following:
+
+.. code-block:: python
 
   ScanPlans:
   0: 'ct_5'
@@ -290,8 +298,8 @@ standardized way for easier later searching.
 
 .. code-block:: python
 
-  bt.samples[1].md        # returns metadata for item 1 in Sample list, i.e., TiO2
-  bt.scanplans[5].md      # returns metadata for item 5 in scanplans list
+  bt.samples[0].md        # returns metadata for item 0 in the sample list, i.e., the dummy ``setup`` sample
+  bt.scanplans[5].md      # returns metadata for item 5 in the scanplans list
 
 Run your experiment
 -------------------
@@ -307,14 +315,22 @@ background scan
 
 It is recommended to run a background scan before your sample so it is available for
 the automated data reduction steps.  It also allows you to see problems with the experimental
-setup, for example, crystalline peaks due to the beam hitting a shutter, for example.
+setup, for example, crystalline peaks due to the beam hitting a shutter.
 
  1. Load the background sample (e.g., empty kapton tube) on the instrument
- 2. type ``bt.list_bkg()`` to list your sample objects tagged as backgrounds (that was done originally in your excel spreadsheet).
+ 2. In your ``collection`` terminal type
+
+ .. code-block:: python
+
+  bt.list_bkg()
+
+to list your sample objects tagged as backgrounds (that was done originally in your excel spreadsheet).
+
  3. run prun (see below) on the background sample with a ``ct`` ScanPlan object of the desired exposure
 
 .. code-block:: python
 
+  # IN ``collection`` terminal
   prun(bt.samples[2],bt.scanplan[5]) # referencing objects explicitly...or...
   prun(2,5)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
                                      # index from the ``bt`` list
@@ -323,7 +339,8 @@ Please see :ref:`background_obj` for more information.
 
 How long should you run your background scan for? See discussion
 `here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
-but for kapton we often do it for 15-30 minutes.
+but for kapton we often do it for 15-30 minutes. Also note that the collecting
+time highly depends on your sample.
 
 production run
 ^^^^^^^^^^^^^^
@@ -334,8 +351,9 @@ production run
 
 .. code-block:: python
 
-  prun(bt.samples[5],bt.scanplan[5]) # referencing objects explicitly
-  prun(5,5)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
+  # In ``collection`` terminal
+  prun(bt.samples[5],bt.scanplan[2]) # referencing objects explicitly
+  prun(5,2)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
                                      # index from the ``bt`` list
 
 For more info: FIXME
@@ -371,18 +389,18 @@ The following
 functions are more useful for running in the ``analysis`` environment to fetch scans from the database
 selectively if you don't want a dump of every scan.
 
-**save images from last 5 scans:**
+**save images from last 2 scans:**
 
 .. code-block:: python
 
-  h = db[-5:]
+  h = db[-2:]
   save_tiff(h)
 
-**save images from scan 5 scans ago:**
+**save images from scan 2 scans ago:**
 
 .. code-block:: python
 
-  h = db[-5]
+  h = db[-2]
   save_tiff(h)
 
 We use "h", short for "header", for the object given back by the NSLS-II databroker (``db``) data-fetching software.
@@ -399,10 +417,10 @@ more information on headers is `here <http://nsls-ii.github.io/databroker/header
 .. code-block:: python
 
   integrate_and_save_last()   # the most recent scan
-  h = db[-5:]                 # the last 5 scans
+  h = db[-2:]                 # the last 2 scans
   integrate_and_save(h)
-  h = db[-5]                  # the scan 5 ago
-  integrate_and_save_(h)
+  h = db[-2]                  # 2 scan ago
+  integrate_and_save(h)
 
 
 With this function, the image will be saved to a ``.tiff`` file, the mask will be saved
