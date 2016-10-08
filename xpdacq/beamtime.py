@@ -135,7 +135,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
 
     Note
     ----
-    temeprature controller that is driven will always be the one configured in
+    temperature controller that is driven will always be the one configured in
     global state. Please refer to http://xpdacq.github.io for more information
     """
 
