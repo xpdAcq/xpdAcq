@@ -12,20 +12,27 @@ Introduction
 To post questions about anything XPD, including software, and to see archived answers, please join the `XPD-Users Google group 
 <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_
 
-``xpdAcq`` is a Python package that helps data collection at XPD beamlime. It is built on top of and augments the NSLS-II data acquisition Python
+``xpdAcq`` is a Python package that aids data collection at the XPD beamlime. It is built on top of and augments the NSLS-II data acquisition Python
 package `bluesky <http://nsls-ii.github.io/bluesky/>`_ .
 
 XPD may be operated directly by bluesky, or using xpdAcq.
 
 The goal of the ``xpdAcq`` package is to simplify your collection and analysis workflow during beamtime,
-so that you can focus more on science aspects. ``xpdAcq`` provides an interface for user who don't have extensive Python coding background.
+so that you can focus more on scientific aspects of your experiment. Additionally, ``xpdAcq`` provides an interface 
+that needs less Python experience than the current native bluesky interface.
 
-Every syntax started from psychological motivation, like the most important one behind running a
+We hope that you find it intuitive, like the most important function to run a
 "production" scan, ``prun``:
 
-.. code-block:: none
+.. code-block:: python
 
-  run this Sample with this ScanPlan
+  prun(sample-info, scan-info) #run this Sample with this Scan-Plan
+
+To get started, please go to :ref:`quick_start`
+
+If you have suggestions for new features in xpdAcq, or want to report a bug or simply ask a question about
+the software, please post it as a new thread at `XPD-Users
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_
 
 What's new?
 +++++++++++
@@ -70,12 +77,6 @@ This version is fully documented and extensively tested.
 .. toctree::
    :maxdepth: 3
    :hidden:
-
-   cheat_sheet
-
-.. toctree::
-   :hidden:
-   :maxdepth: 3
 
    quickstart
 
