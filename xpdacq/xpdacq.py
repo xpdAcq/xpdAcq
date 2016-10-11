@@ -302,19 +302,19 @@ class CustomizedRunEngine(RunEngine):
         Basic usage...
 
         Run samples and plans by number...
-        >>> prun(0, 0)
+        >>> xrun(0, 0)
 
         Advanced usage...
 
         Use custom plans
-        >>> prun(3, custom_plan)  # sample 3, an arbitrary bluesky plan
+        >>> xrun(3, custom_plan)  # sample 3, an arbitrary bluesky plan
 
         Or custom sample info --- sample just has to be dict-like
         and contain the required keys.
-        >>> prun(custom_sample_dict, custom_plan)
+        >>> xrun(custom_sample_dict, custom_plan)
 
         Or use completely custom dark frame logic
-        >>> prun(3, 'ct', dark_strategy=some_custom_func)
+        >>> xrun(3, 'ct', dark_strategy=some_custom_func)
         """
         super().__init__(*args, **kwargs)
         self._beamtime = beamtime
