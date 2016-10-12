@@ -400,7 +400,7 @@ class CustomizedRunEngine(RunEngine):
         if glbl.auto_dark:
             plan = dark_strategy(plan)
             plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
-        
+
         # force to open shutter before scan and close it after
         if glbl.shutter_control:
             # 60 means open at XPD, Oc.4, 2016
@@ -410,18 +410,16 @@ class CustomizedRunEngine(RunEngine):
         # Load calibration file
         if glbl.auto_load_calib:
             plan = bp.msg_mutator(plan, _inject_calibration_md)
-        
+
         # Insert glbl mask
         plan = bp.msg_mutator(plan, _inject_mask)
-        
+
         # Execute
-        super().__call__(plan, subs,
-                         raise_if_interrupted=raise_if_interrupted,
-                         **metadata_kw)
+        return super().__call__(plan, subs,
+                                raise_if_interrupted=raise_if_interrupted,
+                                **metadata_kw)
 
         # deprecated from v0.5 release
         # insert collection
         #_insert_collection(glbl.collection_name, glbl.collection,
         #                   self._run_start_uids)
-
-        return self._run_start_uid
