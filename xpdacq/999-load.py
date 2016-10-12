@@ -1,7 +1,7 @@
 import os
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import *
-from xpdacq.utils import import_sample
+from xpdacq.utils import import_sample_info
 from xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
                                   _end_beamtime)
 
@@ -33,16 +33,16 @@ except NameError:
 from xpdacq.xpdacq import *
 
 # instantiate prun without beamtime, like bluesky setup
-prun = CustomizedRunEngine(None)
-prun.md['owner'] = glbl.owner
-prun.md['beamline_id'] = glbl.beamline_id
-prun.md['group'] = glbl.group
+xrun = CustomizedRunEngine(None)
+xrun.md['owner'] = glbl.owner
+xrun.md['beamline_id'] = glbl.beamline_id
+xrun.md['group'] = glbl.group
 
 # load beamtime
 bt = start_xpdacq()
 if bt is not None:
     print("INFO: Reload beamtime objects:\n{}\n".format(bt))
-    prun.beamtime = bt
+    xrun.beamtime = bt
 
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
@@ -57,7 +57,7 @@ else:
 from xpdacq.calib import *
 
 # analysis functions, only at beamline
-#from xpdan.data_reduction import *
+from xpdan.data_reduction import *
 
 print('OK, ready to go.  To continue, follow the steps in the xpdAcq')
 print('documentation at http://xpdacq.github.io/xpdacq')

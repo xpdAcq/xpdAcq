@@ -277,7 +277,7 @@ class ExceltoYaml:
 
         self.pd_dict = pd.read_excel(os.path.join(self.src_dir,
                                                   xl_f.pop()),
-                                     skiprows=0)
+                                     skiprows=[1])
 
         self.sa_md_list = self._pd_dict_to_dict_list(self.pd_dict.to_dict())
 
@@ -356,7 +356,7 @@ class ExceltoYaml:
 
                 # other fields dont need to be pased
                 else:
-                    parsed_sa_md.update({k: v.replace(' ', '_')})
+                    parsed_sa_md.update({k: v})
 
             parsed_sa_md_list.append(parsed_sa_md)
         self.parsed_sa_md_list = parsed_sa_md_list
@@ -505,7 +505,7 @@ class ExceltoYaml:
 excel_to_yaml = ExceltoYaml()
 
 
-def import_sample(saf_num=None, bt=None):
+def import_sample_info(saf_num=None, bt=None):
     """ import sample metadata based on a spreadsheet
 
     this function expect a prepopulated '<SAF_number>_sample.xls' file 

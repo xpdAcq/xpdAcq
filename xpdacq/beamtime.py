@@ -398,6 +398,12 @@ class Beamtime(ValidatedDictLike, YamlDict):
         # for back-compat
         print(self)
 
+    def list_bkg(self):
+        """ method to list background object only """
+
+        contents = ['', 'Background:'] + ['{i}: {sample_name}'.format(i=i, **s)
+                                          for i, s in enumerate(self.samples) if s['sample_name'].startswith('bkgd')]
+        print('\n'.join(contents))
 
 class Sample(ValidatedDictLike, YamlChainMap):
     """

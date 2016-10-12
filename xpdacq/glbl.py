@@ -8,7 +8,7 @@ from time import strftime, sleep
 HOME_DIR_NAME = 'xpdUser'
 BLCONFIG_DIR_NAME = 'xpdConfig'
 BEAMLINE_HOST_NAME = 'xf28id1-ws2'
-ARCHIVE_BASE_DIR_NAME = 'pe2_data/.userBeamtimeArchive'
+ARCHIVE_BASE_DIR_NAME = '/direct/XF28ID1/pe2_data/.userBeamtimeArchive'
 USER_BACKUP_DIR_NAME = strftime('%Y')
 DARK_WINDOW = 3000  # default value, in terms of minute
 FRAME_ACQUIRE_TIME = 0.1  # pe1 frame acq time
@@ -17,7 +17,7 @@ BEAMLINE_ID = 'xpd'
 GROUP = 'XPD'
 IMAGE_FIELD = 'pe1_image'
 CALIB_CONFIG_NAME = 'pyFAI_calib.yml'
-MASK_MD_NAME = 'xpdacq_mask_md.npy'
+MASK_MD_NAME = 'xpdacq_mask.npy'
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()
@@ -29,12 +29,13 @@ else:
 if simulation:
     BASE_DIR = os.getcwd()
 else:
-    BASE_DIR = os.path.expanduser('~/')
+    #BASE_DIR = os.path.expanduser('~/')
+    BASE_DIR = os.path.abspath('/direct/XF28ID1/pe1_data/UserArea/XPDhome')
 
 # top directories
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
 BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
-ARCHIVE_BASE_DIR = os.path.join(BASE_DIR, ARCHIVE_BASE_DIR_NAME)
+ARCHIVE_BASE_DIR = os.path.abspath(ARCHIVE_BASE_DIR_NAME)
 
 # aquire object directories
 CONFIG_BASE = os.path.join(HOME_DIR, 'config_base')
