@@ -22,7 +22,7 @@ from pyFAI.calibration import Calibration, PeakPicker
 from pyFAI.calibrant import Calibrant
 from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 
-_REQUIRED_OBJ_LIST = ['prun', 'bt']
+_REQUIRED_OBJ_LIST = ['xrun', 'bt']
 
 
 def _check_obj(required_obj_list):
@@ -83,7 +83,7 @@ def run_calibration(exposure=60, dark_sub_bool=True, calibrant_file=None,
     _check_obj(_REQUIRED_OBJ_LIST)
     ips = get_ipython()
     bto = ips.ns_table['user_global']['bt']
-    prun = ips.ns_table['user_global']['prun']
+    xrun = ips.ns_table['user_global']['xrun']
 
     # d-spacing
     if calibrant_file is not None:
@@ -99,7 +99,7 @@ def run_calibration(exposure=60, dark_sub_bool=True, calibrant_file=None,
                         'is_calibration': True,
                         'calibration_collection_uid': calib_collection_uid}
     sample = Sample(bto, calibration_dict)
-    prun_uid = prun(sample, ScanPlan(bto, ct, exposure))
+    xrun_uid = xrun(sample, ScanPlan(bto, ct, exposure))
     light_header = glbl.db[-1]
     if dark_sub_bool:
         dark_uid = light_header.start['sc_dk_field_uid']
@@ -187,7 +187,7 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
     _check_obj(_REQUIRED_OBJ_LIST)
     ips = get_ipython()
     bto = ips.ns_table['user_global']['bt']
-    prun = ips.ns_table['user_global']['prun']
+    xrun = ips.ns_table['user_global']['xrun']
 
     # default behavior
     if sample_name is None:
@@ -216,7 +216,7 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
                         'is_mask': True,
                         'mask_collection_uid': mask_collection_uid}
     sample = Sample(bto, mask_builder_dict)
-    prun_uid = prun(sample, ScanPlan(bto, ct, exposure))
+    xrun_uid = xrun(sample, ScanPlan(bto, ct, exposure))
     light_header = glbl.db[-1]
     if dark_sub_bool:
         dark_uid = light_header.start['sc_dk_field_uid']
@@ -277,7 +277,7 @@ def calibration(img, calibrant_file=None, wavelength=None,
     _check_obj(_REQUIRED_OBJ_LIST)
     ips = get_ipython()
     bto = ips.ns_table['user_global']['bt']
-    prun = ips.ns_table['user_global']['prun']
+    xrun = ips.ns_table['user_global']['xrun']
 
     calibrant = Calibrant()
     # d-spacing
