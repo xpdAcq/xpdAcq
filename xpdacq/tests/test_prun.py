@@ -25,7 +25,7 @@ class PrunTest(unittest.TestCase):
         self.home_dir = os.path.join(self.base_dir, 'xpdUser')
         self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
         self.PI_name = 'Billinge '
-        self.saf_num = 300000  # must be 30079 for proper load of config yaml => don't change
+        self.saf_num = 300000  # must be 30000 for proper load of config yaml => don't change
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee', 'S0ham', 1),
                               ('Terban ', ' Max', 2)]
@@ -45,7 +45,7 @@ class PrunTest(unittest.TestCase):
         # simulation objects
         glbl.area_det = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
         glbl.temp_controller = be.motor
-        glbl.shutter = MagicMock()
+        glbl.shutter = be.Mover('motor', {'motor': lambda x: x}, {'x': 0})
 
 
 
@@ -123,6 +123,7 @@ class PrunTest(unittest.TestCase):
         # case4: with real prun
         glbl._dark_dict_list = []  # re-init
         prun_uid = self.prun(0, 0)
+        print(prun_uid)
         self.assertEqual(len(prun_uid), 2)  # first one is auto_dark
         dark_uid = _validate_dark()
         self.assertEqual(prun_uid[0], dark_uid)
