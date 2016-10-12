@@ -22,7 +22,7 @@ class BeamtimeObjTest(unittest.TestCase):
         self.home_dir = os.path.join(self.base_dir,'xpdUser')
         self.config_dir = os.path.join(self.base_dir,'xpdConfig')
         self.PI_name = 'Billinge '
-        self.saf_num = 30079   # must be 30079 for proper load of config yaml => don't change
+        self.saf_num = 300000  # must be 300000  => don't change
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),
                               ('Terban ',' Max',2)]
@@ -31,9 +31,9 @@ class BeamtimeObjTest(unittest.TestCase):
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
-        xlf = '30079_sample.xlsx'
+        xlf = '300000_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf)
-        shutil.copyfile(src, os.path.join(glbl.xpdconfig, xlf))
+        shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -49,7 +49,7 @@ class BeamtimeObjTest(unittest.TestCase):
         # direct sample -> no ipython session, fail as expect
         self.assertRaises(AttributeError, lambda: import_sample())
         # explict import
-        import_sample(30079, self.bt)
+        import_sample(300000, self.bt)
         # incorrect file name
         self.assertRaises(FileNotFoundError,
                           lambda: import_sample(12345, self.bt))
