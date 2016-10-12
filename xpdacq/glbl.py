@@ -17,7 +17,7 @@ BEAMLINE_ID = 'xpd'
 GROUP = 'XPD'
 IMAGE_FIELD = 'pe1_image'
 CALIB_CONFIG_NAME = 'pyFAI_calib.yml'
-MASK_MD_NAME = 'xpdacq_mask.npy'
+MASK_MD_NAME = 'xpdacq_mask_md.npy'
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()

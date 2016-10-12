@@ -143,7 +143,7 @@ def run_calibration(exposure=60, dark_sub_bool=True, calibrant_file=None,
 
 
 def run_mask_builder(exposure=300, dark_sub_bool=True,
-                     polarization_factor=0.99,
+                     poloarization_factor=0.99,
                      sample_name=None, calib_dict=None,
                      mask_dict=None, save_name=None):
     """ function to generate mask
