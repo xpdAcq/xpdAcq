@@ -31,9 +31,9 @@ class BeamtimeObjTest(unittest.TestCase):
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
-        xlf = '30079_sample.xlsx'
+        xlf = '300000_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf)
-        shutil.copyfile(src, os.path.join(glbl.xpdconfig, xlf))
+        shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
         # simulation objects
         glbl.area_det = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
         glbl.temp_controller = be.motor
