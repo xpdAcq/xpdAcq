@@ -104,9 +104,7 @@ def periodic_dark(plan):
     def insert_take_dark(msg):
         now = time.time()
         nonlocal need_dark
-        # print('after nonlocal dark, need_dark={}'.format(need_dark))
         qualified_dark_uid = _validate_dark(expire_time=glbl.dk_window)
-        # print('qualified_dark_uid is {}'.format(qualified_dark_uid))
         # FIXME: should we do "or" or "and"?
         if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
@@ -126,7 +124,8 @@ def periodic_dark(plan):
                              bp.single_gen(msg),
                              bp.abs_set(glbl.shutter, 60, wait=True)), None
         elif msg.command == 'open_run' and 'dark_frame' not in msg.kwargs:
-            return bp.pchain(bp.single_gen(msg), bp.abs_set(glbl.shutter, 60, wait=True)), None
+            return bp.pchain(bp.single_gen(msg),
+                             bp.abs_set(glbl.shutter, 60, wait=True)), None
         else:
             # do nothing if (not need_dark)
             return None, None
@@ -396,15 +395,13 @@ class CustomizedRunEngine(RunEngine):
         metadata_kw.update(sample)
         sh = glbl.shutter
 
-        # Alter the plan to incorporate dark frames.
-        if glbl.auto_dark:
-            plan = dark_strategy(plan)
-            plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
-
-        # force to open shutter before scan and close it after
         if glbl.shutter_control:
-            # 60 means open at XPD, Oc.4, 2016
-            #plan = bp.pchain(bp.abs_set(sh, 60, wait=True), plan, bp.abs_set(sh, 0, wait=True))
+            # Alter the plan to incorporate dark frames.
+            # only works if user allows shutter control
+            if glbl.auto_dark:
+                plan = dark_strategy(plan)
+                plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
+            # force to close shutter after scan
             plan = bp.finalize_wrapper(plan, bp.abs_set(sh, 0, wait=True))
 
         # Load calibration file
