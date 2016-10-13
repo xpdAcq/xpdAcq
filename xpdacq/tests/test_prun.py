@@ -39,7 +39,7 @@ class PrunTest(unittest.TestCase):
         shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
         import_sample(self.saf_num, self.bt)
         self.sp = ScanPlan(self.bt, ct, 5)
-        glbl.shutter_control = False
+        glbl.shutter_control = True
         self.prun = CustomizedRunEngine(self.bt)
         open_collection('unittest')
         # simulation objects
