@@ -60,3 +60,6 @@ target/
 
 # charm
 .idea/
+
+# MacOS file
+.DS_Store

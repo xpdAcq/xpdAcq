@@ -1,175 +1,536 @@
-.. _qs:
+.. _quick_start:
 
-Quick start
------------
+Quick Start
+===========
 
-Checklist
-+++++++++
+This quick-start contains little explanation of how the ``xpdAcq`` software works.
+To understand this, please refer to the detailed documentation in :ref:`xpdu`
 
-The instrument scientist (IS) should have set up your beamtime hardware and software
-for you.  Let's check if it is the case.
+Please use this page as a reminder of the workflow and to copy & paste code snippets into your
+active ``collection`` and ``analysis-dev`` ipython environments (then hit return).
 
-1. Activate the XPD data acquisition environment:
+Remember, to post questions about anything XPD, including software, and to see archived answers, at the `XPD-Users Google group
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ .  If you are not already a member please request to join
+the community
 
-  * In a terminal look to see if it is already activated.  If it is, you should see ``(collection)`` at the beginning of the line.
+OK, let's get started.
 
-  .. code-block:: none
+Check your data collection environment is correctly set up
+----------------------------------------------------------
 
-    (collection)xf28id1@xf28id1-ws2:~$
+1. Make sure you are working in the correct environment. For data acquisition you should be
+in the ``collection`` ipython environment. You should see ``In[#]:`` which indicates you are
+in an ipython environment. To check what the environment is type 
 
-  * If you don't see it, type ``icollection`` at the command prompt then check again.
+.. code-block:: python
 
-2. OK, you are in.  Make sure that that the instrument scientist has initiated your beamtime. type ``bt.md`` and hit return. You should see the beamtime (``bt``) metadata (``md``) that has been pre-stored by the IS, and it should contain things like the last name of the PI on the proposal and the SAF number for the beamtime.  If not, please seek out the IS to get your session initialized.
-3. Check that the wavelength has been set.  Does the correct x-ray wavelength appear in ``bt.md`` ``['bt_wavelength']`` field, or does it say ``None``.  If the latter, you can still collect scans but automated data reduction may not work, so best to grab the IS again.
-5. Check that the Perkin Elmer detector is correctly set up.
-
-  * Look at the Perkin Elmer screen on the CSS and make sure that ``Acquire`` mode has been enabled. If Acquire mode is enabled, it should show system information ``Collecting`` in yellow color. If it hasn't been activated, please click 'start' button.
-
-  .. image:: /cropped_pe1c_ioc.png
-    :width: 300px
-    :align: center
-    :height: 200px
-
-  * Type ``glbl.area_det`` and return.  It should return:
-
-   .. code-block:: python
-
-     In [5]: glbl.area_det
-     Out[5]: PerkinElmerContinuous(prefix='XF:28IDC-ES:1{Det:PE1}', name='pe1', read_attrs=['tiff', 'stats1'], configuration_attrs=['images_per_set', 'number_of_sets'], monitor_attrs=[])
-
-There are other setups that you can do to make your experiment run smoothly.  For example, by carrying out a calibration before you start collecting it greatly facilitate data reduction later.  Please talk to the IS if you don't know how to do this.  
-
-But you seem to be set up ok, so let's go and collect some data.
-
-Collecting Data Quickstart
-++++++++++++++++++++++++++
-
-The basic way to collect data is to carry out a "scan", by typing the kind of scan and giving it as arguments a ``sample-object`` and a ``scanplan-object``.  These objects just contain information that will either be used to run the scan, and/or just saved as metadata with the data, allowing you to find the data later and process it. You will make your own objects later, but for now you can do a quick scan just to collect some data with some predefined objects.
-
- 1. Type ``bt.list()`` and return.  You should see a list of already defined objects and their index, or the number they sit in the list.
- 2. To run a scan you type ``<scan-name>(<sample-object>,<scanplan-object>)``:
-
-   Replace those words in angle brackets with pointers to real objects, eg.:
-
-   1. ``prun(bt.get(2),bt.get(5))`` will do a scan on the dummy sample (``'sa'``) called ``'l-user'``--(for lazy user!) which is in position (index) ``2`` in the ``bt.list()`` list--for 1 second (the name of that object in the list at position ``5`` is ``'ct1s'`` which stands for "count 1 second").
-   2. ``prun(bt.get(2),bt.get(7))`` will do a scan for 10 s on the same sample (to see that, look at the list produced by typing ``bt.list()``.
-   3. ``setupscan(bt.get(2),bt.get(7))`` will do a setupscan on that sample for 10 seconds.  A setupscan is like a prun ("production run") except it is tagged in metadata as a setupscan so you can separate later which were production runs and which were setup-scans.
-
-   .. code-block:: python
-   
-     Pro-Tip:
-     '''``prun`` and all the scans support different ways of assigning acquire objects. 
-     You can either get the objects with the ``bt.get()`` methods as above, or
-     to save typing, the scan functions allow you to specify just the object index, 
-     or (unique) name of the acquire object. The following expressions are all 
-     equivalent:'''
-
-     prun(bt.get(2), bt.get(5))  
-     prun('l-user', bt.get(5))  # where 'l-user' is the name of bt Sample object at index 2
-     prun(bt.get(2), 'ct_1')    # where 'ct_1' is the name of bt ScanPlan object at index 5
-     prun(2,5)
-     prun('l-user','ct_1')
-
-
- 3. to see the data you have to extract it from the NSLS-ii database.
-
-   1. Type ``save_last_tiff()`` to get the most recent scan you ran.  A dark-subtracted tiff file will appear in the directory ``~/xpdUser/tiff_base`` with prefix ``sub_`` in file name.
-   2. ``save_tiff(db[-2])`` gets you the second to last scan that was collected, ``save_tiff(db[-10:])`` gets you the last 10 scans, (the syntax is Pythonic but it means "the items in the list from 10 ago up to the end of the list, i.e., now".  You can do all kinds of slicing and dicing, for example ``db[-10:-8,-2]`` would return the scans that were tenth, ninth and eighth ago, and also the last but one.) and so on.
-   3. The tiff file appears in the directory ``~/xpdUser/tiff_base`` with a reasonably recognizable automatically generated name and you can do pretty much what you like with it. For example, copy it to an external drive.  However, there are handy tools on the XPD computer for analyzing your data.  As long as you save all your work in the ``xpdUser`` directory tree (make as many directories as you like under there) your work will be archived in a remote location at the end of your beamtime, and then completely deleted from the local XPD computer so that the next user has their own fresh environment to work in, but your work is safe.
-   4. To use data analysis tools on the XPD computer, **in a new terminal window**
-
-     * Type ``getxgui``
-     * proceed to :ref:`xPDFsuite_manual`
-
-Remember!
-+++++++++
-   1. ``bt.list()`` to see what objects are available
-   2. ``setupscan(<index-of-Sample-object>,<index-of-ScanPlan-object>)``  to run setup scans until you are ready for production runs, then
-   3. ``prun(<index-of-Sample-object>),<index-of-ScanPlan-object>)``
-   4. ``save_tiff(db[list_of_scans])`` to get the data back as a tiff file
-   5. ``xpdfsuite`` (xPDFsuite) to visualize it, integrate it to 1D and process to get a diffraction pattern or PDF.
-
-Next Steps
-++++++++++
-
-So you have collected some data, and looked at it.  It is probably time to set up some more extensive data-objects so that you will be able to search easily for your data later and do more sophisticated scans.
-Please take the time to read the full documentation from **XPD user** section to get the most out of your data.  But for now, here is a quick summary.
-
-You should try and set up some of your own scanplan objects:
-  * let's say you want to do a count scan for 1.5 minutes.
-
-    1. type ``bt.list('sp')``  to see the current list of scanplan objects
-    2. make a new ``scanPlan`` object by typing
-
-      .. code-block:: python
-
-        >>> ScanPlan('ct_90')
-
-      This will create a ``'ct'``, or count-type, scan with an exposure of 90 s or 1.5 minutes.
-      To find more details on creating new ``ScanPlan`` objects, please see :ref:`usb_Scan`
-    3. type ``bt.list('sp')`` again.  You should see your new ``ScanPlan`` object at the end of the list.  You can now use your object to collect data by passing it to a "scan" function:
-    4. You can run it using ``prun(<sample-object>,<index-of-your-new-ScanPlan-Object>)``  If your new object is at position 11 in the list, and position 2 holds a ``Sample`` object (it does by default) then ``prun(2,11)``, or probably better, ``setupscan(2,11)`` since we are still messing around here.
-
-Types of scan available.
-  They all take as arguments ``(<sample-object>, <scanplan-object>)`` in that order:
-
-  1. ``prun()`` - the one you will use the most.  It stands for "production run"
-  2. ``setupscan()`` - it is just the same as ``prun()`` but the data are tagged as being test/setup data, helping you to keep track of what is what later.
-  3. ``dryrun()`` - it doesn't execute anything, only prints out metadata, so you can test out your scan to see what it will do.
-  4. ``background()`` - Like ``prun()`` but it tags the dataset as a background scan, so later you can search for all your background scans!
+  !conda list
   
-  these ones you will use less often, if at all
+It lists all the python packages in your environment, but the name of the environment
+is at the end of the line at the top.  It should say ``something something/something/collection``
+which tell you that you are in the ``collection`` environment.
+
+If you see something more like ``/direct/pe1_data/userArea/XPDhome/xpdUser`` then
+type
+
+.. code-block:: python
+
+  icollection
+
+to activate the collection environment.
+
+2. Make sure that the software has been properly configured for your beamtime. In
+your ``collection`` environment, type:
+
+.. code-block:: python
+
+  bt.md
+
+This should return a list of metadata about your experiment, such as PI last name.  If not,
+or if the metadata is wrong, please get your beamtime environment properly
+set up by the instrument scientist (IS) before proceeding.
+
+.. note::
+
+  Only create and work on files within the ``xpdUser`` directory tree.  At the end of your
+  experiment, everything written in there will be permanently archived in a remote store
+  and then deleted from the xpd computer leaving
+  a clean environment for the next user.  You can, of course, take anything home from within ``xpdUser``,
+  or if you forgot something have the IS fetch it for you from the archive later.
+
+Check that your data analysis environment is correctly set up
+-------------------------------------------------------------
+
+1. Analysis is done in a separate (but very similar) environment to acquisition.
+This will be in a separate terminal window on the computer (or even on a different computer)
+to the collection environment.  Try and find the right terminal window.
+For data analysis you should be
+in the ``analysis-dev`` ipython environment You should see ``In[#]:`` which indicates you are
+in an ipython environment. To check what the environment is type 
+
+.. code-block:: python
+
+  !conda list
   
-  5. ``calibration()`` - the same as ``prun()`` , but the data are tagged as calibration data.
-  6. ``dark()`` - you shouldn't have to use this as dark scans (shutter closed) and dark subtractions of your data are done automatically, but it is here in case you do it is there.  It ensure the shutter is closed and tags the scan as being a dark.
-  7. ``run_mask_builder()`` - take data and produce a mask for the image, the mask is then inserted into the metadata
+now you are looking for ``something something/something/analysis-dev``
+on the top line of the output, 
+which tell you that you are in the right analysis environment.
 
-Types of ScanPlan objects available:
-  * ``'ct'`` just exposes the the detector for a number of seconds. e.g.,  ``ScanPlan('ct17.5s','ct',{'exposure':17.5})``, or ``ScanPlan('ct_17.5')`` for short, is a scan plan that just exposes the detector for 17.5 seconds.
-  * ``'tseries'`` executes a series of ``'num'`` exposures, each of exposure time ``'exposure'`` seconds with  a delay of ``'delay'`` seconds between them.  e.g., ``ScanPlan('tseries_1_59_50','tseries',{'num':50,'exposure':1,'delay':59})``, or ``ScanPlan('tseries_1_59_50')`` for short, will measure 50 scans of 1 second with a delay of 59 seconds in between each of them.
-  * ``'Tramp'`` executes a temperature ramp from ``'startingT'`` to ``'endingT'`` in temperature steps of ``'Tstep'`` with exposure time of ``'exposure'``.  e.g., ``ScanPlan('Tramp_1_200_500_5','Tramp',{'startingT':200, 'endingT':500, 'Tstep':5, 'exposure':1})``, or ``ScanPlan('Tramp_1_200_500_5')`` for short, will automatically change the temperature, starting at 200 K and ending at 500 K, measuring a scan of 1 s at every 5 K step. The temperature controller will hold at each temperature until the temperature stabilizes before starting the measurement.
-  in the shortened "auto-naming" syntax, the logic is that the first number is always the exposure time.  Later numbers depend on the type of the ``ScanPlan`` type.  Remember, you can always give your object to ``dryrun()`` and it will tell you what Frankenstein you created without executing anything.
- 
-Types of Sample objects available:
-  * ``Sample`` - there is only one type of Sample "object", but you will create as many copies of it as you have samples, each with a unique sample name that helps you remember what the sample is.  It is a container for all the metadata about your sample, and moving forward, the metadata may be used for automated data reduction and modeling.
-    
-Here is a summary table:
+If you see something more like ``/direct/pe1_data/userArea/XPDhome/xpdUser`` then
+type.
 
-=========== =================================================================================================== ==================================
-Scan Type   Syntax                                                                                              Short Form
-=========== =================================================================================================== ==================================
-overview    ``ScanPlan('<name>','<scan-type>',{<dictionary-of-scan-attributes>})``                              ``ScanPlan('<name-in-std-form>')``
-``ct``      ``ScanPlan('ct_17.5','ct',{'exposure':17.5})``                                                      ``ScanPlan('ct_17.5')``
-``tseries`` ``ScanPlan('tseries_1_59_50','tseries',{'num':50,'exposure':1,'delay':59})``                        ``ScanPlan('tseries_1_59_50')``
-``Tramp``   ``ScanPlan('Tramp_1_200_500_5','Tramp',{'startingT':200, 'endingT':500, 'Tstep':5, 'exposure':1})`` ``ScanPlan('Tramp_1_200_500_5')``
-=========== =================================================================================================== ==================================
+.. code-block:: python
 
-Abort!
-++++++
+  ianalysis
 
-  Oops, you requested a scan with the wrong ``Sample``, or ``ScanPlan`` object, or your ``ScanPlan`` object is not doing what you expected!!!!!
+2. Make sure that the software has been properly configured for your beamtime. In
+your ``analysis`` environment, type:
 
-      .. code-block:: python
+.. code-block:: python
 
-        >>> CTL-C
-        
-  will interrupt your scan and allow you to choose whether to abort it, or restart it.  
+  an.md
+
+This should return a list of metadata about your experiment, such as PI last name.  If not
+please get your analysis environment set up by the instrument scientist before proceeding.
+
+3. Make sure the visualization software is running. We will use ``SrXgui`` and ``XPDsuite`` for visualizing data.
+Check that they are running by finding windows that looks like:
+
+**XPDsuite**
+
+.. image:: ./img/XPDsuite.png
+  :width: 400px
+  :align: center
+  :height: 300px
+
+**SrXgui**
+
+.. image:: ./img/srxgui.png
+  :width: 400px
+  :align: center
+  :height: 300px
+
+If you can't find them, contact your IS to get them running correctly.  
+
+Set up your experiment
+----------------------
+0. general
+""""""""""
+
+If you want to query any ``xpdAcq`` or ``xpdAn`` function, type the function name with a ``?`` at the end and hit
+return.  Documentation for what paramters the function takes, and any default values, and what
+the function returns will be printed.  For example, in your ``collection`` terminal type:
+
+.. code-block:: python
+
+  run_calibration?
+
+If you can't remember what functions are available, but can remember the first letter or first few
+letters, type those letters and hit ``tab`` to see a list of all available functions that begin with
+those letters. This will include Python imported and built-in functions as well as xpdAcq ones.
+
+0.5 quick look
+""""""""""""""
+
+Place any sample, but maybe the Ni calibrant, at the sample position.  Let's make sure we are getting a nice
+Ni diffraction pattern. In your ``collection`` terminal type:
+
+.. code-block:: python
+
+  prun(0,0) # will run an exposure of 60 seconds on your setup sample
+  save_last_tiff() # will save the image in the tiff_base/Setup directory
+
+Note, if the software gives an error that it cannot find the sample object, then you will need
+to load a sample spreadsheet.  See section 3 below: `set up Sample objects to use later`
+
+Navigate to the ``SrXgui`` image viewer. Click on the folder icon and navigate to
+the ``tiff_base/Setup`` folder and look for a list of one or more tiff files.
+Double-click on the most recent one to view the one you just collected.
+
+
+1. calibration
+""""""""""""""
+run this first, then run it again each time the geometry of your measurement changes.
+
+Place the Ni calibrant at the sample position, close the hutch and open the shutter then type in your ``collection`` terminal:
+
+.. code-block:: python
+
+  run_calibration() # default values (calibrant_file='Ni.D' and exposure=60) don't need to be typed
+
+and follow the instructions in :ref:`calib_manual`.
+
+The resulting calibration parameters will be saved in the header of every scan you run until you
+run ``run_calibration()`` again.
+
+2. set up a mask
+""""""""""""""""
+
+The standard mask removes problematic pixels at the edge of the detector, shadows
+the beamstop, and uses an auto-masking scheme to get rid of outlier pixels.
+The automasking has been extensively tested on a low-scattering sample so our mask
+building function has been designed to run on data from an empty kapton tube.
+Load an empty kapton tube on the diffractometer, then in your ``collection`` terminal type
+
+.. code-block:: python
+
+  run_mask_builder() # be patient, the process takes 10 minutes!
+
+A mask will be generated based on the image collected from this sample. This mask
+will be saved in the header of all future scans until you run ``run_mask_builder()``
+again.  You will always be able to extract your data unmasked, or apply a different mask,
+at analysis time, but if this mask works well, it will save you a lot of time later if
+you do this step now.
+
+You can look at the 2D image with and without the mask in SrXgui.
+You can load the mask file by clicking the 'folder' icon in SrXgui, navigating
+to the ``tiff_base/setup`` folder and looking for a file with a long sample name
+and the extension ``.npy``. Select and load this file in the SrXgui mask dialog box.
+
+.. image:: ./img/select_mask_00.png
+  :width: 400px
+  :align: center
+  :height: 200px
+
+
+.. image:: ./img/select_mask_01.png
+  :width: 400px
+  :align: center
+  :height: 300px
+
+
+For more info: :ref:`auto_mask`.
+
+3. set up ``Sample`` objects to use later
+"""""""""""""""""""""""""""""""""""""""""
+
+Your sample information should be loaded in an excel spreadsheet, with a well
+defined format (a template file may be found `here
+<https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_
+). If the IS didn't already
+do it, save your sample xls file to the ``xpdUser/import`` directory using the name
+``<saf_number>_sample.xlsx``, where you replace ``<saf_number>`` with the number
+of the safety approval form associated with your experiment.  If you are not sure
+what your ``saf_number`` is you can get it by typing following command in your ``collection`` terminal:
+
+.. code-block:: python
+
+  In[1] bt
+  Out[1]:
+  {'bt_experimenters': ['Tim', 'Liu'],
+   'bt_piLast': 'Billinge',
+   'bt_safN': '300336',
+   'bt_uid': 'f4ewjf9c',
+   'bt_wavelength': 0.1832}
+
+where the ``saf_number`` in this case is ``300336``.
+
+Next type:
+
+.. code-block:: python
+
+  import_sample_info()
+
+which loads the sample information and makes all the sample objects available in the current beamtime.
+
+Updates and additions may be made by editing existing sample information, and by adding more samples, in the excel file and rerunning ``import_sample_info()``
+at any time during the experiment.  The ``Sample`` object list will be updated based on contents of this new sheet so
+we recommend to just edit existing or add new samples to the sheet but not to delete any.
+
+For more info :ref:`import_sample`.
+
+
+4. set up ``ScanPlan`` objects to use later
+"""""""""""""""""""""""""""""""""""""""""""
+
+use an xpdAcq template
+^^^^^^^^^^^^^^^^^^^^^^
+
+``xpdAcq`` has templates for three common scans (more will follow, please request yours at `xpd-users Google group!
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ ): a
+simple count, a series of counts, and a temperature scan.  You can create ``ScanPlans`` now to use later, or you can create
+them when you need them (and reuse them after that).  Examples of what to type to create different example ``ScanPlans`` are shown
+in the table below.  Adapt these as you need to by changing the numbers in the arguments.
+
+======================================= ===================================================================================
+command
+======================================= ===================================================================================
+``ScanPlan(bt, ct, 5)``                  a count scan for 5s
+
+``ScanPlan(bt, tseries, 5, 50, 15)``     time series with 5s count time, 50s delay and 15 repeats
+
+``ScanPlan(bt, Tramp, 5, 300, 200, 5)``  temperature series with 5s count time, starting from 300k to 200k with 5k per step
+======================================= ===================================================================================
+
+write your own scan plan
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+``xpdAcq`` also consumes any scan plan from ``bluesky``. Here we will show a brief example
+for illustration. This is a more advanced topic that is beyond the scope of this quick-start,
+but this gives you the idea of what is possible.
+
+The specific illustration is a scan that drives a motor called ``motor`` through a specific list of points while collecting
+an image at each point from the detector ``area_detector``.  It uses a predefined bluesky
+plan for this purpose, ``list_scan``.  To use this in ``xpdAcq`` you would first define your ``bluesky`` plan
+and assign it to the object we have called ``mybsplan`` in this example:
+
+.. code-block:: python
+
+  from bluesky.plans import list_scan
   
-  If you abort it the system is reset to where it was before the scan started.
+  # it is entirely optional to add metadata to the scan, but here is what you would do:
+  mymd = {'memoy_aid': 'This metadata should be about the scan, not the sample which would be added when the scanplan is run',
+          'author': 'Simon',
+          'etc': 'make up any key-value pairs'}
 
-Experiment and sample objects:
-  1. It is time well spent to set up all your experiment and sample objects accurately.
-  To set up a sample you have to give it an experiment object, so ``Sample('Li battery electrode',bt.get(96))`` uses the object in ``bt.list(96)`` which must be an ``ex`` type object, for example I #may have made# it with ``Experiment('cycled and uncycled batteries',bt)``.
-  The ``bt`` is the beamtime object. For complete documentation, please see :ref:`usb_experiment`
+  mybsplan = list_scan([glbl.area_det], motor, [1,3,5,7,9], md=mymd) # drives motor to postions 1,3,5,7,9 and fires area_detector at each position
+  mybsplan = subs_wrapper(mybsplan, LiveTable([glbl.area_det])) # set up the scan so LiveTable will give updates on how the scan is progressing
 
-  2. It is also possible to download xpdAcq `from here <https://github.com/xpdAcq/xpdAcq>`_ and run it on your own computer to set up the ``sample`` and ``scanplan`` objects you think you will need at the beamtime.
-  So when you are at XPD you can concentrate on collecting data and not typing metadata.
-  Simulation at home is strongly recommended. See the full documentation for more details here [FIXME doc needed]
+Then to use it successfully in xpdAcq you have to do a bit of configuration of global parameters.  This work is done
+automatically for you in the ``xpdAcq`` built-in plans.  There are many things you could set up, but the simplest example
+is that we want the detector to collect 50 frames each time we fire it, which would give a 50s exposure at a framerate of 0.1s (framerate
+is another glbl option that you could reset).  
+
+.. code-block:: python
+
+  glbl.area_det.images_per_set.put(50)  # set detector to collect 50 frames, so 5 s exposure if continuous acquisition with 0.1s framerate
+
+Finally, later on in the experiment when you are ready to run it, you would run this plan just the same as a regular ``xpdAcq`` scanPlan object:
+
+.. code-block:: python
+
+  prun(56, myplan) # on sample 56 in the sample list, run the myplan scan plan.
+  prun(57, myplan)
+
+The ability to write your own bluesky plans gives enormous flexibility
+but has a steep learning curve, but you should be able to get help
+setting these up from your local contact.
+For more details about how to write a ``bluesky`` scan plan,
+please see `here <http://nsls-ii.github.io/bluesky/plans.html>`_.
+
+We recommend that you use ``xpdAcq`` built-in plans wherever possible.  If there
+is a new scan plan that you think could be useful to other users, please post it to
+the `XPD-Users Google group
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ , 
+and suggest that perhaps it would be great to have that
+as an ``xpdAcq`` built-in ScanPlan in the future!
+
+5. list objects by categories
+"""""""""""""""""""""""""""""
+
+To list out currently available ``Sample`` and ``ScanPlan`` objects you can do:
+
+.. code-block:: python
+
+  in[1]: bt.list()
+  Out[1]:
+
+and you should similar output as following:
+
+.. code-block:: python
+
+  ScanPlans:
+  0: 'ct_5'
+  1: 'Tramp_5_300_200_5'
+  2: 'tseries_5_50_15'
+  3: 'ct_900'
+  ...
+  
+  Samples:
+  0: setup
+  1: Ni
+  2: mt_kapton_1mm
+  ...
+
+
+6. interrogate metadata in objects
+""""""""""""""""""""""""""""""""""
+
+.. code-block:: python
+
+  bt.samples[0].md        # returns metadata for item 0 in the sample list, i.e., the dummy ``setup`` sample
+  bt.scanplans[0].md      # returns metadata for item 0 in the scanplans list
+
+Run your experiment
+-------------------
+
+1. A scan is a scanplan executed on a sample
+""""""""""""""""""""""""""""""""""""""""""""
+
+The main philosophy of ``xpdAcq`` is : **on this sample run this scanplan** which
+is typed as ``prun(<Sample.object>,<ScanPlan-object>)``
+
+background scan
+^^^^^^^^^^^^^^^
+
+It is recommended to run a background scan before your sample so it is available for
+the automated data reduction steps.  It also allows you to see problems with the experimental
+setup, for example, crystalline peaks due to the beam hitting a shutter.
+
+ 1. Load the background sample (e.g., empty kapton tube) on the instrument
+ 2. In your ``collection`` terminal type
+
+ .. code-block:: python
+
+  bt.list_bkg()
+
+to list your sample objects tagged as backgrounds (that was done originally in your excel spreadsheet).
+
+ 3. In the ``collection`` terminal, run ``prun`` (see below) on the background sample with a ``ct`` ScanPlan object of the desired exposure
+
+.. code-block:: python
+
+  # if you are running this as a tutorial don't type this.  It will take >30 mins to complete because
+  # scanplan[3] is a 15 minute exposure and there is no stored 15 minute dark exposure for subtraction
+  # so the code will automatically collect that too!
+  # but to test it you could replace bt.scanplan[3] with bt.scanplan[0]....
+  prun(bt.samples[2],bt.scanplan[3]) # referencing objects explicitly...or...
+  prun(2,3)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
+                                     # index from the ``bt`` list
+
+Please see :ref:`background_obj` for more information.
+
+How long should you run your background scan for? See discussion
+`here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
+but for kapton we often do it for 15-30 minutes, though it can be highly dependent
+on the scattering properties of your sample.  For example, strongly scattering samples 
+like Ni often need
+no background subtraction at all.
+
+setup scans
+^^^^^^^^^^^
+
+There is always a bit of setting up and testing to get things just right before you are
+ready to collect real production data, for example, figuring out the right exposure and so
+on.   **We strongly recommend that you use a 
+``setup`` sample-object while you are doing this**. This will make it much easier later to separate
+your setup scans from your production scans.  
+
+For nearly all cases you can use the setup sample we
+gave you (object ``bt.sample.[0]`` at position ``0`` in the sample list).  
+
+However, if necessary you can 
+create your own setup samples.  Any sample in the excel spreadsheet tagged as ``setup`` is a setup
+scan.  Note that output files are written in a directory with the sample name, so to separate your
+output files it is also a good idea to give your setup sample a name like ``mysample_setup``.
+
+ 1. Load your sample
+ 2. If you are not using the built-in setup sample, list your sample objects to find your setup sample object
+ 3. type prun with the desired sample object and ScanPlan (see below)
+
+.. code-block:: python
+
+  # In ``collection`` terminal
+  prun(bt.samples[0],bt.scanplan[6]) # referencing objects explicitly. If you are doing this as a tutorial, bt.scanplan[6] may not exist yet
+  prun(0,6)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
+                                     # index from the ``bt`` list
+
+For more info: FIXME
+
+production run
+^^^^^^^^^^^^^^
+
+ 1. Load your sample (if it is not already loaded)
+ 2. List your sample objects to find the right one for this sample
+ 3. type prun with the desired sample object and ScanPlan (see below)
+
+.. code-block:: python
+
+  prun(5,16)
+
+For more info: FIXME
+
+Get your data
+-------------
+
+1. Save images and metadata from scans
+""""""""""""""""""""""""""""""""""""""
+
+These commands can be run in the ``collection`` or the ``analysis`` ipython environments.
+
+Data are saved in the directory ``xpdUser/tiff_base/<sample_name>`` where ``<sample_name>`` is the name of the
+sample that you used in the sample spreadsheet, and is the name of the ``Sample`` object.
+
+**save images from last scan:**
+
+.. code-block:: python
+
+  save_last_tiff()
+
+With this function, the image will be saved to a ``.tiff`` file.
+The metadata associated with the image will be saved to a ``.yml`` file which is a
+text file and can be opened with a text editor.  Saving behavior
+can be modified by changing the default function arguments.  Type ``save_last_tiff?``
+to see the allowed values.
+
+**Pro Tip**: this function is often typed just after ``prun()`` in the collection environment,
+so that the data are extracted out of the NSLS-II database and delivered to you automatically when
+the scan finishes.  You can then play around with them and take them home as you like.
+
+The following
+functions are more useful for running in the ``analysis`` environment to fetch scans from the database
+selectively if you don't want a dump of every scan.
+
+**save images from last 2 scans:**
+
+.. code-block:: python
+
+  h = db[-2:]
+  save_tiff(h)
+
+**save images from scan 2 scans ago:**
+
+.. code-block:: python
+
+  h = db[-2]
+  save_tiff(h)
+
+We use "h", short for "header", for the object given back by the NSLS-II databroker (``db``) data-fetching software.
+This is a software object that contains all the information about your scan and can
+be passed to different functions to do analysis.
+more information on headers is `here <http://nsls-ii.github.io/databroker/headers.html>`_
+
+
+2. Save images and also integrate images to a 1D patterns
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+**save your images and also integrate to a 1D pattern:**
+
+.. code-block:: python
+
+  integrate_and_save_last()   # the most recent scan
+
+You could use this instead of ``save_last_tiff()`` as part of your acquisition
+sequence by typing it in the ``collection`` environment.
+
+Or use these in the ``analysis`` environment to be analyzing data over here as
+the data are being collected over there...
+
+.. code-block:: python
+
+  h = db[-2:]                 # the last 2 scans
+  integrate(h)                # saves a copy of the 1D diffraction pattern
+  h = db[-2]                  # 2 scan ago
+  integrate(h)
+  integrate_and_save(h)       # saves a copy of the image AND a copy of the 1D diffraction pattern
+                              # this is the same as typing save_last_tiff() then integrate()
+
+With these functions, the image (if requested) will be saved to a ``.tiff`` file, the mask 
+(if there is one) will be saved
+to a ``.npy`` file, and the masked-image will be integrated and saved to a ``.chi`` file.
+The metadata associated with the image will be saved to a ``.yml`` file which is a
+text file and can be opened with a text editor.  Masking and calibration behavior
+can be modified by overriding the default function arguments.  Type, for example, ``integrate_and_save_last?``
+to see the allowed values.
 
 User scripts
-++++++++++++
+------------
 
-  Your ``scanplan`` objects can be sequenced into scripts, executing one after the other as you desire.  To set this up, write a sequence of commands into a text file, save it with the extension ``.py`` in the ``userScripts`` directory with a memorable name, like ``myNightShiftScript.py``.  Double and triple check your script, then when you are ready to execute it, in ``ipython`` session type:
+Your experiment commands can be sequenced into scripts, 
+to be executed one after the other as you desire.  To set this up, write a sequence of commands into a text file, 
+save it with the extension ``.py`` in the ``userScripts`` directory with a memorable name, like ``myNightShiftScript.py``.  
+Double and triple check your script, then when you are ready to execute it, in ``ipython`` session type:
+
 
   .. code-block:: python
 
@@ -177,45 +538,51 @@ User scripts
 
   Stay there for a while to make sure everything is running as expected and then go to bed!
 
-There is much more to the ``xpdAcq`` software that will give you superpowers in rapid and flexible data collection, data retrieval and processing.
-This was just the quick start, but much more information is in the full documentation in the **XPD user** section of the documentation
+.. Note::
+These scripts should execute as desired under normal circumstances.  Runs will automatically pause if
+there is a beam-dump and then resume, for example.  However, there are some situations where the scans
+can be tricked into hanging, or continuing to run without scans completing, so please check your data
+carefully.  We are working on solutions for these edge cases.
 
+Interrupt your scan
+--------------------
 
-Global options
---------------
+Just started your scan but realized you have made a mistake?  Waited long enough for the scan to end
+and want to end it?  Need to pause to refill liquid nitrogen, but then want to continue on afterwards?
 
-``glbl`` class has several attributes that control the overall behavior of ``xpdacq`` software.
+You can safely interrupt scans using ``CTL-C`` using the following
+crib
 
-Possible scenarios
-""""""""""""""""""
+a) Interactively Interrupt Execution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    **No automated dark collection logic at all:**
+======================= ===========
+Command                 Outcome
+======================= ===========
+Ctrl+C                  Pause soon (at next break point in the code)
+Ctrl+C twice quickly    Pause now
+Ctrl+C three times fast (Shortcut) Pause now and abort
+======================= ===========
 
-    .. code-block:: python
+These interrupts leave the run in a paused state.  You may want to then just
+resume the scan sometime later (the liquid nitrogen case) or abort (you made a mistake
+with the scan and want to start over), or stop but save the data (the "you are
+fed up waiting for it to finish" case).  See below for handling this.
 
-      glbl.auto_dark = False
-      glbl.shutter_control = False
+b) Recovering from the paused state caused by an interrupt
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    **Want a fresh dark frame every time ``prun`` is triggered:**
+After a pause, when you are ready to continue working, type one of these commands
+into the ``collection`` environment:
 
-    .. code-block:: python
+============== ===========
+Command        Outcome
+============== ===========
+prun.resume()    Safely resume plan.
+prun.abort()     Perform cleanup. Mark as aborted.
+prun.stop()      Perform cleanup. Mark as success.
+prun.halt()      Do not perform cleanup --- just stop.
+prun.state       Check if 'paused' or 'idle'.
+============== ===========
 
-      glbl.dk_window = 0.001 # dark window is 0.001 min = 0.06 secs
-
-
-    **Want a 0.2 exposure time per frame instead of 0.1s:**
-
-    .. code-block:: python
-
-      glbl.frame_acq_time = 0.2
-
-    **Want to run temperature ramp with different device and use alternative shutter:**
-
-    .. code-block:: python
-
-      glbl.temp_controller = eurotherm
-      glbl.shutter = shctl2
-
-    .. note::
-
-      desired objects should be properly *configured*. For more details, please contact beamline staff.
+For more info: `here <http://nsls-ii.github.io/bluesky/state-machine.html#interactive-pause-summary>`_

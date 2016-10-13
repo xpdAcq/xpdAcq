@@ -383,8 +383,8 @@ phase string
 
 .. _background_obj:
 
-Sample objects going to be generated
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sample Objects
+^^^^^^^^^^^^^^
 
 * **Sample**:
 
