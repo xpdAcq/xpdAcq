@@ -65,9 +65,10 @@ def _update_dark_dict_list(name, doc):
 def take_dark():
     """a plan for taking a single dark frame"""
     print('INFO: closing shutter...')
-    yield from bp.abs_set(glbl.shutter, 0)
-    if glbl.shutter_control:
-        yield from bp.sleep(2)
+    # 60 means open at XPD, Oct.4, 2016
+    yield from bp.abs_set(glbl.shutter, 0, wait=True)
+    #if glbl.shutter_control:
+    #    yield from bp.sleep(2)
     print('INFO: taking dark frame....')
     # upto this stage, glbl.pe1c has been configured to so exposure time is
     # correct
@@ -85,9 +86,10 @@ def take_dark():
     c = bp.count([glbl.area_det], md=_md)
     yield from bp.subs_wrapper(c, {'stop': [_update_dark_dict_list]})
     print('opening shutter...')
-    yield from bp.abs_set(glbl.shutter, 1)
-    if glbl.shutter_control:
-        yield from bp.sleep(2)
+    # 60 means open at XPD, Oct.4, 2016
+    #yield from bp.abs_set(glbl.shutter, 60, wait=True)
+    #if glbl.shutter_control:
+    #    yield from bp.sleep(2)
 
 
 def periodic_dark(plan):
@@ -102,9 +104,7 @@ def periodic_dark(plan):
     def insert_take_dark(msg):
         now = time.time()
         nonlocal need_dark
-        # print('after nonlocal dark, need_dark={}'.format(need_dark))
         qualified_dark_uid = _validate_dark(expire_time=glbl.dk_window)
-        # print('qualified_dark_uid is {}'.format(qualified_dark_uid))
         # FIXME: should we do "or" or "and"?
         if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
@@ -121,7 +121,11 @@ def periodic_dark(plan):
             return bp.pchain(bp.unstage(glbl.area_det),
                              take_dark(),
                              bp.stage(glbl.area_det),
-                             bp.single_gen(msg)), None
+                             bp.single_gen(msg),
+                             bp.abs_set(glbl.shutter, 60, wait=True)), None
+        elif msg.command == 'open_run' and 'dark_frame' not in msg.kwargs:
+            return bp.pchain(bp.single_gen(msg),
+                             bp.abs_set(glbl.shutter, 60, wait=True)), None
         else:
             # do nothing if (not need_dark)
             return None, None
@@ -390,26 +394,29 @@ class CustomizedRunEngine(RunEngine):
                   "beamtime object, scan will keep going....")
         metadata_kw.update(sample)
         sh = glbl.shutter
-        # force to open shutter before scan and close it after
+
         if glbl.shutter_control:
-            plan = bp.pchain(bp.abs_set(sh, 1), plan, bp.abs_set(sh, 0))
-        # Alter the plan to incorporate dark frames.
-        if glbl.auto_dark:
-            plan = dark_strategy(plan)
-            plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
+            # Alter the plan to incorporate dark frames.
+            # only works if user allows shutter control
+            if glbl.auto_dark:
+                plan = dark_strategy(plan)
+                plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
+            # force to close shutter after scan
+            plan = bp.finalize_wrapper(plan, bp.abs_set(sh, 0, wait=True))
+
         # Load calibration file
         if glbl.auto_load_calib:
             plan = bp.msg_mutator(plan, _inject_calibration_md)
+
         # Insert glbl mask
         plan = bp.msg_mutator(plan, _inject_mask)
+
         # Execute
-        super().__call__(plan, subs,
-                         raise_if_interrupted=raise_if_interrupted,
-                         **metadata_kw)
+        return super().__call__(plan, subs,
+                                raise_if_interrupted=raise_if_interrupted,
+                                **metadata_kw)
 
         # deprecated from v0.5 release
         # insert collection
         #_insert_collection(glbl.collection_name, glbl.collection,
         #                   self._run_start_uids)
-
-        return self._run_start_uids

@@ -17,7 +17,7 @@ BEAMLINE_ID = 'xpd'
 GROUP = 'XPD'
 IMAGE_FIELD = 'pe1_image'
 CALIB_CONFIG_NAME = 'pyFAI_calib.yml'
-MASK_MD_NAME = 'xpdacq_mask_md.npy'
+MASK_MD_NAME = 'xpdacq_mask.npy'
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()
@@ -29,7 +29,8 @@ else:
 if simulation:
     BASE_DIR = os.getcwd()
 else:
-    BASE_DIR = os.path.expanduser('~/')
+    #BASE_DIR = os.path.expanduser('~/')
+    BASE_DIR = os.path.abspath('/direct/XF28ID1/pe1_data')
 
 # top directories
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
