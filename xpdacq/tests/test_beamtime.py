@@ -239,3 +239,7 @@ class BeamtimeObjTest(unittest.TestCase):
         bt2 = load_beamtime()
         self.assertEqual(bt2, bt)
         self.assertEqual(bt2.samples[0], sa)
+
+    def test_list_bkg_smoke(self):
+        bt = Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
+        bt.list_bkg()
