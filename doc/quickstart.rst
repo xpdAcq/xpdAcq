@@ -119,7 +119,7 @@ Set up your experiment
 
 If you want to query any ``xpdAcq`` or ``xpdAn`` function, type the function name with a ``?`` at the end and hit
 return.  Documentation for what paramters the function takes, and any default values, and what
-the function returns will be printed.  For example, type:
+the function returns will be printed.  For example, in your ``collection`` terminal type:
 
 .. code-block:: python
 
@@ -133,18 +133,18 @@ those letters. This will include Python imported and built-in functions as well 
 """"""""""""""
 
 Place any sample, but maybe the Ni calibrant, at the sample position.  Let's make sure we are getting a nice
-Ni diffraction pattern. Type:
+Ni diffraction pattern. In your ``collection`` terminal type:
 
 .. code-block:: python
 
   prun(0,0) # will run an exposure of 60 seconds on your setup sample
-  save_last_tiff() # will save the image in the tiff_base/setup directory
+  save_last_tiff() # will save the image in the tiff_base/Setup directory
 
-Navigate to the SrXgui image viewer. Click on the folder icon and navigate to
-the ``tiff_base/setup`` folder and look for a list of one or more tiff files.
 Note, if the software gives an error that it cannot find the sample object, then you will need
 to load a sample spreadsheet.  See section 3 below: `set up Sample objects to use later`
 
+Navigate to the ``SrXgui`` image viewer. Click on the folder icon and navigate to
+the ``tiff_base/Setup`` folder and look for a list of one or more tiff files.
 Double-click on the most recent one to view the one you just collected.
 
 
@@ -152,7 +152,7 @@ Double-click on the most recent one to view the one you just collected.
 """"""""""""""
 run this first, then run it again each time the geometry of your measurement changes.
 
-Place the Ni calibrant at the sample position, close the hutch and open the shutter then type:
+Place the Ni calibrant at the sample position, close the hutch and open the shutter then type in your ``collection`` terminal:
 
 .. code-block:: python
 
@@ -170,7 +170,7 @@ The standard mask removes problematic pixels at the edge of the detector, shadow
 the beamstop, and uses an auto-masking scheme to get rid of outlier pixels.
 The automasking has been extensively tested on a low-scattering sample so our mask
 building function has been designed to run on data from an empty kapton tube.
-Load an empty kapton tube on the diffractometer, then type
+Load an empty kapton tube on the diffractometer, then in your ``collection`` terminal type
 
 .. code-block:: python
 
@@ -192,7 +192,6 @@ and the extension ``.npy``. Select and load this file in the SrXgui mask dialog 
   :align: center
   :height: 200px
 
-
 .. image:: ./img/select_mask_01.png
   :width: 400px
   :align: center
@@ -209,9 +208,9 @@ defined format (a template file may be found `here
 <https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_
 ). If the IS didn't already
 do it, save your sample xls file to the ``xpdUser/import`` directory using the name
-``<saf_number>_sample.xls``, where you replace ``<saf_number>`` with the number
+``<saf_number>_sample.xlsx``, where you replace ``<saf_number>`` with the number
 of the safety approval form associated with your experiment.  If you are not sure
-what your ``saf_number`` is you can get it by typing:
+what your ``saf_number`` is you can get it by typing following command in your ``collection`` terminal:
 
 .. code-block:: python
 
@@ -229,12 +228,12 @@ Next type:
 
 .. code-block:: python
 
-  import_sample()
+  import_sample_info()
 
 which loads the sample information and makes all the sample objects available in the current beamtime.
 
-Updates and additions may be made by editing existing sample information, and by adding more samples, in the excel file and rerunning ``import_sample()``
-at any time during the experiment.  The existing sample objects will be overwritten by this new sheet so
+Updates and additions may be made by editing existing sample information, and by adding more samples, in the excel file and rerunning ``import_sample_info()``
+at any time during the experiment.  The ``Sample`` object list will be updated based on contents of this new sheet so
 we recommend to just edit existing or add new samples to the sheet but not to delete any.
 
 For more info :ref:`import_sample`.
@@ -318,10 +317,16 @@ as an ``xpdAcq`` built-in ScanPlan in the future!
 5. list objects by categories
 """""""""""""""""""""""""""""
 
+To list out currently available ``Sample`` and ``ScanPlan`` objects you can do:
+
 .. code-block:: python
 
   in[1]: bt.list()
   Out[1]:
+
+and you should similar output as following:
+
+.. code-block:: python
 
   ScanPlans:
   0: 'ct_5'
@@ -359,15 +364,15 @@ background scan
 
 It is recommended to run a background scan before your sample so it is available for
 the automated data reduction steps.  It also allows you to see problems with the experimental
-setup, for example, crystalline peaks due to the beam hitting a shutter, for example.
+setup, for example, crystalline peaks due to the beam hitting a shutter.
 
  1. Load the background sample (e.g., empty kapton tube) on the instrument
- 2. type ``bt.list_bkg()`` to list your sample objects tagged as backgrounds (that was done originally in your excel spreadsheet).
- 
+ 2. In your ``collection`` terminal type
+
  .. code-block:: python
 
   bt.list_bkg()
- 
+
 to list your sample objects tagged as backgrounds (that was done originally in your excel spreadsheet).
 
  3. In the ``collection`` terminal, run ``prun`` (see below) on the background sample with a ``ct`` ScanPlan object of the desired exposure
@@ -465,18 +470,18 @@ The following
 functions are more useful for running in the ``analysis`` environment to fetch scans from the database
 selectively if you don't want a dump of every scan.
 
-**save images from last 5 scans:**
+**save images from last 2 scans:**
 
 .. code-block:: python
 
-  h = db[-5:]
+  h = db[-2:]
   save_tiff(h)
 
-**save images from scan 5 scans ago:**
+**save images from scan 2 scans ago:**
 
 .. code-block:: python
 
-  h = db[-5]
+  h = db[-2]
   save_tiff(h)
 
 We use "h", short for "header", for the object given back by the NSLS-II databroker (``db``) data-fetching software.
@@ -489,6 +494,16 @@ more information on headers is `here <http://nsls-ii.github.io/databroker/header
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 **save your images and also integrate to a 1D pattern:**
+
+.. code-block:: python
+
+  integrate_and_save_last()   # the most recent scan
+
+You could use this instead of ``save_last_tiff()`` as part of your acquisition
+sequence by typing it in the ``collection`` environment.
+
+Or use these in the ``analysis`` environment to be analyzing data over here as
+the data are being collected over there...
 
 .. code-block:: python
 
