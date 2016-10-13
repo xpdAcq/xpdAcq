@@ -8,7 +8,7 @@ from time import strftime, sleep
 HOME_DIR_NAME = 'xpdUser'
 BLCONFIG_DIR_NAME = 'xpdConfig'
 BEAMLINE_HOST_NAME = 'xf28id1-ws2'
-ARCHIVE_BASE_DIR_NAME = '/direct/XF28ID1/pe2_data/.userBeamtimeArchive'
+ARCHIVE_BASE_DIR_NAME = '/direct/XF28ID1/pe1_data/.userBeamtimeArchive'
 USER_BACKUP_DIR_NAME = strftime('%Y')
 DARK_WINDOW = 3000  # default value, in terms of minute
 FRAME_ACQUIRE_TIME = 0.1  # pe1 frame acq time
@@ -30,7 +30,7 @@ if simulation:
     BASE_DIR = os.getcwd()
 else:
     #BASE_DIR = os.path.expanduser('~/')
-    BASE_DIR = os.path.abspath('/direct/XF28ID1/pe1_data/UserArea/XPDhome')
+    BASE_DIR = os.path.abspath('/direct/XF28ID1/pe2_data/')
 
 # top directories
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
