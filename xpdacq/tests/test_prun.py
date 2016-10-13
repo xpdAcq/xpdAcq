@@ -4,6 +4,7 @@ import shutil
 import time
 import yaml
 import uuid
+from unittest.mock import MagicMock
 from configparser import ConfigParser
 from time import strftime
 
@@ -14,7 +15,9 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
 from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
                            _auto_load_calibration_file,
                            open_collection)
+from xpdacq.simulation import SimulatedPE1C
 
+import bluesky.examples as be
 
 class PrunTest(unittest.TestCase):
     def setUp(self):
@@ -22,7 +25,7 @@ class PrunTest(unittest.TestCase):
         self.home_dir = os.path.join(self.base_dir, 'xpdUser')
         self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
         self.PI_name = 'Billinge '
-        self.saf_num = 30079  # must be 30079 for proper load of config yaml => don't change
+        self.saf_num = 300000  # must be 30079 for proper load of config yaml => don't change
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee', 'S0ham', 1),
                               ('Terban ', ' Max', 2)]
@@ -31,14 +34,20 @@ class PrunTest(unittest.TestCase):
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
-        xlf = '30079_sample.xlsx'
+        xlf = '300000_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf)
-        shutil.copyfile(src, os.path.join(glbl.xpdconfig, xlf))
+        shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
         import_sample(self.saf_num, self.bt)
         self.sp = ScanPlan(self.bt, ct, 5)
         glbl.shutter_control = False
         self.prun = CustomizedRunEngine(self.bt)
         open_collection('unittest')
+        # simulation objects
+        glbl.area_det = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
+        glbl.temp_controller = be.motor
+        glbl.shutter = MagicMock()
+
+
 
     def tearDown(self):
         os.chdir(self.base_dir)

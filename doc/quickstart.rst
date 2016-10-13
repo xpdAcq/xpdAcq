@@ -192,7 +192,6 @@ and the extension ``.npy``. Select and load this file in the SrXgui mask dialog 
   :align: center
   :height: 200px
 
-
 .. image:: ./img/select_mask_01.png
   :width: 400px
   :align: center
