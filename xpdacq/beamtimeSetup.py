@@ -11,7 +11,7 @@ from .beamtime import *
 from .utils import _graceful_exit
 
 
-def _start_beamtime(PI_last, saf_num, experimenters=[], *,
+def _start_beamtime(PI_last, saf_num, experimenters=[],
                     wavelength=None):
     """ function for start beamtime """
     # TODO - allow config file later
