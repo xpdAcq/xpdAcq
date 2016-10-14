@@ -38,11 +38,11 @@ def _start_beamtime(PI_last, saf_num, experimenters=[], *,
         src = os.path.join(os.path.dirname(__file__), 'Ni24.D')
         dst = os.path.join(glbl.usrAnalysis_dir, 'Ni.D')
         shutil.copy(src, dst)
-        
+
         # pre-populated scan plan
-        ScanPlan(bt, ct, 60)
+        ScanPlan(bt, ct, 5)
         ScanPlan(bt, ct, 30)
-        ScanPlan(bt, ct, 10)
+        ScanPlan(bt, ct, 60)
 
         return bt
 
