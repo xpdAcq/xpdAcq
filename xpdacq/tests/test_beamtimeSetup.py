@@ -94,9 +94,9 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(self.experimenters, self.bt.get('bt_experimenters'))
         self.assertEqual(self.wavelength, self.bt.get('bt_wavelength'))
         self.assertEqual(os.getcwd(), self.home_dir)
-        # FIXME
-        # strtScnLst = ['bt_bt.yml','ex_l-user.yml','sa_l-user.yml','sp_ct_0.1.yml','sp_ct_0.5.yml','sp_ct_1.yml','sp_ct_5.yml','sp_ct_10.yml','sp_ct_30.yml']
-        # self.assertEqual(newobjlist,strtScnLst)
+        # test prepoluate ScanPlan
+        self.assertEqual(len(self.bt.scanplans), 3)
+        self.assertEqual(self.bt.scanplans[0]['sp_args'], (5,))
 
     def test_end_beamtime(self):
         _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']
