@@ -107,6 +107,7 @@ class NewBeamtimeTest(unittest.TestCase):
         for current_sp in self.bt.scanplans:
             reload_sp = ScanPlan.from_yaml(current_sp.to_yaml())
             self.assertEqual(reload_sp, current_sp)
+            self.assertFalse(id(reload_sp) ==  id(current_sp))
 
     def test_end_beamtime(self):
         _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']
