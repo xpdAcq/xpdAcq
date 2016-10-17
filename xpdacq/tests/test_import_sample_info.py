@@ -9,13 +9,13 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
                                   load_beamtime)
 from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
-from xpdacq.utils import import_sample
+from xpdacq.utils import import_sample_info
 from bluesky.examples import motor, det, Reader
 
 # print messages for debugging
 #prun.msg_hook = print
 
-class BeamtimeObjTest(unittest.TestCase):
+class ImportSamplTest(unittest.TestCase):
 
     def setUp(self):
         self.base_dir = glbl.base
@@ -45,11 +45,15 @@ class BeamtimeObjTest(unittest.TestCase):
             shutil.rmtree(os.path.join(self.base_dir,'pe2_data'))
 
 
-    def test_import_sample(self):
-        # direct sample -> no ipython session, fail as expect
-        self.assertRaises(AttributeError, lambda: import_sample())
+    def test_import_sample_info(self):
+        # direct sample -> no ipython session, no bt exist fail as expect
+        self.assertRaises(AttributeError, lambda: import_sample_info())
         # explict import
-        import_sample(300000, self.bt)
-        # incorrect file name
+        import_sample_info(300000, self.bt)
+        # check imported sample metadata
+        for sample in self.bt.samples:
+            # Sample is a ChainMap with arg[1] == bt
+            self.assertEqual(sample.maps[1], self.bt)
+        # incorrect SAF_num
         self.assertRaises(FileNotFoundError,
-                          lambda: import_sample(12345, self.bt))
+                          lambda: import_sample_info(12345, self.bt))
