@@ -503,7 +503,6 @@ def import_sample_info(saf_num=None, bt=None):
                             "object")
             return
 
-    _saf_num = str(saf_num)
     if saf_num is None:
         try:
             saf_num = bt['bt_safN']
@@ -513,16 +512,17 @@ def import_sample_info(saf_num=None, bt=None):
                   "object?")
             return
     else:
-        # test if saf_num is consistent
+        # user input, test if saf_num is consistent with bt
         saf_num_from_bt = bt['bt_safN']
-        if _saf_num != saf_num_from_bt:
+        saf_num = str(saf_num)
+        if saf_num != saf_num_from_bt:
             raise ValueError("WARNING: you give a SAF number = {}, "
                              "while SAF number of current beamtime is = {}\n"
                              "Please make sure you are using the correct "
                              "SAF number/beamtime combination"
-                             .format(_saf_num, saf_num_from_bt))
+                             .format(saf_num, saf_num_from_bt))
             return
-    print('INFO: using SAF_number = {}'.format(_saf_num))
+    print('INFO: using SAF_number = {}'.format(saf_num))
 
     bt.samples = []
     # exclude Sample objects from reference list
