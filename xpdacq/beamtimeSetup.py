@@ -10,6 +10,9 @@ from .glbl import glbl
 from .beamtime import *
 from .utils import _graceful_exit
 
+# list of exposure times for pre-poluated ScanPlan inside
+# _start_beamtime
+EXPO_LIST = [5, 0.1, 1, 10, 30, 60]
 
 def _start_beamtime(PI_last, saf_num, experimenters=[], *,
                     wavelength=None):
@@ -40,12 +43,8 @@ def _start_beamtime(PI_last, saf_num, experimenters=[], *,
         shutil.copy(src, dst)
 
         # pre-populated scan plan
-        ScanPlan(bt, ct, 5)
-        ScanPlan(bt, ct, 0.1)
-        ScanPlan(bt, ct, 1)
-        ScanPlan(bt, ct, 10)
-        ScanPlan(bt, ct, 30)
-        ScanPlan(bt, ct, 60)
+        for expo in EXPO_LIST:
+            ScanPlan(bt, ct, expo)
 
         return bt
 

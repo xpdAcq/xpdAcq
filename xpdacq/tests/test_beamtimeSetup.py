@@ -11,7 +11,7 @@ import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
                                   _delete_home_dir_tree, _make_clean_env,
                                   _clean_info, _load_bt, _load_bt_info,
-                                  _tar_user_data)
+                                  _tar_user_data, EXPO_LIST)
 from xpdacq.utils import (export_userScriptsEtc, import_userScriptsEtc,
                           import_sample)
 
@@ -95,12 +95,11 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(self.wavelength, self.bt.get('bt_wavelength'))
         self.assertEqual(os.getcwd(), self.home_dir)
         # test prepoluate ScanPlan
-        expo_list = [5, 0.1, 1, 10, 30, 60]
-        self.assertEqual(len(self.bt.scanplans), len(expo_list))
-        for sp, expect_arg in zip(self.bt.scanplans, expo_list):
+        self.assertEqual(len(self.bt.scanplans), len(EXPO_LIST))
+        for sp, expect_arg in zip(self.bt.scanplans, EXPO_LIST):
             self.assertEqual(sp['sp_args'], (expect_arg,))
         # test if yml files are saved properly
-        for expo in expo_list:
+        for expo in EXPO_LIST:
             f_path = os.path.join(glbl.scanplan_dir,
                                   'ct_{}.yml'.format(expo))
             self.assertTrue(os.path.isfile(f_path))
