@@ -95,7 +95,7 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(self.wavelength, self.bt.get('bt_wavelength'))
         self.assertEqual(os.getcwd(), self.home_dir)
         # test prepoluate ScanPlan
-        expo_list = [5, 1, 10, 30, 60]
+        expo_list = [5, 0.1, 1, 10, 30, 60]
         self.assertEqual(len(self.bt.scanplans), len(expo_list))
         for sp, expect_arg in zip(self.bt.scanplans, expo_list):
             self.assertEqual(sp['sp_args'], (expect_arg,))
