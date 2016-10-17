@@ -28,12 +28,6 @@ class ImportSamplTest(unittest.TestCase):
                               ('Terban ',' Max',2)]
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
-        self.bt = _start_beamtime(self.PI_name, self.saf_num,
-                                  self.experimenters,
-                                  wavelength=self.wavelength)
-        xlf = '300000_sample.xlsx'
-        src = os.path.join(os.path.dirname(__file__), xlf)
-        shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -46,14 +40,39 @@ class ImportSamplTest(unittest.TestCase):
 
 
     def test_import_sample_info(self):
-        # direct sample -> no ipython session, no bt exist fail as expect
-        self.assertRaises(AttributeError, lambda: import_sample_info())
-        # explict import
+        # no bt, default argument will fail
+        self.assertRaises(FileNotFoundError, lambda: import_sample_info())
+        # make bt but no spreadsheet
+        self.bt = _start_beamtime(self.PI_name, self.saf_num,
+                                  self.experimenters,
+                                  wavelength=self.wavelength)
+        # expect FileNotFoundError as no spreadsheet
+        self.assertRaises(FileNotFoundError,
+                          lambda: import_sample_info())
+        # copy spreadsheet
+        xlf = '300000_sample.xlsx'
+        src = os.path.join(os.path.dirname(__file__), xlf)
+        shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
+
+        # expect to pass with default argument
+        import_sample_info()
+        # check imported sample metadata
+        for sample in self.bt.samples:
+            # Sample is a ChainMap with self.maps[1] == bt
+            self.assertEqual(sample.maps[1], self.bt)
+
+        # expect to pass with explicit argument
         import_sample_info(300000, self.bt)
         # check imported sample metadata
         for sample in self.bt.samples:
-            # Sample is a ChainMap with arg[1] == bt
+            # Sample is a ChainMap with self.maps[1] == bt
             self.assertEqual(sample.maps[1], self.bt)
-        # incorrect SAF_num
-        self.assertRaises(FileNotFoundError,
-                          lambda: import_sample_info(12345, self.bt))
+
+        # expect ValueError with inconsistent SAF_num between bt and input
+        self.bt['bt_safN'] = 300179
+        self.assertTrue(os.path.isfile(os.path.join(glbl.import_dir,
+                                                    xlf)))
+        self.assertRaises(ValueError, lambda: import_sample_info(300000))
+
+        # expct TypeError with incorrect beamtime
+        self.assertRaises(TypeError, lambda: import_sample_info(bt=set()))
