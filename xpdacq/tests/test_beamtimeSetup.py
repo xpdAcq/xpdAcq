@@ -6,7 +6,7 @@ from time import strftime
 
 # FIXME
 from xpdacq.glbl import glbl
-from xpdacq.beamtime import Beamtime
+from xpdacq.beamtime import Beamtime, ScanPlan
 import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
                                   _delete_home_dir_tree, _make_clean_env,
@@ -95,8 +95,19 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(self.wavelength, self.bt.get('bt_wavelength'))
         self.assertEqual(os.getcwd(), self.home_dir)
         # test prepoluate ScanPlan
-        self.assertEqual(len(self.bt.scanplans), 3)
-        self.assertEqual(self.bt.scanplans[0]['sp_args'], (5,))
+        expo_list = [5, 1, 10, 30, 60]
+        self.assertEqual(len(self.bt.scanplans), len(expo_list))
+        for sp, expect_arg in zip(self.bt.scanplans, expo_list):
+            self.assertEqual(sp['sp_args'], (expect_arg,))
+        # test if yml files are saved properly
+        for expo in expo_list:
+            f_path = os.path.join(glbl.scanplan_dir,
+                                  'ct_{}.yml'.format(expo))
+            self.assertTrue(os.path.isfile(f_path))
+        # test if it can be reloaded
+        for current_sp in self.bt.scanplans:
+            reload_sp = ScanPlan.from_yaml(current_sp.to_yaml())
+            self.assertEqual(reload_sp, current_sp)
 
     def test_end_beamtime(self):
         _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']

@@ -41,6 +41,8 @@ def _start_beamtime(PI_last, saf_num, experimenters=[], *,
 
         # pre-populated scan plan
         ScanPlan(bt, ct, 5)
+        ScanPlan(bt, ct, 1)
+        ScanPlan(bt, ct, 10)
         ScanPlan(bt, ct, 30)
         ScanPlan(bt, ct, 60)
 
