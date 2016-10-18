@@ -321,9 +321,10 @@ class CustomizedRunEngine(RunEngine):
     @property
     def beamtime(self):
         if self._beamtime is None:
-            raise RuntimeError("This CustomizedRunEngine was not "
-                               "assigned a beamtime object, so integer-based lookup is not "
-                               "available.")
+            raise RuntimeError("Your beamtime environment is not properly "
+                               "setup. Please do\n"
+                               ">>> xrun.beamtime = bt\n"
+                               "then retry")
         return self._beamtime
 
     @beamtime.setter
