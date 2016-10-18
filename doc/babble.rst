@@ -25,16 +25,16 @@ Start a beamtime
   * ``experimenters`` field is expected to be [‘first_name’, ‘last_name’, ‘fist_name’, ‘last_name’, ….]
 
 
-link bt to prun
+link bt to xrun
 """""""""""""""
 
 .. code-block:: python
 
-  prun.beamtime = bt
+  xrun.beamtime = bt
 
 .. note::
 
-   this is to notice ``prun`` for current beamtime. concept of ``prun`` will be introduced later
+   this is to notice ``xrun`` for current beamtime. concept of ``xrun`` will be introduced later
 
 open a collection
 """""""""""""""""
@@ -139,9 +139,9 @@ running scan with acquire objects
 
 .. code-block:: python
 
-  prun(bt.samples[2],  bt.scanplan[5]) # indexing object explicitly
+  xrun(bt.samples[2],  bt.scanplan[5]) # indexing object explicitly
 
-  prun(2,5)  # inexplicit give ``Sample`` and ``ScanPlan`` index
+  xrun(2,5)  # inexplicit give ``Sample`` and ``ScanPlan`` index
 
 .. note::
 
@@ -172,11 +172,11 @@ From a paused state
 ============== ===========
 Command        Outcome
 ============== ===========
-prun.resume()    Safely resume plan.
-prun.abort()     Perform cleanup. Mark as aborted.
-prun.stop()      Perform cleanup. Mark as success.
-prun.halt()      Do not perform cleanup --- just stop.
-prun.state       Check if 'paused' or 'idle'.
+xrun.resume()    Safely resume plan.
+xrun.abort()     Perform cleanup. Mark as aborted.
+xrun.stop()      Perform cleanup. Mark as success.
+xrun.halt()      Do not perform cleanup --- just stop.
+xrun.state       Check if 'paused' or 'idle'.
 ============== ===========
 
 For more complicated situations, please go to :ref:`troubleshooting`
@@ -197,7 +197,7 @@ please refer to `here <http://nsls-ii.github.io/databroker/headers.html>`_
 .. note::
 
    * dark subtracted images from last ``header`` will be saved under directory with ``sample_name``
-     defined in ``Sample`` object you feed to ``prun``.
+     defined in ``Sample`` object you feed to ``xrun``.
 
 You can also issue a commend to save all images from desired ``header`` or a bunch of ``headers``
 
@@ -284,7 +284,7 @@ Possible scenarios:
       glbl.auto_dark = False
       glbl.shutter_control = False
 
-    **Want a fresh dark frame every time ``prun`` is triggered:**
+    **Want a fresh dark frame every time ``xrun`` is triggered:**
 
     .. code-block:: python
 

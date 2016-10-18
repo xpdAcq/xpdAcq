@@ -51,7 +51,7 @@ Setup
       #. find the sample object for your calibrant sample in ``bt.list()`` or create it if it is not there.
       #. type ``bt.list()``. Find the index number of your desired count-length (preloaded defaults are 0.1s, 0.5s, 1s, 5s, 10s, 30s).
          e.g., default index of ``ct30s`` object should be index 8
-      #. type ``prun(<sample object>, <scan object>)``, e.g., ``prun(bt.get(2),bt.get(8))`` where index 2 in the object list is the lazy-user sample and index 8 is the 30s count scan (please check though)
+      #. type ``xrun(<sample object>, <scan object>)``, e.g., ``xrun(bt.get(2),bt.get(8))`` where index 2 in the object list is the lazy-user sample and index 8 is the 30s count scan (please check though)
       #. when complete, type ``save_last_tiff()`` to save it as a tiff image.  It should reside in ``~/xpdUser/tiff_base``.
       #. load it in ``xPDFsuite`` or ``Fit2D`` and do the calibration
       #. save the resulting calibration config file in ``~/xpdUser/config_base`` (note, it goes in config_base, not in ``config_base/yml`` with the (default) file extension ``.cfg``)

@@ -17,7 +17,7 @@ Possible scenarios
       glbl.auto_dark = False
       glbl.shutter_control = False
 
-    **Want a fresh dark frame every time ``prun`` is triggered:**
+    **Want a fresh dark frame every time ``xrun`` is triggered:**
 
     .. code-block:: python
 

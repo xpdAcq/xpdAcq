@@ -13,7 +13,7 @@ from xpdacq.utils import import_sample_info
 from bluesky.examples import motor, det, Reader
 
 # print messages for debugging
-#prun.msg_hook = print
+#xrun.msg_hook = print
 
 class ImportSamplTest(unittest.TestCase):
 

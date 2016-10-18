@@ -19,7 +19,7 @@ from xpdacq.simulation import SimulatedPE1C
 
 import bluesky.examples as be
 
-class PrunTest(unittest.TestCase):
+class xrunTest(unittest.TestCase):
     def setUp(self):
         self.base_dir = glbl.base
         self.home_dir = os.path.join(self.base_dir, 'xpdUser')
@@ -40,7 +40,7 @@ class PrunTest(unittest.TestCase):
         import_sample_info(self.saf_num, self.bt)
         self.sp = ScanPlan(self.bt, ct, 5)
         glbl.shutter_control = True
-        self.prun = CustomizedRunEngine(self.bt)
+        self.xrun = CustomizedRunEngine(self.bt)
         open_collection('unittest')
         # simulation objects
         glbl.area_det = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
@@ -120,28 +120,28 @@ class PrunTest(unittest.TestCase):
         self.assertEqual(len(correct_uid), 1)
         self.assertEqual(rv, correct_uid[-1])
 
-        # case4: with real prun
+        # case4: with real xrun
         glbl._dark_dict_list = []  # re-init
-        prun_uid = self.prun(0, 0)
-        print(prun_uid)
-        self.assertEqual(len(prun_uid), 2)  # first one is auto_dark
+        xrun_uid = self.xrun(0, 0)
+        print(xrun_uid)
+        self.assertEqual(len(xrun_uid), 2)  # first one is auto_dark
         dark_uid = _validate_dark()
-        self.assertEqual(prun_uid[0], dark_uid)
+        self.assertEqual(xrun_uid[0], dark_uid)
         # test sc_dark_field_uid
         msg_list = []
 
         def msg_rv(msg):
             msg_list.append(msg)
 
-        self.prun.msg_hook = msg_rv
-        self.prun(0, 0)
+        self.xrun.msg_hook = msg_rv
+        self.xrun(0, 0)
         open_run = [el.kwargs for el in msg_list if el.command == 'open_run'][
             0]
         self.assertEqual(dark_uid, open_run['sc_dk_field_uid'])
         # no auto-dark
         glbl.auto_dark = False
-        new_prun_uid = self.prun(0, 0)
-        self.assertEqual(len(new_prun_uid), 1)  # no dark frame
+        new_xrun_uid = self.xrun(0, 0)
+        self.assertEqual(len(new_xrun_uid), 1)  # no dark frame
         self.assertEqual(glbl._dark_dict_list[-1]['uid'],
                          dark_uid)  # no update
 
@@ -176,23 +176,23 @@ class PrunTest(unittest.TestCase):
         # trust file-based solution
         self.assertEqual(reload_auto_calibration_md_dict, config_from_file)
         self.assertFalse('new_field' in reload_auto_calibration_md_dict)
-        # test with prun : auto_load_calib = False -> nothing happpen
+        # test with xrun : auto_load_calib = False -> nothing happpen
         msg_list = []
         def msg_rv(msg):
             msg_list.append(msg)
-        self.prun.msg_hook = msg_rv
+        self.xrun.msg_hook = msg_rv
         glbl.auto_load_calib = False
-        prun_uid = self.prun(0,0)
+        xrun_uid = self.xrun(0,0)
         open_run = [el.kwargs for el in msg_list
                     if el.command =='open_run'][0]
         self.assertFalse('calibration_md' in open_run)
-        # test with prun : auto_load_calib = True -> full calib_md
+        # test with xrun : auto_load_calib = True -> full calib_md
         msg_list = []
         def msg_rv(msg):
             msg_list.append(msg)
-        self.prun.msg_hook = msg_rv
+        self.xrun.msg_hook = msg_rv
         glbl.auto_load_calib = True
-        prun_uid = self.prun(0,0)
+        xrun_uid = self.xrun(0,0)
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'][0]
         # modify in place
@@ -209,9 +209,9 @@ class PrunTest(unittest.TestCase):
     #def test_open_collection(self):
     #    # no collection
     #    delattr(glbl, 'collection')
-    #    self.assertRaises(RuntimeError, lambda: self.prun(0, 0))
+    #    self.assertRaises(RuntimeError, lambda: self.xrun(0, 0))
     #    # test collection num
     #    open_collection('unittest_collection')
     #    self.assertEqual(glbl.collection, [])
-    #    self.prun(0, 0)
+    #    self.xrun(0, 0)
     #    self.assertEqual(glbl.collection_num, 1)

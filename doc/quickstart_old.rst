@@ -51,24 +51,24 @@ The basic way to collect data is to carry out a "scan", by typing the kind of sc
 
    Replace those words in angle brackets with pointers to real objects, eg.:
 
-   1. ``prun(bt.get(2),bt.get(5))`` will do a scan on the dummy sample (``'sa'``) called ``'l-user'``--(for lazy user!) which is in position (index) ``2`` in the ``bt.list()`` list--for 1 second (the name of that object in the list at position ``5`` is ``'ct1s'`` which stands for "count 1 second").
-   2. ``prun(bt.get(2),bt.get(7))`` will do a scan for 10 s on the same sample (to see that, look at the list produced by typing ``bt.list()``.
-   3. ``setupscan(bt.get(2),bt.get(7))`` will do a setupscan on that sample for 10 seconds.  A setupscan is like a prun ("production run") except it is tagged in metadata as a setupscan so you can separate later which were production runs and which were setup-scans.
+   1. ``xrun(bt.get(2),bt.get(5))`` will do a scan on the dummy sample (``'sa'``) called ``'l-user'``--(for lazy user!) which is in position (index) ``2`` in the ``bt.list()`` list--for 1 second (the name of that object in the list at position ``5`` is ``'ct1s'`` which stands for "count 1 second").
+   2. ``xrun(bt.get(2),bt.get(7))`` will do a scan for 10 s on the same sample (to see that, look at the list produced by typing ``bt.list()``.
+   3. ``setupscan(bt.get(2),bt.get(7))`` will do a setupscan on that sample for 10 seconds.  A setupscan is like a xrun ("production run") except it is tagged in metadata as a setupscan so you can separate later which were production runs and which were setup-scans.
 
    .. code-block:: python
    
      Pro-Tip:
-     '''``prun`` and all the scans support different ways of assigning acquire objects. 
+     '''``xrun`` and all the scans support different ways of assigning acquire objects.
      You can either get the objects with the ``bt.get()`` methods as above, or
      to save typing, the scan functions allow you to specify just the object index, 
      or (unique) name of the acquire object. The following expressions are all 
      equivalent:'''
 
-     prun(bt.get(2), bt.get(5))  
-     prun('l-user', bt.get(5))  # where 'l-user' is the name of bt Sample object at index 2
-     prun(bt.get(2), 'ct_1')    # where 'ct_1' is the name of bt ScanPlan object at index 5
-     prun(2,5)
-     prun('l-user','ct_1')
+     xrun(bt.get(2), bt.get(5))
+     xrun('l-user', bt.get(5))  # where 'l-user' is the name of bt Sample object at index 2
+     xrun(bt.get(2), 'ct_1')    # where 'ct_1' is the name of bt ScanPlan object at index 5
+     xrun(2,5)
+     xrun('l-user','ct_1')
 
 
  3. to see the data you have to extract it from the NSLS-ii database.
@@ -85,7 +85,7 @@ Remember!
 +++++++++
    1. ``bt.list()`` to see what objects are available
    2. ``setupscan(<index-of-Sample-object>,<index-of-ScanPlan-object>)``  to run setup scans until you are ready for production runs, then
-   3. ``prun(<index-of-Sample-object>),<index-of-ScanPlan-object>)``
+   3. ``xrun(<index-of-Sample-object>),<index-of-ScanPlan-object>)``
    4. ``save_tiff(db[list_of_scans])`` to get the data back as a tiff file
    5. ``xpdfsuite`` (xPDFsuite) to visualize it, integrate it to 1D and process to get a diffraction pattern or PDF.
 
@@ -108,19 +108,19 @@ You should try and set up some of your own scanplan objects:
       This will create a ``'ct'``, or count-type, scan with an exposure of 90 s or 1.5 minutes.
       To find more details on creating new ``ScanPlan`` objects, please see :ref:`usb_Scan`
     3. type ``bt.list('sp')`` again.  You should see your new ``ScanPlan`` object at the end of the list.  You can now use your object to collect data by passing it to a "scan" function:
-    4. You can run it using ``prun(<sample-object>,<index-of-your-new-ScanPlan-Object>)``  If your new object is at position 11 in the list, and position 2 holds a ``Sample`` object (it does by default) then ``prun(2,11)``, or probably better, ``setupscan(2,11)`` since we are still messing around here.
+    4. You can run it using ``xrun(<sample-object>,<index-of-your-new-ScanPlan-Object>)``  If your new object is at position 11 in the list, and position 2 holds a ``Sample`` object (it does by default) then ``xrun(2,11)``, or probably better, ``setupscan(2,11)`` since we are still messing around here.
 
 Types of scan available.
   They all take as arguments ``(<sample-object>, <scanplan-object>)`` in that order:
 
-  1. ``prun()`` - the one you will use the most.  It stands for "production run"
-  2. ``setupscan()`` - it is just the same as ``prun()`` but the data are tagged as being test/setup data, helping you to keep track of what is what later.
+  1. ``xrun()`` - the one you will use the most.  It stands for "production run"
+  2. ``setupscan()`` - it is just the same as ``xrun()`` but the data are tagged as being test/setup data, helping you to keep track of what is what later.
   3. ``dryrun()`` - it doesn't execute anything, only prints out metadata, so you can test out your scan to see what it will do.
-  4. ``background()`` - Like ``prun()`` but it tags the dataset as a background scan, so later you can search for all your background scans!
+  4. ``background()`` - Like ``xrun()`` but it tags the dataset as a background scan, so later you can search for all your background scans!
   
   these ones you will use less often, if at all
   
-  5. ``calibration()`` - the same as ``prun()`` , but the data are tagged as calibration data.
+  5. ``calibration()`` - the same as ``xrun()`` , but the data are tagged as calibration data.
   6. ``dark()`` - you shouldn't have to use this as dark scans (shutter closed) and dark subtractions of your data are done automatically, but it is here in case you do it is there.  It ensure the shutter is closed and tags the scan as being a dark.
   7. ``run_mask_builder()`` - take data and produce a mask for the image, the mask is then inserted into the metadata
 
@@ -196,7 +196,7 @@ Possible scenarios
       glbl.auto_dark = False
       glbl.shutter_control = False
 
-    **Want a fresh dark frame every time ``prun`` is triggered:**
+    **Want a fresh dark frame every time ``xrun`` is triggered:**
 
     .. code-block:: python
 

@@ -32,17 +32,17 @@ except NameError:
 # beamtime reload happen in xpdacq
 from xpdacq.xpdacq import *
 
-# instantiate prun without beamtime, like bluesky setup
-prun = CustomizedRunEngine(None)
-prun.md['owner'] = glbl.owner
-prun.md['beamline_id'] = glbl.beamline_id
-prun.md['group'] = glbl.group
+# instantiate xrun without beamtime, like bluesky setup
+xrun = CustomizedRunEngine(None)
+xrun.md['owner'] = glbl.owner
+xrun.md['beamline_id'] = glbl.beamline_id
+xrun.md['group'] = glbl.group
 
 # load beamtime
 bt = start_xpdacq()
 if bt is not None:
     print("INFO: Reload beamtime objects:\n{}\n".format(bt))
-    prun.beamtime = bt
+    xrun.beamtime = bt
 
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
