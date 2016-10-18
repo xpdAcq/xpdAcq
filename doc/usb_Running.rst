@@ -18,74 +18,57 @@ The allowed scan types are:
 .. code-block:: python
 
   >>> xrun(sample, scanplan)
-  >>> dark(sample, scanplan)
-  >>> background(sample, scanplan)
-  >>> calibration(sample, scanplan)
-  >>> setupscan(sample, scanplan)
-  >>> dryrun(sample, scanplan)
 
 .. autofunction:: xpdacq.xpdacq.xrun
 
-``xrun`` stands for "production run" which is a normal run.
+``xrun`` stands for "XPD run" which is a our main run engine.
 
-.. autofunction:: xpdacq.xpdacq.dark
-
-``dark`` collects dark frames.Strictly speaking the sample is irrelevant here because the shutter is closed, but
-it is left in the definition for consistency and in general ``dark`` is not necessary as automated dark subtraction collect dark images for you.
-
-.. autofunction:: xpdacq.xpdacq.calibration
-
-``calibration`` is specifically designed to collect image on your calibrants.
-
-.. autofunction:: xpdacq.xpdacq.setupscan
-
-``setupscan`` is for testing things before you are ready to get production data, such as trying out different exposures
-on a sample to find the best exposure time.
-
-.. autofunction:: xpdacq.xpdacq.dryrun
-
-``dryrun`` does not execute any scan but tells you what is going to be run when you give the same Sample and Scan objects
-to any of the other runs. It may be used for validating your scan objects, and also for estimating how long a ``tseries`` or ``Tramp`` might take.
-
-Here are some examples of a workflow.  Assume a GaAs sample is loaded on the diffractometer
-and the ``'GaAs'`` Sample object is created as well as all the ScanPlans we need.
-We will start by doing a dry-run on our ``'ct2'`` count ScanPlan.
+Here are some examples of a workflow.  Assume a Ni_calibrant sample is loaded on the diffractometer
+and the ``Ni_calibrant`` Sample object is created as well as all the ``ScanPlan`` we need.
+We will start by doing a scan with ``Sample`` object ``Setup`` on our ``ct_1`` ScanPlan.
 
 Remember, always start with ``bt.list()``
 
 .. code-block:: python
 
   >>> bt.list()
-  bt object bt has list index  0
-  ex object InGaAsAlloyPD has list index  1
-  ex object ProteinFolding has list index  2
-  sa object GaAs has list index  3
-  sa object IGA75-25 has list index  4
-  sa object In0.25Ga0.75As has list index  5
-  sa object InAs has list index  6
-  sa object InGaAs-5050 has list index  7
-  sc object ct1.5 has list index  8
-  sc object ct1.5_nosh has list index  9
-  sc object ct100.5_nolt has list index  10
-  sc object ct2 has list index  11
-  sc object ct2_vw has list index  12
-  sc object ct2_vw_nos has list index  13
-  sc object ct2_vw_nosh has list index  14
-  Use bt.get(index) to get the one you want
 
-The Sample object I want has list index 3 and the ScanPlan has list index 11.
-Let's try a dryrun to make sure everything is ok.
+  ScanPlans:
+  0: 'ct_5'
+  1: 'ct_0.1'
+  2: 'ct_1'
+  3: 'ct_10'
+  4: 'ct_30'
+  5: 'ct_60'
+  7: 'ct_1.5'
+  8: 'ct_100.5'
+
+  Samples:
+  0: Setup
+  1: Ni_calibrant
+  2: bkgd_kapton_0.9mmOD
+  3: bkgd_kapton_1mmOD
+  4: bkgd_kapton_0.5mmOD
+  5: activated_carbon_1
+  6: activated_carbon_2
+  7: activated_carbon_3
+...
+
+The Sample object I want has list index 0 and the ScanPlan has list index 2.
+Let's try to make sure everything is ok.
 
 .. code-block:: python
 
-  >>> dryrun(bt.get(3),bt.get(11))
-  INFO: requested exposure time =  2.0  -> computed exposure time: 2.0
-  === dryrun mode ===
-  this will execute a single bluesky Count type scan
-  Sample metadata: Sample name = GaAs
-  using the "pe1c" detector (Perkin-Elmer in continuous acquisition mode)
-  in the form of 20 frames of 0.1 s summed into a single event
-  (i.e. accessible as a single tiff file)
+  >>> xrun(0, 2)
+  INFO: requested exposure time = 1 - > computed exposure time= 1.0
+  INFO: No calibration file found in config_base. Scan will still keep going on
+  INFO: no mask has been associated with current glbl
+  +-----------+------------+------------+
+  |   seq_num |       time |  pe1_image |
+  +-----------+------------+------------+
+  |         1 | 15:58:47.4 |       5.00 |
+  +-----------+------------+------------+
+  generator count ['73dc71'] (scan num: 3)
 
 OK, it seems to work, lets do some testing to see how much intensity we need.
 We will do three setup scans with 1.5 seconds and 100.5 seconds exposure
@@ -93,51 +76,55 @@ and then compare them.
 
 .. code-block:: python
 
-  >>> setupscan(bt.get(3),bt.get(8))   #1.5 seconds
-  >>> setupscan(bt.get(3),bt.get(10))  #100.5 seconds
-  INFO: requested exposure time =  1.5  -> computed exposure time: 1.5
-  +-----------+------------+------------------+
-  |   seq_num |       time | pe1_stats1_total |
-  +-----------+------------+------------------+
-  |         1 | 10:49:31.3 |                0 |
-  +-----------+------------+------------------+
-  Count ['e7adbd'] (scan num: 1)
-  INFO: requested exposure time =  100.5  -> computed exposure time: 100.5
-  +-----------+------------+------------------+
-  |   seq_num |       time | pe1_stats1_total |
-  +-----------+------------+------------------+
-  |         1 | 10:49:41.3 |                0 |
-  +-----------+------------+------------------+
-  Count ['e7adbd'] (scan num: 2)
+  >>> xrun(0, 7)  #1.5 seconds
+  INFO: requested exposure time = 1.5 - > computed exposure time= 1.5
+  INFO: No calibration file found in config_base. Scan will still keep going on
+  INFO: no mask has been associated with current glbl
+  +-----------+------------+------------+
+  |   seq_num |       time |  pe1_image |
+  +-----------+------------+------------+
+  |         1 | 16:01:37.3 |       5.00 |
+  +-----------+------------+------------+
+  generator count ['728f2f'] (scan num: 5)
 
-what is nice about these is that they are tagged with an ``sc_isxrun':False`` metadata field
-which means that, by default, they will not be retrieved when searching for production data.  It
-keeps our setup scans and production scans nicely separated in the database, though
-the underlying scans that are carried out are all still there and can be retrieved if need
-be.
+  >>> setupscan(0, 8)  #100.5 seconds
+  INFO: requested exposure time = 100.5 - > computed exposure time= 100.5
+  INFO: No calibration file found in config_base. Scan will still keep going on
+  INFO: no mask has been associated with current glbl
+  +-----------+------------+------------+
+  |   seq_num |       time |  pe1_image |
+  +-----------+------------+------------+
+  |         1 | 16:02:57.0 |       5.00 |
+  +-----------+------------+------------+
+  generator count ['981e70'] (scan num: 6)
 
-It seems that the 2 second scans are the best, so let's do a production run
+
+It seems that the 2 second scans are the best, so let's do with desired ``Sample``
 to get the first data-set.
 
 .. code-block:: python
 
-  >>> xrun(bt.get(3),bt.get(11))  #2 seconds
-  INFO: auto_dark didn't detect a valid dark, so is collecting a new dark frame.
-  See documentation at http://xpdacq.github.io for more information about controlling this behavior
-  INFO: requested exposure time =  2.0  -> computed exposure time: 2.0
-  +-----------+------------+------------------+
-  |   seq_num |       time | pe1_stats1_total |
-  +-----------+------------+------------------+
-  |         1 | 10:51:36.6 |                0 |
-  +-----------+------------+------------------+
-  Count ['d475dc'] (scan num: 1)
-  INFO: requested exposure time =  2.0  -> computed exposure time: 2.0
-  +-----------+------------+------------------+
-  |   seq_num |       time | pe1_stats1_total |
-  +-----------+------------+------------------+
-  |         1 | 10:51:42.4 |                0 |
-  +-----------+------------+------------------+
-  Count ['e7adbd'] (scan num: 2)
+  >>>In [13]: xrun(0, 8)
+  INFO: requested exposure time = 100.5 - > computed exposure time= 100.5
+  INFO: closing shutter...
+  INFO: taking dark frame....
+  INFO: No calibration file found in config_base. Scan will still keep going on
+  INFO: no mask has been associated with current glbl
+  +-----------+------------+------------+
+  |   seq_num |       time |  pe1_image |
+  +-----------+------------+------------+
+  |         1 | 16:04:31.4 |       5.00 |
+  +-----------+------------+------------+
+  generator count ['d770c7'] (scan num: 7)
+  opening shutter...
+  INFO: No calibration file found in config_base. Scan will still keep going on
+  INFO: no mask has been associated with current glbl
+  +-----------+------------+------------+
+  |   seq_num |       time |  pe1_image |
+  +-----------+------------+------------+
+  |         1 | 16:04:31.5 |       5.00 |
+  +-----------+------------+------------+
+  generator count ['0beaaf'] (scan num: 8)
 
 
   .. _auto_dark:
@@ -391,13 +378,6 @@ Sample Objects
   Each row in your spreadsheet will be taken as one valid Sample and metadata
   will be parsed based on the contents you type in with above parsing rule.
 
-
-* **background**:
-
-  In additional to ``Sample`` objects parsed from rows, ``xpdAcq`` also create
-  background objects with information you type in at ``Geometry`` field.
-
-  background objects will automatically tagged as ``is_background`` in metadata.
 
 Generally, after successfully importing sample from spreadsheet, that is what
 you would see:

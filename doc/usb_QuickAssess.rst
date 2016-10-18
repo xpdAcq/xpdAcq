@@ -36,5 +36,5 @@ This behavior can be turned off by giving additional argument:
 
 .. code-block:: python
 
-  save_last_tiff(dark_subtraction = False)
-  save_tiff(db[-1], dark_subtraction = False)
+  save_last_tiff(dark_sub_bool = True)
+  save_tiff(db[-1], dark_sub_bool = False)

@@ -46,14 +46,8 @@ hierarchy for saving with the data.
 
 The hierarch is as follows:
  * Beamtime
+       (* Sample , * ScanPlan)
 
-    * Experiment
-
-       * Sample
-
-          * ScanPlan
-
-             * Scan
 
 where it is assumed that a `Beamtime` may consist of one or more `Experiments`
 (such as "temperature and doping dependence of In1-xGaxA"). Each experiment

@@ -18,11 +18,11 @@ How do I start the ``collection`` ipython environment so I can collect some data
 
 2. Activate the XPD data analysis environment:
 
-  * In a terminal look to see if it is already activated.  If it is, you should see ``(analysis)`` at the beginning of the line.
+  * In a terminal look to see if it is already activated.  If it is, you should see ``(analysis-dev)`` at the beginning of the line.
 
   .. code-block:: none
 
-    (analysis)xf28id1@xf28id1-ws2:~$
+    (analysis-dev)xf28id1@xf28id1-ws2:~$
 
   * If you don't see it, type ``ianalysis`` at the command prompt then check again.
 
@@ -54,7 +54,7 @@ for you.  Let's check if it is the case.
      In [5]: glbl.area_det
      Out[5]: PerkinElmerContinuous(prefix='XF:28IDC-ES:1{Det:PE1}', name='pe1', read_attrs=['tiff', 'stats1'], configuration_attrs=['images_per_set', 'number_of_sets'], monitor_attrs=[])
 
-There are other setups that you can do to make your experiment run smoothly.  For example, by carrying out a calibration before you start collecting it greatly facilitate data reduction later.  Please follow the workflow in the :ref:`cheat_sheet` or talk to the IS if you don't know how to do this.  
+There are other setups that you can do to make your experiment run smoothly.  For example, by carrying out a calibration before you start collecting it greatly facilitate data reduction later.  Please follow the workflow in the :ref:`cheat_sheet` or talk to the IS if you don't know how to do this.
 
 
 Why does my scan halt for no reason?
