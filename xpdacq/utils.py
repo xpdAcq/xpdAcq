@@ -6,11 +6,37 @@ import tarfile as tar
 import uuid
 from time import strftime
 from shutil import ReadError
+from IPython import get_ipython
+
 
 import pandas as pd
 
 from .glbl import glbl
 from .beamtime import Beamtime, Sample, ScanPlan
+
+
+def _check_obj(required_obj_list):
+    """ function to check if object(s) exist
+
+    Parameter
+    ---------
+    required_obj_list : list
+        a list of strings refering to object names
+
+    """
+    ips = get_ipython()
+    for obj_str in required_obj_list:
+        if not ips.ns_table['user_global'].get(obj_str, None):
+            raise NameError("Required object {} doesn't exist in"
+                            "namespace".format(obj_str))
+    return
+
+def _timestampstr(timestamp):
+    """ convert timestamp to strftime formate """
+    timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime(
+        '%Y%m%d-%H%M%S')
+    return timestring
+
 
 def _graceful_exit(error_message):
     try:
@@ -487,21 +513,41 @@ def import_sample_info(saf_num=None, bt=None):
     bt : xpdacq.beamtime.Beamtime
         beamtime object that is going to be linked with these samples
     """
+
     if bt is None:
-        bt_fn = os.path.join(glbl.yaml_dir, 'bt_bt.yml')
-        if not os.path.isfile(bt_fn):
-            raise FileNotFoundError("WARNING: there is no beamtime "
-                                    "object exits.\nHave you started a "
-                                    "beamtime ?")
-            return
-        f = open(bt_fn)
-        bt = Beamtime.from_yaml(f)
-    else:
-        if not isinstance(bt, Beamtime):
-            raise TypeError("WARINING: illegal beamtime object!.\n"
-                            "Please make sure you are hadning correct "
-                            "object")
-            return
+        _check_obj(['bt'])  # raise NameError if bt is not alive
+        ips = get_ipython()
+        bt = ips.ns_table['user_global']['bt']
+
+    # pass to core function
+    _import_sample_info(saf_num=saf_num, bt=bt)
+
+
+def _import_sample_info(saf_num=None, bt=None):
+    """ core function to import sample metadata based on a spreadsheet
+
+    this function expect a prepopulated '<SAF_number>_sample.xls' file 
+    located under `xpdConfig/` directory. Corresponding Sample objects 
+    will be created after information stored being parsed. Please go to 
+    http://xpdacq.github.io for parser rules.
+
+    Parameters
+    ----------
+    saf_num : int
+        Safety Approval Form number of beamtime.
+    bt : xpdacq.beamtime.Beamtime
+        beamtime object that is going to be linked with these samples
+    """
+
+    # at core function level, bt should strictly be Beamtime,
+    # raise if it is not this case
+    if not isinstance(bt, Beamtime):
+        raise TypeError("WARINING: illegal Beamtime object argument!.\n"
+                        "input object {} has type = {}\n"
+                        "Please make sure you are hadning correct object\n"
+                        "or double check if you already started a beamtime"
+                        .format(bt, type(bt)))
+        return
 
     if saf_num is None:
         try:
