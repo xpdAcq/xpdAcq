@@ -7,12 +7,18 @@ This should have been carried out by the beamline responsible.  To check all is 
 carry out the following steps:
 
  #. Check you are in the collection environment
- #. Type ``bt``.  It should return an ``Beamtime`` object.  If not, please contact your beamline responsible.
+ #. Type ``bt``.  It should return similar output as following:
 
-.. code-block:: python
+ .. code-block:: python
 
   >>> bt
-  <xpdacq.beamtime.Beamtime at 0x4b112b0>
+  {'bt_experimenters': ['Tim', 'Liu'],
+   'bt_piLast': 'Billinge',
+   'bt_safN': '300564',
+   'bt_uid': 'c76a6fe1',
+   'bt_wavelength': 0.1832}
+
+ If not, please contact your beamline responsible.
 
 This object is like a container that contains some critical information about
 your beamtime.  You can investigate what is inside.
@@ -20,32 +26,29 @@ your beamtime.  You can investigate what is inside.
 To see the kinds of things that container contains, place a dot after bt and hit `tab`,
 and all things it contains (but not their values) will be listed.
 
-.. code-block:: python
-
-  >>> bt.
-  bt.export    bt.list        bt.md     bt.type
-  bt.get       bt.loadyamls   bt.name
+.. image:: ./img/usb_beamtime_bt_0.png
+  :width: 400px
+  :align: center
+  :height: 200px
 
 To see what those things contain, type ``bt.<thing>`` and hit return. For example, in our case:
 
 .. code-block:: python
 
-  >>> bt.name
-  'bt'
-  >>> bt.type
-  'bt'
+  In [3]: bt.wavelength
+  Out[3]: 0.1832
 
 So this is a beamtime (`'bt'`) type of object with name `'bt'`.  More interesting
 is the metadata it contains:
 
 .. code-block:: python
 
-  >>> bt.md
- {'bt_experimenters': [('Chia-Hao', 'Liu'), ('Simon', 'Billinge')],
- 'bt_piLast': 'Billinge',
- 'bt_safN': 300256,
- 'bt_uid': '9b0c5878-cba4-11e5-8984-28b2bd4521c0',
- 'bt_wavelength': 0.1818}
+ >>> bt.md
+ {'bt_experimenters': ['Tim', 'Liu'],
+  'bt_piLast': 'Billinge',
+  'bt_safN': '300564',
+  'bt_uid': 'c76a6fe1',
+  'bt_wavelength': 0.1832}
 
 The instrument responsible created an initial version of ``bt`` with information
 from the Safety Approval Form (SAF) form: the PI last name, the SAF number
@@ -73,9 +76,26 @@ and hit return.  So far there is only 1 object, it is the `bt` object with name 
 
 .. code-block:: python
 
-  >>> bt.list()
-  bt object bt has list index  0
-  Use bt.get(index) to get the one you want
+In [4]: bt.list()
+
+ScanPlans:
+0: 'ct_5'
+1: 'ct_0.1'
+2: 'ct_1'
+3: 'ct_10'
+4: 'ct_30'
+5: 'ct_60'
+
+Samples:
+0: Setup
+1: Ni_calibrant
+2: bkgd_kapton_0.9mmOD
+3: bkgd_kapton_1mmOD
+4: bkgd_kapton_0.5mmOD
+5: activated_carbon_1
+6: activated_carbon_2
+7: activated_carbon_3
+...
 
 Before we move on, one more thing.  As we mentioned before, if ``bt`` doesn't exist,
 
@@ -95,6 +115,6 @@ environment setup that need to be fixed, but if you ever do have to create
 
 .. code-block:: python
 
-  >>> bt = Beamtime('Billinge',300256,0.1818,[('Simon','Billinge'),('Chia-Hao','Liu')])
+  >>> bt = Beamtime('Billinge',300256, ['Simon','Billinge', 'Chia-Hao','Liu'], 0.18326)
 
 We will assume that ``bt`` exists.  Now we move on to the next step, :ref:`usb_experiment` within our beamtime.

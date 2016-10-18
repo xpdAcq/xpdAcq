@@ -12,47 +12,57 @@ As Douglas Adams taught us `DON'T PANIC` .  This is actually
 `normal` (or at least `expected` ) behavior in xpdAcq.  Remember that
 one of the design goals of the software project was to minimize
 users' typing.  The design had to take into account that the
-collection ipython environment is not so stable 
+collection ipython environment is not so stable
 (e.g., see :ref:`troubleshooting` ) and we should expect periodic
 restarts of it.  How bad if we had to retype our metadata every
 time?  So every time you create an xpdAcq acquisition object,
 the details are saved to a file on the local hard-drive.  When
 ``icollection`` is run, the main ``bt`` object (if it exists) is
-automatically reloaded, but not the other acquisition objects. 
+automatically reloaded, but not the other acquisition objects.
 But don't worry, they are all safe and sound.
 
 .. _usb_bt_list:
 
-bt.list() and bt.get() are your friends
----------------------------------------
+bt.list() is your friends
+--------------------------
 
-To see what xpdAcquire acquisition objects you have available 
-to you, type ``bt.list()`` .  This lists the name and type of all 
+To see what xpdAcquire acquisition objects you have available
+to you, type ``bt.list()`` .  This lists the name and type of all
 the acquisition objects that are on the hard-drive and available
-to you....your objects: e.g., 
+to you....your objects: e.g.,
 
 .. code-block:: python
 
-  >>> bt.list()
-  bt object bt has list index  0
-  ex object InGaAsAlloyPD has list index  1
-  ex object ProteinFolding has list index  2
-  sa object GaAs has list index  3
-  sa object IGA75-25 has list index  4
-  sa object In0.25Ga0.75As has list index  5
-  sa object InAs has list index  6
-  sa object InGaAs-5050 has list index  7
-  Use bt.get(index) to get the one you want
+>>> bt.list()
+
+ScanPlans:
+0: 'ct_5'
+1: 'ct_0.1'
+2: 'ct_1'
+3: 'ct_10'
+4: 'ct_30'
+5: 'ct_60'
+
+Samples:
+0: Setup
+1: Ni_calibrant
+2: bkgd_kapton_0.9mmOD
+3: bkgd_kapton_1mmOD
+4: bkgd_kapton_0.5mmOD
+5: activated_carbon_1
+6: activated_carbon_2
+7: activated_carbon_3
+...
 
 so they are all there, and we can get them, but we can no longer refer to them by the
-assignment we used when we created them (remember we used ``s1`` , ``s2`` and so on)
+assignment we used when we created them
 
 To get them we use ``bt.get()`` .  We can explicitly reload them again
 or usually just use ``bt.get(#)`` where ``#`` is the list index (a number) as a  for example,
 to refer to them directly. For example, consider the following sequence of code blocks:
 
 .. code-block:: python
-  
+
   >>> s1
   ---------------------------------------------------------------------------
   NameError                                 Traceback (most recent call last)
@@ -75,7 +85,7 @@ Oh no, my ``s1`` sample object, which as my sample named `GaAs` , has disappeare
   sa object InAs has list index  6
   sa object InGaAs-5050 has list index  7
   Use bt.get(index) to get the one you want
-  
+
 That's it with a list index of 3, the ``sa`` sample type object called ``GaAs`` .
 Just to be sane, let's reload it. We can give it any name, it doesn't have to be
 the same name as last time, so let's reload it as ``s1_again`` :
@@ -134,20 +144,19 @@ Make sure to refer to that object by the written index number and not where you 
 bt.list() and bt.get() Gotchas
 ------------------------------
 
-Once you get used to this design we hope you will like it, but there are a 
+Once you get used to this design we hope you will like it, but there are a
 couple of important `Gotchas` that you should bear in mind that could lead to
 confusion until you get used to them.
 
  #. If you create a `new` object with the same type and name as an existing one, the existing one will be **OVERWRITTEN** by the new one!  You will lose the old one forever.
- 
+
     This is actually a feature of the code (we want each object to be unique and the only thing that makes it unique from one ``collection`` session to the next is its name and type). But please be careful about your naming! Why is it a feature?  You can use this to update an object by redefining it with the same name.
- 
+
  #. Objects may change their position in the ``bt.list()`` as new objects are created.  Just because the object you want was in position ``4`` before, doesn't mean it will be now. **So get used to always typing** ``bt.list()`` **FIRST then** ``bt.get()`` .
  #. At the time of writing, our xpdacq objects incorporate metadata from higher in the stack (e.g., Sample inheriting Experiment metadata) statically at the time they are created.  If you update information higher in the stack, for example, add some experiment information, the new information will only appear in objects created (or updated by reinstantiating) after this upstream change.  We hope to fix this in the future.
- 
+
 go to :ref:`usb_scan`
 
 go to :ref:`usb_running`
- 
-return to :ref:`xpdu`
 
+return to :ref:`xpdu`

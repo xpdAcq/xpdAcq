@@ -10,13 +10,13 @@ Required Information
 
     PI last name, SAF number and bt_uid
 
-  ``xpdAcq`` will load in information automatically unless user delete ``bt`` object in  ``xpdUser/config_base/yml/``.
+  ``xpdAcq`` will load in information automatically unless user delete ``bt_bt.yml`` file in  ``xpdUser/config_base/yml/``.
 
 Goals of the Process
 """"""""""""""""""""
 
   #. Tar entire xpdUser tree with name ``<PIlastname>_<saf#>_<date>_<bt_uid>.tar``
-  #. Place a copy of the tarball into remote archive directory ``pe2_data/.userBeamtimeArchive/``
+  #. Place a copy of the tarball into remote archive directory ``pe1_data/.userBeamtimeArchive/``
   #. Verify that the archival copy is present and can be accessed
   #. Delete everything except under ``xpdUser``
   #. Keep operator informed of what is going on

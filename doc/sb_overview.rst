@@ -3,10 +3,10 @@
 Overview of xpd acquisition environment
 ---------------------------------------
 
-All experiments will be carried out in the ``~/xpdUser`` directory tree.
+All experiments will be carried out in the ``pe2_data/xpdUser`` directory tree.
 
 At the beginning of the beamtime users are presented with a standard set of directories
-inside  ``~/xpdUser``.  The directories and their purpose are shown in the table
+inside  ``pe2_data/xpdUser``.  The directories and their purpose are shown in the table
 below.
 
 All the directories will be empty initially, except that users can place predefined
@@ -24,20 +24,21 @@ Table of directories and their uses:
 +---------------+------------------------------------------------------------+
 |directory name |contents                                                    |
 +===============+============================================================+
-|Import         |User places here their pre-made files user scripts (.py),   |
+|Import         |User places here pre-populated Sample spreadsheet(.xlsx)    |
+|               |pre-made files user scripts (.py),                          |
 |               |detector-image mask files (.npy), files containing xpdAcq   |
 |               |objects (extension .yml) or an archived file made of mix of |
 |               |them. User can use ``import_userScriptsEtc`` to unpack and  |
 |               |import those files.                                         |
 +---------------+------------------------------------------------------------+
-|config_base    |This contains the config file and mask file                 |
-|               |used by ``xPDFsuite`` and                                   |
-|               |xpdacq. Only the programs should write in this directory    |
+|config_base    |This contains the calibration parametersm, config file and  |
+|               |mask file used by ``xPDFsuite`` and ``xpdacq``.             |
+|               | Only the programs should write in this directory           |
 |               |Users must not edit or add anything to this directory.      |
 +---------------+------------------------------------------------------------+
-|tif_base       |This is where all the image files (.tiff) are stored *that* |
-|               |*the user extracts* from the database using dataBroker      |
-|               |scripts during the experiment.                              |
+|tiff_base      |This is where all the image files (.tif) are stored *that*  |
+|               |*the user extracts* from the database using ``databroker``  |
+|               |library during the experiment.                              |
 +---------------+------------------------------------------------------------+
 |userScripts    |This is a handy space where the users can write their own   |
 |               |experiment scripts and save them. They will be bundled up   |
@@ -45,8 +46,6 @@ Table of directories and their uses:
 +---------------+------------------------------------------------------------+
 |userAnalysis   |Users can create any sets of directories under here for     |
 |               |storing analyzed files (for example, saved by xPDFsuite).   |
-|               |it is expected that most of these will be 1D files such as  |
-|               |raw 1D diffraction intensities, g(r) and F(Q) files.        |
 +---------------+------------------------------------------------------------+
 |...            |Actually, the users can create any directories and files    |
 |               |they want and they will be bundled, tarred and zipped at the|
