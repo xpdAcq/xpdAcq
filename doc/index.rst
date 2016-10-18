@@ -22,11 +22,11 @@ so that you can focus more on scientific aspects of your experiment. Additionall
 that needs less Python experience than the current native bluesky interface.
 
 We hope that you find it intuitive, like the most important function to run a
-"production" scan, ``prun``:
+"production" scan, ``xrun``:
 
 .. code-block:: python
 
-  prun(sample-info, scan-info) #run this Sample with this Scan-Plan
+  xrun(sample-info, scan-info) #run this Sample with this Scan-Plan
 
 To get started, please go to :ref:`quick_start`
 

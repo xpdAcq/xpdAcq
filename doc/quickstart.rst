@@ -137,7 +137,7 @@ Ni diffraction pattern. In your ``collection`` terminal type:
 
 .. code-block:: python
 
-  prun(0,0) # will run an exposure of 60 seconds on your setup sample
+  xrun(0,0) # will run an exposure of 60 seconds on your setup sample
   save_last_tiff() # will save the image in the tiff_base/Setup directory
 
 Note, if the software gives an error that it cannot find the sample object, then you will need
@@ -298,8 +298,8 @@ Finally, later on in the experiment when you are ready to run it, you would run 
 
 .. code-block:: python
 
-  prun(56, myplan) # on sample 56 in the sample list, run the myplan scan plan.
-  prun(57, myplan)
+  xrun(56, myplan) # on sample 56 in the sample list, run the myplan scan plan.
+  xrun(57, myplan)
 
 The ability to write your own bluesky plans gives enormous flexibility
 but has a steep learning curve, but you should be able to get help
@@ -357,7 +357,7 @@ Run your experiment
 """"""""""""""""""""""""""""""""""""""""""""
 
 The main philosophy of ``xpdAcq`` is : **on this sample run this scanplan** which
-is typed as ``prun(<Sample.object>,<ScanPlan-object>)``
+is typed as ``xrun(<Sample.object>,<ScanPlan-object>)``
 
 background scan
 ^^^^^^^^^^^^^^^
@@ -375,7 +375,7 @@ setup, for example, crystalline peaks due to the beam hitting a shutter.
 
 to list your sample objects tagged as backgrounds (that was done originally in your excel spreadsheet).
 
- 3. In the ``collection`` terminal, run ``prun`` (see below) on the background sample with a ``ct`` ScanPlan object of the desired exposure
+ 3. In the ``collection`` terminal, run ``xrun`` (see below) on the background sample with a ``ct`` ScanPlan object of the desired exposure
 
 .. code-block:: python
 
@@ -383,8 +383,8 @@ to list your sample objects tagged as backgrounds (that was done originally in y
   # scanplan[3] is a 15 minute exposure and there is no stored 15 minute dark exposure for subtraction
   # so the code will automatically collect that too!
   # but to test it you could replace bt.scanplan[3] with bt.scanplan[0]....
-  prun(bt.samples[2],bt.scanplan[3]) # referencing objects explicitly...or...
-  prun(2,3)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
+  xrun(bt.samples[2],bt.scanplan[3]) # referencing objects explicitly...or...
+  xrun(2,3)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
                                      # index from the ``bt`` list
 
 Please see :ref:`background_obj` for more information.
@@ -415,13 +415,13 @@ output files it is also a good idea to give your setup sample a name like ``mysa
 
  1. Load your sample
  2. If you are not using the built-in setup sample, list your sample objects to find your setup sample object
- 3. type prun with the desired sample object and ScanPlan (see below)
+ 3. type xrun with the desired sample object and ScanPlan (see below)
 
 .. code-block:: python
 
   # In ``collection`` terminal
-  prun(bt.samples[0],bt.scanplan[6]) # referencing objects explicitly. If you are doing this as a tutorial, bt.scanplan[6] may not exist yet
-  prun(0,6)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
+  xrun(bt.samples[0],bt.scanplan[6]) # referencing objects explicitly. If you are doing this as a tutorial, bt.scanplan[6] may not exist yet
+  xrun(0,6)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
                                      # index from the ``bt`` list
 
 For more info: FIXME
@@ -431,11 +431,11 @@ production run
 
  1. Load your sample (if it is not already loaded)
  2. List your sample objects to find the right one for this sample
- 3. type prun with the desired sample object and ScanPlan (see below)
+ 3. type xrun with the desired sample object and ScanPlan (see below)
 
 .. code-block:: python
 
-  prun(5,16)
+  xrun(5,16)
 
 For more info: FIXME
 
@@ -462,7 +462,7 @@ text file and can be opened with a text editor.  Saving behavior
 can be modified by changing the default function arguments.  Type ``save_last_tiff?``
 to see the allowed values.
 
-**Pro Tip**: this function is often typed just after ``prun()`` in the collection environment,
+**Pro Tip**: this function is often typed just after ``xrun()`` in the collection environment,
 so that the data are extracted out of the NSLS-II database and delivered to you automatically when
 the scan finishes.  You can then play around with them and take them home as you like.
 
@@ -577,11 +577,11 @@ into the ``collection`` environment:
 ============== ===========
 Command        Outcome
 ============== ===========
-prun.resume()    Safely resume plan.
-prun.abort()     Perform cleanup. Mark as aborted.
-prun.stop()      Perform cleanup. Mark as success.
-prun.halt()      Do not perform cleanup --- just stop.
-prun.state       Check if 'paused' or 'idle'.
+xrun.resume()    Safely resume plan.
+xrun.abort()     Perform cleanup. Mark as aborted.
+xrun.stop()      Perform cleanup. Mark as success.
+xrun.halt()      Do not perform cleanup --- just stop.
+xrun.state       Check if 'paused' or 'idle'.
 ============== ===========
 
 For more info: `here <http://nsls-ii.github.io/bluesky/state-machine.html#interactive-pause-summary>`_

@@ -17,16 +17,16 @@ The allowed scan types are:
 
 .. code-block:: python
 
-  >>> prun(sample, scanplan)
+  >>> xrun(sample, scanplan)
   >>> dark(sample, scanplan)
   >>> background(sample, scanplan)
   >>> calibration(sample, scanplan)
   >>> setupscan(sample, scanplan)
   >>> dryrun(sample, scanplan)
 
-.. autofunction:: xpdacq.xpdacq.prun
+.. autofunction:: xpdacq.xpdacq.xrun
 
-``prun`` stands for "production run" which is a normal run.
+``xrun`` stands for "production run" which is a normal run.
 
 .. autofunction:: xpdacq.xpdacq.dark
 
@@ -110,7 +110,7 @@ and then compare them.
   +-----------+------------+------------------+
   Count ['e7adbd'] (scan num: 2)
 
-what is nice about these is that they are tagged with an ``sc_isprun':False`` metadata field
+what is nice about these is that they are tagged with an ``sc_isxrun':False`` metadata field
 which means that, by default, they will not be retrieved when searching for production data.  It
 keeps our setup scans and production scans nicely separated in the database, though
 the underlying scans that are carried out are all still there and can be retrieved if need
@@ -121,7 +121,7 @@ to get the first data-set.
 
 .. code-block:: python
 
-  >>> prun(bt.get(3),bt.get(11))  #2 seconds
+  >>> xrun(bt.get(3),bt.get(11))  #2 seconds
   INFO: auto_dark didn't detect a valid dark, so is collecting a new dark frame.
   See documentation at http://xpdacq.github.io for more information about controlling this behavior
   INFO: requested exposure time =  2.0  -> computed exposure time: 2.0
@@ -145,9 +145,9 @@ to get the first data-set.
 Automated dark collection
 """""""""""""""""""""""""
 
-you might have found something weird when you running a ``prun`` command:
+you might have found something weird when you running a ``xrun`` command:
 
-*I only requested one ``prun`` but program runs two scans*
+*I only requested one ``xrun`` but program runs two scans*
 
 So what happen?
 

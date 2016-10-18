@@ -14,7 +14,7 @@ import bluesky.examples as be
 from xpdacq.simulation import start_simulation, SimulatedPE1C
 
 # print messages for debugging
-# prun.msg_hook = print
+# xrun.msg_hook = print
 
 class BeamtimeObjTest(unittest.TestCase):
     def setUp(self):

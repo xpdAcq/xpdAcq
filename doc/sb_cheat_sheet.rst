@@ -26,11 +26,11 @@ Start a beamtime
                        experimenters = ['Emma', 'Watson', 'Tim', 'Liu'],
                        wavelength=0.184649)
 
-4. link bt to prun
+4. link bt to xrun
 
 .. code-block:: python
 
-  prun.beamtime = bt
+  xrun.beamtime = bt
 
 5. Copy the Excel spreadsheet provided by the experimenters with their samples in it to the ``xpdUser/import`` directory. Check that it has the name ``<saf_number>_samples.xlsx``
 where the <saf_number> must match that of the current beamtime.  If the user didn't supply such a thing, then copy the file ``300000_samples.xls`` from the ``xpdConfig`` directory

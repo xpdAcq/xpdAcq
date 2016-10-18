@@ -301,19 +301,19 @@ class CustomizedRunEngine(RunEngine):
         Basic usage...
 
         Run samples and plans by number...
-        >>> prun(0, 0)
+        >>> xrun(0, 0)
 
         Advanced usage...
 
         Use custom plans
-        >>> prun(3, custom_plan)  # sample 3, an arbitrary bluesky plan
+        >>> xrun(3, custom_plan)  # sample 3, an arbitrary bluesky plan
 
         Or custom sample info --- sample just has to be dict-like
         and contain the required keys.
-        >>> prun(custom_sample_dict, custom_plan)
+        >>> xrun(custom_sample_dict, custom_plan)
 
         Or use completely custom dark frame logic
-        >>> prun(3, 'ct', dark_strategy=some_custom_func)
+        >>> xrun(3, 'ct', dark_strategy=some_custom_func)
         """
         super().__init__(*args, **kwargs)
         self._beamtime = beamtime
@@ -343,7 +343,7 @@ class CustomizedRunEngine(RunEngine):
             # self.install_suspender(beamdump_sus)
             # print("INFO: beam dump suspender has been created."
             #        " to check, please do\n:"
-            #        ">>> prun.suspenders")
+            #        ">>> xrun.suspenders")
         else:
             pass
 
@@ -359,7 +359,7 @@ class CustomizedRunEngine(RunEngine):
         #    raise RuntimeError("No collection has been linked to current "
         #                       "experiment yet.\nPlease do\n"
         #                       ">>> open_collection(<collection_name>)\n"
-        #                       "before you run any prun")
+        #                       "before you run any xrun")
 
         if isinstance(sample, int):
             try:

@@ -8,9 +8,9 @@
 Automated dark collection
 --------------------------
 
-you might have found something weird when you running a ``prun`` command:
+you might have found something weird when you running a ``xrun`` command:
 
-*I only requested one ``prun`` but program runs two scans*
+*I only requested one ``xrun`` but program runs two scans*
 
 So what happen?
 

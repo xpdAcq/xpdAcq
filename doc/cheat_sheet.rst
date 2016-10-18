@@ -43,7 +43,7 @@ Here is a sample code covering the entire process from defining ``Sample`` and
   run_calibration()
 
   bt.list() # returns the 'NaCl' sample object at position 17 and the 'ct_0.5' ScanPlan object at position 20
-  prun(17,20)
+  xrun(17,20)
 
   # the data are saved into the NSLS-II database (don't worry) but we want to get the image so
   # type:
@@ -51,14 +51,14 @@ Here is a sample code covering the entire process from defining ``Sample`` and
 
   # now we have everything set up, it is super-easy to sequence lots of interesting scans
   # this does a series of different scans on the same sample
-  prun(17,21)   # assume 'Tramp_0.5_300_310_2' ScanPlan object at position 21
-  prun(17,22)   # assume 'Tramp_0.5_310_250_5' ScanPlan object at position 23
+  xrun(17,21)   # assume 'Tramp_0.5_300_310_2' ScanPlan object at position 21
+  xrun(17,22)   # assume 'Tramp_0.5_310_250_5' ScanPlan object at position 23
   save_tiff(db[-3:]) # save tiffs from last three scans
 
   # this does the same scan on a series of samples
-  prun(17,21)   # running sample at index 17 with 'Tramp_0.5_300_310_2' ScanPlan
-  prun(18,21)   # running sample at index 18 with 'Tramp_0.5_300_310_2' ScanPlan
-  prun(19,21)   # running sample at index 19 with 'Tramp_0.5_300_310_2' ScanPlan
+  xrun(17,21)   # running sample at index 17 with 'Tramp_0.5_300_310_2' ScanPlan
+  xrun(18,21)   # running sample at index 18 with 'Tramp_0.5_300_310_2' ScanPlan
+  xrun(19,21)   # running sample at index 19 with 'Tramp_0.5_300_310_2' ScanPlan
   save_tiff(db[-3:]) # save tiffs from last three scans
 
 FIXME: if we have a ``view_last_image()`` function, document this one too.
