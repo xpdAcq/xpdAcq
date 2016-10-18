@@ -10,7 +10,7 @@ from time import strftime
 
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import *
-from xpdacq.utils import import_sample
+from xpdacq.utils import import_sample_info
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
 from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
                            _auto_load_calibration_file,
@@ -37,7 +37,7 @@ class PrunTest(unittest.TestCase):
         xlf = '300000_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf)
         shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
-        import_sample(self.saf_num, self.bt)
+        import_sample_info(self.saf_num, self.bt)
         self.sp = ScanPlan(self.bt, ct, 5)
         glbl.shutter_control = True
         self.prun = CustomizedRunEngine(self.bt)

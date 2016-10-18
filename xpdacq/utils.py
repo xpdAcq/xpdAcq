@@ -1,5 +1,6 @@
 import os
 import sys
+import yaml
 import shutil
 import tarfile as tar
 import uuid
@@ -9,41 +10,7 @@ from shutil import ReadError
 import pandas as pd
 
 from .glbl import glbl
-from .beamtime import Sample, ScanPlan
-from IPython import get_ipython
-
-def _check_obj(required_obj_list):
-    """ function to check if object(s) exist
-
-    Parameter
-    ---------
-    required_obj_list : list
-        a list of strings refering to object names
-
-    """
-    ips = get_ipython()
-    for obj_str in required_obj_list:
-        if not ips.ns_table['user_global'].get(obj_str, None):
-            raise NameError("Required object {} doesn't exist in"
-                            "namespace".format(obj_str))
-    return
-
-
-def _check_obj(required_obj_list):
-    """ function to check if object(s) exist
-
-    Parameter
-    ---------
-    required_obj_list : list
-        a list of strings refering to object names
-
-    """
-    ips = get_ipython()
-    for obj_str in required_obj_list:
-        if not ips.ns_table['user_global'].get(obj_str, None):
-            raise NameError("Required object {} doesn't exist in"
-                            "namespace".format(obj_str))
-    return
+from .beamtime import Beamtime, Sample, ScanPlan
 
 def _graceful_exit(error_message):
     try:
@@ -505,7 +472,7 @@ class ExceltoYaml:
 excel_to_yaml = ExceltoYaml()
 
 
-def import_sample(saf_num=None, bt=None):
+def import_sample_info(saf_num=None, bt=None):
     """ import sample metadata based on a spreadsheet
 
     this function expect a prepopulated '<SAF_number>_sample.xls' file 
@@ -521,29 +488,48 @@ def import_sample(saf_num=None, bt=None):
         beamtime object that is going to be linked with these samples
     """
     if bt is None:
-        # NameError will rise in _check_obj
-        _check_obj(['bt'])
-        ips = get_ipython()
-        bt = ips.ns_table['user_global']['bt']
+        bt_fn = os.path.join(glbl.yaml_dir, 'bt_bt.yml')
+        if not os.path.isfile(bt_fn):
+            raise FileNotFoundError("WARNING: there is no beamtime "
+                                    "object exits.\nHave you started a "
+                                    "beamtime ?")
+            return
+        f = open(bt_fn)
+        bt = Beamtime.from_yaml(f)
+    else:
+        if not isinstance(bt, Beamtime):
+            raise TypeError("WARINING: illegal beamtime object!.\n"
+                            "Please make sure you are hadning correct "
+                            "object")
+            return
+
     if saf_num is None:
         try:
             saf_num = bt['bt_safN']
-        except NameError:
-            print("WARNING: there is no beamtime object (bt) exists in "
-                  "current namespace.\n Have you started a beamtime ? ")
-            return
         except KeyError:
             print("WARNING: there is no SAF number information in this "
                   "beamtime objec.\n Do you feed in a valid beamtime "
                   "object?")
             return
+    else:
+        # user input, test if saf_num is consistent with bt
+        saf_num_from_bt = bt['bt_safN']
+        saf_num = str(saf_num)
+        if saf_num != saf_num_from_bt:
+            raise ValueError("WARNING: you give a SAF number = {}, "
+                             "while SAF number of current beamtime is = {}\n"
+                             "Please make sure you are using the correct "
+                             "SAF number/beamtime combination"
+                             .format(saf_num, saf_num_from_bt))
+            return
     print('INFO: using SAF_number = {}'.format(saf_num))
+
     bt.samples = []
     # exclude Sample objects from reference list
     # logic: only update Sample objects that are currently in bt.list
     sp_ref = [el for el in bt._referenced_by if isinstance(el, ScanPlan)]
     bt._referenced_by = sp_ref
-    excel_to_yaml.load(str(saf_num))
+    excel_to_yaml.load(saf_num)
     excel_to_yaml.create_yaml(bt)
     return excel_to_yaml
 
