@@ -15,20 +15,23 @@ from .glbl import glbl
 from .beamtime import Beamtime, Sample, ScanPlan
 
 
-def _check_obj(required_obj_list):
-    """ function to check if object(s) exist
+def _check_obj(obj_name, error_msg=None):
+    """ function to check if an object exist in current namespace
 
     Parameter
     ---------
-    required_obj_list : list
-        a list of strings refering to object names
-
+    obj_name : str
+        a string referring to object names
+    error_msg : str
+        error msg when target object cant't be found in current
+        namespace
     """
+    if error_msg is None:
+        error_msg = "Required object {} doesn't exist in"\
+                    "current namespace".format(obj_name)
     ips = get_ipython()
-    for obj_str in required_obj_list:
-        if not ips.ns_table['user_global'].get(obj_str, None):
-            raise NameError("Required object {} doesn't exist in"
-                            "namespace".format(obj_str))
+    if not ips.ns_table['user_global'].get(obj_name, None):
+        raise NameError(error_msg)
     return
 
 def _timestampstr(timestamp):
@@ -515,7 +518,15 @@ def import_sample_info(saf_num=None, bt=None):
     """
 
     if bt is None:
-        _check_obj(['bt'])  # raise NameError if bt is not alive
+        error_msg = "WARNING: Beamtime object does not exist in current"\
+                    "ipython session. Please make sure:\n"\
+                    "1. a beamtime has been started\n"\
+                    "2. double check 'bt_bt.yml' exists under "\
+                    "xpdUser/config_base/yml directory.\n"\
+                    "\n"\
+                    "If any of these checks fails or problem "\
+                    "persists, please contact beamline staff immediately"
+        _check_obj('bt', error_msg)  # raise NameError if bt is not alive
         ips = get_ipython()
         bt = ips.ns_table['user_global']['bt']
 
