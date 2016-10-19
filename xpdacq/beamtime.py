@@ -424,9 +424,9 @@ class Sample(ValidatedDictLike, YamlChainMap):
 
     Examples
     --------
-    >>> Sample(bt, {'samle_name': 'Ni', 'sample_composition':{'Ni': 1}})
+    >>> Sample(bt, {'sample_name': 'Ni', 'sample_composition':{'Ni': 1}})
 
-    >>> Sample(bt, {'samle_name': 'TiO2',
+    >>> Sample(bt, {'sample_name': 'TiO2',
                     'sample_composition':{'Ti': 1, 'O': 2}})
 
     Please refer to http://xpdacq.github.io for more examples.
@@ -444,7 +444,7 @@ class Sample(ValidatedDictLike, YamlChainMap):
             print("At least sample_name and sample_composition is needed.\n"
                   "For example\n"
                   ">>> sample_md = {'sample_name':'Ni',"
-                  "'composition_dict':{'Ni':1}\n"
+                  "'sample_composition':{'Ni':1}}\n"
                   ">>> Sample(bt, sample_md)\n")
             return
         self.setdefault('sa_uid', new_short_uid())
