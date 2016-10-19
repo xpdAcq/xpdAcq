@@ -8,151 +8,141 @@ Overview
 
 The basic workflow is
 
- #. Set up xpdAcq `experiment-sample` objects. These contain information about the samples and experimental conditions.
- #. Set up xpdAcq `scanplan` objects.  These contain information used to run the scan, and metadata about the scan.
- #. Run scans by passing one ``sample`` and one ``scanplan`` object to the various available `run` functions. Data will be measured and saved to the NSLS-II file-store with all the metadata in the objects saved with it.
+ #. Set up xpdAcq ``Sample`` objects. These contain information about the samples and experimental conditions.
+ #. Set up xpdAcq ``ScanPlan`` objects.  These contain information used to run the scan, and metadata about the scan.
+ #. Run scans by passing one ``Sample`` and one ``ScanPlan`` object to the run engine ``xrun``. Data will be measured and saved to the NSLS-II file-store with all the metadata in the objects saved with it.
  #. Extract scans and data that you want from the data-store by searching on the metadata, selecting the data you want and extracting it in the form you want it (e.g., tiff files)
  #. Analyze the data, by integrating images to 1D diffraction patterns, F(Q), and PDFs, subtracting backgrounds, plotting and fitting models
  #. Export all the data, both raw tiffs and analyzed data, that you want.
 
 Note that the raw data, and metadata, will be stored indefinitely by NSLS-II, and can be searched for and extracted at any time in the future.
 
-Hierarchy of experiment-sample objects
+Hierarchy of Sample objects
 """"""""""""""""""""""""""""""""""""""
 
-The goal of the xpd Acquisition software is to save data with as much accurate metadata
+The goal of the ``xpdAcq`` is to save data with as much accurate metadata
 as possible with as little user-typing as possible.  To do this we associate
 metadata with appropriate levels of the beamtime hierarchy laid out in :ref:`sb_icollection`.
 In :ref:`usb_beamtime` we discussed setting up the main ``Beamtime`` object.  Here we set
-up the an object at the next level down in hierarchy, ``Experiment``.
+up the an object at the next level down in hierarchy, ``Sample``.
 
-The basic syntax is ``e = Experiment (arg1, arg2,...)``, where the ``args`` are the arguments
+The basic syntax is ``sa = Sample(arg1, arg2,...)``, where the ``args`` are the arguments
 or parameters of the object, but it is always helpful to have a little reminder
-of what are the required and optional arguments of this object.  ipython offers a
+of what are the required and optional arguments of this object.  ``ipython`` offers a
 handy feature that you can type a ``?`` instead of the parentheses after a function and
 ipython will remind you of what the arguments are for that function.
 
 .. code-block:: python
 
-   >>> e = Experiment?
-   Init signature: Experiment(self, expname, beamtime)
-   Docstring:
+  >>> sa = Sample?
+  Init signature: Sample(beamtime, sample_md, **kwargs)
+  Docstring:
+  class that carries sample-related metadata
 
-    class that holds experiment information
+  after creation, this Sample object will be related to Beamtime
+  object given as argument and will be available in bt.list()
 
-    Parameters
-    ----------
-    expname : str
-        name to this experiment
+  Parameters
+  ----------
+  beamtime : xpdacq.beamtime.Beamtime
+   object representing current beamtime
+  sample_md : dict
+   dictionary contains all sample related metadata
+  kwargs :
+   keyword arguments for extr metadata
 
-    beamtime : xpdAcq.beamtime.Beamtime object
-        object to current beamtime
+  Examples
+  --------
+  >>> Sample(bt, {'sample_name': 'Ni', 'sample_composition':{'Ni': 1}})
 
-    **kwargs : dict
-        optional. a dictionary for user-supplied information.
+  >>> Sample(bt, {'sample_name': 'TiO2',
+               'sample_composition':{'Ti': 1, 'O': 2}})
 
-   File:           c:\users\billinge\documents\github\xpdacq\xpdacq\beamtime.py
-   Type:           type
+  Please refer to http://xpdacq.github.io for more examples.
+  Init docstring:
+  Initialize a ChainMap by setting *maps* to the given mappings.
+  If no mappings are provided, a single empty dictionary is used.
 
-Here we see that Experiment takes 3 arguments (this will change in later versions of
-the software, so always check!), ``self``, ``expname`` and ``beamtime``.
-We can ignore ``self`` (it is just a reference of the object to itself) so
-we just have to give two arguments, ``expname`` which we see is a string
-with the name of the experiment and ``beamtime`` which is a beamtime object.
+Here we see that ``Sample`` takes 3 arguments (this will change in later versions of
+the software, so always check!), ``beamtime``, ``sample_md`` and ``**kwargs``.
+``beamtime`` which is a beamtime object,``sample_md`` is a dictionary and ``kwargs`` is
+a standard python argument. See reference `here <https://docs.python.org/3.5/faq/programming.html>`_.
 
-So let's go ahead and create it
+We also see there are examples on how to create a valid ``Sample`` object, so let's go ahead and create it
 
 .. code-block:: python
 
-   >>> e = Experiment('InGaAsAlloyPD',bt)
+   >>> sa = Sample(bt, {'sample_name': 'Ni', 'sample_composition':{'Ni': 1}})
 
 and, just as before we can investigate it
 
 .. code-block:: python
 
-   >>> e.name
-   'InGaAsAlloyPD'
-   >>> e.type
-   'ex'
+  >>> type(sa)
+  xpdacq.beamtime.Sample
 
-so it is an object of type ``ex`` (experiment) with name ``'InGaAsAlloyPD'``
-where the experiment is to study the phase diagram of an In1-xGaxAs alloy.
+so it is an object of type ``xpdacq.beamtime.Sample``.
 
 Let's take a look at its metadata store
 
 .. code-block:: python
 
-   >>> e.md
-   {'bt_experimenters': {('Chia-Hao', 'Liu'), ('Simon', 'Billinge')},
-   'bt_piLast': 'Billinge',
-   'bt_safN': 300256,
-   'bt_uid': '9b0c5878-cba4-11e5-8984-28b2bd4521c0',
-   'bt_wavelength': 0.1818,
-   'ex_name': 'InGaAsAlloyPD',
-   'ex_uid': '4e45bf3e-cbc7-11e5-8b67-28b2bd4521c0
+  >>> sa.md
+  {'bt_experimenters': ['Tim', 'Liu'],
+  'bt_piLast': 'Billinge',
+  'bt_safN': '300564',
+  'bt_uid': 'fbb381c3',
+  'bt_wavelength': 0.1832,
+  'sa_uid': 'f3323ad0',
+  'sample_composition': {'Ni': 1},
+  'sample_name': 'Ni'}
 
-So it has a couple of experiment metadata items, 'ex_uid' (it created)
-and 'ex_name' (we gave it), but interestingly it carries with it all
+So it has a couple of experiment metadata items, 'sa_uid' (it created)
+and 'sample_name' (we gave it), but interestingly it carries with it all
 the metadata from the beamtime object ``bt`` that we passed to it.
 
-In general, at a beamtime, we may have two or more experiments that we
-want to accomplish during our time, in which case we would create a
-second Experiment instance, but give it the same ``bt`` metadata:
+
+For the InGaAs phase diagram study for example,we may have to make 5 samples:
 
 .. code-block:: python
 
-   >>> e2 = Experiment('ProteinFolding',bt)
-   >>> e2.md
-   {'bt_experimenters': {('Chia-Hao', 'Liu'), ('Simon', 'Billinge')},
-    'bt_piLast': 'Billinge',
-    'bt_safN': 300256,
-    'bt_uid': '9b0c5878-cba4-11e5-8984-28b2bd4521c0',
-    'bt_wavelength': 0.1818,
-    'ex_name': 'ProteinFolding',
-    'ex_uid': 'c89120dc-cbc8-11e5-ac9b-28b2bd4521c0'}
+  >>> s1 = Sample(bt, {'sample_name':'GaAs', 'sample_composition':{'Ga':1., 'As':1.}})
+  >>> s2 = Sample(bt, {'sample_name':'In0.25Ga0.75As', 'sample_composition':{'In':0.25, 'Ga':0.75, 'As':1.}})
+  >>> s3 = Sample(bt, {'sample_name':'In0.5Ga0.5As', 'sample_composition':{'In':0.5, 'Ga':0.5, 'As':1.}})
+  >>> s4 = Sample(bt, {'sample_name':'In0.75Ga0.25As', 'sample_composition':{'In':0.75, 'Ga':0.25, 'As':1.}})
+  >>> s5 = Sample(bt, {'sample_name':'InAs', 'sample_composition':{'In':1., 'As':1.}})
 
-Here, careful inspection will indicate that this experiment has a
-different experiment-ID ``ex_uid`` and ``ex_name`` but all the beamtime
-leve metadata are the same as the other experiment (because this experiment
-is being done at the same beamtime!).
-
-Finally, there will be a number of samples that are part of the same experiment.
-For the InGaAs phase diagram study for example, we may have to make 5 samples:
-
-
-.. code-block:: python
-
-  >>> s1 = Sample('GaAs',e)
-  >>> s2 = Sample('In0.25Ga0.75As',e)
-  >>> s3 = Sample('InGaAs-5050',e)
-  >>> s4 = Sample('IGA75-25',e)
-  >>> s5 = Sample('InAs',e)
   >>> s1.md
-  {'bt_experimenters': {('Chia-Hao', 'Liu'), ('Simon', 'Billinge')},
+  {'bt_experimenters': ['Tim', 'Liu'],
   'bt_piLast': 'Billinge',
-  'bt_safN': 300256,
-  'bt_uid': '9b0c5878-cba4-11e5-8984-28b2bd4521c0',
-  'bt_wavelength': 0.1818,
-  'ex_name': 'InGaAsAlloyPD',
-  'ex_uid': '4e45bf3e-cbc7-11e5-8b67-28b2bd4521c0
-  'sa_name': 'InAs',
-  'sa_uid': '415f8e06-cbca-11e5-92fe-28b2bd4521c0'}
+  'bt_safN': '300564',
+  'bt_uid': 'fbb381c3',
+  'bt_wavelength': 0.1832,
+  'sa_uid': '4557b649',
+  'sample_composition': {'As': 1.0, 'Ga': 1.0},
+  'sample_name': 'GaAs'}
+
   >>> s3.md
-  {'bt_experimenters': {('Chia-Hao', 'Liu'), ('Simon', 'Billinge')},
+  {'bt_experimenters': ['Tim', 'Liu'],
   'bt_piLast': 'Billinge',
-  'bt_safN': 300256,
-  'bt_uid': '9b0c5878-cba4-11e5-8984-28b2bd4521c0',
-  'bt_wavelength': 0.1818,
-  'ex_name': 'InGaAsAlloyPD',
-  'ex_uid': '4e45bf3e-cbc7-11e5-8b67-28b2bd4521c0
-  'sa_name': 'InAs',
-  'sa_uid': '7c73f3a7-cbca-11e5-a0cb-28b2bd4521c0'}
+  'bt_safN': '300564',
+  'bt_uid': 'fbb381c3',
+  'bt_wavelength': 0.1832,
+  'sa_uid': '3bac77a8',
+  'sample_composition': {'As': 1.0, 'Ga': 0.5, 'In': 0.5},
+  'sample_name': 'In0.5Ga0.5As'}
+
+Here, careful inspection will indicate that among various ``Sample`` objects,
+there are different sample-ID ``sa_uid`` and ``sample_name`` but all the ``beamtime``
+leve metadata are the same as the other samples (because this series of samples
+is being done at the same beamtime!).
 
 Hopefully you are getting the picture.  We will hand these sample
 objects to the run engine when each scan is launched and
 all the metadata up the stack will be associated with each scan, easily allowing
 us to search, for example, for "all the scans done on sample ``'InGas'`` as
-part of this beamtime" or perhaps "all the scans done in experiment ``'ProteinFolding'``.
+part of this beamtime".
+
 Other metadata is saved such as date-time at the time of running, so we could
 search for "the scan that was running at 5pm on Friday".  We also differentiate
 production runs and setup scans.  By default the search will not return the
