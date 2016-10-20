@@ -20,17 +20,19 @@ Setup
     #. type ``icollection`` to start the ``(collection)`` environment and get the ``In[1]:`` prompt.
     #. type ``bt = _start_collection(<PI_last>, <saf_number>, <experimenter_list>, <wavelength>)`` for example,
 
-    .. code-block:: python
+      .. code-block:: python
 
-         ``bt = _start_beamtime('Billinge', 300564, ['Tim', 'Liu'], wavelength=0.1832)
+        ``bt = _start_beamtime('Billinge', 300564, ['Tim', 'Liu'], wavelength=0.1832)
 
-    #. there will be two possible outcomes
-        * the environment has already been cleaned from the previous user and there will be no error message
-        * the previous beamtime has not been properly ended (or testing took place in between, whatever).  Then the program will exit asking you to run ``_end_beamtime()``
+  there will be two possible outcomes
+    #. **outcome 1**: the environment has already been cleaned from the previous user and there will be no error message
 
-#. **if (2.3) results in outcome 2.:**
+    #. **outcome 2**: the previous beamtime has not been properly ended (or testing took place in between, whatever).
+      Then the program will exit asking you to run ``_end_beamtime()``
+
+  **if results in outcome 2.:**
     #. still in the ``(collection)`` environment, type ``_end_beamtime()`` and follow the prompts.
-    #. rerun the start-beamtime sequence => ``bt = _start_beamtime(<saf number>)``.  this time it should result in outcome 1.
+    #. rerun the start-beamtime sequence, ``bt = _start_collection(<PI_last>, <saf_number>, <experimenter_list>, <wavelength>)``  this time it should result in outcome 1.
 
 #. **Wavelength calibration:**
     #. Do what you have to do to do a wavelength calibration. Write the wavelength on a bit of paper.
@@ -43,7 +45,7 @@ Setup
 #. If the users have provided you with yaml files containing their pre-prepared helper objects:
       #. copy them to the directory ``~/xpdUser/Import``.  They can be in the form of a series of ``.yml``, ``.py`` ``.npy`` files,
       or they may be a bundle of them in ``.tar``, ``.zip`` or ``tar.gz`` file
-      #. type ``import_userScriptsEtc()`` and files with supported format will be imported and placed in right places.
+      #. type ``import_userScriptsEtc()`` and files with supported format will be imported and placed in the right places.
 
 #. At this point, you can hand off to the users.  However, to give the users a better experience, the next step is to do a detector geometry calibration.  If you do this the calibration information will be saved in each data-file allowing automated integration.
       #. put in beam attenuator

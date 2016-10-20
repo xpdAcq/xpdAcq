@@ -24,7 +24,7 @@ Possible scenarios
       glbl.dk_window = 0.001 # dark window is 0.001 min = 0.06 secs
 
 
-    **Want a 0.2 exposure time per frame instead of 0.1s:**
+    **Want a 0.2s exposure time per frame instead of 0.1s:**
 
     .. code-block:: python
 

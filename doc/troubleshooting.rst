@@ -36,8 +36,21 @@ How do I check if my beamtime is properly set up?
 The instrument scientist (IS) should have set up your beamtime hardware and software
 for you.  Let's check if it is the case.
 
-1. Type ``bt.md`` and hit return. You should see the beamtime (``bt``) metadata (``md``) that has been pre-stored by the IS, and it should contain things like the last name of the PI on the proposal and the SAF number for the beamtime.  If not, please seek out the IS to get your session initialized.
-2. Check that the wavelength has been set.  Does the correct x-ray wavelength appear in ``bt.md`` ``['bt_wavelength']`` field, or does it say ``None``.  If the latter, you can still collect scans but automated data reduction may not work, so best to grab the IS again.
+1. Type ``bt.md`` and hit return, you should see similar output as following:
+
+  .. code-block:: python:
+
+    >>> bt.md
+    {'bt_experimenters': ['Tim', 'Liu'],
+    'bt_piLast': 'Billinge',
+    'bt_safN': '300564',
+    'bt_uid': 'fbb381c3',
+    'bt_wavelength': 0.1832}
+
+ You should see the beamtime (``bt``) metadata (``md``) that has been pre-stored by the IS, and it should contain things like the last name of the PI on the proposal and the SAF number for the beamtime.  If not, please seek out the IS to get your session initialized.
+
+2. Check that the wavelength has been set.  Does the correct x-ray wavelength appear inside ``bt_wavelength`` field, or does it say ``None``.  If the latter, you can still collect scans but automated data reduction may not work, so best to grab the IS again.
+
 3. Check that the Perkin Elmer detector is correctly set up.
 
   * Look at the Perkin Elmer screen on the CSS and make sure that ``Acquire`` mode has been enabled. If Acquire mode is enabled, it should show system information ``Collecting`` in yellow color. If it hasn't been activated, please click 'start' button.
@@ -54,32 +67,34 @@ for you.  Let's check if it is the case.
      In [5]: glbl.area_det
      Out[5]: PerkinElmerContinuous(prefix='XF:28IDC-ES:1{Det:PE1}', name='pe1', read_attrs=['tiff', 'stats1'], configuration_attrs=['images_per_set', 'number_of_sets'], monitor_attrs=[])
 
-There are other setups that you can do to make your experiment run smoothly.  For example, by carrying out a calibration before you start collecting it greatly facilitate data reduction later.  Please follow the workflow in the :ref:`cheat_sheet` or talk to the IS if you don't know how to do this.
+There are other setups that you can do to make your experiment run smoothly.
+For example, by carrying out a calibration before you start collecting it greatly facilitates data reduction later.
+Please follow the workflow in the :ref:`cheat_sheet` or talk to the IS if you don't know how to do this.
 
 
 Why does my scan halt for no reason?
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Sometimes you might find your scans halt for no reason, not even an error message.
-That is most likely come from confusion at machine level.
+That most likely come from confusion at machine level.
 Don't worry, just make sure **there is only one XPD control running on this computer.**.
-``XPD control`` can be launched by double-click on shortcut in desktop:
+``XPD control`` can be launched by double-clicking on shortcut in desktop:
 
   .. image:: ./xpd_control.png
     :width: 60px
     :align: center
     :height: 80px
 
-After launched it, a window similar to this should pop out:
+After launched, a window similar to this should pop out:
 
   .. image:: ./pe1c_ioc.png
     :width: 400px
     :align: center
     :height: 300px
 
-Each ``XPD control`` window means a control panel between XPD computer and experiment apparatuses, such as area detector or motor.
+Each ``XPD control`` means a control panel between XPD computer and experiment apparatuses, such as area detector or motor.
 Therefore we should avoid having multiple ``XPD control`` running at the same time.
-To make sure there is only one ``XPD control`` running, move to top right corner and click ``Activities``.
+To make sure there is only one ``XPD control`` running, move to top left corner and click ``Activities``.
 Then you should see all currently active windows. Close duplicated control panels (if any) then it should work.
 
 If scan still halts, please contact beamline scientist immediately for bug report.
