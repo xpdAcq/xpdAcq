@@ -21,7 +21,7 @@ def _check_obj(obj_name, error_msg=None):
     Parameter
     ---------
     obj_name : str
-        a string referring to object names
+        object names in string format
     error_msg : str
         error msg when target object cant't be found in current
         namespace
