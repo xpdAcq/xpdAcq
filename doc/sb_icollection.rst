@@ -11,9 +11,15 @@ window at the XPD computer you begin an ipython session and preload an ipython
 profile (called ``collection``) that contains all the software to run the NSLS-II
 data collection software.  You can tell when you are in the ``collection`` environment
 because you will see ``(collection)`` at the beginning of the command-line.  When
-you are not in the environment you won't see that.
+you are not in the environment you won't see that. There is also an analysis
+environment, which is currently called ``analysis-dev``,
+that is very similar to the ``collection`` environment but it is for data
+analysis functions and you cannot control any XPD hardware from it.  This may
+be run on a different computer than the control software, as long as it can see
+the NSLS-II data database.   This environment is activated by typing ``ianalysis``
+in a fresh terminal on one of the XPD linux computers.
 
-Inside this ``collection`` environment you can type commands that will control the
+Inside the ``collection`` environment you can type commands that will control the
 diffractometer, collect data, and also extract data from the NSLS-II database.
 The NSLS-II data acquisition environment is powerful and flexible, but there is a
 stiff learning curve to using it.  We have therefore added a layer on top that
@@ -31,13 +37,14 @@ tag every dataset with unique-ID tags, and to save rich metadata with each saved
 frame that can be searched on to find the data.  The ``xpdAcq`` package is designed
 to make the user inputs easier when collecting data, and to facilitate the saving
 of rich and correct metadata with the saved data for easier retrieval later.  It is
-hoped that this will greatly speed up and facilitate users' later workflows.
+hoped that this will greatly speed up and facilitate users' later data analysis
+and modeling workflows.
 You are reading the xpdAcq documentation.  Documentation for the NSLS-II data acquisition
 package, 'Bluesky' can be found `here <http://nsls-ii.github.io/bluesky/>`_.
 
 xpdAcq philosophy
 +++++++++++++++++
-
+[simon revisit]
 Our goal is to maximize the quantity and quality of your metadata whilst minimizing
 your typing.  To do this we separate the experimental workflow into a hierarchy
 of activities and we associate metadata with each level of the hierarchy.  Each
@@ -62,19 +69,28 @@ processing it (in the future the metadata will be passed directly to the data
 reduction software) it is important that a complete stack of metadata is saved
 with each scan.  The philosophy of the xpdAcq software is to accomplish this.
 
-The way this is done is that we associate metadata with each level of the hierarchy
-and levels that are lower in the hierarchy inherit the data from the higher levels.
-Two required pieces of data at the Beamtime level are ``PIlastName`` and ``SAF#``,
-the last name of the PI in charge of the beamtime and the number of the safety
-approval form for the experiment.  This information will be typed once, but saved
-with every dataset during that beamtime.  You can create multiple `instances`
-of each metadata level and these will be saved for later use. So at the
-beginning of the beamtime (or at home before you arrive using simulation mode)
-you can create a ``myGaAs`` object, an ``myIn25Ga75As``, and so on.  When you create
-a scanplan you just have tell it that the sample is ``myGaAs`` and all the metadata
-in myGaAs will automatically be saved with every scan in that scanplan.  In ``xpdAcq``
-there are helpful functions for setting up these metadata libraries. In the
-future, a GUI is planned to facilitate this even further.
+Metadata comes from a number of sources: beamtime information, sample information, scan information, and
+information coming from hardware during the experiment (such as sample temperature, for example).
+With this in mind, ``xpdAcq`` assumes that you may be doing multiple scans on the same sample,
+and so we define a scan as the union of a scan-plan (which contains all the parameters of the
+scan you want to run) and a sample.  Beamtime metadata consists of the SAF number, PI name,
+list of experimenters and so on and is set up by the beamline scientist at the beginning of your
+beamtime.  There can be a wealth of information about your sample that you want to save.  To make 
+this easier, we provide an excel spreadsheet that you can fill in before (or during) your experiment
+that contains information about each separate sample that you will run.
+When you run a scan using ``xrun`` and specifying a scan-plan and a sample, 
+``xpdAcq`` will take all the beamtime metadata, the sample metadata, and all the parameters of the scan,
+and save it in the scan header in the metadata store, linked to the actual dataset itself. You may also
+specify more metadata to save when the scan is run by specifying it in ``xrun``.   Additional metadata
+are also saved, such as a link to the ``xpdAcq``'s best guess at the right dark-collection to use for correcting
+your scan data, calibration parameters for the experimental setup, and so on.  These can be overridden during analysis
+so don't worry if they are incorrectly saved, but following the preferred ``xpdAcq`` workflow during data collection
+can save you a lot of  time later by making these guesses correct.   Hardware generated metadata, such as sample temperature,
+are also saved and can be retrieved later.
+
+Later you will be able to use the scan metadata to search for your scans from the XPD database.  For example, a search
+on the PI-last name and a date-range will return all the datasets you collected in that date-range.  If you add sample name
+it will return all the scans done on that sample in that date-range and so on.
 
 With this information in mind, please go ahead and start the step-by-step process
 of setting up your beamtime in :ref:`usb_Beamtime`
