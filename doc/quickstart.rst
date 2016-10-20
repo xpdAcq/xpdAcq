@@ -20,12 +20,12 @@ Check your data collection environment is correctly set up
 
 1. Make sure you are working in the correct environment. For data acquisition you should be
 in the ``collection`` ipython environment. You should see ``In[#]:`` which indicates you are
-in an ipython environment. To check what the environment is type 
+in an ipython environment. To check what the environment is type
 
 .. code-block:: python
 
   !conda list
-  
+
 It lists all the python packages in your environment, but the name of the environment
 is at the end of the line at the top.  It should say ``something something/something/collection``
 which tell you that you are in the ``collection`` environment.
@@ -66,14 +66,14 @@ This will be in a separate terminal window on the computer (or even on a differe
 to the collection environment.  Try and find the right terminal window.
 For data analysis you should be
 in the ``analysis-dev`` ipython environment You should see ``In[#]:`` which indicates you are
-in an ipython environment. To check what the environment is type 
+in an ipython environment. To check what the environment is type
 
 .. code-block:: python
 
   !conda list
-  
+
 now you are looking for ``something something/something/analysis-dev``
-on the top line of the output, 
+on the top line of the output,
 which tell you that you are in the right analysis environment.
 
 If you see something more like ``/direct/pe1_data/userArea/XPDhome/xpdUser`` then
@@ -110,7 +110,7 @@ Check that they are running by finding windows that looks like:
   :align: center
   :height: 300px
 
-If you can't find them, contact your IS to get them running correctly.  
+If you can't find them, contact your IS to get them running correctly.
 
 Set up your experiment
 ----------------------
@@ -276,7 +276,7 @@ and assign it to the object we have called ``mybsplan`` in this example:
 .. code-block:: python
 
   from bluesky.plans import list_scan
-  
+
   # it is entirely optional to add metadata to the scan, but here is what you would do:
   mymd = {'memoy_aid': 'This metadata should be about the scan, not the sample which would be added when the scanplan is run',
           'author': 'Simon',
@@ -288,7 +288,7 @@ and assign it to the object we have called ``mybsplan`` in this example:
 Then to use it successfully in xpdAcq you have to do a bit of configuration of global parameters.  This work is done
 automatically for you in the ``xpdAcq`` built-in plans.  There are many things you could set up, but the simplest example
 is that we want the detector to collect 50 frames each time we fire it, which would give a 50s exposure at a framerate of 0.1s (framerate
-is another glbl option that you could reset).  
+is another glbl option that you could reset).
 
 .. code-block:: python
 
@@ -310,7 +310,7 @@ please see `here <http://nsls-ii.github.io/bluesky/plans.html>`_.
 We recommend that you use ``xpdAcq`` built-in plans wherever possible.  If there
 is a new scan plan that you think could be useful to other users, please post it to
 the `XPD-Users Google group
-<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ , 
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ ,
 and suggest that perhaps it would be great to have that
 as an ``xpdAcq`` built-in ScanPlan in the future!
 
@@ -334,7 +334,7 @@ and you should similar output as following:
   2: 'tseries_5_50_15'
   3: 'ct_900'
   ...
-  
+
   Samples:
   0: setup
   1: Ni
@@ -392,7 +392,7 @@ Please see :ref:`background_obj` for more information.
 How long should you run your background scan for? See discussion
 `here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
 but for kapton we often do it for 15-30 minutes, though it can be highly dependent
-on the scattering properties of your sample.  For example, strongly scattering samples 
+on the scattering properties of your sample.  For example, strongly scattering samples
 like Ni often need
 no background subtraction at all.
 
@@ -401,14 +401,14 @@ setup scans
 
 There is always a bit of setting up and testing to get things just right before you are
 ready to collect real production data, for example, figuring out the right exposure and so
-on.   **We strongly recommend that you use a 
+on.   **We strongly recommend that you use a
 ``setup`` sample-object while you are doing this**. This will make it much easier later to separate
-your setup scans from your production scans.  
+your setup scans from your production scans.
 
 For nearly all cases you can use the setup sample we
-gave you (object ``bt.sample.[0]`` at position ``0`` in the sample list).  
+gave you (object ``bt.sample.[0]`` at position ``0`` in the sample list).
 
-However, if necessary you can 
+However, if necessary you can
 create your own setup samples.  Any sample in the excel spreadsheet tagged as ``setup`` is a setup
 scan.  Note that output files are written in a directory with the sample name, so to separate your
 output files it is also a good idea to give your setup sample a name like ``mysample_setup``.
@@ -507,14 +507,12 @@ the data are being collected over there...
 
 .. code-block:: python
 
-  h = db[-2:]                 # the last 2 scans
-  integrate(h)                # saves a copy of the 1D diffraction pattern
-  h = db[-2]                  # 2 scan ago
-  integrate(h)
-  integrate_and_save(h)       # saves a copy of the image AND a copy of the 1D diffraction pattern
-                              # this is the same as typing save_last_tiff() then integrate()
+  h = db[-2:]                               # the last 2 scans
+  integrate_and_save(h, save_image=False)   # saves a copy of the 1D diffraction pattern
+  h = db[-2]                                # 2 scan ago
+  integrate_and_save(h)                     # saves a copy of the image AND a copy of the 1D diffraction pattern
 
-With these functions, the image (if requested) will be saved to a ``.tiff`` file, the mask 
+With these functions, the image (if requested) will be saved to a ``.tiff`` file, the mask
 (if there is one) will be saved
 to a ``.npy`` file, and the masked-image will be integrated and saved to a ``.chi`` file.
 The metadata associated with the image will be saved to a ``.yml`` file which is a
@@ -525,9 +523,9 @@ to see the allowed values.
 User scripts
 ------------
 
-Your experiment commands can be sequenced into scripts, 
-to be executed one after the other as you desire.  To set this up, write a sequence of commands into a text file, 
-save it with the extension ``.py`` in the ``userScripts`` directory with a memorable name, like ``myNightShiftScript.py``.  
+Your experiment commands can be sequenced into scripts,
+to be executed one after the other as you desire.  To set this up, write a sequence of commands into a text file,
+save it with the extension ``.py`` in the ``userScripts`` directory with a memorable name, like ``myNightShiftScript.py``.
 Double and triple check your script, then when you are ready to execute it, in ``ipython`` session type:
 
 

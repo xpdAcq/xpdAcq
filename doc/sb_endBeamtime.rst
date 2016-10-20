@@ -33,6 +33,7 @@ Process Steps
 
       Enter ``y`` in the inteactive command prompt then program will flush all directories under ``xpdUser``
       and successfully end a beamtime.
+
     * **File size or contents in remote copy appear to be inconsistent with local tree**
 
       Please answer ``n`` in the interactive command prompt and program will stop at this point.
