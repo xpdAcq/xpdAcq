@@ -76,7 +76,7 @@ and hit return.  So far there is only 1 object, it is the `bt` object with name 
 
 .. code-block:: python
 
-In [4]: bt.list()
+>>> bt.list()
 
 ScanPlans:
 0: 'ct_5'

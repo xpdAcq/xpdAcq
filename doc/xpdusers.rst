@@ -9,8 +9,9 @@ For XPD Users
    sb_overview
    sb_icollection
    usb_Beamtime
-   usb_Where
+   usb_Experiment
    usb_Scan
+   usb_Where
    usb_Running
    usb_QuickAssess
    usb_GlobalOptions
