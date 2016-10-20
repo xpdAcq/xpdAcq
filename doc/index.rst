@@ -21,8 +21,7 @@ The goal of the ``xpdAcq`` package is to simplify your collection and analysis w
 so that you can focus more on scientific aspects of your experiment. Additionally, ``xpdAcq`` provides an interface 
 that needs less Python experience than the current native bluesky interface.
 
-We hope that you find it intuitive, like the most important function to run a
-"production" scan, ``xrun``:
+We hope that you find it intuitive, like the most important function to run a scan, ``xrun``:
 
 .. code-block:: python
 
