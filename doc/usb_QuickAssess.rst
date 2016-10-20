@@ -1,13 +1,13 @@
 .. _usb_quickassess:
 
 Initial assessment of your data
------------------------------------------
+--------------------------------
 
 Saving tiff files
 """""""""""""""""
 
 The most obvious way of accessing your data is to pull them from centralized
-server and save them into workstation at ``XPD``. As we have mentioned in
+server and save them into your working directory. As we have mentioned in
 :ref:`qs`, saving tiff can be done in following ways:
 
 .. code-block:: python
@@ -22,12 +22,19 @@ With this function, the image will be saved to a ``.tiff`` file under ``xpdUser/
 where ``<sample_name>`` is the metadata you entered during :ref:`setting up your Sample object <usb_experiment>`.
 
 The metadata associated with the image will be saved to a ``.yml`` file which is a
-text file and can be opened with a text editor.  Saving behavior
-can be modified by changing the default function arguments.  Type ``save_last_tiff?``
+text file which can be opened with a text editor.  Saving behavior can be modified
+by changing the default function arguments.  Type ``save_last_tiff?``
 to see the allowed values..
 
-Here index means slicing and ``-`` sign means *last*. you can slice whatever you
-want with various combinations. ``db`` stands for ``databroker`` which is another
+Here index means slicing and ``-`` sign means *last* You can slice whatever you
+want with various combinations.
+
+.. note::
+
+  if you are new to ``python``, please see `here <https://docs.python.org/3.5/tutorial/introduction.html>`_
+  for basic information.
+
+``db`` stands for ``databroker`` which is another
 *awesome* software package developed by NSLS-II software team. For more information, please see
 `here <https://nsls-ii.github.io/databroker/>`_
 
@@ -35,9 +42,9 @@ Automated dark subtraction
 """"""""""""""""""""""""""
 
 Like we have mentioned at :ref:`auto_dark`, ``xpdAcq``
-helps you keep track if appropriate dark frames have been collected, if you
-allow it. With ``auto_dark`` set to True, ``xpdAcq`` can automatically subtract
-your light frames from corresponding dark frames when you save your tiffs.
+helps you keep track of appropriate dark frames. With ``auto_dark`` set to True,
+``xpdAcq`` can automatically subtract your light frames from corresponding dark
+frames when you save your tiffs.
 
 This behavior can be turned off by giving additional argument:
 
