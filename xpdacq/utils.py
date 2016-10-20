@@ -16,7 +16,7 @@ from .beamtime import Beamtime, Sample, ScanPlan
 
 
 def _check_obj(obj_name, error_msg=None):
-    """ function to check if an object exist in current namespace
+    """ function to check if an object exists in current namespace
 
     Parameter
     ---------
