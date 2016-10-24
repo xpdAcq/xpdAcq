@@ -154,15 +154,11 @@ to get the first data-set.
 
 
 
-  .. _auto_dark:
+.. _auto_dark:
 
 
 Automated dark collection
 """""""""""""""""""""""""
-
-
-Tim, I'm just gonna make the grammar changes in text, not in red from now on, it's a pain to switch on my phone. Realized that you could easily just diff the two...
-
 
 You might have found something weird when you ran the ``xrun`` command:
 
