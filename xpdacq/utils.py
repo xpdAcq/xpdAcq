@@ -447,7 +447,7 @@ class ExceltoYaml:
         return name_list  # [first, last]
 
     def _phase_parser(self, phase_str):
-        """ parser for filed with <chem formula>: <phase_amount>
+        """ parser for field with <chem formula>: <phase_amount>
 
         Parameters
         ----------
