@@ -6,11 +6,40 @@ import tarfile as tar
 import uuid
 from time import strftime
 from shutil import ReadError
+from IPython import get_ipython
+
 
 import pandas as pd
 
 from .glbl import glbl
 from .beamtime import Beamtime, Sample, ScanPlan
+
+
+def _check_obj(obj_name, error_msg=None):
+    """ function to check if an object exists in current namespace
+
+    Parameter
+    ---------
+    obj_name : str
+        object name in string format
+    error_msg : str
+        error msg when target object can't be found in current
+        namespace
+    """
+    if error_msg is None:
+        error_msg = "Required object {} doesn't exist in"\
+                    "current namespace".format(obj_name)
+    ips = get_ipython()
+    if not ips.ns_table['user_global'].get(obj_name, None):
+        raise NameError(error_msg)
+    return
+
+def _timestampstr(timestamp):
+    """ convert timestamp to strftime formate """
+    timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime(
+        '%Y%m%d-%H%M%S')
+    return timestring
+
 
 def _graceful_exit(error_message):
     try:
@@ -118,10 +147,10 @@ def import_userScriptsEtc():
     """Import user files that have been placed in xpdUser/Import
 
     Allowed files are python user-script files (extension .py),
-    detector-image mask files (.npy) or files containing xpdAcq objects 
-    (extension .yml). Files created by running export_userScriptsEtc() are 
-    also allowed.  Unallowed files (anything not in the previous list) will 
-    be ignored. 
+    detector-image mask files (.npy) or files containing xpdAcq objects
+    (extension .yml). Files created by running export_userScriptsEtc() are
+    also allowed.  Unallowed files (anything not in the previous list) will
+    be ignored.
 
     After import, all files in the xpdUser/import directory will be deleted
     The user can run `export_userScriptsEtc` to revert them.
@@ -321,7 +350,7 @@ class ExceltoYaml:
                 elif k in self._DICT_LIKE_FIELD:
                     parsed_sa_md.update({k: self._dict_like_parser(v)})
 
-                # other fields dont need to be pased
+                # other fields don't need to be parsed
                 else:
                     parsed_sa_md.update({k: v})
 
@@ -418,12 +447,12 @@ class ExceltoYaml:
         return name_list  # [first, last]
 
     def _phase_parser(self, phase_str):
-        """ parser for filed with <chem formular>: <phase_amount>
+        """ parser for field with <chem formula>: <phase_amount>
 
         Parameters
         ----------
         phase_str : str
-            a string contains a series of <chem formular> : <phase_amount>.
+            a string contains a series of <chem formula> : <phase_amount>.
             Each phase is separated by a comma
 
         Returns
@@ -457,7 +486,7 @@ class ExceltoYaml:
                 amount = amount.replace('%','')
             phase_dict.update({com.strip(): float(amount.strip())})
             parsed_tuple = composition_analysis(com.strip())
-            # expect: ([elment_1, element_2, ...], [sto_1, sto_2,...])
+            # expect: ([element_1, element_2, ...], [sto_1, sto_2,...])
             for i in range(len(parsed_tuple[0])):
                 composition_dict.update({parsed_tuple[0][i]:
                                              parsed_tuple[1][i]})
@@ -475,9 +504,9 @@ excel_to_yaml = ExceltoYaml()
 def import_sample_info(saf_num=None, bt=None):
     """ import sample metadata based on a spreadsheet
 
-    this function expect a prepopulated '<SAF_number>_sample.xls' file 
-    located under `xpdConfig/` directory. Corresponding Sample objects 
-    will be created after information stored being parsed. Please go to 
+    this function expects a pre-populated '<SAF_number>_sample.xls' file
+    located under `xpdUser/import` directory. Corresponding Sample objects
+    will be created after information stored being parsed. Please go to
     http://xpdacq.github.io for parser rules.
 
     Parameters
@@ -487,28 +516,56 @@ def import_sample_info(saf_num=None, bt=None):
     bt : xpdacq.beamtime.Beamtime
         beamtime object that is going to be linked with these samples
     """
+
     if bt is None:
-        bt_fn = os.path.join(glbl.yaml_dir, 'bt_bt.yml')
-        if not os.path.isfile(bt_fn):
-            raise FileNotFoundError("WARNING: there is no beamtime "
-                                    "object exits.\nHave you started a "
-                                    "beamtime ?")
-            return
-        f = open(bt_fn)
-        bt = Beamtime.from_yaml(f)
-    else:
-        if not isinstance(bt, Beamtime):
-            raise TypeError("WARINING: illegal beamtime object!.\n"
-                            "Please make sure you are hadning correct "
-                            "object")
-            return
+        error_msg = "WARNING: Beamtime object does not exist in current"\
+                    "ipython session. Please make sure:\n"\
+                    "1. a beamtime has been started\n"\
+                    "2. double check 'bt_bt.yml' exists under "\
+                    "xpdUser/config_base/yml directory.\n"\
+                    "\n"\
+                    "If any of these checks fails or problem "\
+                    "persists, please contact beamline staff immediately"
+        _check_obj('bt', error_msg)  # raise NameError if bt is not alive
+        ips = get_ipython()
+        bt = ips.ns_table['user_global']['bt']
+
+    # pass to core function
+    _import_sample_info(saf_num=saf_num, bt=bt)
+
+
+def _import_sample_info(saf_num=None, bt=None):
+    """ core function to import sample metadata based on a spreadsheet
+
+    this function expects a pre-populated '<SAF_number>_sample.xlxs' file
+    located under `xpduser/import` directory. Corresponding Sample objects
+    will be created after information stored being parsed. Please go to
+    http://xpdacq.github.io for parser rules.
+
+    Parameters
+    ----------
+    saf_num : int
+        Safety Approval Form number of beamtime.
+    bt : xpdacq.beamtime.Beamtime
+        beamtime object that is going to be linked with these samples
+    """
+
+    # at core function level, bt should strictly be Beamtime,
+    # raise if it is not this case
+    if not isinstance(bt, Beamtime):
+        raise TypeError("WARNING: illegal Beamtime object argument!.\n"
+                        "input object {} has type = {}\n"
+                        "Please make sure you are handing correct object\n"
+                        "or double check if you already started a beamtime"
+                        .format(bt, type(bt)))
+        return
 
     if saf_num is None:
         try:
             saf_num = bt['bt_safN']
         except KeyError:
             print("WARNING: there is no SAF number information in this "
-                  "beamtime objec.\n Do you feed in a valid beamtime "
+                  "beamtime object.\n Do you feed in a valid beamtime "
                   "object?")
             return
     else:
@@ -532,4 +589,3 @@ def import_sample_info(saf_num=None, bt=None):
     excel_to_yaml.load(saf_num)
     excel_to_yaml.create_yaml(bt)
     return excel_to_yaml
-

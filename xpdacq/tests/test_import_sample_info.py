@@ -9,7 +9,7 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
                                   load_beamtime)
 from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
-from xpdacq.utils import import_sample_info
+from xpdacq.utils import import_sample_info, _import_sample_info
 from bluesky.examples import motor, det, Reader
 
 # print messages for debugging
@@ -39,30 +39,23 @@ class ImportSamplTest(unittest.TestCase):
             shutil.rmtree(os.path.join(self.base_dir,'pe2_data'))
 
 
-    def test_import_sample_info(self):
+    def test_import_sample_info_core_function(self):
         # no bt, default argument will fail
-        self.assertRaises(FileNotFoundError, lambda: import_sample_info())
+        self.assertRaises(TypeError, lambda: _import_sample_info(bt=None))
         # make bt but no spreadsheet
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
         # expect FileNotFoundError as no spreadsheet
         self.assertRaises(FileNotFoundError,
-                          lambda: import_sample_info())
+                          lambda: _import_sample_info(bt=self.bt))
         # copy spreadsheet
         xlf = '300000_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf)
         shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
 
-        # expect to pass with default argument
-        import_sample_info()
-        # check imported sample metadata
-        for sample in self.bt.samples:
-            # Sample is a ChainMap with self.maps[1] == bt
-            self.assertEqual(sample.maps[1], self.bt)
-
         # expect to pass with explicit argument
-        import_sample_info(300000, self.bt)
+        _import_sample_info(300000, self.bt)
         # check imported sample metadata
         for sample in self.bt.samples:
             # Sample is a ChainMap with self.maps[1] == bt
@@ -72,7 +65,8 @@ class ImportSamplTest(unittest.TestCase):
         self.bt['bt_safN'] = 300179
         self.assertTrue(os.path.isfile(os.path.join(glbl.import_dir,
                                                     xlf)))
-        self.assertRaises(ValueError, lambda: import_sample_info(300000))
+        self.assertRaises(ValueError,
+                          lambda: _import_sample_info(300000, self.bt))
 
         # expct TypeError with incorrect beamtime
-        self.assertRaises(TypeError, lambda: import_sample_info(bt=set()))
+        self.assertRaises(TypeError, lambda: _import_sample_info(bt=set()))
