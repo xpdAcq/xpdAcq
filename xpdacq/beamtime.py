@@ -18,11 +18,12 @@ import uuid
 import yaml
 import inspect
 from collections import ChainMap
-import bluesky.plans as bp
+
 import numpy as np
+import bluesky.plans as bp
 from bluesky.callbacks import LiveTable
 
-from .glbl import glbl
+from .glbl import glbl, xpd_device, glbl_dict
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 
@@ -68,18 +69,18 @@ def _summarize(plan):
     return '\n'.join(output)
 
 
-def _configure_pe1c(exposure):
+def _configure_area_det(exposure):
     """
     private function to configure pe1c with continuous acquisition mode
     """
     # cs studio configuration doesn't propagate to python level
-    glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
+    xpd_device['area_det'].cam.acquire_time.put(glbl['frame_acq_time'])
     # compute number of frames
-    acq_time = glbl.area_det.cam.acquire_time.get()
+    acq_time = xpd_device['area_det'].cam.acquire_time.get()
     _check_mini_expo(exposure, acq_time)
     num_frame = np.ceil(exposure / acq_time)
     computed_exposure = num_frame * acq_time
-    glbl.area_det.images_per_set.put(num_frame)
+    xpd_device['area_det'].images_per_set.put(num_frame)
     # print exposure time
     print("INFO: requested exposure time = {} - > computed exposure time"
           "= {}".format(exposure, computed_exposure))
@@ -107,7 +108,7 @@ def _check_mini_expo(exposure, acq_time):
                          "0.1s)\n in which case you cannot set it to a"
                          "lower value"
                          .format(exposure, acq_time,
-                                 ">>> glbl.frame_acq_time = 0.5  #set"
+                                 ">>> glbl['frame_acq_time'] = 0.5  #set"
                                  " to 0.5s"))
 
 def ct(dets, exposure, *, md=None):
@@ -133,7 +134,8 @@ def ct(dets, exposure, *, md=None):
     if md is None:
         md = {}
     # setting up area_detector
-    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
+    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
+    area_det = xpd_device['area_det']
     # update md
     _md = ChainMap(md, {'sp_time_per_frame': acq_time,
                         'sp_num_frames': num_frame,
@@ -144,8 +146,8 @@ def ct(dets, exposure, *, md=None):
                         # 'sp_name': 'ct_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'ct'})
-    plan = bp.count([glbl.area_det], md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
+    plan = bp.count([area_det], md=_md)
+    plan = bp.subs_wrapper(plan, LiveTable([area_det]))
     yield from plan
 
 
@@ -182,6 +184,8 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
         md = {}
     # setting up area_detector
     (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
+    area_det = xpd_device['area_det']
+    temp_controller = xpd_device['temp_controller']
     # compute Nsteps
     (Nsteps, computed_step_size) = _nstep(Tstart, Tstop, Tstep)
     # update md
@@ -199,10 +203,10 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
                         # 'sp_name': 'Tramp_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'Tramp'})
-    plan = bp.scan([glbl.area_det], glbl.temp_controller, Tstart, Tstop,
+    plan = bp.scan([area_det], temp_controller, Tstart, Tstop,
                    Nsteps, md=_md)
     plan = bp.subs_wrapper(plan,
-                           LiveTable([glbl.area_det, glbl.temp_controller]))
+                           LiveTable([area_det, temp_controller]))
     yield from plan
 
 
@@ -228,8 +232,8 @@ def Tlist(dets, exposure, T_list):
     configured in global state. To find out which these are, please
     using following commands:
 
-        >>> glbl.area_det
-        >>> glbl.temp_controller
+        >>> xpd_device['area_det']
+        >>> xpd_device['temp_controller']
 
     To interrogate which devices are currently in use.
     """
@@ -237,7 +241,8 @@ def Tlist(dets, exposure, T_list):
     pe1c, = dets
     # setting up area_detector and temp_controller
     (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
-    T_controller = glbl.temp_controller
+    area_det = xpd_device['area_det']
+    T_controller = xpd_device['temp_controller']
     xpdacq_md = {'sp_time_per_frame': acq_time,
                  'sp_num_frames': num_frame,
                  'sp_requested_exposure': exposure,
@@ -248,8 +253,8 @@ def Tlist(dets, exposure, T_list):
                  'sp_plan_name': 'Tlist'
                 }
     # pass xpdacq_md to as additional md to bluesky plan
-    plan = bp.list_scan([glbl.area_det], T_controller, T_list, md=xpdacq_md)
-    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det, T_controller]))
+    plan = bp.list_scan([area_det], T_controller, T_list, md=xpdacq_md)
+    plan = bp.subs_wrapper(plan, LiveTable([area_det, T_controller]))
     yield from plan
 
 
@@ -280,6 +285,7 @@ def tseries(dets, exposure, delay, num, *, md=None):
     if md is None:
         md = {}
     # setting up area_detector
+    area_det = xpd_device['area_det']
     (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
     real_delay = max(0, delay - computed_exposure)
     period = max(computed_exposure, real_delay + computed_exposure)
@@ -299,8 +305,8 @@ def tseries(dets, exposure, delay, num, *, md=None):
                         # 'sp_name': 'tseries_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'tseries'})
-    plan = bp.count([glbl.area_det], num, delay, md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
+    plan = bp.count([area_det], num, delay, md=_md)
+    plan = bp.subs_wrapper(plan, LiveTable([area_det]))
     yield from plan
 
 
@@ -428,7 +434,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
             raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
-        return os.path.join(glbl.yaml_dir,
+        return os.path.join(glbl['yaml_dir'],
                             'bt_bt.yml').format(**self)
 
     def register_sample(self, sample):
@@ -544,7 +550,7 @@ class Sample(ValidatedDictLike, YamlChainMap):
             raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
-        return os.path.join(glbl.yaml_dir, 'samples',
+        return os.path.join(glbl['yaml_dir'], 'samples',
                             '{sample_name}.yml').format(**self)
 
     @classmethod
@@ -608,7 +614,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         if exposure is None:
             # input as args
             exposure, *rest = args  # predefined scan signature
-        _check_mini_expo(exposure, glbl.frame_acq_time)
+        _check_mini_expo(exposure, glbl['frame_acq_time'])
         super().__init__(sp_dict, beamtime)  # ChainMap signature
         self.setdefault('sp_uid', new_short_uid())
         beamtime.register_scanplan(self)
@@ -635,7 +641,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
 
     def factory(self):
         # grab the area detector used in current configuration
-        pe1c = glbl.area_det
+        pe1c = xpd_device['area_det']
         # pass parameter to plan_func
         plan = self.plan_func([pe1c], *self['sp_args'], **self['sp_kwargs'])
         return plan
@@ -674,5 +680,5 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
     def default_yaml_path(self):
         arg_value_str = map(str, self.bound_arguments.values())
         fn = '_'.join([self['sp_plan_name']] + list(arg_value_str))
-        return os.path.join(glbl.yaml_dir, 'scanplans',
+        return os.path.join(glbl['yaml_dir'], 'scanplans',
                             '%s.yml' % fn)

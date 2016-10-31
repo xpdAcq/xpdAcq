@@ -136,23 +136,23 @@ def export_userScriptsEtc():
         path to archive file just created
     """
     F_EXT = '.tar'
-    root_dir = glbl.home
+    root_dir = glbl['home']
     os.chdir(root_dir)
     f_name = strftime('userScriptsEtc_%Y-%m-%dT%H%M') + F_EXT
     # extra work to avoid comple directory structure in tarball
-    tar_f_name = os.path.join(glbl.home, f_name)
+    tar_f_name = os.path.join(root_dir, f_name)
     export_dir_list = list(
-        map(lambda x: os.path.basename(x), glbl._export_tar_dir))
+        map(lambda x: os.path.basename(x), glbl['_export_tar_dir']))
     with tar.open(tar_f_name, 'w') as f:
         for el in export_dir_list:
             f.add(el)
-    archive_path = os.path.join(glbl.home, f_name)
+    archive_path = os.path.join(root_dir, f_name)
     if os.path.isfile(archive_path):
         return archive_path
     else:
         _graceful_exit(
             'Did you accidentally change write privilege to {}'.format(
-                glbl.home))
+                root_dir))
         print(
             'Please check your setting and try `export_userScriptsEtc()` again at command prompt')
         return
@@ -176,7 +176,7 @@ def import_userScriptsEtc():
         a list of file names that have been moved successfully
     """
     _f_ext_dst_dict = ['py', 'npy', 'yml']
-    src_dir = glbl.import_dir
+    src_dir = glbl['import_dir']
     f_list = os.listdir(src_dir)
     if len(f_list) == 0:
         print(
@@ -198,15 +198,15 @@ def import_userScriptsEtc():
             src_full_path = os.path.join(src_dir, f_name)
             (root, ext) = os.path.splitext(f_name)
             if ext == '.yml':
-                dst_dir = glbl.yaml_dir
+                dst_dir = glbl['yaml_dir']
                 yml_dst_name = _copy_and_delete(f_name, src_full_path, dst_dir)
                 moved_list.append(yml_dst_name)
             elif ext == '.py':
-                dst_dir = glbl.usrScript_dir
+                dst_dir = glbl['usrScript_dir']
                 py_dst_name = _copy_and_delete(f_name, src_full_path, dst_dir)
                 moved_list.append(py_dst_name)
             elif ext == '.npy':
-                dst_dir = glbl.config_base
+                dst_dir = glbl['config_base']
                 npy_dst_name = _copy_and_delete(f_name, src_full_path, dst_dir)
                 moved_list.append(npy_dst_name)
             elif ext in ('.tar', '.zip', '.gztar'):
@@ -274,7 +274,7 @@ class ExceltoYaml:
     def __init__(self):
         self.pd_dict = None
         self.sa_md_list = None
-        self.src_dir = glbl.import_dir
+        self.src_dir = glbl['import_dir']
 
     def load(self, saf_num):
         xl_f = [f for f in os.listdir(self.src_dir) if
