@@ -158,7 +158,8 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
 
 
 # create objects
+# FIXME: in the future, these creations should go to xpdSim
 pe1c = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
 shutter = be.Mover('motor', {'motor': lambda x: x}, {'x': 0})
 db = build_pymongo_backed_broker()
-insert_imgs(db.mds, db.fs, 1, (2048,2048), save_dir=tempfile.mkdtemp()):
+insert_imgs(db.mds, db.fs, 1, (2048,2048), save_dir=tempfile.mkdtemp())

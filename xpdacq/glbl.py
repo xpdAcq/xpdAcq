@@ -217,3 +217,5 @@ class GlblYamlDict(YamlDict):
         return cls(**d)
 
 glbl = GlblYamlDict('glbl', **glbl_dict)
+# Possible config:
+# full_xpdAcq_config = ChainMap(glbl, xpd_device)
