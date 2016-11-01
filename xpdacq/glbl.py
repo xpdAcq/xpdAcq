@@ -114,18 +114,17 @@ glbl_dict = {
              }
 
 
-# dict to store all necessary dict
+# dict to store all necessary objects
 xpd_device = {}
 
-def setup_xpdAcq(device_list, *, area_det, shutter, temp_controller, db,
-                 **kwargs):
+def setup_xpdAcq(*, area_det, shutter, temp_controller, db, **kwargs):
     """ function to set up required device/objects for xpdacq """
-    REQUIRED_KEYS = ['area_det', 'shutter', 'temp_controller', 'db']
-    for key, device in zip(REQUIRED_KEYS, device_list):
-        try:
-            xpd_device.update(key, device)
-        except NameError:
-            pass
+    # specifically assign minimum requirements
+    xpd_device['area_det'] = area_det
+    xpd_device['shutter'] = shutter
+    xpd_device['temp_controller'] = temp_controller
+    xpd_device['db'] = db
+    # extra kwargs
     xpd_device.update(**kwargs)
 
 
@@ -141,8 +140,13 @@ def configure_frame_acq_time(new_frame_acq_time):
     # extra wait time for device to set
     time.sleep(1)
     area_det.cam.acquire.put(1)
-    print("INFO: area detector has been configured to new"
-          " exposure_time = {}s".format(new_frame_acq_time))
+    print("INFO: area detector has been configured to new "
+          "exposure_time = {}s".format(new_frame_acq_time))
+
+
+class xpdAcqException(Exception):
+    # customized class for xpdAcq-related exception
+    pass
 
 
 class GlblYamlDict(YamlDict):
@@ -156,16 +160,16 @@ class GlblYamlDict(YamlDict):
     -----------
     name : str
         name of this object. It's *suggested* to be the same as
-        the instance name. i.e. glbl = GlblYamlDict('glbl', *kwargs...)
+        the instance name. i.e. glbl = GlblYamlDict('glbl', **kwargs)
     kwargs :
         keyword arguments for global options
     """
     # required attributes for yaml
-    VALID_ATTRS = ['_name', '_filepath', 'filepath', '_referenced_by']
+    _VALID_ATTRS = ['_name', '_filepath', 'filepath', '_referenced_by']
 
     # keys for fileds allowed to change
-    ALLOWED_KEYS = ['det_image_field', 'auto_dark',
-                    'dk_window', 'shutter_control']
+    _ALLOWED_KEYS = ['det_image_field', 'auto_dark',
+                     'dk_window', 'shutter_control']
 
     def __init__(self, name, **kwargs):
         super().__init__(name=name,**kwargs)
@@ -176,17 +180,17 @@ class GlblYamlDict(YamlDict):
         return os.path.join(os.getcwd(), 'glbl_test.yml')
 
     def __setitem__(self, key, val):
-        if key not in self.ALLOWED_KEYS:
-            e = "{} doesn't correspond to a valid key".format(key)
-            print("List of valid keys is:\n"
-                  "\n{}".format('\n'.join(self.ALLOWED_KEYS)))
-            raise KeyError(e)
+        if key not in self._ALLOWED_KEYS:
+            raise xpdAcqException("{} is not an allowed key\n"
+                                  "Allowed keys are:\n{}"
+                                  .format(key,
+                                          '\n'.join(self._ALLOWED_KEYS)))
         else:
             super().__setitem__(key, val)
 
     def __setattr__(self, key, val):
-        if key not in self.VALID_ATTRS:
-            if key in (self.ALLOWED_KEYS):
+        if key not in self._VALID_ATTRS:
+            if key in (self._ALLOWED_KEYS):
                 # back-support
                 raise DeprecationWarning("{} has been changed, please do "
                                          "this command instead\n"
@@ -211,3 +215,5 @@ class GlblYamlDict(YamlDict):
     @classmethod
     def from_dict(cls, d):
         return cls(**d)
+
+glbl = GlblYamlDict('glbl', **glbl_dict)
