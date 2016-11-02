@@ -69,3 +69,8 @@ class ImportSamplTest(unittest.TestCase):
 
         # expct TypeError with incorrect beamtime
         self.assertRaises(TypeError, lambda: _import_sample_info(bt=set()))
+
+        # test get_md_method
+        sample_obj_list = [el for el in self.bt.samples.values()]
+        for i, el in enumerate(sample_obj_list):
+            self.assertEqual(dict(el), self.bt.samples.get_md(i))
