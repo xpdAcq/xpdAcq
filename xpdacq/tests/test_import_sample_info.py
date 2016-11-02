@@ -56,7 +56,7 @@ class ImportSamplTest(unittest.TestCase):
         # expect to pass with explicit argument
         _import_sample_info(300000, self.bt)
         # check imported sample metadata
-        for sample in self.bt.samples:
+        for sample in self.bt.samples.values():
             # Sample is a ChainMap with self.maps[1] == bt
             self.assertEqual(sample.maps[1], self.bt)
 
