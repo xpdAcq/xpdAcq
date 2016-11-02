@@ -430,6 +430,15 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self.scanplans.update({scanplan_name: scanplan})
         # yaml sync list
         self._referenced_by.append(scanplan)
+        # save order
+        with open(os.path.join(glbl.config_base,
+                               '.scanplan_order.yml'),'w+') as f:
+            scanplan_order = {}
+            for i, name in enumerate(self.scanplans.keys()):
+                scanplan_order.update({i: name+'.yml'})
+            # debug line
+            self._scanplan_order = scanplan_order
+            yaml.dump(scanplan_order, f)
 
     def register_sample(self, sample):
         # Notify this Beamtime about an Sample that should be re-synced
@@ -438,6 +447,15 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self.samples.update({sample_name: sample})
         # yaml sync list
         self._referenced_by.append(sample)
+        # save order
+        with open(os.path.join(glbl.config_base,
+                               '.sample_order.yml'),'w+') as f:
+            sample_order = {}
+            for i, name in enumerate(self.samples.keys()):
+                sample_order.update({i: name+'.yml'})
+            # debug line
+            self._sample_order = sample_order
+            yaml.dump(sample_order, f)
 
     @classmethod
     def from_yaml(cls, f):

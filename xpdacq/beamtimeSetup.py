@@ -127,11 +127,19 @@ def load_beamtime(directory=None):
     with open(beamtime_fn, 'r') as f:
         bt = load_yaml(f, known_uids)
 
-    for fn in scanplan_fns:
+    # get the most recent order
+    with open(os.path.join(glbl.config_base,
+                           '.scanplan_order.yml')) as f:
+        scanplan_order = yaml.load(f)
+    with open(os.path.join(glbl.config_base,
+                           '.sample_order.yml')) as f:
+        sample_order = yaml.load(f)
+
+    for fn in sorted(scanplan_fns, key=list(scanplan_order.values()).index):
         with open(os.path.join(directory, 'scanplans', fn), 'r') as f:
             load_yaml(f, known_uids)
 
-    for fn in sample_fns:
+    for fn in sorted(sample_fns, key=list(sample_order.values()).index):
         with open(os.path.join(directory, 'samples', fn), 'r') as f:
             load_yaml(f, known_uids)
 
