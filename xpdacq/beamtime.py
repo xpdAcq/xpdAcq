@@ -338,13 +338,12 @@ def _clean_info(obj):
     """ stringtify and replace space"""
     return str(obj).strip().replace(' ', '_')
 
-
-class SliceableOrderedDict(OrderedDict):
-    def get_slice(self, ind):
-        """method to return value of OrderedDict based on index"""
-        val_list = list(self.values())
-        return dict(val_list[ind])
-
+class MDOrderedDict(OrderedDict):
+    def get_md(self, ind):
+        """ special method to get metadata of a objects based on index """
+        obj_list = list(self.values())
+        md_dict = dict(obj_list[ind])
+        return md_dict
 
 class Beamtime(ValidatedDictLike, YamlDict):
     """
