@@ -21,14 +21,14 @@ def _start_beamtime(PI_last, saf_num, experimenters=[],
     # TODO - allow config file later
 
     if not os.path.exists(glbl.home):
-        raise RuntimeError("WARNING: fundamental directory {} does not"
-                           "exist. Please contact beamline staff immediately"
+        raise RuntimeError("WARNING: fundamental directory {} does not "
+                           "exist.\nPlease contact beamline staff immediately"
                            .format(glbl.home))
 
     dir_list = os.listdir(glbl.home)
     if len(dir_list) != 0:
         raise FileExistsError("There are more than one files/directories "
-                              "under {}, have you 'run _end_beamtime()' yet?"
+                              "under {}, have you run '_end_beamtime()' yet?"
                               .format(glbl.home))
     elif len(dir_list) == 0:
         _make_clean_env()
