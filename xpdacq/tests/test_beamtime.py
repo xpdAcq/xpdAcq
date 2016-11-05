@@ -243,3 +243,15 @@ class BeamtimeObjTest(unittest.TestCase):
     def test_list_bkg_smoke(self):
         bt = Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
         bt.list_bkg()
+
+    def test_min_exposure_time(self):
+        bt = Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
+        # shorter than acq time -> ValueError
+        #set_frame_acq_time(0.5)  # method will be used in the future
+        glbl.frame_acq_time = 0.5
+        print('glbl frame acq time = {}'.format(glbl.frame_acq_time))
+        self.assertRaises(ValueError, lambda: ScanPlan(bt, ct, 0.2))
+        # proper frame acq time -> pass
+        #set_frame_acq_time(0.1)  # method will be used in the future
+        #glbl.frame_acq_time = 0.1
+        #ScanPlan(bt, ct, 0.2)

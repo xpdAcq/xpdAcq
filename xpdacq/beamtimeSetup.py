@@ -27,9 +27,11 @@ def _start_beamtime(PI_last, saf_num, experimenters=[],
 
     dir_list = os.listdir(glbl.home)
     if len(dir_list) != 0:
-        raise FileExistsError("There are more than one files/directories "
-                              "under {}, have you run '_end_beamtime()' yet?"
-                              .format(glbl.home))
+        raise FileExistsError("There are more than one files/directories:\n"
+                              "{}\n"
+                              "under {}.\n"
+                              "have you run '_end_beamtime()' yet?"
+                              .format(os.listdir(glbl.home), glbl.home))
     elif len(dir_list) == 0:
         _make_clean_env()
         print("INFO: initiated requried directories for experiment")
