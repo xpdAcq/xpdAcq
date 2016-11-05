@@ -1,6 +1,7 @@
 import os
 import uuid
 import yaml
+import time
 import inspect
 from collections import ChainMap
 import bluesky.plans as bp
@@ -55,15 +56,14 @@ def _summarize(plan):
 
 def _configure_pe1c(exposure):
     """
-    priviate function to configure pe1c with continuous acquistion mode
+    private function to configure pe1c with continuous acquisition mode
     """
     # cs studio configuration doesn't propagate to python level
     glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
-    acq_time = glbl.area_det.cam.acquire_time.get()
     # compute number of frames
+    acq_time = glbl.area_det.cam.acquire_time.get()
+    _check_mini_expo(exposure)
     num_frame = np.ceil(exposure / acq_time)
-    if num_frame == 0:
-        num_frame = 1
     computed_exposure = num_frame * acq_time
     glbl.area_det.images_per_set.put(num_frame)
     # print exposure time
@@ -71,6 +71,18 @@ def _configure_pe1c(exposure):
           "= {}".format(exposure, computed_exposure))
     return num_frame, acq_time, computed_exposure
 
+def _check_mini_expo(exposure):
+    acq_time = glbl.area_det.cam.acquire_time.get()
+    if exposure < acq_time:
+        print("INSIDE evaluation block")
+        raise ValueError("WARNING: total exposure time: {}s is shorter "
+                         "than frame acquisition time {}s\n"
+                         "Please use following command to set "
+                         "frame acquisition time and retry:\n"
+                         ">>> {}"
+                         .format(exposure, acq_time,
+                                 ">>> glbl.frame_acq_time = 0.5  #set"
+                                 "to 0.5s"))
 
 def ct(dets, exposure, *, md=None):
     """
@@ -450,11 +462,6 @@ class Sample(ValidatedDictLike, YamlChainMap):
         self.setdefault('sa_uid', new_short_uid())
         beamtime.register_sample(self)
 
-    @property
-    def md(self):
-        """ metadata for current object """
-        return dict(self)
-
     def validate(self):
         missing = set(self._REQUIRED_FIELDS) - set(self)
         if missing:
@@ -520,6 +527,12 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         if 'sp_uid' in sp_dict['sp_kwargs']:
             scanplan_uid = sp_dict['sp_kwargs'].pop('sp_uid')
             sp_dict.update({'sp_uid': scanplan_uid})
+        # test if that is a valid plan
+        exposure = kwargs.get('exposure') # input as kwargs
+        if exposure is None:
+            # input as args
+            exposure, *rest = args  # predefined scan signature
+        _check_mini_expo(exposure)
         super().__init__(sp_dict, beamtime)  # ChainMap signature
         self.setdefault('sp_uid', new_short_uid())
         beamtime.register_scanplan(self)

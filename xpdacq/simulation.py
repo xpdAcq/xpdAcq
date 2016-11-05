@@ -10,20 +10,40 @@ from unittest.mock import MagicMock
 import bluesky.examples as be
 
 
+# faking plug in:
+class PutGet:
+    """ basic class to have set/put method """
+
+    def __init__(self, numeric_val=1):
+        self._val = numeric_val
+
+    def put(self, val):
+        self._val = val
+        return self._val
+
+    def get(self):
+        return self._val
+
+
+class SimulatedCam:
+    """ class to simulate Camera class """
+
+    def __init__(self):
+        self.acquire_time = PutGet()
+        self.acquire = PutGet()
+
+
 # define simulated PE1C
 class SimulatedPE1C(be.Reader):
-    """Subclass the bluesky plain detector examples ('Reader'); add attributes."""
+    """ Subclass the bluesky plain detector examples ('Reader');
+
+    also add realistic attributes.
+    """
 
     def __init__(self, name, read_fields):
-        self.images_per_set = MagicMock()
-        self.images_per_set.get = MagicMock(return_value=5)
-        self.number_of_sets = MagicMock()
-        self.number_of_sets.put = MagicMock(return_value=1)
-        self.number_of_sets.get = MagicMock(return_value=1)
-        self.cam = MagicMock()
-        self.cam.acquire_time = MagicMock()
-        self.cam.acquire_time.put = MagicMock(return_value=0.1)
-        self.cam.acquire_time.get = MagicMock(return_value=0.1)
+        self.images_per_set = PutGet()
+        self.number_of_sets = PutGet()
+        self.cam = SimulatedCam()
         self._staged = False
 
         super().__init__(name, read_fields)
