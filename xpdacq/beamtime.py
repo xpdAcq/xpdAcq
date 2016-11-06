@@ -62,7 +62,7 @@ def _configure_pe1c(exposure):
     glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
     # compute number of frames
     acq_time = glbl.area_det.cam.acquire_time.get()
-    _check_mini_expo(exposure)
+    _check_mini_expo(exposure, acq_time)
     num_frame = np.ceil(exposure / acq_time)
     computed_exposure = num_frame * acq_time
     glbl.area_det.images_per_set.put(num_frame)
@@ -71,8 +71,7 @@ def _configure_pe1c(exposure):
           "= {}".format(exposure, computed_exposure))
     return num_frame, acq_time, computed_exposure
 
-def _check_mini_expo(exposure):
-    acq_time = glbl.area_det.cam.acquire_time.get()
+def _check_mini_expo(exposure, acq_time):
     if exposure < acq_time:
         print("INSIDE evaluation block")
         raise ValueError("WARNING: total exposure time: {}s is shorter "
@@ -532,7 +531,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         if exposure is None:
             # input as args
             exposure, *rest = args  # predefined scan signature
-        _check_mini_expo(exposure)
+        _check_mini_expo(exposure, glbl.frame_acq_time)
         super().__init__(sp_dict, beamtime)  # ChainMap signature
         self.setdefault('sp_uid', new_short_uid())
         beamtime.register_scanplan(self)

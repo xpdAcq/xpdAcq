@@ -29,6 +29,7 @@ class SimulatedCam:
     """ class to simulate Camera class """
 
     def __init__(self, frame_acq_time=0.1, acquire=1):
+        # default acq_time = 0.1s and detector is turned on
         self.acquire_time = PutGet(frame_acq_time)
         self.acquire = PutGet(acquire)
 
@@ -45,7 +46,6 @@ class SimulatedPE1C(be.Reader):
         self.number_of_sets = PutGet()
         self.cam = SimulatedCam()
         self._staged = False
-
         super().__init__(name, read_fields)
 
         self.ready = True  # work around a hack in Reader
