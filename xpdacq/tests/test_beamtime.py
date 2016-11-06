@@ -11,7 +11,7 @@ from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
 import bluesky.examples as be
 
-from xpdacq.simulation import SimulatedPE1C
+from xpdacq.simulation import pe1c, cs700, shctl1
 
 # print messages for debugging
 # xrun.msg_hook = print
@@ -28,16 +28,16 @@ class BeamtimeObjTest(unittest.TestCase):
                               ('Terban ', ' Max', 2)]
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
+        # set simulation objects
+        glbl.area_det = pe1c
+        glbl.temp_controller = cs700
+        glbl.shutter = shctl1
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
         xlf = '300000_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf)
         shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
-        # simulation objects
-        glbl.area_det = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
-        glbl.temp_controller = be.motor
-        glbl.shutter = MagicMock()
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -244,6 +244,7 @@ class BeamtimeObjTest(unittest.TestCase):
         bt = Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
         bt.list_bkg()
 
+
     def test_min_exposure_time(self):
         bt = Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
         # shorter than acq time -> ValueError
@@ -253,5 +254,5 @@ class BeamtimeObjTest(unittest.TestCase):
         self.assertRaises(ValueError, lambda: ScanPlan(bt, ct, 0.2))
         # proper frame acq time -> pass
         #set_frame_acq_time(0.1)  # method will be used in the future
-        #glbl.frame_acq_time = 0.1
-        #ScanPlan(bt, ct, 0.2)
+        glbl.frame_acq_time = 0.1
+        ScanPlan(bt, ct, 0.2)

@@ -10,7 +10,9 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
 from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
 from xpdacq.utils import import_sample_info, _import_sample_info
-from bluesky.examples import motor, det, Reader
+
+from xpdacq.simulation import pe1c, cs700, shctl1
+
 
 # print messages for debugging
 #xrun.msg_hook = print
@@ -28,6 +30,10 @@ class ImportSamplTest(unittest.TestCase):
                               ('Terban ',' Max',2)]
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
+        # set simulation objects
+        glbl.area_det = pe1c
+        glbl.temp_controller = cs700
+        glbl.shutter = shctl1
 
     def tearDown(self):
         os.chdir(self.base_dir)

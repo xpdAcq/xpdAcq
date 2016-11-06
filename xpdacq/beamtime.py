@@ -73,7 +73,6 @@ def _configure_pe1c(exposure):
 
 def _check_mini_expo(exposure, acq_time):
     if exposure < acq_time:
-        print("INSIDE evaluation block")
         raise ValueError("WARNING: total exposure time: {}s is shorter "
                          "than frame acquisition time {}s\n"
                          "Please use following command to set "
