@@ -82,7 +82,7 @@ def _check_mini_expo(exposure):
                          ">>> {}"
                          .format(exposure, acq_time,
                                  ">>> glbl.frame_acq_time = 0.5  #set"
-                                 "to 0.5s"))
+                                 " to 0.5s"))
 
 def ct(dets, exposure, *, md=None):
     """
