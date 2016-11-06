@@ -28,9 +28,9 @@ class PutGet:
 class SimulatedCam:
     """ class to simulate Camera class """
 
-    def __init__(self):
-        self.acquire_time = PutGet()
-        self.acquire = PutGet()
+    def __init__(self, frame_acq_time=0.1, acquire=1):
+        self.acquire_time = PutGet(frame_acq_time)
+        self.acquire = PutGet(acquire)
 
 
 # define simulated PE1C
