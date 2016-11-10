@@ -1,8 +1,8 @@
 import os
 import socket
 import time
-from unittest.mock import MagicMock
 from time import strftime, sleep
+from xpdacq.yamldict import YamlDict
 
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
@@ -29,7 +29,6 @@ else:
 if simulation:
     BASE_DIR = os.getcwd()
 else:
-    #BASE_DIR = os.path.expanduser('~/')
     BASE_DIR = os.path.abspath('/direct/XF28ID1/pe2_data')
 
 # top directories
@@ -49,7 +48,6 @@ config_base/
 """
 BT_DIR = YAML_DIR
 SAMPLE_DIR = os.path.join(YAML_DIR, 'samples')
-EXPERIMENT_DIR = os.path.join(YAML_DIR, 'experiments')
 SCANPLAN_DIR = os.path.join(YAML_DIR, 'scanplans')
 # other dirs
 IMPORT_DIR = os.path.join(HOME_DIR, 'Import')
@@ -64,7 +62,6 @@ ALL_FOLDERS = [
     YAML_DIR,
     CONFIG_BASE,
     SAMPLE_DIR,
-    EXPERIMENT_DIR,
     SCANPLAN_DIR,
     TIFF_BASE,
     USERSCRIPT_DIR,
@@ -77,84 +74,148 @@ _EXCLUDE_DIR = [HOME_DIR, BLCONFIG_DIR, YAML_DIR]
 _EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
 
 
-class Glbl:
-    _is_simulation = simulation
-    beamline_host_name = BEAMLINE_HOST_NAME
-    # directory names
-    base = BASE_DIR
-    home = HOME_DIR
-    _export_tar_dir = _EXPORT_TAR_DIR
-    xpdconfig = BLCONFIG_DIR
-    import_dir = IMPORT_DIR
-    config_base = CONFIG_BASE
-    tiff_base = TIFF_BASE
-    usrScript_dir = USERSCRIPT_DIR
-    usrAnalysis_dir = ANALYSIS_DIR
-    yaml_dir = YAML_DIR
-    bt_dir = BT_DIR
-    sample_dir = SAMPLE_DIR
-    experiment_dir = EXPERIMENT_DIR
-    scanplan_dir = SCANPLAN_DIR
-    allfolders = ALL_FOLDERS
-    archive_dir = USER_BACKUP_DIR
-    # on/off and attributes for functionality
-    auto_dark = True
-    dk_window = DARK_WINDOW
-    _dark_dict_list = [] # initiate a new one every time
-    shutter_control = True
-    auto_load_calib = True
-    calib_config_name = CALIB_CONFIG_NAME
-    # beamline name
-    owner = OWNER
-    beamline_id = BEAMLINE_ID
-    group = GROUP
-    # instrument config
-    det_image_field = IMAGE_FIELD
-    mask_md_name = MASK_MD_NAME
-
-    # logic to assign correct objects depends on simulation or real experiment
-    if not simulation:
-        # FIXME: it seems to be unused, confirm and delete
-        #from bluesky.callbacks.broker import verify_files_saved as verifyFiles
-        from ophyd import EpicsSignalRO, EpicsSignal
-        from bluesky.suspenders import SuspendFloor
-        ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
-                                     name='ring_current')
-        #verify_files_saved = verifyFiles
-    else:
-        archive_dir = os.path.join(BASE_DIR, 'userSimulationArchive')
-
-    # object should be handled by ipython profile
-    db = None
-    area_det = None
-    temp_controller = None
-    shutter = None
-    verify_files_saved = None
-
-    # default masking dict
-    mask_dict = {'edge': 30, 'lower_thresh': 0.0,
-                 'upper_thresh': None, 'bs_width': 13,
-                 'tri_offset': 13, 'v_asym': 0,
-                 'alpha': 2.5, 'tmsk': None}
-
-    def __init__(self, frame_acq_time=FRAME_ACQUIRE_TIME):
-        self._frame_acq_time = frame_acq_time
-
-    @property
-    def frame_acq_time(self):
-        return self._frame_acq_time
-
-    @frame_acq_time.setter
-    def frame_acq_time(self, val):
-        self.area_det.cam.acquire.put(0)
-        time.sleep(1)
-        self.area_det.number_of_sets.put(1)
-        self.area_det.cam.acquire_time.put(val)
-        time.sleep(1)
-        self.area_det.cam.acquire.put(1)
-        print("INFO: area detector has been configured to new"
-              " exposure_time = {}s".format(val))
-        self._frame_acq_time = val
+glbl_dict = {
+             '_is_simulation': simulation,
+             # beamline info
+             'owner':OWNER,
+             'beamline_id': BEAMLINE_ID,
+             'group': GROUP,
+             'beamline_host_name': BEAMLINE_HOST_NAME,
+             # directory names
+             'base': BASE_DIR,
+             'home': HOME_DIR,
+             '_export_tar_dir': _EXPORT_TAR_DIR,
+             'xpdconfig': BLCONFIG_DIR,
+             'import_dir': IMPORT_DIR,
+             'config_base': CONFIG_BASE,
+             'tiff_base': TIFF_BASE,
+             'usrScript_dir': USERSCRIPT_DIR,
+             'usrAnalysis_dir': ANALYSIS_DIR,
+             'yaml_dir': YAML_DIR,
+             'bt_dir': BT_DIR,
+             'sample_dir': SAMPLE_DIR,
+             'scanplan_dir': SCANPLAN_DIR,
+             'allfolders': ALL_FOLDERS,
+             'archive_dir': USER_BACKUP_DIR,
+             # options for functionalities
+             'auto_dark': True,
+             'dk_window': DARK_WINDOW,
+             '_dark_dict_list': [], # initiate a new one every time
+             'shutter_control': True,
+             'auto_load_calib': True,
+             'calib_config_name': CALIB_CONFIG_NAME,
+             'mask_dict': {'edge': 30, 'lower_thresh': 0.0,
+                           'upper_thresh': None, 'bs_width': 13,
+                           'tri_offset': 13, 'v_asym': 0,
+                           'alpha': 2.5, 'tmsk': None},
+             # instrument config
+             'det_image_field': IMAGE_FIELD,
+             'mask_md_name': MASK_MD_NAME
+             }
 
 
-glbl = Glbl()
+# dict to store all necessary objects
+xpd_device = {}
+
+def setup_xpdAcq(*, area_det, shutter, temp_controller, db, **kwargs):
+    """ function to set up required device/objects for xpdacq """
+    # specifically assign minimum requirements
+    xpd_device['area_det'] = area_det
+    xpd_device['shutter'] = shutter
+    xpd_device['temp_controller'] = temp_controller
+    xpd_device['db'] = db
+    # extra kwargs
+    xpd_device.update(**kwargs)
+
+
+def configure_frame_acq_time(new_frame_acq_time):
+    """ function to configure frame acquire time of area detector """
+
+    area_det = xpd_device['area_det']
+    # stop acquisition
+    area_det.cam.acquire.put(0)
+    time.sleep(1)
+    area_det.number_of_sets.put(1)
+    area_det.cam.acquire_time.put(val)
+    # extra wait time for device to set
+    time.sleep(1)
+    area_det.cam.acquire.put(1)
+    print("INFO: area detector has been configured to new "
+          "exposure_time = {}s".format(new_frame_acq_time))
+
+
+class xpdAcqException(Exception):
+    # customized class for xpdAcq-related exception
+    pass
+
+
+class GlblYamlDict(YamlDict):
+    """ class holds global options of xpdAcq.
+
+    It automatically update yaml file when contents are changed,
+    and for back-support, it issues a Deprecationwarning when user tries
+    to set attributes
+
+    Parameters:
+    -----------
+    name : str
+        name of this object. It's *suggested* to be the same as
+        the instance name. i.e. glbl = GlblYamlDict('glbl', **kwargs)
+    kwargs :
+        keyword arguments for global options
+    """
+    # required attributes for yaml
+    _VALID_ATTRS = ['_name', '_filepath', 'filepath', '_referenced_by']
+
+    # keys for fileds allowed to change
+    _ALLOWED_KEYS = ['det_image_field', 'auto_dark',
+                     'dk_window', 'shutter_control']
+
+    def __init__(self, name, **kwargs):
+        super().__init__(name=name,**kwargs)
+        self._referenced_by = []
+        self._name = name
+
+    def default_yaml_path(self):
+        return os.path.join(os.getcwd(), 'glbl_test.yml')
+
+    def __setitem__(self, key, val):
+        if key not in self._ALLOWED_KEYS:
+            raise xpdAcqException("{} is not an allowed key\n"
+                                  "Allowed keys are:\n{}"
+                                  .format(key,
+                                          '\n'.join(self._ALLOWED_KEYS)))
+        else:
+            super().__setitem__(key, val)
+
+    def __setattr__(self, key, val):
+        if key not in self._VALID_ATTRS:
+            if key in (self._ALLOWED_KEYS):
+                # back-support
+                raise DeprecationWarning("{} has been changed, please do "
+                                         "this command instead\n"
+                                         ">>> {}['{}']={}"
+                                         .format(self._name,
+                                                 self._name,
+                                                 key, val))
+            else:
+                raise AttributeError("{} doesn't support attribute"
+                                     .format(self._name))
+        else:
+            super().__setattr__(key, val)
+
+    @classmethod
+    def from_yaml(cls, f):
+        d = yaml.load(f)
+        instance = cls.from_dict(d)
+        if not isinstance(f, str):
+            instance.filepath = os.path.abspath(f.name)
+        return instance
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(**d)
+
+glbl = GlblYamlDict('glbl', **glbl_dict)
+# Possible config:
+# full_xpdAcq_config = ChainMap(glbl, xpd_device)

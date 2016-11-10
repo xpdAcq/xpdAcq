@@ -8,26 +8,7 @@ from time import strftime
 from tifffile import imread
 from unittest.mock import MagicMock
 
-
-from .glbl import glbl
 import bluesky.examples as be
-
-
-
-def start_simulation(glbl=glbl):
-    # mock imports
-    glbl.db = build_pymongo_backed_broker()
-    glbl.get_events = glbl.db.get_events
-    glbl.get_images = glbl.db.get_images
-    glbl.verify_files_saved = MagicMock()
-    # mock collection objects
-    glbl.area_det = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
-    glbl.temp_controller = be.motor
-    glbl.shutter = MagicMock()
-    glbl.ring_current = MagicMock()
-    print('==== Simulation being created in current directory:{} ===='
-          .format(glbl.base))
-    os.makedirs(glbl.home, exist_ok=True)
 
 
 # define simulated PE1C
@@ -174,3 +155,11 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
                         uid=str(uuid.uuid4()),
                         time=time.time())
     return save_dir
+
+
+# create objects
+# FIXME: in the future, these creations should go to xpdSim
+pe1c = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
+shutter = be.Mover('motor', {'motor': lambda x: x}, {'x': 0})
+db = build_pymongo_backed_broker()
+insert_imgs(db.mds, db.fs, 1, (2048,2048), save_dir=tempfile.mkdtemp())
