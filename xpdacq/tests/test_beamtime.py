@@ -10,7 +10,7 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
 from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
 import bluesky.examples as be
-
+from xpdacq.xpdacq import CustomizedRunEngine
 from xpdacq.simulation import pe1c, cs700, shctl1
 
 # print messages for debugging
@@ -251,8 +251,19 @@ class BeamtimeObjTest(unittest.TestCase):
         #set_frame_acq_time(0.5)  # method will be used in the future
         glbl.frame_acq_time = 0.5
         print('glbl frame acq time = {}'.format(glbl.frame_acq_time))
+        # exposure as arg
         self.assertRaises(ValueError, lambda: ScanPlan(bt, ct, 0.2))
+        # exposure as kwarg
+        self.assertRaises(ValueError, lambda: ScanPlan(bt, ct,
+                                                       exposure=0.2))
         # proper frame acq time -> pass
         #set_frame_acq_time(0.1)  # method will be used in the future
         glbl.frame_acq_time = 0.1
-        ScanPlan(bt, ct, 0.2)
+        ScanPlan(bt, ct, 0.2)  
+        # test with xrun
+        xrun = CustomizedRunEngine(bt)
+        xrun({}, ScanPlan(bt, ct, 0.2))  # safe, should pass
+        glbl.frame_acq_time = 0.5
+        self.assertRaises(ValueError,
+                          lambda: xrun({},ScanPlan(bt, ct, 0.2)))
+        glbl.frame_acq_time = 0.1  # reset after test

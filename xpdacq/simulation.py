@@ -12,21 +12,23 @@ import bluesky.examples as be
 
 # faking plug in:
 class PutGet:
-    """ basic class to have set/put method """
+    """basic class to have set/put method"""
 
     def __init__(self, numeric_val=1):
         self._val = numeric_val
 
     def put(self, val):
+        """set value"""
         self._val = val
         return self._val
 
     def get(self):
+        """read current value"""
         return self._val
 
 
 class SimulatedCam:
-    """ class to simulate Camera class """
+    """class to simulate Camera class"""
 
     def __init__(self, frame_acq_time=0.1, acquire=1):
         # default acq_time = 0.1s and detector is turned on
@@ -36,7 +38,7 @@ class SimulatedCam:
 
 # define simulated PE1C
 class SimulatedPE1C(be.Reader):
-    """ Subclass the bluesky plain detector examples ('Reader');
+    """Subclass the bluesky plain detector examples ('Reader');
 
     also add realistic attributes.
     """

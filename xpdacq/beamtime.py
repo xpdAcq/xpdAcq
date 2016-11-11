@@ -1,7 +1,6 @@
 import os
 import uuid
 import yaml
-import time
 import inspect
 from collections import ChainMap
 import bluesky.plans as bp
@@ -71,13 +70,27 @@ def _configure_pe1c(exposure):
           "= {}".format(exposure, computed_exposure))
     return num_frame, acq_time, computed_exposure
 
+
 def _check_mini_expo(exposure, acq_time):
     if exposure < acq_time:
         raise ValueError("WARNING: total exposure time: {}s is shorter "
                          "than frame acquisition time {}s\n"
-                         "Please use following command to set "
-                         "frame acquisition time and retry:\n"
-                         ">>> {}"
+                         "you have two choices:\n"
+                         "1) increase your exposure time to be at least"
+                         "larger than frame acquisition time\n"
+                         "2) increase the frame rate, if possible\n"
+                         "    - to increase exposure time, simply resubmit"
+                         "    the ScanPlan with a longer exposure time\n"
+                         "    - to increase frame-rate/decrease the"
+                         "    frame acquisition time, please use the"
+                         "    following command:\n"
+                         "    >>> {} \n then rerun your ScanPlan definition"
+                         "    or rerun the xrun"
+                         "Note: by default, xpdAcq recommends running"
+                         "the detector at  its fastest frame-rate\n"
+                         "(currently with a frame-acquisition time of"
+                         "0.1s)\n in which case you cannot set it to a"
+                         "lower value"
                          .format(exposure, acq_time,
                                  ">>> glbl.frame_acq_time = 0.5  #set"
                                  " to 0.5s"))

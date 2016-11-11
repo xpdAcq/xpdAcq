@@ -149,7 +149,6 @@ def _validate_dark(expire_time=None):
     for el in dark_dict_list:
         expo_diff = abs(el['exposure'] - light_cnt_time)
         time_diff = abs(el['timestamp'] - now)
-        acq_time_diff = abs(el['acq_time'] - acq_time)
         if (expo_diff < acq_time) and\
            (time_diff < expire_time*60) and\
            (el['acq_time'] ==  acq_time):
