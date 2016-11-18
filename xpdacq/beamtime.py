@@ -170,13 +170,14 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
 
 def T_list(dets, exposure, T_list):
     """
-    Scan over the temperature controller in a list of user defined steps
+    Taking images from the area detector while scaning over the temperature
+    controller in a list of user defined steps
 
     Parameters
     ----------
     dets : list
-        list of objects represent instrument devices. In xpdAcq, it is
-        default to area detector.
+        list of objects that represent instrument devices. In xpdAcq, it is
+        defaulted to area detector.
     exposure : float
         total time of exposure in seconds for area detector
     T_list : list
@@ -191,7 +192,7 @@ def T_list(dets, exposure, T_list):
         >>> glbl.area_det
         >>> glbl.temp_controller
 
-    To figure interrogate devices that are currently in use.
+    To interrogate which devices are currently in use.
     """
 
     pe1c, = dets
