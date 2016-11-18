@@ -168,6 +168,65 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
     yield from plan
 
 
+def T_list(dets, exposure, T_list):
+    """
+    Scan over the temperature controller in a list of user defined steps
+
+    Parameters
+    ----------
+    dets : list
+        list of objects represent instrument devices. In xpdAcq, it is
+        default to area detector.
+    exposure : float
+        total time of exposure in seconds for area detector
+    T_list : list
+        a list of temperature steps that you wish to scan over
+
+    Note
+    ----
+    area detector and temperature controller that would be triggered will
+    always be the one configured in global state. Please using following
+    commands:
+
+        >>> glbl.area_det
+        >>> glbl.temp_controller
+
+    To figure interrogate devices that are currently in use.
+    """
+
+    pe1c, = dets
+    # setting up area_detector and temp_controller
+    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
+    motor = glbl.temp_controller
+    # manage md
+    bluesky_parent_md = {'detectors': [det.name for det in dets],
+                         'motors': [motor.name],
+                         'num_steps': len(T_list),
+                         'plan_args': {'detectors': list(map(repr, dets)),
+                                       'motor': repr(motor),
+                                       'steps': T_list,
+                                       'per_step': None},
+                         'plan_name': 'list_scan',
+                         'plan_pattern': 'array',
+                         'plan_pattern_module': 'numpy',
+                        }
+
+    xpdacq_md = {'sp_time_per_frame': acq_time,
+                 'sp_num_frames': num_frame,
+                 'sp_requested_exposure': exposure,
+                 'sp_computed_exposure': computed_exposure,
+                 'sp_T_list': T_list,
+                 'sp_type': 'T_list',
+                 'sp_uid': str(uuid.uuid4()),
+                 'sp_plan_name': 'T_list'
+                }
+    _md = ChainMap(bluesky_parent_md, xpdacq_md)
+
+    plan = bp.list_scan([glbl.area_det], motor, T_list, md=_md)
+    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det, motor]))
+    yield from plan
+
+
 def tseries(dets, exposure, delay, num, *, md=None):
     """
     time series scan with area detector.
@@ -207,6 +266,8 @@ def tseries(dets, exposure, delay, num, *, md=None):
                         'sp_num_frames': num_frame,
                         'sp_requested_exposure': exposure,
                         'sp_computed_exposure': computed_exposure,
+                        'sp_requested_delay': delay,
+                        'sp_requested_num': num,
                         'sp_type': 'tseries',
                         # need a name that shows all parameters values
                         # 'sp_name': 'tseries_<exposure_time>',
@@ -234,6 +295,7 @@ def _nstep(start, stop, step_size):
 register_plan('ct', ct)
 register_plan('Tramp', Tramp)
 register_plan('tseries', tseries)
+register_plan('T_list', T_list)
 
 
 def new_short_uid():
