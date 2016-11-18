@@ -1,6 +1,7 @@
 import os
 import socket
 import time
+import yaml
 from unittest.mock import MagicMock
 from time import strftime, sleep
 
@@ -77,7 +78,30 @@ _EXCLUDE_DIR = [HOME_DIR, BLCONFIG_DIR, YAML_DIR]
 _EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
 
 
+class YamlClass:
+    """special class automatically yamlize allowed values"""
+    def __setattr__(self, key, val):
+        if key in self._ALLOWED_LIST:
+            with open(self.GLBL_YML_NAME, 'w+') as f:
+                yaml.dump(yml_dict, f)
+
+    def default_yaml_path(self):
+        pass
+
+    def validate(self):
+        pass
+
+
+
+
 class Glbl:
+    """class holds global options of xpdAcq"""
+    _ALLOWED_LIST = ['auto_dark', 'dk_window', '_dark_dict_list',
+                     'shutter_control', 'auto_load_calib',
+                     'calib_config_name','calib_config_dict',
+                     '_frame_acq_time', 'mask', 'mask_dict']
+    GLBL_YML_NAME = os.path.join(CONFIG_BASE, 'glbl.yml')
+
     _is_simulation = simulation
     beamline_host_name = BEAMLINE_HOST_NAME
     # directory names
@@ -111,6 +135,8 @@ class Glbl:
     # instrument config
     det_image_field = IMAGE_FIELD
     mask_md_name = MASK_MD_NAME
+    calib_config_dict = None
+    mask = None
 
     # logic to assign correct objects depends on simulation or real experiment
     if not simulation:
@@ -138,7 +164,22 @@ class Glbl:
                  'alpha': 2.5, 'tmsk': None}
 
     def __init__(self, frame_acq_time=FRAME_ACQUIRE_TIME):
+        self.glbl_yml_dict = {}  # dict that would be yamlized
+        for key in self._ALLOWED_LIST:
+            try:
+                val = self.__getattribute__(str(key))
+                self.glbl_yml_dict.update({key:val})
+            except AttributeError:
+                print("pass {}".format(key))
         self._frame_acq_time = frame_acq_time
+
+    def __setattr__(self, key, val):
+        if key in self._ALLOWED_LIST:
+            print("INFO: yamlized {} = {}".format(key, val))
+            self.glbl_yml_dict.update({key: val})
+            with open(self.GLBL_YML_NAME, 'w+') as f:
+                yaml.dump(self.glbl_yml_dict, f)
+        super().__setattr__(key, val)
 
     @property
     def frame_acq_time(self):
