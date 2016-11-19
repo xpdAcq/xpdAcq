@@ -2,8 +2,9 @@ import os
 import socket
 import time
 import yaml
-from unittest.mock import MagicMock
 from time import strftime, sleep
+
+from xpdacq.yamlclass import YamlClass
 
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
@@ -59,6 +60,7 @@ USERSCRIPT_DIR = os.path.join(HOME_DIR, 'userScripts')
 TIFF_BASE = os.path.join(HOME_DIR, 'tiff_base')
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 
+
 ALL_FOLDERS = [
     HOME_DIR,
     BLCONFIG_DIR,
@@ -78,30 +80,8 @@ _EXCLUDE_DIR = [HOME_DIR, BLCONFIG_DIR, YAML_DIR]
 _EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
 
 
-class YamlClass:
-    """special class automatically yamlize allowed values"""
-    def __setattr__(self, key, val):
-        if key in self._ALLOWED_LIST:
-            with open(self.GLBL_YML_NAME, 'w+') as f:
-                yaml.dump(yml_dict, f)
-
-    def default_yaml_path(self):
-        pass
-
-    def validate(self):
-        pass
-
-
-
-
-class Glbl:
-    """class holds global options of xpdAcq"""
-    _ALLOWED_LIST = ['auto_dark', 'dk_window', '_dark_dict_list',
-                     'shutter_control', 'auto_load_calib',
-                     'calib_config_name','calib_config_dict',
-                     '_frame_acq_time', 'mask', 'mask_dict']
-    GLBL_YML_NAME = os.path.join(CONFIG_BASE, 'glbl.yml')
-
+class Glbl(YamlClass):
+    """A class stores global options of xpdAcq"""
     _is_simulation = simulation
     beamline_host_name = BEAMLINE_HOST_NAME
     # directory names
@@ -128,6 +108,7 @@ class Glbl:
     shutter_control = True
     auto_load_calib = True
     calib_config_name = CALIB_CONFIG_NAME
+    _frame_acq_time = FRAME_ACQUIRE_TIME
     # beamline name
     owner = OWNER
     beamline_id = BEAMLINE_ID
@@ -138,16 +119,7 @@ class Glbl:
     calib_config_dict = None
     mask = None
 
-    # logic to assign correct objects depends on simulation or real experiment
-    if not simulation:
-        # FIXME: it seems to be unused, confirm and delete
-        #from bluesky.callbacks.broker import verify_files_saved as verifyFiles
-        from ophyd import EpicsSignalRO, EpicsSignal
-        from bluesky.suspenders import SuspendFloor
-        ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
-                                     name='ring_current')
-        #verify_files_saved = verifyFiles
-    else:
+    if simulation:
         archive_dir = os.path.join(BASE_DIR, 'userSimulationArchive')
 
     # object should be handled by ipython profile
@@ -163,23 +135,17 @@ class Glbl:
                  'tri_offset': 13, 'v_asym': 0,
                  'alpha': 2.5, 'tmsk': None}
 
-    def __init__(self, frame_acq_time=FRAME_ACQUIRE_TIME):
-        self.glbl_yml_dict = {}  # dict that would be yamlized
-        for key in self._ALLOWED_LIST:
-            try:
-                val = self.__getattribute__(str(key))
-                self.glbl_yml_dict.update({key:val})
-            except AttributeError:
-                print("pass {}".format(key))
-        self._frame_acq_time = frame_acq_time
+    def __init__(self, filepath, internal_dict={}):
+        super().__init__(internal_dict)
+        self._filepath = filepath
 
-    def __setattr__(self, key, val):
-        if key in self._ALLOWED_LIST:
-            print("INFO: yamlized {} = {}".format(key, val))
-            self.glbl_yml_dict.update({key: val})
-            with open(self.GLBL_YML_NAME, 'w+') as f:
-                yaml.dump(self.glbl_yml_dict, f)
-        super().__setattr__(key, val)
+    def allowed_attributes(self):
+        """define a list of attribute names that are allowed to be
+        yamlize"""
+        return ['auto_dark', 'dk_window', '_dark_dict_list',
+                'shutter_control', 'auto_load_calib',
+                'calib_config_name','calib_config_dict',
+                '_frame_acq_time', 'mask', 'mask_dict']
 
     @property
     def frame_acq_time(self):
@@ -187,6 +153,7 @@ class Glbl:
 
     @frame_acq_time.setter
     def frame_acq_time(self, val):
+        """special method to configure frame acqusition time"""
         self.area_det.cam.acquire.put(0)
         time.sleep(1)
         self.area_det.number_of_sets.put(1)
@@ -197,5 +164,5 @@ class Glbl:
               " exposure_time = {}s".format(val))
         self._frame_acq_time = val
 
-
-glbl = Glbl()
+glbl_filepath = os.path.join(CONFIG_BASE, 'glbl.yml')
+glbl = Glbl(glbl_filepath)
