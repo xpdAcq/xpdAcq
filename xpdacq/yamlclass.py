@@ -30,6 +30,7 @@ class YamlClass:
         """setter to create file if it doesn't exist"""
         self._filepath = fpath
         os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
+        print("filepath is about to be flushed")
         self.flush()
 
     def allowed_attributes(self):

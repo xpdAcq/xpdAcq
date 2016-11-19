@@ -19,7 +19,7 @@ BEAMLINE_ID = 'xpd'
 GROUP = 'XPD'
 IMAGE_FIELD = 'pe1_image'
 CALIB_CONFIG_NAME = 'pyFAI_calib.yml'
-MASK_MD_NAME = 'xpdacq_mask.npy'
+MASK_NAME = 'xpdacq_mask.npy'
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()
@@ -31,7 +31,6 @@ else:
 if simulation:
     BASE_DIR = os.getcwd()
 else:
-    #BASE_DIR = os.path.expanduser('~/')
     BASE_DIR = os.path.abspath('/direct/XF28ID1/pe2_data')
 
 # top directories
@@ -115,7 +114,7 @@ class Glbl(YamlClass):
     group = GROUP
     # instrument config
     det_image_field = IMAGE_FIELD
-    mask_md_name = MASK_MD_NAME
+    mask_name = MASK_NAME
     calib_config_dict = None
     mask = None
 
@@ -161,7 +160,7 @@ class Glbl(YamlClass):
         time.sleep(1)
         self.area_det.cam.acquire.put(1)
         print("INFO: area detector has been configured to new"
-              " exposure_time = {}s".format(val))
+              " acquisition_time = {}s".format(val))
         self._frame_acq_time = val
 
 glbl_filepath = os.path.join(CONFIG_BASE, 'glbl.yml')

@@ -8,26 +8,7 @@ from time import strftime
 from tifffile import imread
 from unittest.mock import MagicMock
 
-
-from .glbl import glbl
 import bluesky.examples as be
-
-
-
-def start_simulation(glbl=glbl):
-    # mock imports
-    glbl.db = build_pymongo_backed_broker()
-    glbl.get_events = glbl.db.get_events
-    glbl.get_images = glbl.db.get_images
-    glbl.verify_files_saved = MagicMock()
-    # mock collection objects
-    glbl.area_det = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
-    glbl.temp_controller = be.motor
-    glbl.shutter = MagicMock()
-    glbl.ring_current = MagicMock()
-    print('==== Simulation being created in current directory:{} ===='
-          .format(glbl.base))
-    os.makedirs(glbl.home, exist_ok=True)
 
 
 # define simulated PE1C
@@ -89,7 +70,7 @@ def build_pymongo_backed_broker():
     fs.register_handler('npy', NpyHandler)
 
     db = Broker(mds, fs)
-    insert_imgs(db.mds, db.fs, 1, (2048,2048))
+    #insert_imgs(db.mds, db.fs, 1, (20, 20))
 
     return db
 
@@ -111,7 +92,7 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
 
     """
     # Insert the dark images
-    dark_img = np.zeros(shape)
+    dark_img = np.ones(shape)
     dark_uid = str(uuid.uuid4())
     run_start = mds.insert_run_start(uid=str(uuid.uuid4()), time=time.time(),
                                      name='test-dark', dark_uid=dark_uid,
@@ -151,11 +132,7 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
                     data_keys=data_keys,
                     time=time.time(), uid=str(uuid.uuid4()))
     descriptor = mds.insert_descriptor(**data_hdr)
-    # FIXME: dirty load
-    exp_img_path = os.path.join(os.path.dirname(__file__),
-                                'examples', 'sub_Ni_60.tif')
-    exp_img = imread(exp_img_path)
-    print(exp_img)
+    exp_img = np.ones(shape)
     for i, light_img in enumerate([exp_img]):
         fs_uid = str(uuid.uuid4())
         fn = os.path.join(save_dir, fs_uid + '.npy')
@@ -174,3 +151,9 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
                         uid=str(uuid.uuid4()),
                         time=time.time())
     return save_dir
+
+# instantiate simulation objects
+db = build_pymongo_backed_broker()
+pe1c = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
+shctl1 = be.Mover('shctl1', {'rad': lambda x: x}, {'x':0})
+cs700 = be.Mover('cs700', {'temperature': lambda x: x}, {'x':300})

@@ -234,7 +234,7 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
     glbl.mask = mask
 
     if save_name is None:
-        save_name = os.path.join(glbl.config_base, glbl.mask_md_name)
+        save_name = os.path.join(glbl.config_base, glbl.mask_name)
     # still save the most recent mask, as we are in file-based
     np.save(save_name, mask)
 
