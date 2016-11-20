@@ -80,7 +80,9 @@ _EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
 
 
 class Glbl(YamlClass):
-    """A class stores global options of xpdAcq"""
+    """
+    A class stores global options of xpdAcq
+    """
     _is_simulation = simulation
     beamline_host_name = BEAMLINE_HOST_NAME
     # directory names
@@ -135,13 +137,14 @@ class Glbl(YamlClass):
                  'tri_offset': 13, 'v_asym': 0,
                  'alpha': 2.5, 'tmsk': None}
 
-    def __init__(self, filepath, internal_dict={}):
+    def __init__(self, filepath, internal_dict=None):
+        if internal_dict is None:
+            internal_dict = {}
         super().__init__(internal_dict)
         self._filepath = filepath
 
     def allowed_attributes(self):
-        """define a list of attribute names that are allowed to be
-        yamlize"""
+        """list of attribute that are allowed to be serialized"""
         return ['auto_dark', 'dk_window', '_dark_dict_list',
                 'shutter_control', 'auto_load_calib',
                 'calib_config_name','calib_config_dict',

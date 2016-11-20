@@ -2,7 +2,6 @@ import os
 import uuid
 import time
 import yaml
-import datetime
 from itertools import count
 
 import bluesky.plans as bp

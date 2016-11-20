@@ -1,11 +1,32 @@
+##############################################################################
+#
+# xpdacq            by Billinge Group
+#                   Simon J. L. Billinge sb2896@columbia.edu
+#                   (c) 2016 trustees of Columbia University in the City
+#                   of
+#                        New York.
+#                   All rights reserved
+#
+# File coded by:    Timothy Liu
+#
+# See AUTHORS.txt for a list of people who contributed.
+# See LICENSE.txt for license information.
+#
+##############################################################################
+
 import os
 import yaml
 
 class YamlClass:
-    """special class automatically yamlize user-defined attributes
-    if they are updated"""
-    def __init__(self, internal_dict={}):
+    """
+    special class automatically yamlize user-defined attributes
+    if they are updated
+    """
+
+    def __init__(self, internal_dict=None):
         # dict stores values of valid attributes
+        if internal_dict is None:
+            internal_dict = {}
         self._internal_dict = internal_dict
         for key in self.allowed_attributes():
             try:
@@ -22,6 +43,7 @@ class YamlClass:
 
     @property
     def filepath(self):
+        """property to store location of local yaml file"""
         return self._filepath
 
     @filepath.setter
@@ -33,6 +55,7 @@ class YamlClass:
         self.flush()
 
     def allowed_attributes(self):
+        """method to defined attributes that will be serialized"""
         pass
 
     def flush(self):

@@ -5,7 +5,6 @@ import time
 import tempfile
 import numpy as np
 from time import strftime
-from tifffile import imread
 from unittest.mock import MagicMock
 
 import bluesky.examples as be
