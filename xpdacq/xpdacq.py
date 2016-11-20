@@ -164,11 +164,6 @@ def _validate_dark(expire_time=None):
         return None
 
 
-def _timestamp_to_time(timestamp):
-    """ short help function """
-    return datetime.datetime.fromtimestamp(timestamp).strftime('%Y%m%d-%H%M')
-
-
 def _auto_load_calibration_file():
     """ function to load the most recent calibration file in config_base
 

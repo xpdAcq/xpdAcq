@@ -11,7 +11,7 @@ from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
 import bluesky.examples as be
 
-from xpdacq.simulation import start_simulation, SimulatedPE1C
+from xpdacq.simulation import SimulatedPE1C
 
 # print messages for debugging
 # xrun.msg_hook = print
