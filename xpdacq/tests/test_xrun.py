@@ -121,22 +121,22 @@ class xrunTest(unittest.TestCase):
         self.assertEqual(rv, correct_uid[-1])
 
         # case4: with real xrun
-        glbl._dark_dict_list = []  # re-init
-        xrun_uid = self.xrun(0, 0)
+        if glbl._dark_dict_list:
+            glbl._dark_dict_list = []
+        self.assertFalse(glbl._dark_dict_list)
+        xrun_uid = self.xrun({}, 0)
         print(xrun_uid)
         self.assertEqual(len(xrun_uid), 2)  # first one is auto_dark
         dark_uid = _validate_dark()
         self.assertEqual(xrun_uid[0], dark_uid)
         # test sc_dark_field_uid
         msg_list = []
-
         def msg_rv(msg):
             msg_list.append(msg)
-
         self.xrun.msg_hook = msg_rv
         self.xrun(0, 0)
-        open_run = [el.kwargs for el in msg_list if el.command == 'open_run'][
-            0]
+        open_run = [el.kwargs for el in msg_list
+                    if el.command == 'open_run'][0]
         self.assertEqual(dark_uid, open_run['sc_dk_field_uid'])
         # no auto-dark
         glbl.auto_dark = False
