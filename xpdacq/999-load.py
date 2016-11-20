@@ -8,10 +8,10 @@ from xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
 
 # configure experiment device being used in current version
 if glbl._is_simulation:
-    _configure_devices()
+    _configure_devices(glbl)
 else:
     # at beamline
-    _configure_devices(area_det=pe1c, shutter=shctl1,
+    _configure_devices(glbl, area_det=pe1c, shutter=shctl1,
                        temp_controller=cs700, db=db)
 
 # beamtime reload happen in xpdacq

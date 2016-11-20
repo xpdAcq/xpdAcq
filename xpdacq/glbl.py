@@ -99,7 +99,11 @@ class Glbl(YamlClass):
     experiment_dir = EXPERIMENT_DIR
     scanplan_dir = SCANPLAN_DIR
     allfolders = ALL_FOLDERS
-    archive_dir = USER_BACKUP_DIR
+    if simulation:
+        archive_dir = os.path.join(BASE_DIR,
+                                   'userSimulationArchive')
+    else:
+        archive_dir = USER_BACKUP_DIR
     # on/off and attributes for functionality
     auto_dark = True
     dk_window = DARK_WINDOW
@@ -117,9 +121,6 @@ class Glbl(YamlClass):
     mask_name = MASK_NAME
     calib_config_dict = None
     mask = None
-
-    if simulation:
-        archive_dir = os.path.join(BASE_DIR, 'userSimulationArchive')
 
     # object should be handled by ipython profile
     db = None

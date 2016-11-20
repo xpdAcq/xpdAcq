@@ -115,7 +115,7 @@ def _load_glbl(glbl_obj, filepath=None):
             setattr(glbl_obj, key, val)
 
 
-def _configure_devices(*, area_det=pe1c, shutter=shctl1,
+def _configure_devices(glbl_obj, *, area_det=pe1c, shutter=shctl1,
                       temp_controller=cs700, db=db, **kwargs):
     """function to configure devices used in glbl class
 
@@ -123,14 +123,14 @@ def _configure_devices(*, area_det=pe1c, shutter=shctl1,
     beamline.
     """
     # specifically configured required objects
-    glbl.area_det = area_det
-    glbl.shutter = shutter
-    glbl.temp_controller = temp_controller
-    glbl.db = db
+    glbl_obj.area_det = area_det
+    glbl_obj.shutter = shutter
+    glbl_obj.temp_controller = temp_controller
+    glbl_obj.db = db
     # additional objects
     for key, val in kwargs.items():
         print("configure device: glbl.{} = {}".format(key, val))
-        setattr(glbl, key, val)
+        setattr(glbl_obj, key, val)
 
 
 def load_beamtime(directory=None):
