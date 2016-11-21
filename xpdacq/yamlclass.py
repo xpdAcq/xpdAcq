@@ -28,7 +28,7 @@ class YamlClass:
         if internal_dict is None:
             internal_dict = {}
         self._internal_dict = internal_dict
-        for key in self.allowed_attributes():
+        for key in self.tracked_attributes():
             try:
                 val = self.__getattribute__(str(key))
                 self._internal_dict.update({key:val})
@@ -36,7 +36,7 @@ class YamlClass:
                 print("pass {}".format(key))
 
     def __setattr__(self, key, val):
-        if key in self.allowed_attributes():
+        if key in self.tracked_attributes():
             self._internal_dict.update({key: val})
             self.flush()
         super().__setattr__(key, val)
@@ -54,7 +54,7 @@ class YamlClass:
         print("filepath is about to be flushed")
         self.flush()
 
-    def allowed_attributes(self):
+    def tracked_attributes(self):
         """method to defined attributes that will be serialized"""
         pass
 

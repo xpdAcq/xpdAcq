@@ -1,7 +1,6 @@
 import os
 import socket
 import time
-import yaml
 from time import strftime, sleep
 
 from xpdacq.yamlclass import YamlClass
@@ -143,8 +142,8 @@ class Glbl(YamlClass):
         super().__init__(internal_dict)
         self._filepath = filepath
 
-    def allowed_attributes(self):
-        """list of attribute that are allowed to be serialized"""
+    def tracked_attributes(self):
+        """list of attribute being tracked and serialized"""
         return ['auto_dark', 'dk_window', '_dark_dict_list',
                 'shutter_control', 'auto_load_calib',
                 'calib_config_name','calib_config_dict',
