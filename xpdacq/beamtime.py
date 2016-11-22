@@ -168,10 +168,11 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
     yield from plan
 
 
-def T_list(dets, exposure, T_list):
-    """
-    Taking images from the area detector while scaning over the temperature
-    controller in a list of user defined steps
+def Tlist(dets, exposure, T_list):
+    """defines a flexible scan with user-specified temperatures
+
+    A frame is exposed for the given exposure time at each of the
+    user-specified temperatures
 
     Parameters
     ----------
@@ -181,13 +182,13 @@ def T_list(dets, exposure, T_list):
     exposure : float
         total time of exposure in seconds for area detector
     T_list : list
-        a list of temperature steps that you wish to scan over
+        a list of temperature where a scan will be run
 
     Note
     ----
-    area detector and temperature controller that would be triggered will
-    always be the one configured in global state. Please using following
-    commands:
+    area detector and temperature controller will always be the one
+    configured in global state. To find out which these are, please
+    using following commands:
 
         >>> glbl.area_det
         >>> glbl.temp_controller
@@ -198,33 +199,19 @@ def T_list(dets, exposure, T_list):
     pe1c, = dets
     # setting up area_detector and temp_controller
     (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
-    motor = glbl.temp_controller
-    # manage md
-    bluesky_parent_md = {'detectors': [det.name for det in dets],
-                         'motors': [motor.name],
-                         'num_steps': len(T_list),
-                         'plan_args': {'detectors': list(map(repr, dets)),
-                                       'motor': repr(motor),
-                                       'steps': T_list,
-                                       'per_step': None},
-                         'plan_name': 'list_scan',
-                         'plan_pattern': 'array',
-                         'plan_pattern_module': 'numpy',
-                        }
-
+    T_controller = glbl.temp_controller
     xpdacq_md = {'sp_time_per_frame': acq_time,
                  'sp_num_frames': num_frame,
                  'sp_requested_exposure': exposure,
                  'sp_computed_exposure': computed_exposure,
                  'sp_T_list': T_list,
-                 'sp_type': 'T_list',
+                 'sp_type': 'Tlist',
                  'sp_uid': str(uuid.uuid4()),
-                 'sp_plan_name': 'T_list'
+                 'sp_plan_name': 'Tlist'
                 }
-    _md = ChainMap(bluesky_parent_md, xpdacq_md)
-
-    plan = bp.list_scan([glbl.area_det], motor, T_list, md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det, motor]))
+    # pass xpdacq_md to as additional md to bluesky plan
+    plan = bp.list_scan([glbl.area_det], T_controller, T_list, md=xpdacq_md)
+    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det, T_controller]))
     yield from plan
 
 
@@ -296,7 +283,7 @@ def _nstep(start, stop, step_size):
 register_plan('ct', ct)
 register_plan('Tramp', Tramp)
 register_plan('tseries', tseries)
-register_plan('T_list', T_list)
+register_plan('Tlist', Tlist)
 
 
 def new_short_uid():

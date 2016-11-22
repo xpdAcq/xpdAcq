@@ -245,18 +245,18 @@ class xrunTest(unittest.TestCase):
         self.assertEqual(open_run['sp_requested_exposure'], exp)
         self.assertEqual(open_run['sp_requested_delay'], delay)
         self.assertEqual(open_run['sp_requested_num'], num)
-        # test with T_list
-        Tlist = [300, 256, 128]
+        # test with Tlist
+        T_list = [300, 256, 128]
         msg_list = []
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
-        self.xrun({}, ScanPlan(self.bt, T_list, exp, Tlist))
+        self.xrun({}, ScanPlan(self.bt, Tlist, exp, T_list))
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'].pop()
-        self.assertEqual(open_run['sp_type'], 'T_list')
+        self.assertEqual(open_run['sp_type'], 'Tlist')
         self.assertEqual(open_run['sp_requested_exposure'], exp)
-        self.assertEqual(open_run['sp_T_list'], Tlist)
+        self.assertEqual(open_run['sp_T_list'], T_list)
 
     # deprecate from v0.5 release
     #def test_open_collection(self):
