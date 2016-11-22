@@ -1,8 +1,9 @@
 import os
 import socket
 import time
-from unittest.mock import MagicMock
 from time import strftime, sleep
+
+from xpdacq.yamlclass import YamlClass
 
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
@@ -17,7 +18,7 @@ BEAMLINE_ID = 'xpd'
 GROUP = 'XPD'
 IMAGE_FIELD = 'pe1_image'
 CALIB_CONFIG_NAME = 'pyFAI_calib.yml'
-MASK_MD_NAME = 'xpdacq_mask.npy'
+MASK_NAME = 'xpdacq_mask.npy'
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()
@@ -29,7 +30,6 @@ else:
 if simulation:
     BASE_DIR = os.getcwd()
 else:
-    #BASE_DIR = os.path.expanduser('~/')
     BASE_DIR = os.path.abspath('/direct/XF28ID1/pe2_data')
 
 # top directories
@@ -58,6 +58,7 @@ USERSCRIPT_DIR = os.path.join(HOME_DIR, 'userScripts')
 TIFF_BASE = os.path.join(HOME_DIR, 'tiff_base')
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 
+
 ALL_FOLDERS = [
     HOME_DIR,
     BLCONFIG_DIR,
@@ -77,7 +78,10 @@ _EXCLUDE_DIR = [HOME_DIR, BLCONFIG_DIR, YAML_DIR]
 _EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
 
 
-class Glbl:
+class Glbl(YamlClass):
+    """
+    A class stores global options of xpdAcq
+    """
     _is_simulation = simulation
     beamline_host_name = BEAMLINE_HOST_NAME
     # directory names
@@ -96,7 +100,11 @@ class Glbl:
     experiment_dir = EXPERIMENT_DIR
     scanplan_dir = SCANPLAN_DIR
     allfolders = ALL_FOLDERS
-    archive_dir = USER_BACKUP_DIR
+    if simulation:
+        archive_dir = os.path.join(BASE_DIR,
+                                   'userSimulationArchive')
+    else:
+        archive_dir = USER_BACKUP_DIR
     # on/off and attributes for functionality
     auto_dark = True
     dk_window = DARK_WINDOW
@@ -104,25 +112,16 @@ class Glbl:
     shutter_control = True
     auto_load_calib = True
     calib_config_name = CALIB_CONFIG_NAME
+    _frame_acq_time = FRAME_ACQUIRE_TIME
     # beamline name
     owner = OWNER
     beamline_id = BEAMLINE_ID
     group = GROUP
     # instrument config
     det_image_field = IMAGE_FIELD
-    mask_md_name = MASK_MD_NAME
-
-    # logic to assign correct objects depends on simulation or real experiment
-    if not simulation:
-        # FIXME: it seems to be unused, confirm and delete
-        #from bluesky.callbacks.broker import verify_files_saved as verifyFiles
-        from ophyd import EpicsSignalRO, EpicsSignal
-        from bluesky.suspenders import SuspendFloor
-        ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
-                                     name='ring_current')
-        #verify_files_saved = verifyFiles
-    else:
-        archive_dir = os.path.join(BASE_DIR, 'userSimulationArchive')
+    mask_name = MASK_NAME
+    calib_config_dict = None
+    mask = None
 
     # object should be handled by ipython profile
     db = None
@@ -137,8 +136,18 @@ class Glbl:
                  'tri_offset': 13, 'v_asym': 0,
                  'alpha': 2.5, 'tmsk': None}
 
-    def __init__(self, frame_acq_time=FRAME_ACQUIRE_TIME):
-        self._frame_acq_time = frame_acq_time
+    def __init__(self, filepath, internal_dict=None):
+        if internal_dict is None:
+            internal_dict = {}
+        super().__init__(internal_dict)
+        self._filepath = filepath
+
+    def tracked_attributes(self):
+        """list of attribute being tracked and serialized"""
+        return ['auto_dark', 'dk_window', '_dark_dict_list',
+                'shutter_control', 'auto_load_calib',
+                'calib_config_name','calib_config_dict',
+                '_frame_acq_time', 'mask', 'mask_dict']
 
     @property
     def frame_acq_time(self):
@@ -146,6 +155,7 @@ class Glbl:
 
     @frame_acq_time.setter
     def frame_acq_time(self, val):
+        """special method to configure frame acqusition time"""
         self.area_det.cam.acquire.put(0)
         time.sleep(1)
         self.area_det.number_of_sets.put(1)
@@ -153,8 +163,8 @@ class Glbl:
         time.sleep(1)
         self.area_det.cam.acquire.put(1)
         print("INFO: area detector has been configured to new"
-              " exposure_time = {}s".format(val))
+              " acquisition_time = {}s".format(val))
         self._frame_acq_time = val
 
-
-glbl = Glbl()
+glbl_filepath = os.path.join(CONFIG_BASE, 'glbl.yml')
+glbl = Glbl(glbl_filepath)

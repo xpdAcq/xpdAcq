@@ -6,9 +6,10 @@ from time import strftime
 from IPython import get_ipython
 
 
-from .glbl import glbl
+from .glbl import glbl, glbl_filepath
 from .beamtime import *
 from .utils import _graceful_exit
+from .simulation import db, pe1c, shctl1, cs700
 
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime
@@ -26,7 +27,7 @@ def _start_beamtime(PI_last, saf_num, experimenters=[],
 
     dir_list = os.listdir(glbl.home)
     if len(dir_list) != 0:
-        raise FileExistsError("There are more than one files/directories"
+        raise FileExistsError("There are more than one files/directories "
                               "under {}, have you 'run _end_beamtime()' yet?"
                               .format(glbl.home))
     elif len(dir_list) == 0:
@@ -89,6 +90,49 @@ def _no_beamtime():
           "to initiate beamtime")
 
 
+def _load_glbl(glbl_obj, filepath=None):
+    """function to reload glbl object
+
+    Parameters
+    ----------
+    glbl_obj : instance of xpdacq.glbl.Glbl
+        glbl obj object that is going to be reloaded
+    filepath : str, default
+        filepath to the yaml file stores options going to be reloaded
+        defaulted to glbl_filepath determined in glbl.py
+    """
+    if filepath is None:
+        filepath = glbl_filepath
+    # fresh start
+    if not os.path.isfile(filepath):
+        glbl_obj.flush()
+    # reload
+    else:
+        print("INFO: reload your glbl object\n")
+        with open(filepath) as f:
+            glbl_dict = yaml.load(f)
+        for key, val in glbl_dict.items():
+            setattr(glbl_obj, key, val)
+
+
+def _configure_devices(glbl_obj, *, area_det=pe1c, shutter=shctl1,
+                      temp_controller=cs700, db=db, **kwargs):
+    """function to configure devices used in glbl class
+
+    function takes simulated objects by default and it's overwritten at
+    beamline.
+    """
+    # specifically configured required objects
+    glbl_obj.area_det = area_det
+    glbl_obj.shutter = shutter
+    glbl_obj.temp_controller = temp_controller
+    glbl_obj.db = db
+    # additional objects
+    for key, val in kwargs.items():
+        print("configure device: glbl.{} = {}".format(key, val))
+        setattr(glbl_obj, key, val)
+
+
 def load_beamtime(directory=None):
     """
     Load a Beamtime and associated objects.
@@ -138,11 +182,6 @@ def load_yaml(f, known_uids=None):
         obj = Beamtime.from_yaml(f)
         known_uids[obj['bt_uid']] = obj
         return obj
-    # Experiment is deprecated
-    # elif isinstance(data, list) and 'ex_uid' in data[0]:
-    #    beamtime = known_uids.get(data[1]['bt_uid'])
-    #    obj = Experiment.from_yaml(f, beamtime=beamtime)
-    #    known_uids[obj['ex_uid']] = obj
     elif isinstance(data, list) and 'sa_uid' in data[0]:
         beamtime = known_uids.get(data[1]['bt_uid'])
         obj = Sample.from_yaml(f, beamtime=beamtime)
@@ -171,7 +210,7 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
     # check env
     files = os.listdir(glbl.home)
     if len(files) == 0:
-        raise FileNotFoundError("It appears that end_beamtime may have been"
+        raise FileNotFoundError("It appears that end_beamtime may have been "
                                 "run. If so, do not run again but proceed to\n"
                                 ">>> bt = _start_beamtime(pi_last, saf_num,"
                                 "experimenters, wavelength=<value>)\n")

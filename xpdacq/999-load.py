@@ -3,31 +3,16 @@ from xpdacq.glbl import glbl
 from xpdacq.beamtime import *
 from xpdacq.utils import import_sample_info
 from xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
-                                  _end_beamtime)
+                                  _end_beamtime, _load_glbl,
+                                  _configure_devices)
 
-# experiment device being used in current plan
-try:
-    device_list = [pe1c, shctl1, cs700]
-    attribute_name = ['area_det', 'shutter', 'temp_controller']
-
-    for attr, device in zip(attribute_name, device_list):
-        try:
-            setattr(glbl, attr, device)
-        except NameError:
-            # NameError -> simulation
-            pass
-except NameError:
-    # NameError -> simulation
-    pass
-
-
-# databroker
-try:
-    setattr(glbl, 'db', db)
-except NameError:
-    # NameError -> simulation
-    pass
-
+# configure experiment device being used in current version
+if glbl._is_simulation:
+    _configure_devices(glbl)
+else:
+    # at beamline
+    _configure_devices(glbl, area_det=pe1c, shutter=shctl1,
+                       temp_controller=cs700, db=db)
 
 # beamtime reload happen in xpdacq
 from xpdacq.xpdacq import *
@@ -46,9 +31,8 @@ if bt is not None:
 
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
-YAML_DIR = glbl.yaml_dir
 
-print('INFO: Initializing the XPD data acquisition environment')
+print('INFO: Initializing the XPD data acquisition environment\n')
 if os.path.isdir(HOME_DIR):
     os.chdir(HOME_DIR)
 else:
@@ -56,8 +40,11 @@ else:
 
 from xpdacq.calib import *
 
+# reload glbl options
+_load_glbl(glbl)
+
 # analysis functions, only at beamline
 #from xpdan.data_reduction import *
 
 print('OK, ready to go.  To continue, follow the steps in the xpdAcq')
-print('documentation at http://xpdacq.github.io/xpdacq')
+print('documentation at http://xpdacq.github.io/xpdacq\n')

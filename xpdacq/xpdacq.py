@@ -2,7 +2,6 @@ import os
 import uuid
 import time
 import yaml
-import datetime
 from itertools import count
 
 import bluesky.plans as bp
@@ -162,11 +161,6 @@ def _validate_dark(expire_time=None):
         return qualified_dark_uid[-1]
     else:
         return None
-
-
-def _timestamp_to_time(timestamp):
-    """ short help function """
-    return datetime.datetime.fromtimestamp(timestamp).strftime('%Y%m%d-%H%M')
 
 
 def _auto_load_calibration_file():
