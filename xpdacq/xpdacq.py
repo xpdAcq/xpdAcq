@@ -45,7 +45,7 @@ def _update_dark_dict_list(name, doc):
     This function should be subscribed to 'stop' documents from dark
     frame runs.
     """
-    # always grab from glbl state 
+    # always grab from glbl state
     dark_dict_list = list(glbl._dark_dict_list)
     # obtain light count time that is already set to glbl.pe1c
     acq_time = glbl.area_det.cam.acquire_time.get()
@@ -116,7 +116,7 @@ def periodic_dark(plan):
             need_dark = False
             # Annoying detail: the detector was probably already staged.
             # Unstage it (if it wasn't staged, nothing will happen) and
-            # then take_dark() and then re-stage it. 
+            # then take_dark() and then re-stage it.
             return bp.pchain(bp.unstage(glbl.area_det),
                              take_dark(),
                              bp.stage(glbl.area_det),
@@ -233,9 +233,9 @@ def _inject_mask(msg):
 def open_collection(collection_name):
     """ function to open a collection of your following scans
 
-    collection is a list of uid of executed scans. 
-    Only one collection will be alive in collection environment. 
-    This set of uids will be saved as a yaml file and desired operations 
+    collection is a list of uid of executed scans.
+    Only one collection will be alive in collection environment.
+    This set of uids will be saved as a yaml file and desired operations
     can be applied later.
 
     Parameters
@@ -279,6 +279,13 @@ def _insert_collection(collection_name, collection_obj, new_uid=None):
         with open(os.path.join(glbl.usrAnalysis_dir,
                                collection_name) + '.yaml', 'w') as f:
             yaml.dump(glbl.collection, f)
+
+
+def _inject_md_schema_version(msg):
+    """function to insert schema version"""
+    if msg.command == 'open_run':
+        msg.kwargs['md_schema_version'] = glbl._md_schema_version
+    return msg
 
 
 class CustomizedRunEngine(RunEngine):
@@ -405,6 +412,9 @@ class CustomizedRunEngine(RunEngine):
 
         # Insert glbl mask
         plan = bp.msg_mutator(plan, _inject_mask)
+
+        # insert md schema version
+        plan = bp.msg_mutator(plan, _inject_md_schema_version)
 
         # Execute
         return super().__call__(plan, subs,

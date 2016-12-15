@@ -205,6 +205,17 @@ class xrunTest(unittest.TestCase):
         self.assertEqual(open_run['calibration_collection_uid'],
                          'uuid1234')
 
+    def test_md_schema_version(self):
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.xrun.msg_hook = msg_rv
+        xrun_uid = self.xrun(0,0)
+        open_run = [el.kwargs for el in msg_list
+                    if el.command =='open_run'][0]
+        self.assertTrue('md_schema_version' in open_run)
+        self.assertEqual(open_run['md_schema_version'], 'v1')
+
     # deprecate from v0.5 release
     #def test_open_collection(self):
     #    # no collection

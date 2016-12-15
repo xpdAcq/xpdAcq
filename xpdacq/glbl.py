@@ -19,6 +19,7 @@ GROUP = 'XPD'
 IMAGE_FIELD = 'pe1_image'
 CALIB_CONFIG_NAME = 'pyFAI_calib.yml'
 MASK_NAME = 'xpdacq_mask.npy'
+MD_SCHEMA_VERSION = 'v1'
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()
@@ -122,6 +123,7 @@ class Glbl(YamlClass):
     mask_name = MASK_NAME
     calib_config_dict = None
     mask = None
+    _md_schema_version = MD_SCHEMA_VERSION
 
     # object should be handled by ipython profile
     db = None
