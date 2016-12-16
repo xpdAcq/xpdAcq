@@ -64,10 +64,8 @@ def _update_dark_dict_list(name, doc):
 def take_dark():
     """a plan for taking a single dark frame"""
     print('INFO: closing shutter...')
-    # 60 means open at XPD, Oct.4, 2016
+    # 0, means close, 60 means open at XPD, Oct.4, 2016
     yield from bp.abs_set(glbl.shutter, 0, wait=True)
-    #if glbl.shutter_control:
-    #    yield from bp.sleep(2)
     print('INFO: taking dark frame....')
     # upto this stage, glbl.pe1c has been configured to so exposure time is
     # correct
@@ -85,10 +83,6 @@ def take_dark():
     c = bp.count([glbl.area_det], md=_md)
     yield from bp.subs_wrapper(c, {'stop': [_update_dark_dict_list]})
     print('opening shutter...')
-    # 60 means open at XPD, Oct.4, 2016
-    #yield from bp.abs_set(glbl.shutter, 60, wait=True)
-    #if glbl.shutter_control:
-    #    yield from bp.sleep(2)
 
 
 def periodic_dark(plan):
@@ -151,14 +145,22 @@ def _validate_dark(expire_time=None):
     light_cnt_time = acq_time * num_frame
     # find fresh and qualified dark
     now = time.time()
-    qualified_dark_uid = [el['uid'] for el in dark_dict_list if
-                          abs(el['exposure'] - light_cnt_time) <= acq_time
-                          and abs(el['timestamp'] - now)
-                          <= (expire_time * 60 - acq_time)
-                          and (el['acq_time'] == acq_time)
-                          ]
-    if qualified_dark_uid:
-        return qualified_dark_uid[-1]
+    qualified_dark_list = []
+    for el in dark_dict_list:
+        expo_diff = abs(el['exposure'] - light_cnt_time)
+        time_diff = abs(el['timestamp'] - now)
+        if (expo_diff < acq_time) and\
+           (time_diff < expire_time*60) and\
+           (el['acq_time'] ==  acq_time):
+            qualified_dark_list.append((el.get('uid'), expo_diff,
+                                        time_diff))
+    if qualified_dark_list:
+        # sort wrt expo_diff for best candidate
+        best_dark = sorted(qualified_dark_list, key=lambda x: x[1])[0]
+        # sort wrt time_diff for best candidate
+        best_dark = sorted(qualified_dark_list, key=lambda x: x[2])[0]
+        best_dark_uid = best_dark[0]
+        return best_dark_uid
     else:
         return None
 

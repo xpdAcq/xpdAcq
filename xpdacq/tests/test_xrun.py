@@ -15,7 +15,7 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
 from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
                            _auto_load_calibration_file,
                            open_collection)
-from xpdacq.simulation import SimulatedPE1C
+from xpdacq.simulation import pe1c, cs700, shctl1, SimulatedPE1C
 
 import bluesky.examples as be
 
@@ -31,6 +31,15 @@ class xrunTest(unittest.TestCase):
                               ('Terban ', ' Max', 2)]
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
+        # set simulation objects
+        glbl.area_det = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
+        print("AT SETUP: numbe_of_sets = {}, images_per_set = {}, "
+              "acquire_time ={}"
+              .format(glbl.area_det.number_of_sets.get(),
+                      glbl.area_det.images_per_set.get(),
+                      glbl.area_det.cam.acquire_time.get()))
+        glbl.temp_controller = cs700
+        glbl.shutter = shctl1
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
@@ -38,14 +47,8 @@ class xrunTest(unittest.TestCase):
         src = os.path.join(os.path.dirname(__file__), xlf)
         shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
         import_sample_info(self.saf_num, self.bt)
-        self.sp = ScanPlan(self.bt, ct, 5)
-        glbl.shutter_control = True
         self.xrun = CustomizedRunEngine(self.bt)
         open_collection('unittest')
-        # simulation objects
-        glbl.area_det = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
-        glbl.temp_controller = be.motor
-        glbl.shutter = be.Mover('motor', {'motor': lambda x: x}, {'x': 0})
 
 
 
@@ -61,64 +64,58 @@ class xrunTest(unittest.TestCase):
     def test_validate_dark(self):
         """ test login in this function """
         # no dark_dict_list
-        if glbl._dark_dict_list:
-            glbl._dark_dict_list = []
+        glbl._dark_dict_list = []
         self.assertFalse(glbl._dark_dict_list)
         rv = _validate_dark()
         self.assertEqual(rv, None)
         # initiate dark_dict_list
-        # light cnt time is always 0.5 in mock detector, for now..
         dark_dict_list = []
         now = time.time()
-
+        acq_time = 0.1
         # case1: adjust exposure time
         for i in range(5):
             dark_dict_list.append({'uid': str(uuid.uuid4()),
                                    'exposure': (i + 1) * 0.1,
                                    'timestamp': now,
-                                   'acq_time': 0.1})
+                                   'acq_time': acq_time})
         glbl._dark_dict_list = dark_dict_list
-        correct_uid = [el['uid'] for el in dark_dict_list if
-                       el['exposure'] == 0.5]
-        self.assertEqual(len(correct_uid), 1)
         rv = _validate_dark()
-        self.assertEqual(rv, correct_uid[-1])
+        self.assertEqual(rv, dark_dict_list[0].get('uid'))
 
         # case2: adjust expire time
         dark_dict_list = []
         for i in range(5):
             dark_dict_list.append({'uid': str(uuid.uuid4()),
-                                   'exposure': 0.5,
+                                   'exposure': 0.1,
                                    'timestamp': now - (i + 1) * 60,
-                                   'acq_time': 0.1})
+                                   'acq_time': acq_time})
         glbl._dark_dict_list = dark_dict_list
-        correct_uid = [el['uid'] for el in dark_dict_list
-                       if el['timestamp'] - time.time() <=
-                       (glbl.dk_window * 60 - 0.1)]
-        # large window
+        # large window -> still find the best (freshest) one
         rv = _validate_dark()
-        self.assertEqual(rv, correct_uid[-1])
-        # small window
+        self.assertEqual(rv, dark_dict_list[0].get('uid'))
+        # small window -> find None
         rv = _validate_dark(0.1)
         self.assertEqual(rv, None)
-        # medium window
+        # medium window -> find the first one as it's within 1 min window
         rv = _validate_dark(1.5)
-        correct_uid = dark_dict_list[0]['uid']
-        self.assertEqual(rv, correct_uid)
+        self.assertEqual(rv, dark_dict_list[0].get('uid'))
 
         # case3: adjust acqtime
         dark_dict_list = []
         for i in range(5):
             dark_dict_list.append({'uid': str(uuid.uuid4()),
-                                   'exposure': 0.5,
+                                   'exposure': 0.1,
                                    'timestamp': now,
-                                   'acq_time': 0.1 * i})
+                                   'acq_time': acq_time * (i+1)})
         glbl._dark_dict_list = dark_dict_list
-        correct_uid = [el['uid'] for el in dark_dict_list
-                       if el['acq_time'] == glbl.frame_acq_time]
+        # leave for future debug
+        #print("dark_dict_list = {}"
+        #      .format([(el.get('exposure'),
+        #                el.get('timestamp'),
+        #                el.get('uid'),
+        #                el.get('acq_time'))for el in glbl._dark_dict_list]))
         rv = _validate_dark()
-        self.assertEqual(len(correct_uid), 1)
-        self.assertEqual(rv, correct_uid[-1])
+        self.assertEqual(rv, dark_dict_list[0].get('uid'))
 
         # case4: with real xrun
         if glbl._dark_dict_list:
