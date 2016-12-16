@@ -27,7 +27,8 @@ from IPython import get_ipython
 import tifffile as tif
 
 from .glbl import glbl
-from .beamtime import ScanPlan, Sample, ct
+from .beamtime import Beamtime, ScanPlan, Sample, ct
+from .xpdacq import CustomizedRunEngine
 from xpdan.tools import mask_img, compress_mask
 
 from pyFAI.gui.utils import update_fig
@@ -61,8 +62,8 @@ def _timestampstr(timestamp):
     return timestring
 
 
-def run_calibration(exposure=5, dark_sub_bool=True, calibrant=None,
-                    wavelength=None, detector=None, **kwargs):
+def run_calibration(exposure=5, calibrant=None, wavelength=None,
+                    detector=None, *, RE_instance=None, **kwargs):
 
     # TODO: discuss default calibrant
     """function to run entire calibration process.
@@ -101,6 +102,10 @@ def run_calibration(exposure=5, dark_sub_bool=True, calibrant=None,
         Detector or one of pre-defined detector names. default to
         'perkin_elmer' detector. please refer to pyFAI full
         documentation for full list of pre-defined detectors
+    RE_instance : bluesky.run_engine.RunEngine instance, optional
+        instance of run engine being called in order to collect image.
+        DO NOT change it unless you are confident. default to current
+        run engine instance (xrun)
     kwargs:
         Additional keyword argument for calibration. please refer to
         pyFAI documentation for all options.
@@ -111,12 +116,53 @@ def run_calibration(exposure=5, dark_sub_bool=True, calibrant=None,
     http://pyfai.readthedocs.io/en/latest/
     """
     # configure calibration instance
-    c = _configure_calibration_instance(calibrant, detector, wavelength)
+    c = _configure_calib_instance(calibrant, detector, wavelength)
 
     # collect & pull subtracted image
-    _check_obj(_REQUIRED_OBJ_LIST)
-    ips = get_ipython()
-    xrun = ips.ns_table['user_global']['xrun']
+    img, calib_collection_uid = _collect_calib_img(c, exposure,
+                                                   RE_instance)
+
+   # pyFAI calibration
+    calib_c = _calibration(img, c, **kwargs)
+
+    # save param for xpdAcq
+    _save_and_attach_calib_param(calib_c, calib_collection_uid)
+
+
+def _configure_calib_instance(calibrant, detector, wavelength):
+    """function to configure calibration instance"""
+    if wavelength is None:
+        bt_fp = os.path.join(glbl.yaml_dir, 'bt_bt.yml')
+        if not os.path.isfile(bt_fp):
+            raise FileNotFoundError("Can't find your Beamtime yaml file.\n"
+                                    "Did you accidentally delete it? "
+                                    "Please contact beamline staff "
+                                    "ASAP")
+        bto = Beamtime.from_yaml(open(bt_fp))
+        wavelength = bto.wavelength
+    if detector is None:
+        detector = 'perkin_elmer'
+    if calibrant is None:
+        calibrant = 'Ni'
+    c = Calibration(calibrant=calibrant, detector=detector,
+                    wavelength=wavelength*10**(-10))
+
+    return c
+
+
+def _collect_calib_img(exposure, calibration_instance, RE_instance=None):
+    """helper function to collect calibration image and return it"""
+    if RE_instance is None:
+        _check_obj(_REQUIRED_OBJ_LIST)
+        ips = get_ipython()
+        xrun = ips.ns_table['user_global']['xrun']
+    else:
+        # for test purpose
+        xrun = RE_instance
+        bt_fp = os.path.join(glbl.yaml_dir, 'bt_bt.yml')
+        bto = Beamtime.from_yaml(open(bt_fp))
+        xrun.beamtime = bto
+    c = calibration_instance  # shorthand notation
     calib_collection_uid = str(uuid.uuid4())
     calibrant_name = c.calibrant.__repr__().split(' ')[0]
     calibration_dict = {'sample_name':calibrant_name,
@@ -134,36 +180,8 @@ def run_calibration(exposure=5, dark_sub_bool=True, calibrant=None,
                                         glbl.det_image_field)).squeeze()
     img -= dark_img
 
-    # pyFAI calibration
-    if 'gui_calib' in kwargs and kwargs['gui_calib']==True:
-        pass  # internal hook to make test with gui-involved process
-    else:
-        calib_c = _calibration(img, c, **kwargs)
+    return img, calib_collection_uid
 
-    # save param for xpdAcq
-    _save_and_attach_calib_param(calib_c, calib_collection_uid)
-
-
-def _configure_calibration_instance(calibrant, detector, wavelength):
-    """function to configure calibration instance"""
-    if wavelength is None:
-        bt_fp = os.path.join(glbl.yaml_dir, 'bt_bt.yml')
-        if not os.path.isfile(bt_fp):
-            raise FileNotFoundError("Can't find your Beamtime yaml file.\n"
-                                    "Did you accidentally delete it? "
-                                    "Please contact beamline staff "
-                                    "ASAP")
-        with open(bt_fp, 'r') as f:
-            bt_dict = yaml.load(f)
-        wavelength = bt_dict['bt_wavelength']
-    if detector is None:
-        detector = 'perkin_elmer'
-    if calibrant is None:
-        calibrant = 'Ni'
-    c = Calibration(calibrant=calibrant, detector=detector,
-                    wavelength=wavelength*10**(-10))
-
-    return c
 
 def _save_and_attach_calib_param(calib_c, calib_collection_uid):
     """save calibration parameters and attach to glbl class instance
