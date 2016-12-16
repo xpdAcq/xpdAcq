@@ -191,6 +191,53 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
     yield from plan
 
 
+def Tlist(dets, exposure, T_list):
+    """defines a flexible scan with user-specified temperatures
+
+    A frame is exposed for the given exposure time at each of the
+    user-specified temperatures
+
+    Parameters
+    ----------
+    dets : list
+        list of objects that represent instrument devices. In xpdAcq, it is
+        defaulted to area detector.
+    exposure : float
+        total time of exposure in seconds for area detector
+    T_list : list
+        a list of temperature where a scan will be run
+
+    Note
+    ----
+    area detector and temperature controller will always be the one
+    configured in global state. To find out which these are, please
+    using following commands:
+
+        >>> glbl.area_det
+        >>> glbl.temp_controller
+
+    To interrogate which devices are currently in use.
+    """
+
+    pe1c, = dets
+    # setting up area_detector and temp_controller
+    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
+    T_controller = glbl.temp_controller
+    xpdacq_md = {'sp_time_per_frame': acq_time,
+                 'sp_num_frames': num_frame,
+                 'sp_requested_exposure': exposure,
+                 'sp_computed_exposure': computed_exposure,
+                 'sp_T_list': T_list,
+                 'sp_type': 'Tlist',
+                 'sp_uid': str(uuid.uuid4()),
+                 'sp_plan_name': 'Tlist'
+                }
+    # pass xpdacq_md to as additional md to bluesky plan
+    plan = bp.list_scan([glbl.area_det], T_controller, T_list, md=xpdacq_md)
+    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det, T_controller]))
+    yield from plan
+
+
 def tseries(dets, exposure, delay, num, *, md=None):
     """
     time series scan with area detector.
@@ -230,6 +277,8 @@ def tseries(dets, exposure, delay, num, *, md=None):
                         'sp_num_frames': num_frame,
                         'sp_requested_exposure': exposure,
                         'sp_computed_exposure': computed_exposure,
+                        'sp_requested_delay': delay,
+                        'sp_requested_num': num,
                         'sp_type': 'tseries',
                         # need a name that shows all parameters values
                         # 'sp_name': 'tseries_<exposure_time>',
@@ -257,6 +306,7 @@ def _nstep(start, stop, step_size):
 register_plan('ct', ct)
 register_plan('Tramp', Tramp)
 register_plan('tseries', tseries)
+register_plan('Tlist', Tlist)
 
 
 def new_short_uid():

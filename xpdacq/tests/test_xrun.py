@@ -202,6 +202,59 @@ class xrunTest(unittest.TestCase):
         self.assertEqual(open_run['calibration_collection_uid'],
                          'uuid1234')
 
+    def test_xrun_with_xpdAcqPlans(self):
+        exp = 5
+        # test with ct
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.xrun.msg_hook = msg_rv
+        self.xrun({}, ScanPlan(self.bt, ct, exp))
+        open_run = [el.kwargs for el in msg_list
+                    if el.command == 'open_run'].pop()
+        self.assertEqual(open_run['sp_type'], 'ct')
+        self.assertEqual(open_run['sp_requested_exposure'], exp)
+        # test with Tramp
+        Tstart, Tstop, Tstep = 300, 200, 10
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.xrun.msg_hook = msg_rv
+        self.xrun({}, ScanPlan(self.bt, Tramp, exp, Tstart,
+                               Tstop, Tstep))
+        open_run = [el.kwargs for el in msg_list
+                    if el.command == 'open_run'].pop()
+        self.assertEqual(open_run['sp_type'], 'Tramp')
+        self.assertEqual(open_run['sp_requested_exposure'], exp)
+        self.assertEqual(open_run['sp_startingT'], Tstart)
+        self.assertEqual(open_run['sp_endingT'], Tstop)
+        self.assertEqual(open_run['sp_requested_Tstep'], Tstep)
+        # test with tseries
+        delay, num = 1, 5
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.xrun.msg_hook = msg_rv
+        self.xrun({}, ScanPlan(self.bt, tseries, exp, delay, num))
+        open_run = [el.kwargs for el in msg_list\
+                    if el.command == 'open_run'].pop()
+        self.assertEqual(open_run['sp_type'], 'tseries')
+        self.assertEqual(open_run['sp_requested_exposure'], exp)
+        self.assertEqual(open_run['sp_requested_delay'], delay)
+        self.assertEqual(open_run['sp_requested_num'], num)
+        # test with Tlist
+        T_list = [300, 256, 128]
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.xrun.msg_hook = msg_rv
+        self.xrun({}, ScanPlan(self.bt, Tlist, exp, T_list))
+        open_run = [el.kwargs for el in msg_list
+                    if el.command == 'open_run'].pop()
+        self.assertEqual(open_run['sp_type'], 'Tlist')
+        self.assertEqual(open_run['sp_requested_exposure'], exp)
+        self.assertEqual(open_run['sp_T_list'], T_list)
+
     # deprecate from v0.5 release
     #def test_open_collection(self):
     #    # no collection
