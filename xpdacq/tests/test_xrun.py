@@ -4,9 +4,7 @@ import shutil
 import time
 import yaml
 import uuid
-from unittest.mock import MagicMock
-from configparser import ConfigParser
-from time import strftime
+import warnings
 
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import *
@@ -47,9 +45,8 @@ class xrunTest(unittest.TestCase):
         src = os.path.join(os.path.dirname(__file__), xlf)
         shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
         import_sample_info(self.saf_num, self.bt)
-        self.xrun = CustomizedRunEngine(self.bt)
+        self.xrun = CustomizedRunEngine(None)
         open_collection('unittest')
-
 
 
     def tearDown(self):
@@ -121,6 +118,7 @@ class xrunTest(unittest.TestCase):
         if glbl._dark_dict_list:
             glbl._dark_dict_list = []
         self.assertFalse(glbl._dark_dict_list)
+        self.xrun.beamtime = self.bt
         xrun_uid = self.xrun({}, 0)
         print(xrun_uid)
         self.assertEqual(len(xrun_uid), 2)  # first one is auto_dark
@@ -178,6 +176,7 @@ class xrunTest(unittest.TestCase):
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
+        self.xrun.beamtime = self.bt
         glbl.auto_load_calib = False
         xrun_uid = self.xrun(0,0)
         open_run = [el.kwargs for el in msg_list
@@ -209,6 +208,7 @@ class xrunTest(unittest.TestCase):
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
+        self.xrun.beamtime = self.bt
         self.xrun({}, ScanPlan(self.bt, ct, exp))
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'].pop()
@@ -254,6 +254,22 @@ class xrunTest(unittest.TestCase):
         self.assertEqual(open_run['sp_type'], 'Tlist')
         self.assertEqual(open_run['sp_requested_exposure'], exp)
         self.assertEqual(open_run['sp_T_list'], T_list)
+
+    def test_xrun_warning(self):
+        # no beamtime linked -> RuntimeError
+        self.assertRaises(RuntimeError, lambda : self.xrun.beamtime)
+        self.xrun.beamtime = self.bt
+        glbl.soft_wait = 0.1
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # trigger warning
+            self.xrun.beamtime.wavelength = None
+            self.xrun(0,0)
+            print("wavelength = {}"
+                  .format(self.xrun.beamtime.wavelength))
+            # check warning
+            assert len(w)==1
+            assert issubclass(w[-1].category, UserWarning)
 
     # deprecate from v0.5 release
     #def test_open_collection(self):
