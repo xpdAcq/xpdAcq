@@ -118,7 +118,7 @@ Set up your experiment
 """"""""""
 
 If you want to query any ``xpdAcq`` or ``xpdAn`` function, type the function name with a ``?`` at the end and hit
-return.  Documentation for what paramters the function takes, and any default values, and what
+return.  Documentation for what parameters the function takes, and any default values, and what
 the function returns will be printed.  For example, in your ``collection`` terminal type:
 
 .. code-block:: python
@@ -251,15 +251,17 @@ simple count, a series of counts, and a temperature scan.  You can create ``Scan
 them when you need them (and reuse them after that).  Examples of what to type to create different example ``ScanPlans`` are shown
 in the table below.  Adapt these as you need to by changing the numbers in the arguments.
 
-======================================= ===================================================================================
+=========================================== ===================================================================================
 command
-======================================= ===================================================================================
-``ScanPlan(bt, ct, 5)``                  a count scan for 5s
+=========================================== ===================================================================================
+``ScanPlan(bt, ct, 5)``                     a count scan for 5s
 
-``ScanPlan(bt, tseries, 5, 50, 15)``     time series with 5s count time, 50s delay and 15 repeats
+``ScanPlan(bt, tseries, 5, 50, 15)``        time series with 5s count time, 50s delay and 15 repeats
 
-``ScanPlan(bt, Tramp, 5, 300, 200, 5)``  temperature series with 5s count time, starting from 300k to 200k with 5k per step
-======================================= ===================================================================================
+``ScanPlan(bt, Tramp, 5, 300, 200, 5)``     temperature series with 5s count time, starting from 300k to 200k with 5k per step
+
+``ScanPlan(bt, Tlist, 5, [250, 180, 200])`` exposure detector for 5s at 250K, 180K and 200K
+=========================================== ===================================================================================
 
 write your own scan plan
 ^^^^^^^^^^^^^^^^^^^^^^^^
