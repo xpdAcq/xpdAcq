@@ -1,3 +1,18 @@
+#!/usr/bin/env python
+##############################################################################
+#
+# xpdacq            by Billinge Group
+#                   Simon J. L. Billinge sb2896@columbia.edu
+#                   (c) 2016 trustees of Columbia University in the City of
+#                        New York.
+#                   All rights reserved
+#
+# File coded by:    Timothy Liu, Dan Allan, Thomas A. Caswell
+#
+# See AUTHORS.txt for a list of people who contributed.
+# See LICENSE.txt for license information.
+#
+##############################################################################
 import os
 import uuid
 import time
@@ -45,7 +60,7 @@ def _update_dark_dict_list(name, doc):
     This function should be subscribed to 'stop' documents from dark
     frame runs.
     """
-    # always grab from glbl state 
+    # always grab from glbl state
     dark_dict_list = list(glbl._dark_dict_list)
     # obtain light count time that is already set to glbl.pe1c
     acq_time = glbl.area_det.cam.acquire_time.get()
@@ -110,7 +125,7 @@ def periodic_dark(plan):
             need_dark = False
             # Annoying detail: the detector was probably already staged.
             # Unstage it (if it wasn't staged, nothing will happen) and
-            # then take_dark() and then re-stage it. 
+            # then take_dark() and then re-stage it.
             return bp.pchain(bp.unstage(glbl.area_det),
                              take_dark(),
                              bp.stage(glbl.area_det),
@@ -222,7 +237,7 @@ def _inject_calibration_md(msg):
 def _inject_mask(msg):
     if msg.command == 'open_run':
         mask = getattr(glbl, 'mask', None)
-        if mask is not None:
+        if mask is not None:homas Caswell
             print("INFO: insert mask into your header")
             data, indicies, indptr = compress_mask(mask)  # rv are lists
             msg.kwargs['mask'] = (data, indicies,
@@ -235,9 +250,9 @@ def _inject_mask(msg):
 def open_collection(collection_name):
     """ function to open a collection of your following scans
 
-    collection is a list of uid of executed scans. 
-    Only one collection will be alive in collection environment. 
-    This set of uids will be saved as a yaml file and desired operations 
+    collection is a list of uid of executed scans.
+    Only one collection will be alive in collection environment.
+    This set of uids will be saved as a yaml file and desired operations
     can be applied later.
 
     Parameters

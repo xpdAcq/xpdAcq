@@ -1,6 +1,20 @@
+#!/usr/bin/env python
+##############################################################################
+#
+# xpdacq            by Billinge Group
+#                   Simon J. L. Billinge sb2896@columbia.edu
+#                   (c) 2016 trustees of Columbia University in the City of
+#                        New York.
+#                   All rights reserved
+#
+# File coded by:    Soham Banerjee
+#
+# See AUTHORS.txt for a list of people who contributed.
+# See LICENSE.txt for license information.
+#
+##############################################################################
 # Calibrant: Nickel (Ni)
 # Face centered cubic cell a=3.5239 b=3.5239 c=3.5239 alpha=90.000 beta=90.000 gamma=90.000
-# Ref: Soham Mod
 2.034582348620 # (1, 1, 1) 8
 1.761935000000 # (2, 0, 0) 6
 1.245922148450 # (2, 2, 0) 12
