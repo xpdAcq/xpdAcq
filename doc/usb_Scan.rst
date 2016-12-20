@@ -61,7 +61,7 @@ Types of ScanPlan available in current version:
   * ``'Tramp'`` executes a temperature ramp from ``'startingT'`` to ``'endingT'`` in temperature steps of ``'Tstep'`` with exposure time of ``'exposure'``.  e.g., ``ScanPlan(bt, Tramp, 1, 200, 500, 5)`` will automatically change the temperature,
     starting at 200 K and ending at 500 K, measuring a scan of 1 s at every 5 K step. The temperature controller will hold at each temperature until the temperature stabilizes before starting the measurement.
 
-Summary table on ScanPlan:
+Summary table on ScanPlan
 """""""""""""""""""""""""""
 
   =========== ==================================================================================================
@@ -71,6 +71,43 @@ Summary table on ScanPlan:
   ``tseries`` ``ScanPlan(bt, tseries, 1, 59, 50)``
   ``Tramp``   ``ScanPlan(bt, Tramp , 1, 200, 500, 5)``
   =========== ==================================================================================================
+
+.. _customize_scan:
+
+Write your own ScanPlan
+""""""""""""""""""""""""
+
+``xpdAcq`` also consumes any scan plan from ``bluesky``. The ability to write your own bluesky plans gives enormous flexibility
+but has a steep learning curve, but you should be able to get help setting these up from your local contact. For more details about how to write a ``bluesky`` scan plan,
+please see `full document <http://nsls-ii.github.io/bluesky/plans.html>`_.
+
+Here we will show a brief example for illustration. The specific illustration is a scan that drives a motor called ``motor`` through a specific list of points while collecting
+an image at each point from the detector ``area_detector``.  It uses a predefined ``bluesky``
+plan for this purpose, ``list_scan``.  To use this in ``xpdAcq`` you would first define your ``bluesky`` plan
+and assign it to the object we have called ``mybsplan`` in this example:
+
+.. code-block:: python
+
+  from bluesky.plans import list_scan
+
+  # it is entirely optional to add metadata to the scan, but here is what you would do:
+  mymd = {'memoy_aid': 'This metadata should be about the scan, not the sample which would be added when the scanplan is run',
+          'author': 'Simon',
+          'etc': 'make up any key-value pairs'}
+
+  mybsplan = list_scan([glbl.area_det], motor, [1,3,5,7,9], md=mymd) # drives motor to positions 1,3,5,7,9 and fires ``area detector`` at each position
+  mybsplan = subs_wrapper(mybsplan, LiveTable([glbl.area_det])) # set up the scan so LiveTable will give updates on how the scan is progressing
+
+Then to use it successfully in xpdAcq you have to do a bit of configuration of global parameters.  This work is done
+automatically for you in the ``xpdAcq`` built-in plans.  There are many things you could set up, but the simplest example
+is that we want the detector to collect 50 frames each time we fire it, which would give a 50s exposure at a frame-rate of 0.1s (frame-rate
+is another ``glbl`` option that you could reset).
+
+.. code-block:: python
+
+  glbl.area_det.images_per_set.put(50)  # set detector to collect 50 frames, so 5 s exposure if continuous acquisition with 0.1s frame-rate
+
+Finally, later on in the experiment when you are ready to run it, you would run this plan just the same as a regular ``ScanPlan`` object!
 
 
 OK, it is time to :ref:`run our scans <usb_running>`
