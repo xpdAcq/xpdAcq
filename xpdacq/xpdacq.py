@@ -237,7 +237,7 @@ def _inject_calibration_md(msg):
 def _inject_mask(msg):
     if msg.command == 'open_run':
         mask = getattr(glbl, 'mask', None)
-        if mask is not None:homas Caswell
+        if mask is not None:
             print("INFO: insert mask into your header")
             data, indicies, indptr = compress_mask(mask)  # rv are lists
             msg.kwargs['mask'] = (data, indicies,
