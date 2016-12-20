@@ -205,7 +205,7 @@ def Tlist(dets, exposure, T_list):
     exposure : float
         total time of exposure in seconds for area detector
     T_list : list
-        a list of temperature where a scan will be run
+        a list of temperatures where a scan will be run
 
     Note
     ----
