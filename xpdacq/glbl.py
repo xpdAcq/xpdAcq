@@ -113,6 +113,7 @@ class Glbl(YamlClass):
     auto_load_calib = True
     calib_config_name = CALIB_CONFIG_NAME
     _frame_acq_time = FRAME_ACQUIRE_TIME
+    soft_wait = 5
     # beamline name
     owner = OWNER
     beamline_id = BEAMLINE_ID

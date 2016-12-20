@@ -2,6 +2,7 @@ import os
 import uuid
 import time
 import yaml
+import warnings
 from itertools import count
 
 import bluesky.plans as bp
@@ -328,7 +329,6 @@ class CustomizedRunEngine(RunEngine):
         self._beamtime = bt_obj
         self.md.update(bt_obj.md)
         print("INFO: beamtime object has been linked\n")
-        # from xpdacq.calib import run_calibration
         if not glbl._is_simulation:
             self.subscribe('all', glbl.db.mds.insert)
             # let user deal with suspender
@@ -386,9 +386,15 @@ class CustomizedRunEngine(RunEngine):
             raise ValueError("These keys in metadata_kw are illegal "
                              "because they are always in sample: "
                              "{}".format(set(sample) & set(metadata_kw)))
-        if self._beamtime.get('bt_wavelength') is None:
-            print("WARNING: there is no wavelength information in current"
-                  "beamtime object, scan will keep going....")
+        if self._beamtime.wavelength is None:
+            warnings.warn("no wavelength is set to current beamtime "
+                          "object. Obtain the correct wavelength and "
+                          "run:\n>>> {}\n"
+                          "to make a auto-reduction work properly."
+                          .format('bt.wavelength = <value>'),
+                          UserWarning)
+            time.sleep(glbl.soft_wait)
+
         metadata_kw.update(sample)
         sh = glbl.shutter
 
