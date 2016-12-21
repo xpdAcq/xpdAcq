@@ -2,6 +2,7 @@ import os
 import uuid
 import time
 import yaml
+import warnings
 from itertools import count
 
 import bluesky.plans as bp
@@ -283,42 +284,55 @@ def _insert_collection(collection_name, collection_obj, new_uid=None):
             yaml.dump(glbl.collection, f)
 
 def set_suspender(xrun, signal=None, suspend_thres=None,
-                   resume_thres=None, sleep=None):
-    """helper function to set suspender based on ring current
+                  resume_thres=None, wait_time=None, clear=True):
+    """helper function to set suspender based on numeric value of signal
 
     Parameters
     ----------
     xrun : instance of RunEngine
-        run engine suspender will be hooked to
+        the run engine instance suspender will be installed
     signal : EpicsSignal, optional
         singal suspender will monitor. default to XPD ring current.
     suspend_thres : float, optional
         suspend if the signal value falls below this threshold. default
         is to monitor ring current. suspender will use the smaller value
-        between 50mA or 30% of current ring current
+        between 50 mA or 50% of current ring current
     resume_thres : float, optional
         resume if tha ring current ramps higher than this value. default
-        to larger value between 180 mA and 90% of current ring current
-    sleep : float, optional
+        to larger value between 150 mA and 90% of current ring current
+    wait_time : float, optional
         wait time in seconds after the reusme condition is met. default
         is 1200s (20 mins)
+    clear : bool, optional
+        option on whether to clear all the existing suspender(s).
+        default is True (only newly added suspender will be applied)
     """
-    from ophyd import EpicsSignalRO, EpicsSignal
-    signal = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
-                           name='ring_current')
-    ring_current_val = ring_current.get()
-    if low is None:
-    beamdump_sus = SuspendFloor(glbl.ring_current, 50,
-                                resume_thresh=glbl.ring_current.get() * 0.9,
-                                sleep=1200)
+    if signal is None:
+        from ophyd import EpicsSignalRO, EpicsSignal
+        signal = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
+                               name='ring_current')
+    signal_val = signal.get()
+    if suspend_thres is None and signal is None:
+        suspend_thres = max(50, 0.5*signal_val)
+    if resume_thres is None and signal is None:
+        resume_thres = max(150, 0.9*signal_val)
+    if wait_time is None:
+        wait_time = 1200
+    if suspend_thres <= 50 and signal is None:
+        warnings.warn("suspender set when beam current was below 50mA.\n"
+                      "For the best operation, run:\n"
+                      ">>> set_suspender(xrun)\n"
+                      "when beam current is at its full value",
+                      UserWarning)
+    sus = SuspendFloor(signal, suspend_thres, resume_thres, sleep)
+    if clear:
+        xrun.clear_suspenders()
+    xrun.install_suspender(sus)
+    print("INFO: suspender on signal {}, with suspend threshold {} and "
+          "resume threshold={}, wait time ={}s has been installed.\n"
+          .format(signal.name, suspend_thres, resume_thres, wait_time))
 
-    glbl.suspender = beamdump_sus
-    # FIXME : print info for user
-    # self.install_suspender(beamdump_sus)
-    # print("INFO: beam dump suspender has been created."
-    #        " to check, please do\n:"
-    #        ">>> xrun.suspenders")
-    
+
 class CustomizedRunEngine(RunEngine):
     def __init__(self, beamtime, *args, **kwargs):
         """ A RunEngine customized for XPD workflows.
@@ -367,18 +381,7 @@ class CustomizedRunEngine(RunEngine):
         # from xpdacq.calib import run_calibration
         if not glbl._is_simulation:
             self.subscribe('all', glbl.db.mds.insert)
-            # let user deal with suspender
-            #beamdump_sus = SuspendFloor(glbl.ring_current, 50,
-            #                            resume_thresh=glbl.ring_current.get() * 0.9,
-            #                            sleep=1200)
-            #glbl.suspender = beamdump_sus
-            # FIXME : print info for user
-            # self.install_suspender(beamdump_sus)
-            # print("INFO: beam dump suspender has been created."
-            #        " to check, please do\n:"
-            #        ">>> xrun.suspenders")
-        else:
-            pass
+            set_suspender(self)
 
     def __call__(self, sample, plan, subs=None, *,
                  verify_write=False, dark_strategy=periodic_dark,
