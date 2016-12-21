@@ -6,12 +6,12 @@ from itertools import count
 
 import bluesky.plans as bp
 from bluesky import RunEngine
-from bluesky.utils import normalize_subs_input
 from bluesky.suspenders import SuspendFloor
+from bluesky.utils import normalize_subs_input
 
 from .glbl import glbl
-from .yamldict import YamlDict, YamlChainMap
 from .beamtime import *
+from .yamldict import YamlDict, YamlChainMap
 
 from xpdan.tools import compress_mask
 
@@ -282,7 +282,43 @@ def _insert_collection(collection_name, collection_obj, new_uid=None):
                                collection_name) + '.yaml', 'w') as f:
             yaml.dump(glbl.collection, f)
 
+def set_suspender(xrun, signal=None, suspend_thres=None,
+                   resume_thres=None, sleep=None):
+    """helper function to set suspender based on ring current
 
+    Parameters
+    ----------
+    xrun : instance of RunEngine
+        run engine suspender will be hooked to
+    signal : EpicsSignal, optional
+        singal suspender will monitor. default to XPD ring current.
+    suspend_thres : float, optional
+        suspend if the signal value falls below this threshold. default
+        is to monitor ring current. suspender will use the smaller value
+        between 50mA or 30% of current ring current
+    resume_thres : float, optional
+        resume if tha ring current ramps higher than this value. default
+        to larger value between 180 mA and 90% of current ring current
+    sleep : float, optional
+        wait time in seconds after the reusme condition is met. default
+        is 1200s (20 mins)
+    """
+    from ophyd import EpicsSignalRO, EpicsSignal
+    signal = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
+                           name='ring_current')
+    ring_current_val = ring_current.get()
+    if low is None:
+    beamdump_sus = SuspendFloor(glbl.ring_current, 50,
+                                resume_thresh=glbl.ring_current.get() * 0.9,
+                                sleep=1200)
+
+    glbl.suspender = beamdump_sus
+    # FIXME : print info for user
+    # self.install_suspender(beamdump_sus)
+    # print("INFO: beam dump suspender has been created."
+    #        " to check, please do\n:"
+    #        ">>> xrun.suspenders")
+    
 class CustomizedRunEngine(RunEngine):
     def __init__(self, beamtime, *args, **kwargs):
         """ A RunEngine customized for XPD workflows.
