@@ -49,6 +49,9 @@ if bt is not None:
     # reload glbl options
     _load_glbl(glbl)
 
+# insert header to db, either simulated or real
+xrun.subscribe('all', glbl.db.mds.insert)
+
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
 
