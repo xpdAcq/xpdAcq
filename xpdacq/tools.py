@@ -28,6 +28,8 @@ def clean_dict(input_dict, target_chr, replace_chr):
     # for safety, copy a new one
     for k, v in input_dict.items():
         if isinstance(v, dict):
+            clean_k = k.replace(target_chr, replace_chr)
+            input_dict[clean_k] = input_dict.pop(k)
             clean_dict(v, target_chr, replace_chr)
         else:
             clean_k = k.replace(target_chr, replace_chr)
