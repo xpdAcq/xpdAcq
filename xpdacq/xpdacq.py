@@ -283,23 +283,20 @@ def _insert_collection(collection_name, collection_obj, new_uid=None):
                                collection_name) + '.yaml', 'w') as f:
             yaml.dump(glbl.collection, f)
 
-def set_suspender(xrun, signal=None, suspend_thres=None,
-                  resume_thres=None, wait_time=None, clear=True):
-    """helper function to set suspender based on numeric value of signal
+def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
+                           wait_time=None, clear=True):
+    """helper function to set suspender based on ring_current
 
     Parameters
     ----------
     xrun : instance of RunEngine
         the run engine instance suspender will be installed
-    signal : EpicsSignal, optional
-        singal suspender will monitor. default to XPD ring current.
     suspend_thres : float, optional
-        suspend if the signal value falls below this threshold. default
-        is to monitor ring current. suspender will use the smaller value
-        between 50 mA or 50% of current ring current
+        suspend if ring current falls below this threshold. default
+        is the larger value between 50 mA or 50% of current ring current
     resume_thres : float, optional
         resume if tha ring current ramps higher than this value. default
-        to larger value between 150 mA and 90% of current ring current
+        is the larger value among 150 mA or 80% of current ring current
     wait_time : float, optional
         wait time in seconds after the reusme condition is met. default
         is 1200s (20 mins)
@@ -307,24 +304,28 @@ def set_suspender(xrun, signal=None, suspend_thres=None,
         option on whether to clear all the existing suspender(s).
         default is True (only newly added suspender will be applied)
     """
+    signal = glbl.ring_current
     if signal is None:
-        from ophyd import EpicsSignalRO, EpicsSignal
-        signal = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
-                               name='ring_current')
+        # edgy case, attribute is accidentally removed
+        raise RuntimeError("no ring current signal is set to global "
+                           "configuration, please reach out local "
+                           "contact for more help.")
     signal_val = signal.get()
-    if suspend_thres is None and signal is None:
+    if suspend_thres is None:
         suspend_thres = max(50, 0.5*signal_val)
-    if resume_thres is None and signal is None:
-        resume_thres = max(150, 0.9*signal_val)
+    if resume_thres is None :
+        resume_thres = max(150, 0.8*signal_val)
     if wait_time is None:
         wait_time = 1200
-    if suspend_thres <= 50 and signal is None:
+    if suspend_thres <= 50:
         warnings.warn("suspender set when beam current was below 50mA.\n"
                       "For the best operation, run:\n"
-                      ">>> set_suspender(xrun)\n"
-                      "when beam current is at its full value",
+                      ">>> {}\n"
+                      "when beam current is at its full value"
+                      .format("set_suspender(xrun)"),
                       UserWarning)
-    sus = SuspendFloor(signal, suspend_thres, resume_thres, sleep)
+    sus = SuspendFloor(signal, suspend_thres,
+                       resume_thresh=resume_thres, sleep=wait_time)
     if clear:
         xrun.clear_suspenders()
     xrun.install_suspender(sus)

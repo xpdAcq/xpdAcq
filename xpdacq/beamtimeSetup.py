@@ -5,8 +5,7 @@ import shutil
 from time import strftime
 from IPython import get_ipython
 
-
-from .glbl import glbl, glbl_filepath
+from .glbl import glbl, glbl_filepath, simulation
 from .beamtime import *
 from .utils import _graceful_exit
 from .simulation import db, pe1c, shctl1, cs700
@@ -48,6 +47,13 @@ def _start_beamtime(PI_last, saf_num, experimenters=[],
         # pre-populated scan plan
         for expo in EXPO_LIST:
             ScanPlan(bt, ct, expo)
+
+        # set ring current attribute
+        if not simulation:
+            from ophyd import EpicsSignalRO, EpicsSignal
+            ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
+                                         name='ring_current')
+            glbl.ring_current = ring_current
 
         return bt
 

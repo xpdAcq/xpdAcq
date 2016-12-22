@@ -129,6 +129,7 @@ class Glbl(YamlClass):
     temp_controller = None
     shutter = None
     verify_files_saved = None
+    ring_current = None
 
     # default masking dict
     mask_dict = {'edge': 30, 'lower_thresh': 0.0,
