@@ -4,8 +4,7 @@ import shutil
 import time
 import yaml
 import uuid
-from unittest.mock import MagicMock
-from configparser import ConfigParser
+import warnings
 from time import strftime
 
 from xpdacq.glbl import glbl
@@ -261,6 +260,7 @@ class xrunTest(unittest.TestCase):
         loop = self.xrun._loop
         # no suspender
         self.xrun({}, ScanPlan(self.bt, ct, 1))
+
         # operate at full current
         sig = ophyd.Signal()
         def putter(val):
@@ -283,6 +283,15 @@ class xrunTest(unittest.TestCase):
         print(delta)
         assert delta > .1 + wait_time + 1.
 
+        # operate at low current, test user warnning
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # trigger warning
+            putter(30)  # low current
+            set_beamdump_suspender(self.xrun, wait_time=wait_time)
+            # check warning
+            assert len(w)==1
+            assert issubclass(w[-1].category, UserWarning)
 
     # deprecate from v0.5 release
     #def test_open_collection(self):
