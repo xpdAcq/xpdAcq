@@ -14,10 +14,12 @@ from xpdacq.utils import import_sample_info
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
 from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
                            _auto_load_calibration_file,
-                           open_collection)
+                           open_collection, set_beamdump_suspender)
 from xpdacq.simulation import pe1c, cs700, shctl1, SimulatedPE1C
 
+import ophyd
 import bluesky.examples as be
+from bluesky import Msg
 
 class xrunTest(unittest.TestCase):
     def setUp(self):
@@ -49,7 +51,6 @@ class xrunTest(unittest.TestCase):
         import_sample_info(self.saf_num, self.bt)
         self.xrun = CustomizedRunEngine(self.bt)
         open_collection('unittest')
-
 
 
     def tearDown(self):
@@ -230,7 +231,7 @@ class xrunTest(unittest.TestCase):
         self.assertEqual(open_run['sp_endingT'], Tstop)
         self.assertEqual(open_run['sp_requested_Tstep'], Tstep)
         # test with tseries
-        delay, num = 1, 5
+        delay, num = 0.5, 5
         msg_list = []
         def msg_rv(msg):
             msg_list.append(msg)
@@ -254,6 +255,34 @@ class xrunTest(unittest.TestCase):
         self.assertEqual(open_run['sp_type'], 'Tlist')
         self.assertEqual(open_run['sp_requested_exposure'], exp)
         self.assertEqual(open_run['sp_T_list'], T_list)
+
+
+    def test_suspender(self):
+        loop = self.xrun._loop
+        # no suspender
+        self.xrun({}, ScanPlan(self.bt, ct, 1))
+        # operate at full current
+        sig = ophyd.Signal()
+        def putter(val):
+            sig.put(val)
+        glbl.ring_current = sig
+        putter(200)
+        wait_time = 0.2
+        set_beamdump_suspender(self.xrun, wait_time=wait_time)
+        # test
+        start = time.time()
+        # queue up fail and resume conditions
+        loop.call_later(.1, putter, 90)  # lower than 50%, trigger
+        loop.call_later( 1., putter, 190)  # higher than 90%, resume
+        # start the scan
+        self.xrun({}, ScanPlan(self.bt, ct, .1))
+        stop = time.time()
+        # assert we waited at least 2 seconds +
+        # the settle time
+        delta = stop - start
+        print(delta)
+        assert delta > .1 + wait_time + 1.
+
 
     # deprecate from v0.5 release
     #def test_open_collection(self):
