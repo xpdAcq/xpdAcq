@@ -10,9 +10,8 @@ from bluesky import RunEngine
 from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input
 
-from .glbl import glbl
+from .glbl import glbl, simulation
 from .beamtime import *
-from .yamldict import YamlDict, YamlChainMap
 
 from xpdan.tools import compress_mask
 
@@ -380,9 +379,11 @@ class CustomizedRunEngine(RunEngine):
         self.md.update(bt_obj.md)
         print("INFO: beamtime object has been linked\n")
         # from xpdacq.calib import run_calibration
-        if not glbl._is_simulation:
+        if not simulation:
+            # FIXME: this insert logic will be refined by FS-integrated
+            # reader
             self.subscribe('all', glbl.db.mds.insert)
-            set_suspender(self)
+            set_beamdump_suspender(self)
 
     def __call__(self, sample, plan, subs=None, *,
                  verify_write=False, dark_strategy=periodic_dark,

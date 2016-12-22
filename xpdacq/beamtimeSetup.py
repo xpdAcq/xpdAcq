@@ -50,7 +50,7 @@ def _start_beamtime(PI_last, saf_num, experimenters=[],
 
         # set ring current attribute
         if not simulation:
-            from ophyd import EpicsSignalRO, EpicsSignal
+            from ophyd import EpicsSignalRO
             ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
                                          name='ring_current')
             glbl.ring_current = ring_current
