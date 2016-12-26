@@ -1,3 +1,18 @@
+#!/usr/bin/env python
+##############################################################################
+#
+# xpdacq            by Billinge Group
+#                   Simon J. L. Billinge sb2896@columbia.edu
+#                   (c) 2016 trustees of Columbia University in the City of
+#                        New York.
+#                   All rights reserved
+#
+# File coded by:    Timothy Liu, Dan Allan
+#
+# See AUTHORS.txt for a list of people who contributed.
+# See LICENSE.txt for license information.
+#
+##############################################################################
 import os
 import uuid
 import yaml
@@ -384,7 +399,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     def register_scanplan(self, scanplan):
         # Notify this Beamtime about an ScanPlan that should be re-synced
-        # whenever the contents of the Beamtime are edited. 
+        # whenever the contents of the Beamtime are edited.
         sp_name_list = [el.short_summary() for el in self.scanplans]
         # manage bt.list
         if scanplan.short_summary() not in sp_name_list:

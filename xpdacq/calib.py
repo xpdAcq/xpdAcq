@@ -1,4 +1,18 @@
-""" Script to perform pyFAI calibration in pure Python """
+#!/usr/bin/env python
+##############################################################################
+#
+# xpdacq            by Billinge Group
+#                   Simon J. L. Billinge sb2896@columbia.edu
+#                   (c) 2016 trustees of Columbia University in the City of
+#                        New York.
+#                   All rights reserved
+#
+# File coded by:    Timothy Liu
+#
+# See AUTHORS.txt for a list of people who contributed.
+# See LICENSE.txt for license information.
+#
+##############################################################################
 import os
 import uuid
 import time
@@ -54,8 +68,8 @@ def run_calibration(exposure=60, dark_sub_bool=True, calibrant_file=None,
 
     """ function to run entire calibration process.
 
-    Entire process includes: collect calibration image, trigger pyFAI 
-    calibration process, store calibration parameters as a yaml file 
+    Entire process includes: collect calibration image, trigger pyFAI
+    calibration process, store calibration parameters as a yaml file
     under xpdUser/config_base/ and inject uid of calibration image to
     following scans, until this function is run again.
 
@@ -67,11 +81,11 @@ def run_calibration(exposure=60, dark_sub_bool=True, calibrant_file=None,
         option of turn on/off dark subtraction on this calibration
         image. default is True.
     calibrant_file : str, optional
-        calibrant file being used, default is 'Ni.D' under 
-        xpdUser/userAnalysis/. File name except for extention will be 
+        calibrant file being used, default is 'Ni.D' under
+        xpdUser/userAnalysis/. File name except for extention will be
         used as sample name.
-    wavelength : flot, optional
-        current of x-ray wavelength, in angstrom. Default value is 
+    wavelength : float, optional
+        current of x-ray wavelength, in angstrom. Default value is
         read out from existing xpdacq.Beamtime object
     detector : pyfai.detector.Detector, optional.
         instance of detector which defines pxiel size in x- and
@@ -254,10 +268,10 @@ def calibration(img, calibrant_file=None, wavelength=None,
     img : ndarray
         image to be calibrated
     calibrant_file : str, optional
-        calibrant file being used, default is 'Ni.D' under 
+        calibrant file being used, default is 'Ni.D' under
         xpdUser/userAnalysis/
     wavelength : flot, optional
-        current of x-ray wavelength, in angstrom. Default value is 
+        current of x-ray wavelength, in angstrom. Default value is
         read out from existing xpdacq.Beamtime object
     calibration_collection_uid : str, optional
         uid of calibration collection. default is generated from run
