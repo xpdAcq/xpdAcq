@@ -84,7 +84,7 @@ def run_calibration(exposure=60, dark_sub_bool=True, calibrant_file=None,
         calibrant file being used, default is 'Ni.D' under
         xpdUser/userAnalysis/. File name except for extention will be
         used as sample name.
-    wavelength : flot, optional
+    wavelength : float, optional
         current of x-ray wavelength, in angstrom. Default value is
         read out from existing xpdacq.Beamtime object
     detector : pyfai.detector.Detector, optional.
