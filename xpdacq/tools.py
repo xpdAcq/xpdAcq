@@ -25,7 +25,6 @@ def clean_dict(input_dict, target_chr, replace_chr):
     replace_chr : str
         character that is going to replace target character
     """
-    # for safety, copy a new one
     for k, v in input_dict.items():
         if isinstance(v, dict):
             clean_k = k.replace(target_chr, replace_chr)
