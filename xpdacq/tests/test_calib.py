@@ -1,14 +1,22 @@
 """module to test run_calibration"""
 import os
 import yaml
+import uuid
+import time
 import shutil
 import unittest
+import numpy as np
+from pathlib import Path
+
+
+from pyFAI.calibration import Calibration
 
 from xpdacq.glbl import glbl
 from xpdacq.calib import (_configure_calib_instance,
                           _save_and_attach_calib_param,
                           _collect_calib_img,
-                          _calibration)
+                          _calibration,
+                          _timestampstr)
 from xpdacq.utils import import_sample_info
 from xpdacq.xpdacq import CustomizedRunEngine
 from xpdacq.beamtimeSetup import _configure_devices, _start_beamtime
@@ -39,6 +47,9 @@ class calibTest(unittest.TestCase):
         _configure_devices(glbl)
         # link mds
         self.xrun.subscribe('all', glbl.db.mds.insert)
+        # calib yaml 
+        p = Path(__file__).resolve().parent
+        self.calib_fp = next(p.glob('*calib.yml')).open()
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -52,18 +63,53 @@ class calibTest(unittest.TestCase):
     def test_configure_calib(self):
         c = _configure_calib_instance(None, None, wavelength=None)
         # calibrant is None, which default to Ni
-        self.assertEqual(c.calibrant.__repr__().split(' ')[0], 'Ni')
+        assert c.calibrant.__repr__().split(' ')[0] == 'Ni'
         # wavelength is None, so it should get the value from bt
-        self.assertEqual(c.wavelength, self.bt.wavelength*10**(-10))
+        assert c.wavelength == self.bt.wavelength*10**(-10)
         # detector is None, which default to Perkin detector 
-        self.assertEqual(c.detector.get_name(), 'Perkin detector')
+        assert c.detector.get_name() == 'Perkin detector'
 
         c2 = _configure_calib_instance(None, None, wavelength=999)
         # wavelength is given, so it should get customized value
-        self.assertEqual(c2.wavelength, 999*10**(-10))
+        assert c2.wavelength == 999*10**(-10)
 
-    
     def test_smoke_collect_calb_img(self):
         c = _configure_calib_instance(None, None, wavelength=None)
-        _collect_calib_img(5.0, c, self.xrun)
-        print(glbl.db[-1])
+        calib_uid = str(uuid.uuid4())
+        img = _collect_calib_img(5.0, c, self.xrun, calib_uid)
+        h = glbl.db[-1]
+        # is information passed down?
+        assert calib_uid == h.start['calibration_collection_uid']
+        assert c.calibrant.__repr__().split(' ')[0] == h.start['sample_name']
+        # is image shape as expected?
+        assert img.shape == (5,5)
+        # is dark subtraction operated as expected?
+        # since simulated pe1c always generate the same array, so
+        # subtracted image should be zeors
+        assert img.all() == np.zeros((5,5)).all()
+
+    def test_save_and_attach_calib_param(self):
+        # reload yaml to produce pre-calib Calibration instance
+        calib_dict = yaml.load(self.calib_fp)
+        c = Calibration()
+        c.ai.setPyFAI(**calib_dict)
+        timestr = _timestampstr(time.time())
+        calib_uid = 'uuid1234'  # mark as test
+        _save_and_attach_calib_param(c, timestr, calib_uid)
+        # test information attached to glbl
+        assert glbl.calib_config_dict['file_name'] == c.basename
+        assert glbl.calib_config_dict['calibration_collection_uid'] == \
+                                                                    calib_uid
+        for k, v in c.ai.getPyFAI().items():
+            assert glbl.calib_config_dict[k] == v
+        # verify calib params are saved as expected
+        local_f = open(os.path.join(glbl.config_base,
+                                    glbl.calib_config_name))
+        reload_dict = yaml.load(local_f)
+        # time and file_name will definitely be different
+        # as they both involve current timestamp. exclude them
+        for k in ['time', 'file_name']:
+            # use list to exhaust generator so pop are applied to both
+            list(map(lambda x: x.pop(k), [reload_dict, calib_dict]))
+        assert reload_dict == calib_dict
+
