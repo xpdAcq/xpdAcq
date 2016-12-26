@@ -63,7 +63,8 @@ def _timestampstr(timestamp):
 
 
 def run_calibration(exposure=5, calibrant=None, wavelength=None,
-                    detector=None, *, RE_instance=None, **kwargs):
+                    detector=None, *, RE_instance=None,
+                    calib_collection_uid=None, **kwargs):
 
     # TODO: discuss default calibrant
     """function to run entire calibration process.
@@ -106,6 +107,10 @@ def run_calibration(exposure=5, calibrant=None, wavelength=None,
         instance of run engine being called in order to collect image.
         DO NOT change it unless you are confident. default to current
         run engine instance (xrun)
+    calib_collection_uid : str, optional
+        uid for this calibration run. default is to generate a new uid.
+        Only set to customized uid if you are certain to associate this
+        calibration run with other calibration runs.
     kwargs:
         Additional keyword argument for calibration. please refer to
         pyFAI documentation for all options.
@@ -119,14 +124,21 @@ def run_calibration(exposure=5, calibrant=None, wavelength=None,
     c = _configure_calib_instance(calibrant, detector, wavelength)
 
     # collect & pull subtracted image
-    img, calib_collection_uid = _collect_calib_img(c, exposure,
-                                                   RE_instance)
+    if calib_collection_uid is None:
+        calib_collection_uid = str(uuid.uuid4())
+    if RE_instance is None:
+        _check_obj(_REQUIRED_OBJ_LIST)
+        ips = get_ipython()
+        xrun = ips.ns_table['user_global']['xrun']
+    img = _collect_calib_img(exposure, c, xrun,
+                             calib_collection_uid)
 
-   # pyFAI calibration
-    calib_c = _calibration(img, c, **kwargs)
+    # pyFAI calibration
+    calib_c, timestr = _calibration(img, c, **kwargs)
 
     # save param for xpdAcq
-    _save_and_attach_calib_param(calib_c, calib_collection_uid)
+    _save_and_attach_calib_param(calib_c, timestr,
+                                 calib_collection_uid)
 
 
 def _configure_calib_instance(calibrant, detector, wavelength):
@@ -150,28 +162,19 @@ def _configure_calib_instance(calibrant, detector, wavelength):
     return c
 
 
-def _collect_calib_img(exposure, calibration_instance, RE_instance=None):
+def _collect_calib_img(exposure, calibration_instance, RE_instance,
+                       calib_collection_uid):
     """helper function to collect calibration image and return it"""
-    if RE_instance is None:
-        _check_obj(_REQUIRED_OBJ_LIST)
-        ips = get_ipython()
-        xrun = ips.ns_table['user_global']['xrun']
-    else:
-        # for test purpose
-        xrun = RE_instance
-        bt_fp = os.path.join(glbl.yaml_dir, 'bt_bt.yml')
-        bto = Beamtime.from_yaml(open(bt_fp))
-        xrun.beamtime = bto
     c = calibration_instance  # shorthand notation
-    calib_collection_uid = str(uuid.uuid4())
     calibrant_name = c.calibrant.__repr__().split(' ')[0]
     calibration_dict = {'sample_name':calibrant_name,
                         'sample_composition':{calibrant_name :1},
                         'is_calibration': True,
                         'calibration_collection_uid': calib_collection_uid}
+    bto = RE_instance.beamtime  # grab beamtime object linked to run_engine
     sample = Sample(bto, calibration_dict)
-    xrun_uid = xrun(sample, ScanPlan(bto, ct, exposure))
-    light_header = glbl.db[xrun_uid[-1]]  # last one must be light
+    uid = RE_instance(sample, ScanPlan(bto, ct, exposure))
+    light_header = glbl.db[uid[-1]]  # last one must be light
     dark_uid = light_header.start.get('sc_dk_field_uid')
     dark_header = glbl.db[dark_uid]
     dark_img = np.asarray(glbl.db.get_images(dark_header,
@@ -180,10 +183,11 @@ def _collect_calib_img(exposure, calibration_instance, RE_instance=None):
                                         glbl.det_image_field)).squeeze()
     img -= dark_img
 
-    return img, calib_collection_uid
+    return img
 
 
-def _save_and_attach_calib_param(calib_c, calib_collection_uid):
+def _save_and_attach_calib_param(calib_c, timestr,
+                                 calib_collection_uid):
     """save calibration parameters and attach to glbl class instance
 
     Parameters
@@ -192,7 +196,6 @@ def _save_and_attach_calib_param(calib_c, calib_collection_uid):
         pyFAI Calibration instance with parameters after calibration
     """
     # save glbl attribute for xpdAcq
-    timestr = _timestampstr(time.time())
     glbl.calib_config_dict = calib_c.ai.getPyFAI()
     glbl.calib_config_dict.update(calib_c.ai.getFit2D())
     glbl.calib_config_dict.update({'file_name':calib_c.basename})
@@ -210,6 +213,7 @@ def _save_and_attach_calib_param(calib_c, calib_collection_uid):
           "process again".format(yaml_name))
 
     return calib_c.geoRef
+
 
 def _calibration(img, calibration, **kwargs):
     """engine for performing calibration on a image with geometry
@@ -252,7 +256,7 @@ def _calibration(img, calibration, **kwargs):
     update_fig(c.peakPicker.fig)
     c.gui_peakPicker()
 
-    return c
+    return c, timestr
 
 
 
