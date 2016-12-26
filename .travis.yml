@@ -63,8 +63,8 @@ install:
   - 'pip install https://github.com/NSLS-II/metadatastore/zipball/master#egg=metadatastore'
   - 'pip install https://github.com/NSLS-II/portable-mds/zipball/master#egg=portable_mds'
   - 'pip install https://github.com/NSLS-II/bluesky/zipball/master#egg=bluesky'
-  - 'pip install https://github.com/xpdAcq/xpdAn/zipball/master#egg=xpdan'
-  - pip install codecov flake8
+  - 'pip install https://github.com/xpdAcq/xpdAn/zipball/master#egg=xpdAn'
+  - pip install codecov flake8 pyFAI
   - python setup.py install
   # Need to clean the python build directory (and other cruft) or pytest is
   # going to find the build directory and get confused why there are two sets
@@ -80,5 +80,7 @@ script:
 
 after_script:
   - flake8 .
+
+after_success:
   - codecov
   - coveralls
