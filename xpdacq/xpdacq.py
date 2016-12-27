@@ -344,7 +344,7 @@ class CustomizedRunEngine(RunEngine):
         print("INFO: beamtime object has been linked\n")
         # from xpdacq.calib import run_calibration
         if not glbl._is_simulation:
-            self.subscribe('all', glbl.db.mds.insert)
+            pass
             # let user deal with suspender
             #beamdump_sus = SuspendFloor(glbl.ring_current, 50,
             #                            resume_thresh=glbl.ring_current.get() * 0.9,

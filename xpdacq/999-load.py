@@ -38,6 +38,9 @@ xrun.md['owner'] = glbl.owner
 xrun.md['beamline_id'] = glbl.beamline_id
 xrun.md['group'] = glbl.group
 
+# insert header to db, either simulated or real
+xrun.subscribe('all', glbl.db.mds.insert)
+
 # load beamtime
 bt = start_xpdacq()
 if bt is not None:
