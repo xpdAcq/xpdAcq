@@ -19,9 +19,9 @@ def clean_dict(input_dict, target_chr, replace_chr):
     Parameters
     ----------
     input_dict : dict
-        a dictionary going to be cleaned. it could be nested
+        a dictionary going to be cleaned. it can be nested
     target_chr : str
-        character that will be placed
+        character that will be replaced
     replace_chr : str
         character that is going to replace target character
     """
