@@ -170,10 +170,9 @@ def _validate_dark(expire_time=None):
             qualified_dark_list.append((el.get('uid'), expo_diff,
                                         time_diff))
     if qualified_dark_list:
-        # sort wrt expo_diff for best candidate
-        best_dark = sorted(qualified_dark_list, key=lambda x: x[1])[0]
-        # sort wrt time_diff for best candidate
-        best_dark = sorted(qualified_dark_list, key=lambda x: x[2])[0]
+        # sort wrt expo_diff and time_diff for best candidate
+        best_dark = sorted(qualified_dark_list,
+                           key=lambda x: x[1] and x[2])[0]
         best_dark_uid = best_dark[0]
         return best_dark_uid
     else:
