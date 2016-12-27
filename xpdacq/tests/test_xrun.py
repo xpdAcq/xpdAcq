@@ -26,7 +26,7 @@ class xrunTest(unittest.TestCase):
                               ('Terban ', ' Max', 2)]
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
-        # set simulation objects
+        # configure device
         _configure_devices(glbl)
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
