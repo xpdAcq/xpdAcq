@@ -6,12 +6,11 @@ from mock import MagicMock
 
 from xpdacq.glbl import glbl
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
-                                  load_beamtime)
+                                  load_beamtime, _configure_devices)
 from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
 import bluesky.examples as be
 from xpdacq.xpdacq import CustomizedRunEngine
-from xpdacq.simulation import pe1c, cs700, shctl1
 
 # print messages for debugging
 # xrun.msg_hook = print
@@ -29,9 +28,7 @@ class BeamtimeObjTest(unittest.TestCase):
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
         # set simulation objects
-        glbl.area_det = pe1c
-        glbl.temp_controller = cs700
-        glbl.shutter = shctl1
+        _configure_devices(glbl)
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)

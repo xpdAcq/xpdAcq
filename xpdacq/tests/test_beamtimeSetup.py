@@ -4,7 +4,6 @@ import shutil
 import yaml
 from time import strftime
 
-# FIXME
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import Beamtime, ScanPlan
 import xpdacq.beamtimeSetup as bts
@@ -12,8 +11,7 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
                                   _delete_home_dir_tree, _make_clean_env,
                                   _clean_info, _load_bt, _load_bt_info,
                                   _tar_user_data, EXPO_LIST)
-from xpdacq.utils import (export_userScriptsEtc, import_userScriptsEtc) 
-from xpdacq.simulation import pe1c, cs700, shctl1
+from xpdacq.utils import (export_userScriptsEtc, import_userScriptsEtc)
 
 
 class NewBeamtimeTest(unittest.TestCase):
@@ -26,10 +24,6 @@ class NewBeamtimeTest(unittest.TestCase):
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee', 'S0ham', 1),
                               ('Terban ', ' Max', 2)]
-        # set up simulation objects
-        glbl.area_det = pe1c
-        glbl.shutter = shctl1
-        glbl.temp_controller = cs700
 
     def tearDown(self):
         os.chdir(self.base_dir)
