@@ -1,10 +1,9 @@
 import pytest
-import copy
 from xpdacq.tools import clean_dict
 
 @pytest.mark.parametrize("input_dict, output_dict",
                          [({'a': 1, 'b': 2, 'c': 3},
-                           {'a': 1, 'b': 2,'c':3}),
+                           {'a': 1, 'b': 2, 'c': 3}),
                           ({'a.foo': 1, 'b.bar': 2, 'c': 3},
                            {'a,foo': 1, 'b,bar': 2, 'c': 3}),
                           ({'a.foo': {'b.bar': 2}, 'c': 3},
