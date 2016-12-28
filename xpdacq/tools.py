@@ -13,7 +13,7 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-def clean_dict(input_dict, target_chr, replace_chr):
+def regularize_dict_key(input_dict, target_chr, replace_chr):
     """recursively replace target character in keys with desired one
 
     Parameters
@@ -29,7 +29,7 @@ def clean_dict(input_dict, target_chr, replace_chr):
         if isinstance(v, dict):
             clean_k = k.replace(target_chr, replace_chr)
             input_dict[clean_k] = input_dict.pop(k)
-            clean_dict(v, target_chr, replace_chr)
+            regularize_dict_key(v, target_chr, replace_chr)
         else:
             clean_k = k.replace(target_chr, replace_chr)
             input_dict[clean_k] = input_dict.pop(k)

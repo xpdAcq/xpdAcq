@@ -8,7 +8,7 @@ import numpy as np
 from bluesky.callbacks import LiveTable
 
 from .glbl import glbl
-from .tools import clean_dict
+from .tools import regularize_dict_key
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 
@@ -510,7 +510,7 @@ class Sample(ValidatedDictLike, YamlChainMap):
 
     def __init__(self, beamtime, sample_md, **kwargs):
         # clean dict before instantiation
-        clean_dict(sample_md, '.', ',')
+        regularize_dict_key(sample_md, '.', ',')
         try:
             super().__init__(sample_md, beamtime)  # ChainMap signature
         except:
