@@ -43,6 +43,8 @@ bt = start_xpdacq()
 if bt is not None:
     print("INFO: Reload beamtime objects:\n{}\n".format(bt))
     xrun.beamtime = bt
+    # reload glbl options
+    _load_glbl(glbl)
 
 HOME_DIR = glbl.home
 BASE_DIR = glbl.base
@@ -54,9 +56,6 @@ else:
     os.chdir(BASE_DIR)
 
 from xpdacq.calib import *
-
-# reload glbl options
-_load_glbl(glbl)
 
 # analysis functions, only at beamline
 #from xpdan.data_reduction import *
