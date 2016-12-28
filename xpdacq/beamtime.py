@@ -23,6 +23,7 @@ import numpy as np
 from bluesky.callbacks import LiveTable
 
 from .glbl import glbl
+from .tools import regularize_dict_key
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 
@@ -523,12 +524,12 @@ class Sample(ValidatedDictLike, YamlChainMap):
     _REQUIRED_FIELDS = ['sample_name', 'sample_composition']
 
     def __init__(self, beamtime, sample_md, **kwargs):
-        composition = sample_md.get('sample_composition', None)
-        # print("composition of {} is {}".format(sample_md['sample_name'],
-        #                                       sample_md['sample_composition']))
+        # clean dict before instantiation
+        regularize_dict_key(sample_md, '.', ',')
         try:
             super().__init__(sample_md, beamtime)  # ChainMap signature
         except:
+            composition = sample_md.get('sample_composition', None)
             print("At least sample_name and sample_composition is needed.\n"
                   "For example\n"
                   ">>> sample_md = {'sample_name':'Ni',"
