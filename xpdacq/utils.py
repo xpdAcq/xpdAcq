@@ -620,6 +620,8 @@ def _import_sample_info(saf_num=None, bt=None, validate_only=False):
             validate_dict_key(md_dict, '.', ',')
         # no invalid keys were found
         print("INFO: all metadata entered are clean and good to go")
+        print("INFO: please set 'validate_only=False' and "
+              "run this commend again to create Sample objects")
         return
     else:
         excel_to_yaml.create_yaml(bt)
