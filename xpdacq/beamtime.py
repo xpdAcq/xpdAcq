@@ -25,6 +25,7 @@ from bluesky.callbacks import LiveTable
 from .glbl import glbl
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
+from .tools import regularize_dict_key
 
 # This is used to map plan names (strings in the YAML file) to actual
 # plan functions in Python.
@@ -523,9 +524,7 @@ class Sample(ValidatedDictLike, YamlChainMap):
     _REQUIRED_FIELDS = ['sample_name', 'sample_composition']
 
     def __init__(self, beamtime, sample_md, **kwargs):
-        composition = sample_md.get('sample_composition', None)
-        # print("composition of {} is {}".format(sample_md['sample_name'],
-        #                                       sample_md['sample_composition']))
+        regularize_dict_key(sample_md, '.', ',')
         try:
             super().__init__(sample_md, beamtime)  # ChainMap signature
         except:

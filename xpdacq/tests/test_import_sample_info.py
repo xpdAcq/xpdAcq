@@ -4,6 +4,7 @@ import shutil
 import warnings
 import unittest
 from pkg_resources import resource_filename as rs_fn
+import warnings
 
 from xpdacq.glbl import glbl
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
@@ -56,7 +57,11 @@ class ImportSamplTest(unittest.TestCase):
         xlf = '300000_sample.xlsx'
         src = os.path.join(self.pkg_rs, xlf)
         shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
-
+        # porblematic ones
+        xlf2 = '999999_sample.xlsx'
+        src = os.path.join(os.path.dirname(__file__), xlf2)
+        shutil.copyfile(src, os.path.join(glbl.import_dir, xlf2))
+        ## test with ordinary import ##
         # expect to pass with explicit argument
         _import_sample_info(300000, self.bt)
         # check imported sample metadata
@@ -87,3 +92,21 @@ class ImportSamplTest(unittest.TestCase):
             assert len(w) == 4
             for el in w:
                 assert issubclass(el.category, UserWarning)
+
+        ## test with incorrect spreadsheet ##
+        # mutate beamtime silently
+        self.bt['bt_safN'] = str(999999)
+        # warning when mutate the md
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            # Trigger
+            _import_sample_info(999999, self.bt)
+            # Verify
+            assert len(w) == 2  # 2 pre-defined errors
+            for warning in w:
+                assert issubclass(warning.category, UserWarning)
+        # error when validate the md
+        self.assertRaises(RuntimeError,
+                          lambda: _import_sample_info(999999, self.bt,
+                                                      validate_only=True))
