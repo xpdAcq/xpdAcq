@@ -338,12 +338,12 @@ def _clean_info(obj):
     """ stringtify and replace space"""
     return str(obj).strip().replace(' ', '_')
 
-class MDOrderedDict(OrderedDict):
-    def get_md(self, ind):
-        """ special method to get metadata of a objects inside a dict """
-        obj_list = list(self.values())
-        md_dict = dict(obj_list[ind])
-        return md_dict
+
+class SliceableOrderedDict(OrderedDict):
+    def get_slice(self, ind):
+        """method to return value of OrderedDict based on index"""
+        val_list = list(self.values())
+        return dict(val_list[ind])
 
 
 class Beamtime(ValidatedDictLike, YamlDict):
@@ -392,8 +392,8 @@ class Beamtime(ValidatedDictLike, YamlDict):
                          bt_experimenters=experimenters,
                          bt_wavelength=wavelength, **kwargs)
         self._wavelength = wavelength
-        self.scanplans = MDOrderedDict()
-        self.samples = MDOrderedDict()
+        self.scanplans = SliceableOrderedDict()
+        self.samples = SliceableOrderedDict()
         self._referenced_by = []
         # used by YamlDict when reload
         self.setdefault('bt_uid', new_short_uid())
