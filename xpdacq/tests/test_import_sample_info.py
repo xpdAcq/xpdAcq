@@ -2,7 +2,7 @@ import os
 import yaml
 import shutil
 import unittest
-from mock import MagicMock
+import warnings
 
 from xpdacq.glbl import glbl
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
@@ -10,8 +10,6 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
 from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
 from xpdacq.utils import import_sample_info, _import_sample_info
-
-from xpdacq.simulation import pe1c, cs700, shctl1
 
 
 # print messages for debugging
@@ -30,10 +28,7 @@ class ImportSamplTest(unittest.TestCase):
                               ('Terban ',' Max',2)]
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
-        # set simulation objects
-        glbl.area_det = pe1c
-        glbl.temp_controller = cs700
-        glbl.shutter = shctl1
+
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -59,7 +54,11 @@ class ImportSamplTest(unittest.TestCase):
         xlf = '300000_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf)
         shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
-
+        # porblematic ones
+        xlf2 = '999999_sample.xlsx'
+        src = os.path.join(os.path.dirname(__file__), xlf2)
+        shutil.copyfile(src, os.path.join(glbl.import_dir, xlf2))
+        ## test with ordinary import ##
         # expect to pass with explicit argument
         _import_sample_info(300000, self.bt)
         # check imported sample metadata
@@ -76,3 +75,21 @@ class ImportSamplTest(unittest.TestCase):
 
         # expct TypeError with incorrect beamtime
         self.assertRaises(TypeError, lambda: _import_sample_info(bt=set()))
+
+        ## test with incorrect spreadsheet ##
+        # mutate beamtime silently
+        self.bt['bt_safN'] = str(999999)
+        # warning when mutate the md
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            # Trigger
+            _import_sample_info(999999, self.bt)
+            # Verify
+            assert len(w) == 2  # 2 pre-defined errors
+            for warning in w:
+                assert issubclass(warning.category, UserWarning)
+        # error when validate the md
+        self.assertRaises(RuntimeError,
+                          lambda: _import_sample_info(999999, self.bt,
+                                                      validate_only=True))
