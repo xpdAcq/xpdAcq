@@ -170,10 +170,9 @@ def _validate_dark(expire_time=None):
             qualified_dark_list.append((el.get('uid'), expo_diff,
                                         time_diff))
     if qualified_dark_list:
-        # sort wrt expo_diff for best candidate
-        best_dark = sorted(qualified_dark_list, key=lambda x: x[1])[0]
-        # sort wrt time_diff for best candidate
-        best_dark = sorted(qualified_dark_list, key=lambda x: x[2])[0]
+        # sort wrt expo_diff and time_diff for best candidate
+        best_dark = sorted(qualified_dark_list,
+                           key=lambda x: x[1] and x[2])[0]
         best_dark_uid = best_dark[0]
         return best_dark_uid
     else:
@@ -345,7 +344,7 @@ class CustomizedRunEngine(RunEngine):
         print("INFO: beamtime object has been linked\n")
         # from xpdacq.calib import run_calibration
         if not glbl._is_simulation:
-            self.subscribe('all', glbl.db.mds.insert)
+            pass
             # let user deal with suspender
             #beamdump_sus = SuspendFloor(glbl.ring_current, 50,
             #                            resume_thresh=glbl.ring_current.get() * 0.9,
