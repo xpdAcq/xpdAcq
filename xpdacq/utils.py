@@ -28,7 +28,7 @@ import pandas as pd
 
 from .glbl import glbl
 from .beamtime import Beamtime, Sample, ScanPlan
-
+from .tools import validate_dict_key
 
 def _check_obj(obj_name, error_msg=None):
     """ function to check if an object exists in current namespace
@@ -271,10 +271,10 @@ class ExceltoYaml:
     _DICT_LIKE_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
                                 DICT_LIKE_FIELD))
 
-    def __init__(self):
+    def __init__(self, src_dir=None):
         self.pd_dict = None
         self.sa_md_list = None
-        self.src_dir = glbl.import_dir
+        self.src_dir = src_dir
 
     def load(self, saf_num):
         xl_f = [f for f in os.listdir(self.src_dir) if
@@ -292,20 +292,8 @@ class ExceltoYaml:
 
         self.sa_md_list = self._pd_dict_to_dict_list(self.pd_dict.to_dict())
 
-    def create_yaml(self, bt):
-        """ parse a list of sample metadata into desired format and
-        create xpdacq.Sample objects inside xpdUser/config_base/yml/
-
-        Parameters
-        ----------
-        bt : xpdacq.Beamtime object
-            an object carries SAF, PI_last and other information
-
-        Returns
-        -------
-        None
-        """
-
+    def parse_md_list(self):
+        """method to parse sample metadata into desired format"""
         parsed_sa_md_list = []
         for sa_md in self.sa_md_list:
             parsed_sa_md = {}
@@ -372,18 +360,26 @@ class ExceltoYaml:
             parsed_sa_md_list.append(parsed_sa_md)
         self.parsed_sa_md_list = parsed_sa_md_list
 
+
+    def create_yaml(self, bt):
+        """create xpdacq.Sample objects based on parsed metadata dict
+
+        Parameters
+        ----------
+        bt : xpdacq.Beamtime object
+            an object carries SAF, PI_last and other information
+
+        Returns
+        -------
+        None
+        """
+
         # normal sample, just create
-        for el in self.parsed_sa_md_list:
-            Sample(bt, el)
-        # separate so that bkg is in the back
-        bkg_name_list = [el['sample_name']
-                         for el in self.parsed_sa_md_list if
-                         el['sample_name'].startswith('bkgd')]
-        for bkg_name in set(bkg_name_list):
-            bkg_dict = {'sample_name': bkg_name,
-                        'sample_composition': {bkg_name: 1},
-                        'is_background': True}
-            Sample(bt, bkg_dict)
+        for md_dict in self.parsed_sa_md_list:
+            sample_name = md_dict.get('sample_name')
+            if sample_name.startswith('bkgd'):
+                md_dict.update({'is_background': True})
+            Sample(bt, md_dict)
 
         print("*** End of import Sample object ***")
 
@@ -516,7 +512,7 @@ class ExceltoYaml:
 excel_to_yaml = ExceltoYaml()
 
 
-def import_sample_info(saf_num=None, bt=None):
+def import_sample_info(saf_num=None, bt=None, validate_only=False):
     """ import sample metadata based on a spreadsheet
 
     this function expects a pre-populated '<SAF_number>_sample.xls' file
@@ -526,10 +522,17 @@ def import_sample_info(saf_num=None, bt=None):
 
     Parameters
     ----------
-    saf_num : int
-        Safety Approval Form number of beamtime.
-    bt : xpdacq.beamtime.Beamtime
-        beamtime object that is going to be linked with these samples
+    saf_num : int, optional
+        Safety Approval Form number of beamtime. default is read from
+        current Beamtime object.
+    bt : xpdacq.beamtime.Beamtime, optional
+        beamtime object that is going to be linked with these samples.
+        default is the Beamtime object in current ipython session.
+    validate_only : bool, optional
+        option of validating metadata entered in spreadsheet. if
+        True, program will go through entire metadata and return
+        keys with invalid character but not create Sample objects.
+        default to False.
     """
 
     if bt is None:
@@ -546,10 +549,11 @@ def import_sample_info(saf_num=None, bt=None):
         bt = ips.ns_table['user_global']['bt']
 
     # pass to core function
-    _import_sample_info(saf_num=saf_num, bt=bt)
+    _import_sample_info(saf_num=saf_num, bt=bt,
+                        validate_only=validate_only)
 
 
-def _import_sample_info(saf_num=None, bt=None):
+def _import_sample_info(saf_num=None, bt=None, validate_only=False):
     """ core function to import sample metadata based on a spreadsheet
 
     this function expects a pre-populated '<SAF_number>_sample.xlxs' file
@@ -559,10 +563,17 @@ def _import_sample_info(saf_num=None, bt=None):
 
     Parameters
     ----------
-    saf_num : int
-        Safety Approval Form number of beamtime.
-    bt : xpdacq.beamtime.Beamtime
-        beamtime object that is going to be linked with these samples
+    saf_num : int, optional
+        Safety Approval Form number of beamtime. default is read from
+        current Beamtime object.
+    bt : xpdacq.beamtime.Beamtime, optional
+        beamtime object that is going to be linked with these samples.
+        default is the Beamtime object in current ipython session.
+    validate_only : bool, optional
+        option of validating metadata entered in spreadsheet. if
+        True, program will go through entire metadata and return
+        keys with invalid character but not create Sample objects.
+        default to False.
     """
 
     # at core function level, bt should strictly be Beamtime,
@@ -601,6 +612,17 @@ def _import_sample_info(saf_num=None, bt=None):
     # logic: only update Sample objects that are currently in bt.list
     sp_ref = [el for el in bt._referenced_by if isinstance(el, ScanPlan)]
     bt._referenced_by = sp_ref
+    excel_to_yaml.src_dir = glbl.import_dir
     excel_to_yaml.load(saf_num)
-    excel_to_yaml.create_yaml(bt)
-    return excel_to_yaml
+    excel_to_yaml.parse_md_list()
+    if validate_only:
+        for md_dict in excel_to_yaml.parsed_sa_md_list:
+            validate_dict_key(md_dict, '.', ',')
+        # no invalid keys were found
+        print("INFO: all metadata entered are clean and good to go")
+        print("INFO: please set 'validate_only=False' and "
+              "run this commend again to create Sample objects")
+        return
+    else:
+        excel_to_yaml.create_yaml(bt)
+        return excel_to_yaml
