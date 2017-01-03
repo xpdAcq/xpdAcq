@@ -22,10 +22,6 @@ import datetime
 import numpy as np
 from IPython import get_ipython
 
-#FIXME : this import is intentionally left as we will save calib_img
-#FIXME : leave for separate PR
-import tifffile as tif
-
 from .glbl import glbl
 from .beamtime import Beamtime, ScanPlan, Sample, ct
 from .xpdacq import CustomizedRunEngine
@@ -178,7 +174,7 @@ def _collect_calib_img(exposure, calibration_instance, RE_instance,
     dark_uid = light_header.start.get('sc_dk_field_uid')
     dark_header = glbl.db[dark_uid]
     dark_img = np.asarray(glbl.db.get_images(dark_header,
-                                         glbl.det_image_field)).squeeze()
+                                             glbl.det_image_field)).squeeze()
     img = np.asarray(glbl.db.get_images(light_header,
                                         glbl.det_image_field)).squeeze()
     img -= dark_img
@@ -194,6 +190,10 @@ def _save_and_attach_calib_param(calib_c, timestr,
     ----------
     calib_c : pyFAI.calibration.Calibration instance
         pyFAI Calibration instance with parameters after calibration
+    time_str : str
+        human readable time string
+    calibration_uid : str
+        uid associated with this calibration
     """
     # save glbl attribute for xpdAcq
     glbl.calib_config_dict = calib_c.ai.getPyFAI()
@@ -207,13 +207,16 @@ def _save_and_attach_calib_param(calib_c, timestr,
     with open(os.path.join(glbl.config_base, yaml_name), 'w') as f:
         yaml.dump(glbl.calib_config_dict, f)
 
+    print(calib_c.geoRef)
     print("INFO: End of calibration process. Your parameter set will be "
           "saved inside {}. this set of parameters will be injected "
           "as metadata to subsequent scans until you perform this "
           "process again".format(yaml_name))
+    print("INFO: you may also do:\n"
+          ">>> save_last_tiff()\n"
+          "to save your calibration image")
 
-    return calib_c.geoRef
-
+    return
 
 def _calibration(img, calibration, **kwargs):
     """engine for performing calibration on a image with geometry
