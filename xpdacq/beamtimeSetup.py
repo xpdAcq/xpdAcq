@@ -231,9 +231,9 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None):
     _end_beamtime_core(base_dir, archive_dir, bto)
     terminator = ExitAutocall()
     terminator
-    print("INFO: please type:\n"
+    print("INFO: beamtime is finished. It's IMPORTANT to type:\n"
           ">>> exit\n"
-          "to exist out current session and finish entire beamtime")
+          "to exit current session and finish entire beamtime")
 
 
 def _end_beamtime_core(base_dir=None, archive_dir=None, bto=None):
