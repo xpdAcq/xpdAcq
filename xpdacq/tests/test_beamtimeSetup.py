@@ -7,7 +7,7 @@ from time import strftime
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import Beamtime, ScanPlan
 import xpdacq.beamtimeSetup as bts
-from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
+from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime_core,
                                   _delete_home_dir_tree, _make_clean_env,
                                   _clean_info, _load_bt, _load_bt_info,
                                   _tar_user_data, EXPO_LIST)
@@ -107,11 +107,11 @@ class NewBeamtimeTest(unittest.TestCase):
             self.assertEqual(reload_sp, current_sp)
             self.assertFalse(id(reload_sp) ==  id(current_sp))
 
-    def test_end_beamtime(self):
+    def test_end_beamtime_core(self):
         _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']
         # end_beamtime has been run
-        self.assertRaises(FileNotFoundError, lambda: _end_beamtime())
-        # entire trip. _start_beamtime to _end_beamtime
+        self.assertRaises(FileNotFoundError, lambda: _end_beamtime_core())
+        # entire trip. _start_beamtime to _end_beamtime_core
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
