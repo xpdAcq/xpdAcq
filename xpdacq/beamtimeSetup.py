@@ -19,7 +19,7 @@ import yaml
 import shutil
 from time import strftime
 from IPython import get_ipython
-
+from IPython.core.autocall import ExitAutocall
 
 from .glbl import glbl, glbl_filepath
 from .beamtime import *
@@ -213,8 +213,31 @@ def load_yaml(f, known_uids=None):
     return obj
 
 
-def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
-    """ funciton to end a beamtime.
+def _end_beamtime(base_dir=None, archive_dir=None, bto=None):
+    """funciton to end a beamtime.
+
+    It makes a remote copy of local directories, ask for user confirm,
+    flush directories and then terminate the ipython session
+
+    Parameters
+    ----------
+    base_dir : str, optional
+        top directory of xpdUser/. default to glbl.base
+    archive_dir : str, optional
+        directory of where the remote copy will go to
+    bto : xpdacq.beamtime.Beamtime, optional
+        beamtime object. default to current beamtime (bt) object
+    """
+    _end_beamtime_core(base_dir, archive_dir, bto)
+    terminator = ExitAutocall()
+    terminator
+    print("INFO: please type:\n"
+          ">>> exit\n"
+          "to exist out current session and finish entire beamtime")
+
+
+def _end_beamtime_core(base_dir=None, archive_dir=None, bto=None):
+    """core funciton to end a beamtime.
 
     It check if directory structure is correct and flush directories
     """
@@ -244,8 +267,6 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
     _confirm_archive(archive_full_name)
     # flush
     _delete_home_dir_tree()
-    # delete bt
-    del ips.ns_table['user_global']['bt']
 
 
 def _clean_info(obj):
