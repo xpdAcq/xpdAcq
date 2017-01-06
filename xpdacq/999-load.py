@@ -14,14 +14,14 @@
 #
 ##############################################################################
 import os
-from xpdacq.glbl import glbl, setup_xpdacq
+from xpdacq.xpdacq_conf import glbl_dict, setup_xpdacq
 from xpdacq.beamtime import *
 from xpdacq.utils import import_sample_info
-from xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
-                                  _end_beamtime)
+from xpdacq.beamtimeSetup import (start_xpdacq, _reload_glbl,
+                                  _start_beamtime, _end_beamtime)
 
 # configure experiment device being used in current version
-if glbl['is_simulation']:
+if glbl_dict['is_simulation']:
     from xpdacq.simulation import pe1c, db, cs700, shctl1
 setup_xpdacq(area_det=pe1c, shutter=shctl1,
              temp_controller=cs700, db=db)
@@ -43,6 +43,9 @@ bt = start_xpdacq()
 if bt is not None:
     print("INFO: Reload beamtime objects:\n{}\n".format(bt))
     xrun.beamtime = bt
+    from xpdacq.glbl import glbl
+    _reload_glbl(glbl)
+
 
 HOME_DIR = glbl['home']
 BASE_DIR = glbl['base']

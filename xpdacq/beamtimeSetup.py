@@ -21,7 +21,8 @@ from time import strftime
 from IPython import get_ipython
 
 
-from .glbl import glbl_dict, glbl
+from .xpdacq_conf import glbl_dict, GlblYamlDict
+from .glbl import glbl
 from .beamtime import *
 
 # list of exposure times for pre-poluated ScanPlan inside
@@ -105,7 +106,7 @@ def _no_beamtime():
           "to initiate beamtime")
 
 
-def _load_glbl(glbl_obj, filepath=None):
+def _reload_glbl(glbl_obj, filepath=None):
     """function to reload glbl object
 
     Parameters
@@ -118,12 +119,12 @@ def _load_glbl(glbl_obj, filepath=None):
     """
     if filepath is None:
         filepath = glbl_dict['glbl_yaml_path']
-    # reload
-    else:
-        print("INFO: reload your glbl object\n")
-        f = open(filepath)
-        reload_glbl = GlblYamlDict.from_yaml(f)
-        for key, val in reload_glbl.items():
+    print("INFO: reload your glbl object\n")
+    f = open(filepath)
+    reload_glbl = GlblYamlDict.from_yaml(f)
+    for key, val in reload_glbl.items():
+        if key in reload_glbl._MUTABLE_FIELDS:
+            print("SETTING {} to {}".format(key, val))
             glbl_obj[key] = val
 
 

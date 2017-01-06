@@ -23,7 +23,8 @@ import numpy as np
 import bluesky.plans as bp
 from bluesky.callbacks import LiveTable
 
-from .glbl import glbl, xpd_device, glbl_dict
+from .glbl import glbl
+from .xpdacq_conf import xpd_device
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 
@@ -183,7 +184,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
     if md is None:
         md = {}
     # setting up area_detector
-    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
+    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
     area_det = xpd_device['area_det']
     temp_controller = xpd_device['temp_controller']
     # compute Nsteps
@@ -240,7 +241,7 @@ def Tlist(dets, exposure, T_list):
 
     pe1c, = dets
     # setting up area_detector and temp_controller
-    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
+    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
     area_det = xpd_device['area_det']
     T_controller = xpd_device['temp_controller']
     xpdacq_md = {'sp_time_per_frame': acq_time,
@@ -286,7 +287,7 @@ def tseries(dets, exposure, delay, num, *, md=None):
         md = {}
     # setting up area_detector
     area_det = xpd_device['area_det']
-    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
+    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
     real_delay = max(0, delay - computed_exposure)
     period = max(computed_exposure, real_delay + computed_exposure)
     print('INFO: requested delay = {}s  -> computed delay = {}s'

@@ -24,7 +24,8 @@ from bluesky import RunEngine
 from bluesky.utils import normalize_subs_input
 from bluesky.suspenders import SuspendFloor
 
-from xpdacq.glbl import glbl, xpd_device, glbl_dict
+from xpdacq.glbl import glbl
+from xpdacq.xpdacq_conf import xpd_device
 from xpdacq.yamldict import YamlDict, YamlChainMap
 from xpdacq.beamtime import *
 
@@ -115,6 +116,8 @@ def periodic_dark(plan):
         now = time.time()
         nonlocal need_dark
         qualified_dark_uid = _validate_dark(expire_time=glbl['dk_window'])
+        area_det = xpd_device['area_det']
+        shutter = xpd_device['shutter']
         # FIXME: should we do "or" or "and"?
         if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
@@ -128,8 +131,6 @@ def periodic_dark(plan):
             # Annoying detail: the detector was probably already staged.
             # Unstage it (if it wasn't staged, nothing will happen) and
             # then take_dark() and then re-stage it.
-            area_det = xpd_device['area_det']
-            shutter = xpd_device['shutter']
             return bp.pchain(bp.unstage(area_det),
                              take_dark(),
                              bp.stage(area_det),
