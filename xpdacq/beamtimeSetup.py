@@ -19,7 +19,6 @@ import yaml
 import shutil
 from time import strftime
 from IPython import get_ipython
-from IPython.core.autocall import ExitAutocall
 
 from .glbl import glbl, glbl_filepath
 from .beamtime import *
@@ -29,6 +28,7 @@ from .simulation import db, pe1c, shctl1, cs700
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime
 EXPO_LIST = [5, 0.1, 1, 10, 30, 60]
+
 
 def _start_beamtime(PI_last, saf_num, experimenters=[],
                     wavelength=None):
@@ -229,11 +229,10 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None):
         beamtime object. default to current beamtime (bt) object
     """
     _end_beamtime_core(base_dir, archive_dir, bto)
-    terminator = ExitAutocall()
-    terminator
-    print("INFO: beamtime is finished. It's IMPORTANT to type:\n"
+    print("INFO: beamtime is finished. please type:\n"
           ">>> exit\n"
-          "to exit current session and finish entire beamtime")
+          "to exit current session and finish entire beamtime. that's "
+          "suggested for the completeness of workflow")
 
 
 def _end_beamtime_core(base_dir=None, archive_dir=None, bto=None):
