@@ -11,16 +11,13 @@ from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
 from xpdacq.utils import import_sample_info, _import_sample_info
 
-from xpdacq.simulation import pe1c, cs700, shctl1
-
-
 # print messages for debugging
 #xrun.msg_hook = print
 
 class ImportSamplTest(unittest.TestCase):
 
     def setUp(self):
-        self.base_dir = glbl.base
+        self.base_dir = glbl['base']
         self.home_dir = os.path.join(self.base_dir,'xpdUser')
         self.config_dir = os.path.join(self.base_dir,'xpdConfig')
         self.PI_name = 'Billinge '
@@ -30,10 +27,6 @@ class ImportSamplTest(unittest.TestCase):
                               ('Terban ',' Max',2)]
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
-        # set simulation objects
-        glbl.area_det = pe1c
-        glbl.temp_controller = cs700
-        glbl.shutter = shctl1
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -58,7 +51,7 @@ class ImportSamplTest(unittest.TestCase):
         # copy spreadsheet
         xlf = '300000_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf)
-        shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
+        shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
 
         # expect to pass with explicit argument
         _import_sample_info(300000, self.bt)
@@ -69,7 +62,7 @@ class ImportSamplTest(unittest.TestCase):
 
         # expect ValueError with inconsistent SAF_num between bt and input
         self.bt['bt_safN'] = 300179
-        self.assertTrue(os.path.isfile(os.path.join(glbl.import_dir,
+        self.assertTrue(os.path.isfile(os.path.join(glbl['import_dir'],
                                                     xlf)))
         self.assertRaises(ValueError,
                           lambda: _import_sample_info(300000, self.bt))

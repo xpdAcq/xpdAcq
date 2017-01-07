@@ -15,13 +15,13 @@
 ##############################################################################
 import os
 import yaml
-from xpdacq.xpdacq_conf import glbl_dict, setup_xpdacq, _reload_glbl
+from xpdacq.xpdacq_conf import glbl_dict, configure_device, _reload_glbl
 
 # configure experiment device being used in current version
 if glbl_dict['is_simulation']:
     from xpdacq.simulation import pe1c, db, cs700, shctl1
-setup_xpdacq(area_det=pe1c, shutter=shctl1,
-             temp_controller=cs700, db=db)
+configure_device(area_det=pe1c, shutter=shctl1,
+                 temp_controller=cs700, db=db)
 
 # cache previous glbl state
 reload_glbl_dict = _reload_glbl()

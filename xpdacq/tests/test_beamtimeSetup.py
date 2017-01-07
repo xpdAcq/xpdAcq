@@ -4,7 +4,7 @@ import shutil
 import yaml
 from time import strftime
 
-from xpdacq.glbl import glbl
+from xpdacq.xpdacq_conf import glbl_dict
 from xpdacq.beamtime import Beamtime, ScanPlan
 import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
@@ -16,7 +16,7 @@ from xpdacq.utils import (export_userScriptsEtc, import_userScriptsEtc)
 
 class NewBeamtimeTest(unittest.TestCase):
     def setUp(self):
-        self.base_dir = glbl.base
+        self.base_dir = glbl_dict['base']
         self.home_dir = os.path.join(self.base_dir, 'xpdUser')
         self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
         self.PI_name = 'Billinge '
@@ -33,11 +33,11 @@ class NewBeamtimeTest(unittest.TestCase):
             shutil.rmtree(os.path.join(self.base_dir, 'xpdConfig'))
         if os.path.isdir(os.path.join(self.base_dir, 'pe2_data')):
             shutil.rmtree(os.path.join(self.base_dir, 'pe2_data'))
-        if os.path.isdir(glbl.archive_dir):
-            shutil.rmtree(glbl.archive_dir)
+        if os.path.isdir(glbl_dict['archive_dir']):
+            shutil.rmtree(glbl_dict['archive_dir'])
 
     def test_make_clean_env(self):
-        # check directory structure from glbl
+        # check directory structure from glbl_dict
         home_dir = os.path.join(self.base_dir, 'xpdUser')
         conf_dir = os.path.join(self.base_dir, 'xpdConfig')
         tiff_dir = os.path.join(self.home_dir, 'tiff_base')
@@ -47,14 +47,13 @@ class NewBeamtimeTest(unittest.TestCase):
         userscripts_dir = os.path.join(self.home_dir, 'userScripts')
         yml_dir = os.path.join(self.home_dir, usrconfig_dir, 'yml')
         sample_dir = os.path.join(yml_dir, 'samples')
-        experiment_dir = os.path.join(yml_dir, 'experiments')
         scanplan_dir = os.path.join(yml_dir, 'scanplans')
         dirs = _make_clean_env()
         dir_list = [home_dir, conf_dir, tiff_dir, usrconfig_dir,
                     import_dir, userysis_dir, userscripts_dir,
-                    yml_dir, sample_dir, experiment_dir, scanplan_dir]
+                    yml_dir, sample_dir, scanplan_dir]
         for el in dir_list:
-            self.assertTrue(el in glbl.allfolders)
+            self.assertTrue(el in glbl_dict['allfolders'])
 
     def test_start_beamtime(self):
         # sanity check. xpdUser directory exists.
@@ -98,7 +97,7 @@ class NewBeamtimeTest(unittest.TestCase):
             self.assertEqual(sp['sp_args'], (expect_arg,))
         # test if yml files are saved properly
         for expo in EXPO_LIST:
-            f_path = os.path.join(glbl.scanplan_dir,
+            f_path = os.path.join(glbl_dict['scanplan_dir'],
                                   'ct_{}.yml'.format(expo))
             self.assertTrue(os.path.isfile(f_path))
         # test if it can be reloaded
@@ -115,13 +114,14 @@ class NewBeamtimeTest(unittest.TestCase):
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
-        bt_path_src = os.path.join(glbl.yaml_dir, 'bt_bt.yml')
-        bt_path_dst = os.path.join(glbl.import_dir, 'bt_bt.yml')
+        bt_path_src = os.path.join(glbl_dict['yaml_dir'], 'bt_bt.yml')
+        bt_path_dst = os.path.join(glbl_dict['import_dir'], 'bt_bt.yml')
         # move out for now, no bt
         shutil.move(bt_path_src, bt_path_dst)
         self.assertTrue(os.path.isfile(bt_path_dst))
         self.assertFalse(os.path.isfile(bt_path_src))
-        self.assertRaises(SystemExit, lambda: _load_bt(glbl.yaml_dir))
+        self.assertRaises(SystemExit, lambda:
+                          _load_bt(glbl_dict['yaml_dir']))
         # move back and test archieving funtionality
         shutil.move(bt_path_dst, bt_path_src)
         self.assertTrue(os.path.isfile(bt_path_src))
@@ -135,18 +135,20 @@ class NewBeamtimeTest(unittest.TestCase):
                                   strftime('%Y-%m-%d-%H%M')])
         # is tar file name correct? 
         self.assertEqual(archive_full_name,
-                         os.path.join(glbl.archive_dir, test_tar_name))
+                         os.path.join(glbl_dict['archive_dir'],
+                                      test_tar_name))
         # are contents tared correctly?
-        archive_test_dir = os.path.join(glbl.home, 'tar_test')
+        archive_test_dir = os.path.join(glbl_dict['home'], 'tar_test')
         os.makedirs(archive_test_dir, exist_ok=True)
         shutil.unpack_archive(archive_full_name + '.tar', archive_test_dir)
         content_list = os.listdir(archive_test_dir)
         # is tarball starting from xpdUser?
         self.assertTrue('xpdUser' in content_list)
         # is every directory included
-        basename_list = list(map(os.path.basename, glbl.allfolders))
+        basename_list = list(map(os.path.basename,
+                                 glbl_dict['allfolders']))
         _exclude_list = ['xpdUser', 'xpdConfig', 'yml', 'samples',
-                         'scanplans', 'experiments']
+                         'scanplans']
         # _exclude_list means sub directories and top directories 
         # that will not be in tar structure
         for el in _exclude_list:
@@ -156,17 +158,17 @@ class NewBeamtimeTest(unittest.TestCase):
                                                           'xpdUser')))
         # now test deleting directories
         _delete_home_dir_tree()
-        self.assertTrue(len(os.listdir(glbl.home)) == 0)
+        self.assertTrue(len(os.listdir(glbl_dict['home'])) == 0)
 
     def test_import_userScript_Etc(self):
-        src = glbl.import_dir
-        dst = [glbl.yaml_dir, glbl.usrScript_dir]
+        src = glbl_dict['import_dir']
+        dst = [glbl_dict['yaml_dir'], glbl_dict['usrScript_dir']]
         os.makedirs(src, exist_ok=True)
         for el in dst:
             os.makedirs(el, exist_ok=True)
-        self.assertTrue(os.path.isdir(glbl.config_base))
-        self.assertTrue(os.path.isdir(glbl.yaml_dir))
-        self.assertTrue(os.path.isdir(glbl.usrScript_dir))
+        self.assertTrue(os.path.isdir(glbl_dict['config_base']))
+        self.assertTrue(os.path.isdir(glbl_dict['yaml_dir']))
+        self.assertTrue(os.path.isdir(glbl_dict['usrScript_dir']))
         # case1 : no files in import_dir, should return nothing
         self.assertEqual(import_userScriptsEtc(), None)
         # case2 : a tar file with three kind of files, test if it is successfully moved and unpacked
@@ -217,25 +219,25 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(exception_dir_name))
 
     def test_export_userScriptsEtc(self):
-        os.makedirs(glbl.usrScript_dir, exist_ok=True)
-        os.makedirs(glbl.yaml_dir, exist_ok=True)
-        new_script = os.path.join(glbl.usrScript_dir, 'script.py')
+        os.makedirs(glbl_dict['usrScript_dir'], exist_ok=True)
+        os.makedirs(glbl_dict['yaml_dir'], exist_ok=True)
+        new_script = os.path.join(glbl_dict['usrScript_dir'], 'script.py')
         open(new_script, 'a').close()
-        new_yaml = os.path.join(glbl.yaml_dir, 'touched.yml')
+        new_yaml = os.path.join(glbl_dict['yaml_dir'], 'touched.yml')
         open(new_yaml, 'a').close()
         tar_f_path = export_userScriptsEtc()
-        shutil.unpack_archive(tar_f_path, glbl.home)
+        shutil.unpack_archive(tar_f_path, glbl_dict['home'])
 
-        userScript_dir_tail = os.path.split(glbl.usrScript_dir)[1]
-        config_base_tail = os.path.split(glbl.config_base)[1]
-        yaml_dir_tail = os.path.split(glbl.yaml_dir)[1]
+        userScript_dir_tail = os.path.split(glbl_dict['usrScript_dir'])[1]
+        config_base_tail = os.path.split(glbl_dict['config_base'])[1]
+        yaml_dir_tail = os.path.split(glbl_dict['yaml_dir'])[1]
         # are parent dirs in xpdUser?
-        self.assertTrue(os.path.isdir(os.path.join(glbl.home,
+        self.assertTrue(os.path.isdir(os.path.join(glbl_dict['home'],
                                                    userScript_dir_tail)))
-        self.assertTrue(os.path.isdir(os.path.join(glbl.home,
+        self.assertTrue(os.path.isdir(os.path.join(glbl_dict['home'],
                                                    config_base_tail)))
         # are files in unpacked dirs?
-        self.assertTrue('script.py' in os.listdir(os.path.join(glbl.home,
-                                                               userScript_dir_tail)))
+        self.assertTrue('script.py' in os.listdir(
+            os.path.join(glbl_dict['home'], userScript_dir_tail)))
         self.assertTrue('touched.yml' in os.listdir(
-            os.path.join(glbl.home, config_base_tail, yaml_dir_tail)))
+            os.path.join(glbl_dict['home'], config_base_tail, yaml_dir_tail)))

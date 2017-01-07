@@ -20,6 +20,20 @@ import yaml
 from time import strftime, sleep
 from xpdacq.yamldict import YamlDict
 
+# special function and dict to store all necessary objects
+xpd_device = {}
+def configure_device(*, area_det, shutter,
+                     temp_controller, db, **kwargs):
+    """ function to set up required device/objects for xpdacq """
+    # specifically assign minimum requirements
+    xpd_device['area_det'] = area_det
+    xpd_device['shutter'] = shutter
+    xpd_device['temp_controller'] = temp_controller
+    xpd_device['db'] = db
+    # extra kwargs
+    xpd_device.update(**kwargs)
+
+
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
 BLCONFIG_DIR_NAME = 'xpdConfig'
@@ -127,6 +141,7 @@ glbl_dict = dict(is_simulation=simulation,
                  shutter_control=True,
                  auto_load_calib=True,
                  calib_config_name=CALIB_CONFIG_NAME,
+                 calib_config_dict=None,
                  mask_dict={'edge': 30, 'lower_thresh': 0.0,
                             'upper_thresh': None, 'bs_width': 13,
                             'tri_offset': 13, 'v_asym': 0,
@@ -134,19 +149,6 @@ glbl_dict = dict(is_simulation=simulation,
                  # instrument config
                  det_image_field=IMAGE_FIELD
                  )
-
-
-# special function and dict to store all necessary objects
-xpd_device = {}
-def setup_xpdacq(*, area_det, shutter, temp_controller, db, **kwargs):
-    """ function to set up required device/objects for xpdacq """
-    # specifically assign minimum requirements
-    xpd_device['area_det'] = area_det
-    xpd_device['shutter'] = shutter
-    xpd_device['temp_controller'] = temp_controller
-    xpd_device['db'] = db
-    # extra kwargs
-    xpd_device.update(**kwargs)
 
 
 def configure_frame_acq_time(new_frame_acq_time):
@@ -210,7 +212,8 @@ class GlblYamlDict(YamlDict):
     _MUTABLE_FIELDS = ['frame_acq_time', 'auto_dark', 'dk_window',
                        '_dark_dict_list', 'shutter_control',
                        'auto_load_calib', 'calib_config_name',
-                       'mask_dict', 'det_image_field']
+                       'calib_config_dict', 'mask_dict',
+                       'det_image_field']
 
     def __init__(self, name, **kwargs):
         super().__init__(name=name,**kwargs)

@@ -20,9 +20,9 @@ import shutil
 from time import strftime
 from IPython import get_ipython
 
-
-from .xpdacq_conf import glbl_dict, GlblYamlDict
 from .beamtime import *
+from .tools import _graceful_exit
+from .xpdacq_conf import glbl_dict, GlblYamlDict
 
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime
