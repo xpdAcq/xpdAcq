@@ -45,6 +45,8 @@ else:
 
 if simulation:
     BASE_DIR = os.getcwd()
+    ARCHIVE_BASE_DIR_NAME = 'userBeamtimeArchive'
+    USER_BACKUP_DIR_NAME = ARCHIVE_BASE_DIR_NAME
 else:
     BASE_DIR = os.path.abspath('/direct/XF28ID1/pe2_data')
 
@@ -162,6 +164,24 @@ def configure_frame_acq_time(new_frame_acq_time):
     print("INFO: area detector has been configured to new "
           "exposure_time = {}s".format(new_frame_acq_time))
 
+
+def _reload_glbl(glbl_yaml_path=None):
+    """function to reload glbl yaml
+
+    Parameters
+    ----------
+    glbl_yaml_path : str, optional
+        filepath to local yaml
+    """
+    if glbl_yaml_path is None:
+        glbl_yaml_path = glbl_dict['glbl_yaml_path']
+    if os.path.isfile(glbl_yaml_path):
+        with open(glbl_dict['glbl_yaml_path']) as f:
+            reload_dict = yaml.load(f)
+            print("RELOAD_DICT = {}".format(reload_dict))
+        return reload_dict
+    else:
+        pass
 
 class xpdAcqException(Exception):
     # customized class for xpdAcq-related exception

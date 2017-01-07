@@ -22,7 +22,6 @@ from IPython import get_ipython
 
 
 from .xpdacq_conf import glbl_dict, GlblYamlDict
-from .glbl import glbl
 from .beamtime import *
 
 # list of exposure times for pre-poluated ScanPlan inside
@@ -32,7 +31,7 @@ EXPO_LIST = [5, 0.1, 1, 10, 30, 60]
 def _start_beamtime(PI_last, saf_num, experimenters=[],
                     wavelength=None):
     """function for start a beamtime"""
-    home_dir = glbl['home']
+    home_dir = glbl_dict['home']
     if not os.path.exists(home_dir):
         raise RuntimeError("WARNING: fundamental directory {} does not "
                            "exist.\nPlease contact beamline staff immediately"
@@ -56,7 +55,7 @@ def _start_beamtime(PI_last, saf_num, experimenters=[],
               ">>> xrun.beamtime = bt")
         # copy default Ni24.D to xpdUser/user_analysis
         src = os.path.join(os.path.dirname(__file__), 'Ni24.D')
-        dst = os.path.join(glbl['usrAnalysis_dir'], 'Ni.D')
+        dst = os.path.join(glbl_dict['usrAnalysis_dir'], 'Ni.D')
         shutil.copy(src, dst)
 
         # pre-populated scan plan
@@ -70,7 +69,7 @@ def _make_clean_env():
     """Make a clean environment for a new user
     """
     out = []
-    for d in glbl['allfolders']:
+    for d in glbl_dict['allfolders']:
         os.makedirs(d, exist_ok=True)
         out.append(d)
     return out
@@ -79,9 +78,9 @@ def _make_clean_env():
 def start_xpdacq():
     """ function to reload beamtime """
     try:
-        bt_list = [f for f in os.listdir(glbl['yaml_dir']) if
+        bt_list = [f for f in os.listdir(glbl_dict['yaml_dir']) if
                    f.startswith('bt') and
-                   os.path.isfile(os.path.join(glbl['yaml_dir'], f))]
+                   os.path.isfile(os.path.join(glbl_dict['yaml_dir'], f))]
     except FileNotFoundError:
         return _no_beamtime()
 
@@ -142,7 +141,7 @@ def load_beamtime(directory=None):
       scanplans/
     """
     if directory is None:
-        directory = glbl['yaml_dir']  # leave room for future multi-beamtime
+        directory = glbl_dict['yaml_dir']  # leave room for multi-beamtime
     known_uids = {}
     beamtime_fn = os.path.join(directory, 'bt_bt.yml')
     sample_fns = os.listdir(os.path.join(directory, 'samples'))
@@ -200,12 +199,12 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
     """
     _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']
     if archive_dir is None:
-        archive_dir = glbl['archive_dir']
+        archive_dir = glbl_dict['archive_dir']
     if base_dir is None:
-        base_dir = glbl['base']
-    os.makedirs(glbl['home'], exist_ok=True)
+        base_dir = glbl_dict['base']
+    os.makedirs(glbl_dict['home'], exist_ok=True)
     # check env
-    files = os.listdir(glbl['home'])
+    files = os.listdir(glbl_dict['home'])
     if len(files) == 0:
         raise FileNotFoundError("It appears that end_beamtime may have been "
                                 "run. If so, do not run again but proceed to\n"
@@ -253,9 +252,9 @@ def _load_bt_info(bt_obj, required_fields):
 def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
     """ Create a remote tarball of all user folders under xpdUser directory
     """
-    archive_full_name = os.path.join(glbl['archive_dir'], archive_name)
+    archive_full_name = os.path.join(glbl_dict['archive_dir'], archive_name)
     if root_dir is None:
-        root_dir = glbl['base']
+        root_dir = glbl_dict['base']
     cur_path = os.getcwd()
     try:
         os.chdir(root_dir)
@@ -272,14 +271,14 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
 
 
 def _load_bt(bt_yaml_path):
-    btoname = os.path.join(glbl['yaml_dir'], 'bt_bt.yml')
+    btoname = os.path.join(glbl_dict['yaml_dir'], 'bt_bt.yml')
     if not os.path.isfile(btoname):
         sys.exit(_graceful_exit("{} does not exist in {}. User might have"
                                 "deleted it accidentally.Please create it"
                                 "based on user information or contect user"
                                 .format(os.path.basename(btoname),
-                                        glbl['yaml_dir'])))
-    with open(btoname, 'r') as fi:
+                                        glbl_dict['yaml_dir'])))
+    with open(btoname, 'r') as f:
         bto = yaml.load(fi)
     return bto
 
@@ -305,10 +304,10 @@ def _confirm_archive(archive_f_name):
 
 
 def _delete_home_dir_tree():
-    os.chdir(glbl['base'])  # move out from xpdUser before deletion
-    shutil.rmtree(glbl['home'])
-    os.makedirs(glbl['home'], exist_ok=True)
-    os.chdir(glbl['home'])  # now move back into xpdUser
+    os.chdir(glbl_dict['base'])  # move out from xpdUser before deletion
+    shutil.rmtree(glbl_dict['home'])
+    os.makedirs(glbl_dict['home'], exist_ok=True)
+    os.chdir(glbl_dict['home'])  # now move back into xpdUser
     return
 
 

@@ -14,20 +14,34 @@
 #
 ##############################################################################
 import os
-from xpdacq.xpdacq_conf import glbl_dict, setup_xpdacq
-from xpdacq.beamtime import *
-from xpdacq.utils import import_sample_info
-from xpdacq.beamtimeSetup import (start_xpdacq, _reload_glbl,
-                                  _start_beamtime, _end_beamtime)
-
+import yaml
+from xpdacq.xpdacq_conf import glbl_dict, setup_xpdacq, _reload_glbl
 # configure experiment device being used in current version
 if glbl_dict['is_simulation']:
     from xpdacq.simulation import pe1c, db, cs700, shctl1
 setup_xpdacq(area_det=pe1c, shutter=shctl1,
              temp_controller=cs700, db=db)
 
-# beamtime reload happen in xpdacq
+# cache previous glbl state
+reload_dict = _reload_glbl()
+
+# load beamtime
+from xpdacq.beamtimeSetup import (start_xpdacq, _reload_glbl,
+                                  _start_beamtime, _end_beamtime)
+bt = start_xpdacq()
+if bt is not None:
+    print("INFO: Reload beamtime objects:\n{}\n".format(bt))
+    from xpdacq.glbl import glbl
+    print("INFO: Reload glbl object....")
+    for k, v in reload_dict.items():
+        if k in glbl._MUTABLE_FIELDS:
+            print("SETTING {} to {}".format(k, v))
+            glbl.update({k:v})
+
+# import necessary modules
 from xpdacq.xpdacq import *
+from xpdacq.beamtime import *
+from xpdacq.utils import import_sample_info
 
 # instantiate xrun without beamtime, like bluesky setup
 xrun = CustomizedRunEngine(None)
@@ -38,17 +52,11 @@ xrun.md['group'] = glbl['group']
 # insert header to db, either simulated or real
 xrun.subscribe('all', db.mds.insert)
 
-# load beamtime
-bt = start_xpdacq()
-if bt is not None:
-    print("INFO: Reload beamtime objects:\n{}\n".format(bt))
+if bt:
     xrun.beamtime = bt
-    from xpdacq.glbl import glbl
-    _reload_glbl(glbl)
 
-
-HOME_DIR = glbl['home']
-BASE_DIR = glbl['base']
+HOME_DIR = glbl_dict['home']
+BASE_DIR = glbl_dict['base']
 
 print('INFO: Initializing the XPD data acquisition environment\n')
 if os.path.isdir(HOME_DIR):
