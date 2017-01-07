@@ -217,6 +217,10 @@ class GlblYamlDict(YamlDict):
         self._referenced_by = []
         self._name = name
 
+    @property
+    def mutable_fields(self):
+        return self._MUTABLE_FIELDS
+
     def default_yaml_path(self):
         return GLBL_YAML_PATH
 

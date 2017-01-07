@@ -16,6 +16,7 @@
 import os
 import yaml
 from xpdacq.xpdacq_conf import glbl_dict, setup_xpdacq, _reload_glbl
+
 # configure experiment device being used in current version
 if glbl_dict['is_simulation']:
     from xpdacq.simulation import pe1c, db, cs700, shctl1
@@ -23,18 +24,19 @@ setup_xpdacq(area_det=pe1c, shutter=shctl1,
              temp_controller=cs700, db=db)
 
 # cache previous glbl state
-reload_dict = _reload_glbl()
+reload_glbl_dict = _reload_glbl()
+from xpdacq.glbl import glbl
 
-# load beamtime
+# reload beamtime
 from xpdacq.beamtimeSetup import (start_xpdacq, _reload_glbl,
                                   _start_beamtime, _end_beamtime)
 bt = start_xpdacq()
 if bt is not None:
     print("INFO: Reload beamtime objects:\n{}\n".format(bt))
-    from xpdacq.glbl import glbl
+if reload_glbl_dict is not None:
     print("INFO: Reload glbl object....")
-    for k, v in reload_dict.items():
-        if k in glbl._MUTABLE_FIELDS:
+    for k, v in reload_glbl_dict.items():
+        if k in glbl.mutable_fields:
             print("SETTING {} to {}".format(k, v))
             glbl.update({k:v})
 
