@@ -23,47 +23,11 @@ from time import strftime
 from shutil import ReadError
 from IPython import get_ipython
 
-
 import pandas as pd
 
 from .glbl import glbl
+from .tools import _check_obj
 from .beamtime import Beamtime, Sample, ScanPlan
-
-
-def _check_obj(obj_name, error_msg=None):
-    """ function to check if an object exists in current namespace
-
-    Parameter
-    ---------
-    obj_name : str
-        object name in string format
-    error_msg : str
-        error msg when target object can't be found in current
-        namespace
-    """
-    if error_msg is None:
-        error_msg = "Required object {} doesn't exist in"\
-                    "current namespace".format(obj_name)
-    ips = get_ipython()
-    if not ips.ns_table['user_global'].get(obj_name, None):
-        raise NameError(error_msg)
-    return
-
-def _timestampstr(timestamp):
-    """ convert timestamp to strftime formate """
-    timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime(
-        '%Y%m%d-%H%M%S')
-    return timestring
-
-
-def _graceful_exit(error_message):
-    try:
-        raise RuntimeError(error_message)
-        return 0
-    except Exception as err:
-        sys.stderr.write('WHOOPS: {}'.format(str(err)))
-        return 1
-
 
 def composition_analysis(compstring):
     """Pulls out elements and their ratios from the config file.
@@ -93,35 +57,6 @@ def composition_analysis(compstring):
     getfraction = lambda s: (s == '' and 1.0 or float(s))
     fractions = [getfraction(w) for w in namefracs[1::2]]
     return names, fractions
-
-
-def _RE_state_wrapper(RE_obj):
-    """ a wrapper to check state of bluesky runengine object after pausing
-
-        it provides control to stop/abort/resume runengine under current package structure
-    """
-    usr_input = input('')
-    # while loop gives chance to iteratively confirm user's input
-    while RE_obj.state == 'paused':
-        if usr_input in 'resume()':
-            RE_obj.resume()
-        elif usr_input in 'abort()':
-            abort_all = input(
-                '''current scan will be aborted. Do you want to abort all successive scans (if you are running a script)? y/[n]  ''')
-            while True:
-                if abort_all in ('y', 'yes'):
-                    sys.exit(_graceful_exit(
-                        '''INFO: All successive scans are aborted'''))
-                elif abort_all in ('n', 'no'):
-                    print(
-                        '''INFO: Current scan is aborted and successive ones are kept''')
-                    RE_obj.abort()
-                else:
-                    print('please reenter your input')
-        elif usr_input in 'stop()':
-            RE_obj.stop()
-        else:
-            print('please renter your input')
 
 
 def export_userScriptsEtc():
