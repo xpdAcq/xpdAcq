@@ -15,7 +15,8 @@
 ##############################################################################
 import os
 import yaml
-from xpdacq.xpdacq_conf import glbl_dict, configure_device, _reload_glbl
+from xpdacq.xpdacq_conf import (glbl_dict, configure_device,
+                                _reload_glbl, _set_glbl)
 
 # configure experiment device being used in current version
 if glbl_dict['is_simulation']:
@@ -34,11 +35,7 @@ bt = start_xpdacq()
 if bt is not None:
     print("INFO: Reload beamtime objects:\n{}\n".format(bt))
 if reload_glbl_dict is not None:
-    print("INFO: Reload glbl object....")
-    for k, v in reload_glbl_dict.items():
-        if k in glbl.mutable_fields:
-            print("SETTING {} to {}".format(k, v))
-            glbl.update({k:v})
+    _set_glbl(glbl, reload_glbl_dict)
 
 # import necessary modules
 from xpdacq.xpdacq import *

@@ -180,10 +180,24 @@ def _reload_glbl(glbl_yaml_path=None):
     if os.path.isfile(glbl_yaml_path):
         with open(glbl_dict['glbl_yaml_path']) as f:
             reload_dict = yaml.load(f)
-            print("RELOAD_DICT = {}".format(reload_dict))
         return reload_dict
     else:
         pass
+
+
+def _set_glbl(glbl_obj, reload_dict):
+    """function to set glbl object based on reload contents
+
+    Parameters
+    ----------
+    glbl_obj : xpdacq.xpdacq_conf.GlblYamlDict
+        instance of GlblYamlDict that is going to be updated
+    reload_dict : dict
+        a dictionary based on reload of glbl yaml
+    """
+    for k, v in reload_dict.items():
+        if k in glbl_obj.mutable_fields:
+            glbl_obj[k] = v
 
 class xpdAcqException(Exception):
     # customized class for xpdAcq-related exception
