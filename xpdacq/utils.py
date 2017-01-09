@@ -19,6 +19,7 @@ import yaml
 import shutil
 import tarfile as tar
 import uuid
+import warnings
 from time import strftime
 from shutil import ReadError
 from IPython import get_ipython
@@ -249,13 +250,16 @@ def _copy_and_delete(f_name, src_full_path, dst_dir):
 
 
 class ExceltoYaml:
-    # maintain in place, aligned with spreadsheet header
+    # maintain regularly, aligned with spreadsheet header
     NAME_FIELD = ['Collaborators', 'Sample Maker', 'Lead Experimenter', ]
     COMMA_SEP_FIELD = ['cif name', 'Tags']
     PHASE_FIELD = ['Phase Info [required]']
     SAMPLE_NAME_FIELD = ['Sample Name [required]']
+    BKGD_NAME_FIELD = ['Bkgd Sample Name']
     GEOMETRY_FIELD = ['Geometry']
     DICT_LIKE_FIELD = ['database id'] # return a dict
+    # special key for high-dimensional sample phase mapping
+    HIGH_D_MD_MAP_KEYWORD = ['gridscan_mappedin']
 
     # real fields goes into metadata store
     _NAME_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
@@ -264,6 +268,8 @@ class ExceltoYaml:
                                 COMMA_SEP_FIELD))
     _SAMPLE_NAME_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
                                   SAMPLE_NAME_FIELD))
+    _BKGD_NAME_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
+                                BKGD_NAME_FIELD))
     _PHASE_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
                             PHASE_FIELD))
     _GEOMETRY_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
@@ -271,20 +277,20 @@ class ExceltoYaml:
     _DICT_LIKE_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
                                 DICT_LIKE_FIELD))
 
-    def __init__(self):
+    def __init__(self, src_dir):
         self.pd_dict = None
         self.sa_md_list = None
-        self.src_dir = glbl.import_dir
+        self.src_dir = src_dir
 
     def load(self, saf_num):
         xl_f = [f for f in os.listdir(self.src_dir) if
                 f in (str(saf_num)+'_sample.xls',
                       str(saf_num)+'_sample.xlsx')]
         if not xl_f:
-            raise FileNotFoundError("assigned file doesn't exist, have "
+            raise FileNotFoundError("file {} doesn't exist, have "
                                     "you put it into {} with correct "
-                                    "naming scheme yet?"
-                                    .format(self.src_dir))
+                                    "naming scheme '<SAF_num>_sample.xlsx'"
+                                    "yet?".format(self.src_dir))
 
         self.pd_dict = pd.read_excel(os.path.join(self.src_dir,
                                                   xl_f.pop()),
@@ -292,20 +298,8 @@ class ExceltoYaml:
 
         self.sa_md_list = self._pd_dict_to_dict_list(self.pd_dict.to_dict())
 
-    def create_yaml(self, bt):
-        """ parse a list of sample metadata into desired format and
-        create xpdacq.Sample objects inside xpdUser/config_base/yml/
-
-        Parameters
-        ----------
-        bt : xpdacq.Beamtime object
-            an object carries SAF, PI_last and other information
-
-        Returns
-        -------
-        None
-        """
-
+    def parse_sample_md(self):
+        """parse a list of sample metadata into desired format"""
         parsed_sa_md_list = []
         for sa_md in self.sa_md_list:
             parsed_sa_md = {}
@@ -313,8 +307,7 @@ class ExceltoYaml:
                 k = str(k).lower()
                 v = str(v)
                 k = k.strip().replace(' ', '_')
-                v = v.replace('/', '_')  # yaml path
-                # mapped_key = self.MAPPING.get(k, None) # no mapping
+                v = v.replace('/', '_')  # make sure yaml path correct
 
                 # name fields
                 if k in self._NAME_FIELD:
@@ -323,11 +316,8 @@ class ExceltoYaml:
                         parsed_name = []
                         for el in comma_sep_list:
                             parsed_name.extend(self._name_parser(el))
-                            # print("successfully parsed name {} -> {}"
-                            #      .format(v, parsed_name))
                     except ValueError:
                         parsed_name = v
-                        # print('cant parsed {}'.format(v))
                     parsed_sa_md.setdefault(k, [])
                     parsed_sa_md.get(k).extend(parsed_name)
 
@@ -358,8 +348,14 @@ class ExceltoYaml:
 
                 # sample name field
                 elif k in self._SAMPLE_NAME_FIELD:
-                    _k = 'sample_name'
+                    _k = 'sample_name' # normalized name
                     parsed_sa_md.update({_k: v.replace(' ','_')})
+
+                # bkgd name field
+                elif k in self._BKGD_SAMPLE_NAME_FIELD:
+                    _k = 'bkgd_sample_name'
+                    parsed_sa_md.update({_k:
+                                         v.strip().replace(' ', '_')})
 
                 # dict-like field
                 elif k in self._DICT_LIKE_FIELD:
@@ -372,20 +368,38 @@ class ExceltoYaml:
             parsed_sa_md_list.append(parsed_sa_md)
         self.parsed_sa_md_list = parsed_sa_md_list
 
-        # normal sample, just create
-        for el in self.parsed_sa_md_list:
-            Sample(bt, el)
-        # separate so that bkg is in the back
-        bkg_name_list = [el['sample_name']
-                         for el in self.parsed_sa_md_list if
-                         el['sample_name'].startswith('bkgd')]
-        for bkg_name in set(bkg_name_list):
-            bkg_dict = {'sample_name': bkg_name,
-                        'sample_composition': {bkg_name: 1},
-                        'is_background': True}
-            Sample(bt, bkg_dict)
+    def create_yaml(self, bt):
+        """instantiate xpdacq.beamtime.Sample objects based on parsed md
 
+        it also validate if bkgd_sample_name has already appeared as a
+        sample_name. If not, it issues a warning
+
+        Parameters
+        ----------
+        bt : xpdacq.Beamtime object
+            an object carries SAF, PI_last and other information
+
+        Returns
+        -------
+        None
+        """
+        sample_name_set = set([d['sample_name'] for d in
+                               self.parsed_sa_md_list])
+        for d in self.parsed_sa_md_list:
+            bkgd_name = d.get('bkgd_sample_name')
+            sample_name = d.get('sample_name')
+            if bkgd_name not in sample_name_set:
+                warnings.warn("Bkgd Sample Name `{}` of Smaple `{}` "
+                              "does not appear as any of sample_name "
+                              "defined in spreadsheet.\n"
+                              "This will degrade the workflow of "
+                              "auto-reduction. It is recommended to"
+                              "correctly set it".format(bkgd_name,
+                                                        sample_name),
+                              UserWarning)
+            Sample(bt, d)
         print("*** End of import Sample object ***")
+
 
     def _pd_dict_to_dict_list(self, pd_dict):
         """ parser of pd generated dict to a list of valid sample dicts
@@ -449,7 +463,7 @@ class ExceltoYaml:
         return output_list
 
     def _name_parser(self, name_str):
-        """ assume a name string
+        """assume a name string
 
         Returns
         -------
@@ -462,20 +476,23 @@ class ExceltoYaml:
         return name_list  # [first, last]
 
     def _phase_parser(self, phase_str):
-        """ parser for field with <chem formula>: <phase_amount>
+        """parser for field with <chem formula>: <phase_amount>
 
         Parameters
         ----------
         phase_str : str
             a string contains a series of <chem formula> : <phase_amount>.
-            Each phase is separated by a comma
+            Each phase is separated by a comma.
 
         Returns
         -------
         composition_dict : dict
-            a dictionary contains {element: stoichiometry}
+            a dictionary contains {element: stoichiometry}.
         phase_dict : dict
-            a dictionary contains relative ratio of phases
+            a dictionary contains relative ratio of phases.
+        transform_dict : dict
+            a dictionary contains string with the format PDF 
+            transfomation software takes. default is pdfgetx
 
         Examples
         --------
@@ -488,27 +505,34 @@ class ExceltoYaml:
         ValueError
             if ',' is not specified between phases
         """
-
         phase_dict = {}
         composition_dict = {}
+        transform_dict = {}
+
         compound_meta = phase_str.split(',')
         for el in compound_meta:
+            # parse comma separated logic
             if len(el.split(':')) == 1:
                 com = el.split(':').pop()
-                amount = '1'  # capture default
+                amount = '1'  # default set to 1
             else:
                 com, amount = el.split(':')  # expect [<com>, <amount>]
                 amount = amount.replace('%','')
-            phase_dict.update({com.strip(): float(amount.strip())})
+            if com in self.HIGH_D_MD_MAP_KEYWORD:
+                print("INFO: you assignined cutomized mapping {} for"
+                      " high dimensional sample".format(amount))
+                phase_dict.update({com.strip(): amount.strip()})
+            else:
+                phase_dict.update({com.strip(): float(amount.strip())})
+            # parse composition dict, e.g. {'Na':1, 'Cl':1}
             parsed_tuple = composition_analysis(com.strip())
-            # expect: ([element_1, element_2, ...], [sto_1, sto_2,...])
-            for i in range(len(parsed_tuple[0])):
-                composition_dict.update({parsed_tuple[0][i]:
-                                             parsed_tuple[1][i]})
+            # std ouput: ([element_1, element_2, ...], [sto_1, sto_2,...])
+            for el, sto in zip(parsed_tuple[0], parsed_tuple[1]):
+                composition_dict.update({el:sto})
         # normalized phase_dict
         total = sum(phase_dict.values())
         for k, v in phase_dict.items():
-            ratio = "{0:.2f}".format(v / total)
+            ratio = "{:.2f}".format(v / total)
             phase_dict[k] = float(ratio)
         return composition_dict, phase_dict
 
@@ -602,5 +626,6 @@ def _import_sample_info(saf_num=None, bt=None):
     sp_ref = [el for el in bt._referenced_by if isinstance(el, ScanPlan)]
     bt._referenced_by = sp_ref
     excel_to_yaml.load(saf_num)
+    excel_to_yaml.parse_sample_md()
     excel_to_yaml.create_yaml(bt)
     return excel_to_yaml
