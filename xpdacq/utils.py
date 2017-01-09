@@ -14,7 +14,6 @@
 #
 ##############################################################################
 import os
-import sys
 import yaml
 import shutil
 import tarfile as tar
@@ -26,7 +25,7 @@ from IPython import get_ipython
 import pandas as pd
 
 from .glbl import glbl
-from .tools import _check_obj
+from .tools import _check_obj, _graceful_exit
 from .beamtime import Beamtime, Sample, ScanPlan
 
 def composition_analysis(compstring):

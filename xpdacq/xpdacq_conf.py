@@ -1,3 +1,4 @@
+#module for configuring xpdacq
 #!/usr/bin/env python
 ##############################################################################
 #
@@ -17,14 +18,16 @@ import os
 import socket
 import time
 import yaml
-from time import strftime, sleep
-from xpdacq.yamldict import YamlDict
+from time import strftime
+
+from .yamldict import YamlDict
+from .tools import xpdAcqException
 
 # special function and dict to store all necessary objects
 xpd_device = {}
 def configure_device(*, area_det, shutter,
                      temp_controller, db, **kwargs):
-    """ function to set up required device/objects for xpdacq """
+    """function to set up required device/objects for xpdacq"""
     # specifically assign minimum requirements
     xpd_device['area_det'] = area_det
     xpd_device['shutter'] = shutter
@@ -152,7 +155,7 @@ glbl_dict = dict(is_simulation=simulation,
 
 
 def configure_frame_acq_time(new_frame_acq_time):
-    """ function to configure frame acquire time of area detector """
+    """function to configure frame acquire time of area detector"""
 
     area_det = xpd_device['area_det']
     # stop acquisition
@@ -199,17 +202,14 @@ def _set_glbl(glbl_obj, reload_dict):
         if k in glbl_obj.mutable_fields:
             glbl_obj[k] = v
 
-class xpdAcqException(Exception):
-    # customized class for xpdAcq-related exception
-    pass
-
 
 class GlblYamlDict(YamlDict):
-    """ class holds global options of xpdAcq.
+    """
+    class holds global options of xpdAcq.
 
-    It automatically update yaml file when contents are changed,
-    and for back-support, it issues a Deprecationwarning when user tries
-    to set attributes
+    It automatically updates contents of local yaml file when its
+    contents are changed, and for back-support, it issues a
+    Deprecationwarning when user tries to set attributes
 
     Parameters:
     -----------
@@ -236,6 +236,7 @@ class GlblYamlDict(YamlDict):
 
     @property
     def mutable_fields(self):
+        """keys for fields that are allowed to updated"""
         return self._MUTABLE_FIELDS
 
     def default_yaml_path(self):
@@ -269,6 +270,7 @@ class GlblYamlDict(YamlDict):
 
     @classmethod
     def from_yaml(cls, f):
+        """method to reload object from local yaml"""
         d = yaml.load(f)
         instance = cls.from_dict(d)
         if not isinstance(f, str):
@@ -277,5 +279,6 @@ class GlblYamlDict(YamlDict):
 
     @classmethod
     def from_dict(cls, d):
+        """method to reload object from dict"""
         return cls(**d)
 

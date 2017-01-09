@@ -71,9 +71,7 @@ def _summarize(plan):
 
 
 def _configure_area_det(exposure):
-    """
-    private function to configure pe1c with continuous acquisition mode
-    """
+    """private function to configure pe1c with continuous acquisition mode"""
     # cs studio configuration doesn't propagate to python level
     xpd_device['area_det'].cam.acquire_time.put(glbl['frame_acq_time'])
     # compute number of frames

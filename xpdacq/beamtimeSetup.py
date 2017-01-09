@@ -105,29 +105,6 @@ def _no_beamtime():
           "to initiate beamtime")
 
 
-def _reload_glbl(glbl_obj, filepath=None):
-    """function to reload glbl object
-
-    Parameters
-    ----------
-    glbl_obj : instance of xpdacq.glbl.GlblYamlDict
-        glbl obj object that is going to be reloaded
-    filepath : str, default
-        filepath to the yaml file stores options going to be reloaded
-        defaulted to glbl['glbl_yaml_path']
-    """
-    if filepath is None:
-        filepath = glbl_dict['glbl_yaml_path']
-    print("INFO: reload your glbl object\n")
-    f = open(filepath)
-    reload_glbl = GlblYamlDict.from_yaml(f)
-    for key, val in reload_glbl.items():
-        if key in reload_glbl._MUTABLE_FIELDS:
-            print("SETTING {} to {}".format(key, val))
-            glbl_obj[key] = val
-
-
-
 def load_beamtime(directory=None):
     """
     Load a Beamtime and associated objects.
@@ -279,7 +256,7 @@ def _load_bt(bt_yaml_path):
                                 .format(os.path.basename(btoname),
                                         glbl_dict['yaml_dir'])))
     with open(btoname, 'r') as f:
-        bto = yaml.load(fi)
+        bto = yaml.load(f)
     return bto
 
 

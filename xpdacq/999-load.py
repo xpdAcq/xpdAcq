@@ -14,7 +14,6 @@
 #
 ##############################################################################
 import os
-import yaml
 from xpdacq.xpdacq_conf import (glbl_dict, configure_device,
                                 _reload_glbl, _set_glbl)
 

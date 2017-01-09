@@ -1,3 +1,4 @@
+#module to store tools which use standard libraries only
 #!/usr/bin/env python
 ##############################################################################
 #
@@ -13,10 +14,15 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-import os
 import sys
+import datetime
 from time import strftime
 from IPython import get_ipython
+
+class xpdAcqException(Exception):
+    """customized class for xpdAcq-related exception"""
+    pass
+
 
 def _graceful_exit(error_message):
     try:
@@ -28,7 +34,7 @@ def _graceful_exit(error_message):
 
 
 def _check_obj(obj_name, error_msg=None):
-    """ function to check if an object exists in current namespace
+    """function to check if an object exists in current namespace
 
     Parameter
     ---------
@@ -48,36 +54,7 @@ def _check_obj(obj_name, error_msg=None):
 
 
 def _timestampstr(timestamp):
-    """ convert timestamp to strftime formate """
+    """convert timestamp to strftime formate"""
     timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime(
         '%Y%m%d-%H%M%S')
     return timestring
-
-
-def _RE_state_wrapper(RE_obj):
-    """ a wrapper to check state of bluesky runengine object after pausing
-
-        it provides control to stop/abort/resume runengine under current package structure
-    """
-    usr_input = input('')
-    # while loop gives chance to iteratively confirm user's input
-    while RE_obj.state == 'paused':
-        if usr_input in 'resume()':
-            RE_obj.resume()
-        elif usr_input in 'abort()':
-            abort_all = input(
-                '''current scan will be aborted. Do you want to abort all successive scans (if you are running a script)? y/[n]  ''')
-            while True:
-                if abort_all in ('y', 'yes'):
-                    sys.exit(_graceful_exit(
-                        '''INFO: All successive scans are aborted'''))
-                elif abort_all in ('n', 'no'):
-                    print(
-                        '''INFO: Current scan is aborted and successive ones are kept''')
-                    RE_obj.abort()
-                else:
-                    print('please reenter your input')
-        elif usr_input in 'stop()':
-            RE_obj.stop()
-        else:
-            print('please renter your input')

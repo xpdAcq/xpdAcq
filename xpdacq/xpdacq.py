@@ -17,7 +17,6 @@ import os
 import uuid
 import time
 import yaml
-from itertools import count
 
 import bluesky.plans as bp
 from bluesky import RunEngine
@@ -26,8 +25,7 @@ from bluesky.suspenders import SuspendFloor
 
 from xpdacq.glbl import glbl
 from xpdacq.xpdacq_conf import xpd_device
-from xpdacq.yamldict import YamlDict, YamlChainMap
-from xpdacq.beamtime import *
+from xpdacq.beamtime import ScanPlan
 
 from xpdan.tools import compress_mask
 
