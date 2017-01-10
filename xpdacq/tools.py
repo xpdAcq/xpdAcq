@@ -1,4 +1,4 @@
-#module to store tools which use standard libraries only
+"""module to store tools which use standard libraries only"""
 #!/usr/bin/env python
 ##############################################################################
 #
@@ -20,7 +20,11 @@ from time import strftime
 from IPython import get_ipython
 
 class xpdAcqException(Exception):
-    """customized class for xpdAcq-related exception"""
+
+    """
+    customized class for xpdAcq-related exception
+    """
+
     pass
 
 

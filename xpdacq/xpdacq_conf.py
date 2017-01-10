@@ -1,4 +1,4 @@
-#module for configuring xpdacq
+"""main module of configuring xpdacq"""
 #!/usr/bin/env python
 ##############################################################################
 #
@@ -156,7 +156,6 @@ glbl_dict = dict(is_simulation=simulation,
 
 def configure_frame_acq_time(new_frame_acq_time):
     """function to configure frame acquire time of area detector"""
-
     area_det = xpd_device['area_det']
     # stop acquisition
     area_det.cam.acquire.put(0)
@@ -204,11 +203,12 @@ def _set_glbl(glbl_obj, reload_dict):
 
 
 class GlblYamlDict(YamlDict):
+
     """
     class holds global options of xpdAcq.
 
-    It automatically updates contents of local yaml file when its
-    contents are changed, and for back-support, it issues a
+    It automatically updates the contents of local yaml file when the
+    contents of class are changed, and for back-support, it issues a
     Deprecationwarning when user tries to set attributes
 
     Parameters:
@@ -219,6 +219,7 @@ class GlblYamlDict(YamlDict):
     kwargs :
         keyword arguments for global options
     """
+
     # required attributes for yaml
     _VALID_ATTRS = ['_name', '_filepath', 'filepath', '_referenced_by']
 

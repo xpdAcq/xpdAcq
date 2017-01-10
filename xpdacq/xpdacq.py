@@ -17,6 +17,7 @@ import os
 import uuid
 import time
 import yaml
+import numpy as np
 
 import bluesky.plans as bp
 from bluesky import RunEngine
@@ -145,11 +146,10 @@ def periodic_dark(plan):
 
 
 def _validate_dark(expire_time=None):
-    """ find appropriate dark frame uid stored in dark_dict_list
+    """find appropriate dark frame uid stored in dark_dict_list
 
     element in dark_scan_dict is expected to be a dict with following
     keys: 'exposure', 'uid' and 'timestamp'
-
     """
     if expire_time is None:
         expire_time = glbl['dk_window']
@@ -184,7 +184,7 @@ def _validate_dark(expire_time=None):
 
 
 def _auto_load_calibration_file():
-    """ function to load the most recent calibration file in config_base
+    """function to load the most recent calibration file in config_base
 
     Returns
     -------

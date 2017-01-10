@@ -22,7 +22,7 @@ from IPython import get_ipython
 
 from .beamtime import *
 from .tools import _graceful_exit
-from .xpdacq_conf import glbl_dict, GlblYamlDict
+from .xpdacq_conf import glbl_dict
 
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime
