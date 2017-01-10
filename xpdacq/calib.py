@@ -16,7 +16,7 @@ from .glbl import glbl
 from .beamtime import ScanPlan, Sample, ct
 from xpdan.tools import mask_img, compress_mask
 
-from pyFAI.gui_utils import update_fig
+from pyFAI.gui.utils import update_fig
 from pyFAI.detectors import Perkin, Detector
 from pyFAI.calibration import Calibration, PeakPicker
 from pyFAI.calibrant import Calibrant
