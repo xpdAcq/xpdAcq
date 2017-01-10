@@ -20,15 +20,17 @@ import shutil
 from time import strftime
 from IPython import get_ipython
 
-
 from .glbl import glbl, glbl_filepath
 from .beamtime import *
 from .utils import _graceful_exit
-from .simulation import db, pe1c, shctl1, cs700
+
+if glbl._is_simulation:
+    from .simulation import db, pe1c, shctl1, cs700
 
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime
 EXPO_LIST = [5, 0.1, 1, 10, 30, 60]
+
 
 def _start_beamtime(PI_last, saf_num, experimenters=[],
                     wavelength=None):
@@ -133,7 +135,7 @@ def _load_glbl(glbl_obj, filepath=None):
 
 
 def _configure_devices(glbl_obj, *, area_det=pe1c, shutter=shctl1,
-                      temp_controller=cs700, db=db, **kwargs):
+                       temp_controller=cs700, db=db, **kwargs):
     """function to configure devices used in glbl class
 
     function takes simulated objects by default and it's overwritten at
