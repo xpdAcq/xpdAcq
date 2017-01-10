@@ -9,7 +9,7 @@ from IPython import get_ipython
 from .glbl import glbl, glbl_filepath
 from .beamtime import *
 from .utils import _graceful_exit
-from .simulation import db, pe1c, shctl1, cs700
+#from .simulation import db, pe1c, shctl1, cs700
 
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime
@@ -115,8 +115,8 @@ def _load_glbl(glbl_obj, filepath=None):
             setattr(glbl_obj, key, val)
 
 
-def _configure_devices(glbl_obj, *, area_det=pe1c, shutter=shctl1,
-                      temp_controller=cs700, db=db, **kwargs):
+def _configure_devices(glbl_obj, *, area_det=None, shutter=None,
+                      temp_controller=None, db=None, **kwargs):
     """function to configure devices used in glbl class
 
     function takes simulated objects by default and it's overwritten at
