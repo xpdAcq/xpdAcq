@@ -1,7 +1,9 @@
 import os
 import yaml
 import shutil
+import warnings
 import unittest
+from pkg_resources import resource_filename as rs_fn
 
 from xpdacq.glbl import glbl
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
@@ -24,6 +26,7 @@ class ImportSamplTest(unittest.TestCase):
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),
                               ('Terban ',' Max',2)]
+        self.pkg_rs = rs_fn('xpdacq', 'examples/')
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
 
@@ -51,7 +54,7 @@ class ImportSamplTest(unittest.TestCase):
                           lambda: _import_sample_info(bt=self.bt))
         # copy spreadsheet
         xlf = '300000_sample.xlsx'
-        src = os.path.join(os.path.dirname(__file__), xlf)
+        src = os.path.join(self.pkg_rs, xlf)
         shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
 
         # expect to pass with explicit argument
@@ -62,7 +65,7 @@ class ImportSamplTest(unittest.TestCase):
             self.assertEqual(sample.maps[1], self.bt)
 
         # expect ValueError with inconsistent SAF_num between bt and input
-        self.bt['bt_safN'] = 300179
+        self.bt['bt_safN'] = str(300179)
         self.assertTrue(os.path.isfile(os.path.join(glbl.import_dir,
                                                     xlf)))
         self.assertRaises(ValueError,
@@ -71,3 +74,16 @@ class ImportSamplTest(unittest.TestCase):
         # expct TypeError with incorrect beamtime
         self.assertRaises(TypeError, lambda:
                           _import_sample_info(bt=set()))
+
+        # test warnings when bkgd_sample_name doesn't appear as one of
+        # the sample names
+        self.bt['bt_safN'] = str(300000)
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            # Trigger a warning.
+            _import_sample_info(300000, self.bt)
+            # Verify number of warnings
+            assert len(w) == 4
+            for el in w:
+                assert issubclass(el.category, UserWarning)

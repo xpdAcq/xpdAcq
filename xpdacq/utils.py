@@ -29,7 +29,7 @@ import pandas as pd
 
 from .glbl import glbl
 from .beamtime import Beamtime, Sample, ScanPlan
-
+from .tools import validate_dict_key
 
 def _check_obj(obj_name, error_msg=None):
     """ function to check if an object exists in current namespace
@@ -397,8 +397,10 @@ class ExceltoYaml:
                               "defined in spreadsheet.\n"
                               "This will degrade the workflow of "
                               "auto-reduction. It is recommended to"
-                              "correctly set it".format(bkgd_name,
-                                                        sample_name),
+                              "enter it correctly\n"
+                              "(please ignore if this Sample is "
+                              "intentionally created as background"
+                              .format(bkgd_name,sample_name),
                               UserWarning)
             Sample(bt, d)
         print("*** End of import Sample object ***")
@@ -489,7 +491,7 @@ class ExceltoYaml:
         phase_dict : dict
             a dictionary contains relative ratio of phases.
         composition_str : str
-            a string with the format PDF transfomation software 
+            a string with the format PDF transfomation software
             takes. default is pdfgetx
 
         Examples
@@ -511,42 +513,66 @@ class ExceltoYaml:
         compound_meta = phase_str.split(',')
         # figure out ratio between phases
         for el in compound_meta:
-            # parse comma separated logic
-            if len(el.split(':')) == 1:
-                com = el.split(':').pop()
-                amount = '1'  # default set to 1
+            el = el.strip()
+            # there is no ":" in the string            
+            if ':' not in el:
+                # take whatever alpha numeric string before symbol
+                # to be the chemical element
+                symbl = [char for char in el if not char.isalnum()]
+                if symbl:
+                    # take the first symbol
+                    symbl_ind = el.find(symbl[0])
+                    com = el[:symbl_ind]
+                else:
+                    # simply take whole string
+                    com = el
+                amount = 1.0
             else:
-                com, amount = el.split(':')  # expect [<com>, <amount>]
-                amount = amount.replace('%','')
+                meta = el.split(':')
+                # there is a ":" but nothing follows
+                if len(meta[1])==0:
+                    com = meta[0]
+                    amount = 1.0
+                # presumably valid input
+                else:
+                    com, amount = meta
+            # construct phase dict
+            # special case: mapping 
             if com in self.HIGH_D_MD_MAP_KEYWORD:
-                print("INFO: you assignined cutomized mapping {} for"
-                      " high dimensional sample".format(amount))
+                print("INFO: you assigned customized mapping {} for"
+                      " high dimensional sample mapping scheme {}"
+                      .format(amount, com))
                 phase_dict.update({com.strip(): amount.strip()})
-            else:
-                phase_dict.update({com.strip(): float(amount.strip())})
-            # parse composition dict, e.g. {'Na':1, 'Cl':1}
-            parsed_tuple = composition_analysis(com.strip())
-            # std ouput: ([element_1, element_2, ...], [sto_1, sto_2,...])
-            for el, sto in zip(parsed_tuple[0], parsed_tuple[1]):
-                composition_dict.update({el:sto})
-        # normalized phase_dict
+                composition_str = 'N/A'
+                composition_dict = {}
+            # normal case, e.g. {'Ni':0.5, 'NaCl':0.5}
+            elif isinstance(amount, str):
+                amount = amount.strip()
+                amount = amount.replace('%', '')
+
+            # construct the not normalized phase dict
+            phase_dict.update({com.strip(): float(amount)})
+
+        # normalize phase ratio for composition dict
         total = sum(phase_dict.values())
         for k, v in phase_dict.items():
             ratio = round(v/total, 2)
             phase_dict[k] = ratio
-            # construct composition_dict
-            smbl, cnt = composition_analysis(k.strip())
-            for i in range(len(smbl)):
-                # element appears in differnt phases, add up
-                if smbl[i] in composition_dict:
-                    val = composition_dict.get(smbl[i])
-                    val += cnt[i] * ratio
-                    composition_dict.update({smbl[i]: val})
+
+        # construct composition_dict
+        for k, v in phase_dict.items():
+            el_list, sto_list = composition_analysis(k.strip())
+            for el, sto in zip(el_list, sto_list):
+                # element appears in different phases, adds up
+                if el in composition_dict:
+                    val = composition_dict.get(el)
+                    val += sto * ratio
+                    composition_dict.update({el: val})
                 else:
                     # otherwise, just update it
-                    composition_dict.update({smbl[i]:
-                                             cnt[i] * ratio})
-        # construct composition_str
+                    composition_dict.update({el: sto * ratio})
+
+        # finally, construct composition_str
         for k,v in sorted(composition_dict.items()):
             composition_str += str(k)+str(v)
 
@@ -555,7 +581,7 @@ class ExceltoYaml:
 excel_to_yaml = ExceltoYaml(glbl.import_dir)
 
 
-def import_sample_info(saf_num=None, bt=None):
+def import_sample_info(saf_num=None, bt=None, validate_only=False):
     """ import sample metadata based on a spreadsheet
 
     this function expects a pre-populated '<SAF_number>_sample.xls' file
@@ -565,10 +591,17 @@ def import_sample_info(saf_num=None, bt=None):
 
     Parameters
     ----------
-    saf_num : int
-        Safety Approval Form number of beamtime.
-    bt : xpdacq.beamtime.Beamtime
-        beamtime object that is going to be linked with these samples
+    saf_num : int, optional
+        Safety Approval Form number of beamtime. default is read from
+        current Beamtime object.
+    bt : xpdacq.beamtime.Beamtime, optional
+        beamtime object that is going to be linked with these samples.
+        default is the Beamtime object in current ipython session.
+    validate_only : bool, optional
+        option of validating metadata entered in spreadsheet. if
+        True, program will go through entire metadata and return
+        keys with invalid character but not create Sample objects.
+        default to False.
     """
 
     if bt is None:
@@ -585,10 +618,11 @@ def import_sample_info(saf_num=None, bt=None):
         bt = ips.ns_table['user_global']['bt']
 
     # pass to core function
-    _import_sample_info(saf_num=saf_num, bt=bt)
+    _import_sample_info(saf_num=saf_num, bt=bt,
+                        validate_only=validate_only)
 
 
-def _import_sample_info(saf_num=None, bt=None):
+def _import_sample_info(saf_num=None, bt=None, validate_only=False):
     """ core function to import sample metadata based on a spreadsheet
 
     this function expects a pre-populated '<SAF_number>_sample.xlxs' file
@@ -598,10 +632,17 @@ def _import_sample_info(saf_num=None, bt=None):
 
     Parameters
     ----------
-    saf_num : int
-        Safety Approval Form number of beamtime.
-    bt : xpdacq.beamtime.Beamtime
-        beamtime object that is going to be linked with these samples
+    saf_num : int, optional
+        Safety Approval Form number of beamtime. default is read from
+        current Beamtime object.
+    bt : xpdacq.beamtime.Beamtime, optional
+        beamtime object that is going to be linked with these samples.
+        default is the Beamtime object in current ipython session.
+    validate_only : bool, optional
+        option of validating metadata entered in spreadsheet. if
+        True, program will go through entire metadata and return
+        keys with invalid character but not create Sample objects.
+        default to False.
     """
 
     # at core function level, bt should strictly be Beamtime,
@@ -640,8 +681,17 @@ def _import_sample_info(saf_num=None, bt=None):
     # logic: only update Sample objects that are currently in bt.list
     sp_ref = [el for el in bt._referenced_by if isinstance(el, ScanPlan)]
     bt._referenced_by = sp_ref
-    print("USING SAF_NUM = {}".format(saf_num))
+    excel_to_yaml.src_dir = glbl.import_dir
     excel_to_yaml.load(saf_num)
     excel_to_yaml.parse_sample_md()
-    excel_to_yaml.create_yaml(bt)
-    return excel_to_yaml
+    if validate_only:
+        for md_dict in excel_to_yaml.parsed_sa_md_list:
+            validate_dict_key(md_dict, '.', ',')
+        # no invalid keys were found
+        print("INFO: all metadata entered are clean and good to go")
+        print("INFO: please set 'validate_only=False' and "
+              "run this commend again to create Sample objects")
+        return
+    else:
+        excel_to_yaml.create_yaml(bt)
+        return excel_to_yaml
