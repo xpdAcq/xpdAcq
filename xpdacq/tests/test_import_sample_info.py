@@ -4,7 +4,6 @@ import shutil
 import warnings
 import unittest
 from pkg_resources import resource_filename as rs_fn
-import warnings
 
 from xpdacq.glbl import glbl
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
