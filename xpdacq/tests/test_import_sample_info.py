@@ -102,8 +102,10 @@ class ImportSamplTest(unittest.TestCase):
             warnings.simplefilter("always")
             # Trigger
             _import_sample_info(999999, self.bt)
+            for el in w:
+                print(el.message)
             # Verify
-            assert len(w) == 2  # 2 pre-defined errors
+            assert len(w) == 2+4  # 2 from "." in key and 4 from background
             for warning in w:
                 assert issubclass(warning.category, UserWarning)
         # error when validate the md

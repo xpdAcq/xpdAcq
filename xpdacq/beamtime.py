@@ -521,7 +521,7 @@ class Sample(ValidatedDictLike, YamlChainMap):
     Please refer to http://xpdacq.github.io for more examples.
     """
 
-    _REQUIRED_FIELDS = ['sample_name', 'sample_composition']
+    _REQUIRED_FIELDS = ['sample_name']
 
     def __init__(self, beamtime, sample_md, **kwargs):
         regularize_dict_key(sample_md, '.', ',')
