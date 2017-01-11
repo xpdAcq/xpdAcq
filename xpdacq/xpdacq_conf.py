@@ -55,7 +55,7 @@ GLBL_YAML_NAME = 'glbl.yml'
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()
-if hostname not in BEAMLINE_HOST_NAME:
+if hostname in BEAMLINE_HOST_NAME:
     simulation = False
 else:
     simulation = True
