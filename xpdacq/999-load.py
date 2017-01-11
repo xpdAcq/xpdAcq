@@ -28,8 +28,8 @@ reload_glbl_dict = _reload_glbl()
 from xpdacq.glbl import glbl
 
 # reload beamtime
-from xpdacq.beamtimeSetup import (start_xpdacq, _reload_glbl,
-                                  _start_beamtime, _end_beamtime)
+from xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
+                                  _end_beamtime)
 bt = start_xpdacq()
 if bt is not None:
     print("INFO: Reload beamtime objects:\n{}\n".format(bt))
@@ -53,8 +53,8 @@ xrun.subscribe('all', db.mds.insert)
 if bt:
     xrun.beamtime = bt
 
-HOME_DIR = glbl_dict['home']
-BASE_DIR = glbl_dict['base']
+HOME_DIR = glbl['home']
+BASE_DIR = glbl['base']
 
 print('INFO: Initializing the XPD data acquisition environment\n')
 if os.path.isdir(HOME_DIR):
@@ -62,7 +62,7 @@ if os.path.isdir(HOME_DIR):
 else:
     os.chdir(BASE_DIR)
 
-#from xpdacq.calib import *
+from xpdacq.calib import *
 
 # analysis functions, only at beamline
 #from xpdan.data_reduction import *
