@@ -156,7 +156,7 @@ glbl_dict = dict(is_simulation=simulation,
 
 def configure_frame_acq_time(new_frame_acq_time):
     """function to configure frame acquire time of area detector"""
-    area_det = xpd_device['area_det']
+    area_det = xpd_configuration['area_det']
     # stop acquisition
     area_det.cam.acquire.put(0)
     time.sleep(1)
