@@ -11,8 +11,7 @@ the information :ref:`here <usb_experiment>` and :ref:`here <usb_where>` , respe
 Firstly, what is a scanplan?  A scanplan is a grouped set of detector exposures.  The set may
 contain just one exposure (we call that a count scan, ``'ct'`` ).  Or it may be a series of exposures
 taken one after the other, possibly with a delay between.  We
-call that a time-series (or ``'tseries'`` ).  Another popular one that is supported is the
-a temperature series, or temperature ramp, ``'Tramp'``.  More are also on the way, but
+call that a time-series (or ``'tseries'`` ).  We also support two kinds of temperature related scanplans, which are temperature ramp, ``'Tramp'`` and temperature list, ``Tlist``. More are also on the way, but
 these simple scanplans may also be combined together in scripts, giving the user significant
 control over how to construct their experiment.
 
@@ -47,19 +46,21 @@ Here are some examples of valid count-type ScanPlan definitions:
 
 A few things to note:
   * First argument is always ``bt``, the ``Beamtime`` object.
-  * Because ``count`` type ``ScanPlans``, the second argument is always ``'ct'``.
+  * The second argument is always the scanplan. In the example above, we
+    are using *count*, so we use ``ct`` as the second argument.
   * The scan parameter is fed in after scan type, starting from the third positional argument.
 
 Types of ScanPlan available in current version:
-  * ``ct`` just exposes the the detector for a number of seconds. e.g.,  ``ScanPlan(bt, ct, 17.5)``
+  * ``ct`` just exposes the detector for a number of seconds. e.g.,  ``ScanPlan(bt, ct, 17.5)``
   * ``tseries`` executes a series of ``num`` counts of exposure time ``exposure`` seconds with  a delay of ``delay`` seconds between them.  e.g., ``ScanPlan(bt, tseries, 1, 59, 50)`` will measure 50 scans of 1 second with a delay of 59 seconds in between each of them.
   * ``Tramp`` executes a temperature ramp from ``'startingT'`` to ``'endingT'`` in temperature steps of ``Tstep`` with exposure time of ``exposure``.  e.g., ``ScanPlan(bt, Tramp, 1, 200, 500, 5)`` will automatically change the temperature,
     starting at 200 K and ending at 500 K, measuring a scan of 1 s at every 5 K step. The temperature controller will hold at each temperature until the temperature stabilizes before starting the measurement.
-  * ``Tlist`` expose the detector for a given exposure time ``exposure``
-    in seconds at each of temperature from user-defined temperature list
-    ``T_list``. e.g., ``ScanPlan(bt, Tlist, 20, [250, 180, 200, 230])``
+  * ``Tlist`` exposes the detector for a given exposure time ``exposure``
+    in seconds at each temperature from a user-defined temperature
+    list. For example, ``ScanPlan(bt, Tlist, 20, [250, 180, 200, 230])``
     will drive the temperature controller to 250K, 180K, 200K and 230K
-    and expose the detector for 20 seconds at each of the temperatures.
+    and expose the detector for 20 seconds after the temperature
+    controller equilibrates at each of the temperatures.
 
 Summary table on ScanPlan:
 """""""""""""""""""""""""""
