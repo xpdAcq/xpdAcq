@@ -58,7 +58,8 @@ def _timestampstr(timestamp):
     return timestring
 
 
-def run_calibration(exposure=5, calibrant=None, wavelength=None,
+def run_calibration(exposure=5, dark_sub_bool=True,
+                    calibrant=None, wavelength=None,
                     detector=None, *, RE_instance=None,
                     calib_collection_uid=None, **kwargs):
 
@@ -95,18 +96,16 @@ def run_calibration(exposure=5, calibrant=None, wavelength=None,
         x-ray wavelength in angstrom. default to value stored in
         existing Beamtime object
     detector : str or pyFAI.detector.Detector instance, optional.
-        detector used to collect data. input could be instance of
-        Detector or one of pre-defined detector names. default to
-        'perkin_elmer' detector. please refer to pyFAI full
-        documentation for full list of pre-defined detectors
+        detector used to collect data. default value is 'perkin-elmer'.
+        other allowed values are in pyFAI documentation.
     RE_instance : bluesky.run_engine.RunEngine instance, optional
-        instance of run engine being called in order to collect image.
-        DO NOT change it unless you are confident. default to current
-        run engine instance (xrun)
+        instance of run engine. Default is xrun. Do not change under
+        normal circumstances.
     calib_collection_uid : str, optional
-        uid for this calibration run. default is to generate a new uid.
-        Only set to customized uid if you are certain to associate this
-        calibration run with other calibration runs.
+        uid for this calibration run. By default a new uid is generated.
+        Do not change under normal circumstances. override default when
+        you want to associate this new calibration with an existing
+        calibration-uid in previously collected run headers.
     kwargs:
         Additional keyword argument for calibration. please refer to
         pyFAI documentation for all options.
@@ -126,8 +125,8 @@ def run_calibration(exposure=5, calibrant=None, wavelength=None,
         _check_obj(_REQUIRED_OBJ_LIST)
         ips = get_ipython()
         xrun = ips.ns_table['user_global']['xrun']
-    img = _collect_calib_img(exposure, c, xrun,
-                             calib_collection_uid)
+    img = _collect_calib_img(exposure, dark_sub_bool,
+                             c, xrun, calib_collection_uid)
 
     # pyFAI calibration
     calib_c, timestr = _calibration(img, c, **kwargs)
@@ -158,8 +157,8 @@ def _configure_calib_instance(calibrant, detector, wavelength):
     return c
 
 
-def _collect_calib_img(exposure, calibration_instance, RE_instance,
-                       calib_collection_uid):
+def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
+                       RE_instance, calib_collection_uid):
     """helper function to collect calibration image and return it"""
     c = calibration_instance  # shorthand notation
     calibrant_name = c.calibrant.__repr__().split(' ')[0]
@@ -177,7 +176,8 @@ def _collect_calib_img(exposure, calibration_instance, RE_instance,
                                              glbl.det_image_field)).squeeze()
     img = np.asarray(glbl.db.get_images(light_header,
                                         glbl.det_image_field)).squeeze()
-    img -= dark_img
+    if dark_sub_bool:
+        img -= dark_img
 
     return img
 
@@ -212,10 +212,8 @@ def _save_and_attach_calib_param(calib_c, timestr,
           "saved inside {}. this set of parameters will be injected "
           "as metadata to subsequent scans until you perform this "
           "process again".format(yaml_name))
-    print("INFO: you may also do:\n"
-          ">>> save_last_tiff()\n"
-          "to save your calibration image")
-
+    print("INFO: To save your calibration image as a tiff file run\n"
+          "save_last_tiff()\nnow.")
     return
 
 def _calibration(img, calibration, **kwargs):
