@@ -397,8 +397,6 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self._referenced_by = []
         # used by YamlDict when reload
         self.setdefault('bt_uid', new_short_uid())
-        self.setdefault('_sample_order', {})
-        self.setdefault('_scanplan_order', {})
 
     @property
     def wavelength(self):
