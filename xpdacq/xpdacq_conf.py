@@ -40,7 +40,7 @@ def configure_device(*, area_det, shutter,
 # better to get this from a config file in the fullness of time
 HOME_DIR_NAME = 'xpdUser'
 BLCONFIG_DIR_NAME = 'xpdConfig'
-BEAMLINE_HOST_NAME = 'xf28id1-ws2'
+BEAMLINE_HOST_NAME = ['xf28id1-ws2', 'xf28id1-ws3']
 ARCHIVE_BASE_DIR_NAME = 'pe1_data/.userBeamtimeArchive'
 USER_BACKUP_DIR_NAME = strftime('%Y')
 DARK_WINDOW = 3000  # default value, in terms of minute
@@ -55,7 +55,7 @@ GLBL_YAML_NAME = 'glbl.yml'
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()
-if hostname == BEAMLINE_HOST_NAME:
+if hostname not in BEAMLINE_HOST_NAME:
     simulation = False
 else:
     simulation = True
