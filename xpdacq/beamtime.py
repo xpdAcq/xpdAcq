@@ -391,8 +391,8 @@ class Beamtime(ValidatedDictLike, YamlDict):
                          bt_experimenters=experimenters,
                          bt_wavelength=wavelength, **kwargs)
         self._wavelength = wavelength
-        self.scanplans = SliceableOrderedDict()
-        self.samples = SliceableOrderedDict()
+        self.scanplans = MDOrderedDict()
+        self.samples = MDOrderedDict()
         self._referenced_by = []
         # used by YamlDict when reload
         self.setdefault('bt_uid', new_short_uid())
