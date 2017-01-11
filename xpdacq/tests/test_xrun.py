@@ -57,10 +57,10 @@ class xrunTest(unittest.TestCase):
         dark_dict_list = []
         now = time.time()
         # configure area detector
-        xpd_device['area_det'].cam.acquire_time.put(0.1)
-        xpd_device['area_det'].images_per_set.put(5)
-        acq_time = xpd_device['area_det'].cam.acquire_time.get()
-        num_frame = xpd_device['area_det'].images_per_set.get()
+        xpd_configuration['area_det'].cam.acquire_time.put(0.1)
+        xpd_configuration['area_det'].images_per_set.put(5)
+        acq_time = xpd_configuration['area_det'].cam.acquire_time.get()
+        num_frame = xpd_configuration['area_det'].images_per_set.get()
         light_cnt_time = acq_time*num_frame
         # case1: adjust exposure time
         for i in range(5):

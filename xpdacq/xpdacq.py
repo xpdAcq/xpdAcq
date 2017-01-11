@@ -25,7 +25,7 @@ from bluesky.utils import normalize_subs_input
 from bluesky.suspenders import SuspendFloor
 
 from xpdacq.glbl import glbl
-from xpdacq.xpdacq_conf import xpd_device
+from xpdacq.xpdacq_conf import xpd_configuration
 from xpdacq.beamtime import ScanPlan
 
 from xpdan.tools import compress_mask
@@ -63,7 +63,7 @@ def _update_dark_dict_list(name, doc):
     # always grab from glbl state
     dark_dict_list = list(glbl['_dark_dict_list'])
     # obtain light count time that is already set to area_det
-    area_det = xpd_device['area_det']
+    area_det = xpd_configuration['area_det']
     acq_time = area_det.cam.acquire_time.get()
     num_frame = area_det.images_per_set.get()
     light_cnt_time = acq_time * num_frame
@@ -81,11 +81,11 @@ def take_dark():
     """a plan for taking a single dark frame"""
     print('INFO: closing shutter...')
     # 0, means close, 60 means open at XPD, Oct.4, 2016
-    yield from bp.abs_set(xpd_device['shutter'], 0, wait=True)
+    yield from bp.abs_set(xpd_configuration['shutter'], 0, wait=True)
     print('INFO: taking dark frame....')
     # upto this stage, area_det has been configured to so exposure time is
     # correct
-    area_det = xpd_device['area_det']
+    area_det = xpd_configuration['area_det']
     acq_time = area_det.cam.acquire_time.get()
     num_frame = area_det.images_per_set.get()
     computed_exposure = acq_time * num_frame
@@ -115,8 +115,8 @@ def periodic_dark(plan):
         now = time.time()
         nonlocal need_dark
         qualified_dark_uid = _validate_dark(expire_time=glbl['dk_window'])
-        area_det = xpd_device['area_det']
-        shutter = xpd_device['shutter']
+        area_det = xpd_configuration['area_det']
+        shutter = xpd_configuration['shutter']
         # FIXME: should we do "or" or "and"?
         if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
@@ -158,7 +158,7 @@ def _validate_dark(expire_time=None):
     if not dark_dict_list:
         return None
     # obtain light count time that is already set to pe1c
-    area_det = xpd_device['area_det']
+    area_det = xpd_configuration['area_det']
     acq_time = area_det.cam.acquire_time.get()
     num_frame = area_det.images_per_set.get()
     light_cnt_time = acq_time * num_frame
@@ -352,7 +352,7 @@ class CustomizedRunEngine(RunEngine):
             print("WARNING: there is no wavelength information in current"
                   "beamtime object, scan will keep going....")
         metadata_kw.update(sample)
-        sh = xpd_device['shutter']
+        sh = xpd_configuration['shutter']
 
         if glbl['shutter_control']:
             # Alter the plan to incorporate dark frames.

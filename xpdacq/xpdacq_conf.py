@@ -24,17 +24,17 @@ from .yamldict import YamlDict
 from .tools import xpdAcqException
 
 # special function and dict to store all necessary objects
-xpd_device = {}
+xpd_configuration = {}
 def configure_device(*, area_det, shutter,
                      temp_controller, db, **kwargs):
     """function to set up required device/objects for xpdacq"""
     # specifically assign minimum requirements
-    xpd_device['area_det'] = area_det
-    xpd_device['shutter'] = shutter
-    xpd_device['temp_controller'] = temp_controller
-    xpd_device['db'] = db
+    xpd_configuration['area_det'] = area_det
+    xpd_configuration['shutter'] = shutter
+    xpd_configuration['temp_controller'] = temp_controller
+    xpd_configuration['db'] = db
     # extra kwargs
-    xpd_device.update(**kwargs)
+    xpd_configuration.update(**kwargs)
 
 
 # better to get this from a config file in the fullness of time

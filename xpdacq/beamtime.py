@@ -24,7 +24,7 @@ import bluesky.plans as bp
 from bluesky.callbacks import LiveTable
 
 from .glbl import glbl
-from .xpdacq_conf import xpd_device
+from .xpdacq_conf import xpd_configuration
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 
@@ -73,13 +73,13 @@ def _summarize(plan):
 def _configure_area_det(exposure):
     """private function to configure pe1c with continuous acquisition mode"""
     # cs studio configuration doesn't propagate to python level
-    xpd_device['area_det'].cam.acquire_time.put(glbl['frame_acq_time'])
+    xpd_configuration['area_det'].cam.acquire_time.put(glbl['frame_acq_time'])
     # compute number of frames
-    acq_time = xpd_device['area_det'].cam.acquire_time.get()
+    acq_time = xpd_configuration['area_det'].cam.acquire_time.get()
     _check_mini_expo(exposure, acq_time)
     num_frame = np.ceil(exposure / acq_time)
     computed_exposure = num_frame * acq_time
-    xpd_device['area_det'].images_per_set.put(num_frame)
+    xpd_configuration['area_det'].images_per_set.put(num_frame)
     # print exposure time
     print("INFO: requested exposure time = {} - > computed exposure time"
           "= {}".format(exposure, computed_exposure))
@@ -134,7 +134,7 @@ def ct(dets, exposure, *, md=None):
         md = {}
     # setting up area_detector
     (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
-    area_det = xpd_device['area_det']
+    area_det = xpd_configuration['area_det']
     # update md
     _md = ChainMap(md, {'sp_time_per_frame': acq_time,
                         'sp_num_frames': num_frame,
@@ -183,8 +183,8 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
         md = {}
     # setting up area_detector
     (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
-    area_det = xpd_device['area_det']
-    temp_controller = xpd_device['temp_controller']
+    area_det = xpd_configuration['area_det']
+    temp_controller = xpd_configuration['temp_controller']
     # compute Nsteps
     (Nsteps, computed_step_size) = _nstep(Tstart, Tstop, Tstep)
     # update md
@@ -231,8 +231,8 @@ def Tlist(dets, exposure, T_list):
     configured in global state. To find out which these are, please
     using following commands:
 
-        >>> xpd_device['area_det']
-        >>> xpd_device['temp_controller']
+        >>> xpd_configuration['area_det']
+        >>> xpd_configuration['temp_controller']
 
     To interrogate which devices are currently in use.
     """
@@ -240,8 +240,8 @@ def Tlist(dets, exposure, T_list):
     pe1c, = dets
     # setting up area_detector and temp_controller
     (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
-    area_det = xpd_device['area_det']
-    T_controller = xpd_device['temp_controller']
+    area_det = xpd_configuration['area_det']
+    T_controller = xpd_configuration['temp_controller']
     xpdacq_md = {'sp_time_per_frame': acq_time,
                  'sp_num_frames': num_frame,
                  'sp_requested_exposure': exposure,
@@ -284,7 +284,7 @@ def tseries(dets, exposure, delay, num, *, md=None):
     if md is None:
         md = {}
     # setting up area_detector
-    area_det = xpd_device['area_det']
+    area_det = xpd_configuration['area_det']
     (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
     real_delay = max(0, delay - computed_exposure)
     period = max(computed_exposure, real_delay + computed_exposure)
@@ -640,7 +640,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
 
     def factory(self):
         # grab the area detector used in current configuration
-        pe1c = xpd_device['area_det']
+        pe1c = xpd_configuration['area_det']
         # pass parameter to plan_func
         plan = self.plan_func([pe1c], *self['sp_args'], **self['sp_kwargs'])
         return plan
