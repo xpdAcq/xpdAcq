@@ -40,7 +40,7 @@ where the <saf_number> must match that of the current beamtime.  If the user did
 
 .. code-block:: python
 
-  import_sample_info()
+  load_sample_info()
 
 .. Note::
 
