@@ -78,40 +78,11 @@ class ImportSamplTest(unittest.TestCase):
         # expct TypeError with incorrect beamtime
         self.assertRaises(TypeError, lambda:
                           _import_sample_info(bt=set()))
-
-        # test warnings when bkgd_sample_name doesn't appear as one of
-        # the sample names
-        self.bt['bt_safN'] = str(300000)
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            # Trigger a warning.
-            _import_sample_info(300000, self.bt)
-            # Verify number of warnings
-            assert len(w) == 1
-            for el in w:
-                assert issubclass(el.category, UserWarning)
-
-        ## test with incorrect spreadsheet ##
-        # mutate beamtime silently
-        self.bt['bt_safN'] = str(999999)
-        # warning when mutate the md
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            # Trigger
-            _import_sample_info(999999, self.bt)
-            for el in w:
-                print(el.message)
-            # Verify
-            assert len(w) == 1  # 1 from background
-            for warning in w:
-                assert issubclass(warning.category, UserWarning)
         # error when validate the md
+        self.bt['bt_safN'] = str(999999)
         self.assertRaises(RuntimeError,
                           lambda: _import_sample_info(999999, self.bt,
                                                       validate_only=True))
-
         # test get_md_method
         sample_obj_list = [el for el in self.bt.samples.values()]
         for i, el in enumerate(sample_obj_list):
