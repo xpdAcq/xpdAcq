@@ -67,10 +67,13 @@ def validate_dict_key(input_dict, invalid_chr, suggested_chr):
             if isinstance(k, str) and invalid_chr in k:
                 invalid_key_list.append(k)
     if invalid_key_list:
-        raise RuntimeError("Invalid character '{}' is found in following "
-                           "keys = \n{}\n"
-                           "To ensure the best quality of metadata, "
-                           "we suggest you to replace invalid character "
-                           "with `{}` and try again"
-                           .format(invalid_chr, invalid_key_list,
+        raise RuntimeError("Sadly our database can't digest periods in "
+                           "dictionary keys. We have found a number entries"
+                           "in your spreadsheet that will violate this."
+                           "these are listed below:\n{}\n"
+                           "As annoying as this is, we suggest you change "
+                           "the sample name to remove the {} characters,"
+                           " for example, you could replace {} with {} in "
+                           "your spreadsheet."
+                           .format(invalid_key_list, invalid_chr,
                                    suggested_chr))
