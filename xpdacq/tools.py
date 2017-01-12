@@ -30,19 +30,15 @@ def regularize_dict_key(input_dict, target_chr, replace_chr):
     for k, v in input_dict.items():
         if isinstance(v, dict):
             if isinstance(k, str) and target_chr in k:
-                warnings.warn("For the quality of your metadata, "
-                              "replace invalid character '{}' with '{}'"
-                              " in key={}".format(target_chr, replace_chr,
-                                                  k), UserWarning)
+                print("replacing character {} with character {} "
+                      "in dictionary".format(target_chr, replace_chr))
                 clean_k = k.replace(target_chr, replace_chr)
                 input_dict[clean_k] = input_dict.pop(k)
             regularize_dict_key(v, target_chr, replace_chr)
         else:
             if isinstance(k, str) and target_chr in k:
-                warnings.warn("For the quality of your metadata, "
-                              "replace invalid character '{}' with '{}'"
-                              " in key={}".format(target_chr, replace_chr,
-                                                  k), UserWarning)
+                print("replacing character {} with character {} "
+                      "in dictionary".format(target_chr, replace_chr))
                 clean_k = k.replace(target_chr, replace_chr)
                 input_dict[clean_k] = input_dict.pop(k)
 
