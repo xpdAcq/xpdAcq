@@ -23,6 +23,7 @@ import numpy as np
 from IPython import get_ipython
 
 from .glbl import glbl
+from .xpdacq_conf import xpd_configuration
 from .beamtime import Beamtime, ScanPlan, Sample, ct
 from .xpdacq import CustomizedRunEngine
 from xpdan.tools import mask_img, compress_mask
@@ -139,7 +140,7 @@ def run_calibration(exposure=5, dark_sub_bool=True,
 def _configure_calib_instance(calibrant, detector, wavelength):
     """function to configure calibration instance"""
     if wavelength is None:
-        bt_fp = os.path.join(glbl.yaml_dir, 'bt_bt.yml')
+        bt_fp = os.path.join(glbl['yaml_dir'], 'bt_bt.yml')
         if not os.path.isfile(bt_fp):
             raise FileNotFoundError("Can't find your Beamtime yaml file.\n"
                                     "Did you accidentally delete it? "
@@ -169,13 +170,13 @@ def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
     bto = RE_instance.beamtime  # grab beamtime object linked to run_engine
     sample = Sample(bto, calibration_dict)
     uid = RE_instance(sample, ScanPlan(bto, ct, exposure))
-    light_header = glbl.db[uid[-1]]  # last one must be light
+    light_header = xpd_configuration['db'][uid[-1]]  # last one must be light
     dark_uid = light_header.start.get('sc_dk_field_uid')
-    dark_header = glbl.db[dark_uid]
-    dark_img = np.asarray(glbl.db.get_images(dark_header,
-                                             glbl.det_image_field)).squeeze()
-    img = np.asarray(glbl.db.get_images(light_header,
-                                        glbl.det_image_field)).squeeze()
+    dark_header = xpd_configuration['db'][dark_uid]
+    dark_img = np.asarray(xpd_configuration['db'].get_images(dark_header,
+                                      glbl['det_image_field'])).squeeze()
+    img = np.asarray(xpd_configuration['db'].get_images(light_header,
+                                      glbl['det_image_field'])).squeeze()
     if dark_sub_bool:
         img -= dark_img
 
@@ -196,16 +197,16 @@ def _save_and_attach_calib_param(calib_c, timestr,
         uid associated with this calibration
     """
     # save glbl attribute for xpdAcq
-    glbl.calib_config_dict = calib_c.ai.getPyFAI()
-    glbl.calib_config_dict.update(calib_c.ai.getFit2D())
-    glbl.calib_config_dict.update({'file_name':calib_c.basename})
-    glbl.calib_config_dict.update({'time':timestr})
-    glbl.calib_config_dict.update({'calibration_collection_uid':
+    glbl['calib_config_dict'] = calib_c.ai.getPyFAI()
+    glbl['calib_config_dict'].update(calib_c.ai.getFit2D())
+    glbl['calib_config_dict'].update({'file_name':calib_c.basename})
+    glbl['calib_config_dict'].update({'time':timestr})
+    glbl['calib_config_dict'].update({'calibration_collection_uid':
                                    calib_collection_uid})
     # save yaml dict used for xpdAcq
-    yaml_name = glbl.calib_config_name
-    with open(os.path.join(glbl.config_base, yaml_name), 'w') as f:
-        yaml.dump(glbl.calib_config_dict, f)
+    yaml_name = glbl['calib_config_name']
+    with open(os.path.join(glbl['config_base'], yaml_name), 'w') as f:
+        yaml.dump(glbl['calib_config_dict'], f)
 
     print(calib_c.geoRef)
     print("INFO: End of calibration process. Your parameter set will be "
@@ -243,7 +244,7 @@ def _calibration(img, calibration, **kwargs):
     timestr = _timestampstr(time.time())
     f_name  = '_'.join([timestr, 'pyFAI_calib',
                         c.calibrant.__repr__().split(' ')[0]])
-    w_name = os.path.join(glbl.config_base, f_name)  # poni name
+    w_name = os.path.join(glbl['config_base'], f_name)  # poni name
     poni_name = w_name + ".npt"
     c.gui = interactive
     c.basename = w_name
@@ -313,11 +314,11 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
         sample_name = 'mask_target'
 
     if mask_dict is None:
-        mask_dict = glbl.mask_dict
+        mask_dict = glbl['mask_dict']
     print("INFO: use mask options: {}".format(mask_dict))
 
     if calib_dict is None:
-        calib_dict = getattr(glbl, 'calib_config_dict', None)
+        calib_dict = glbl.get('calib_config_dict', None)
         if calib_dict is None:
             print("INFO: there is no glbl calibration dictionary linked\n"
                   "Please do ``run_calibration()`` or provide your own"
@@ -336,24 +337,25 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
                         'mask_collection_uid': mask_collection_uid}
     sample = Sample(bto, mask_builder_dict)
     xrun_uid = xrun(sample, ScanPlan(bto, ct, exposure))
-    light_header = glbl.db[-1]
+    light_header = xpd_configuration['db'][-1]
     if dark_sub_bool:
         dark_uid = light_header.start['sc_dk_field_uid']
-        dark_header = glbl.db[dark_uid]
-        dark_img = np.asarray(glbl.db.get_images(dark_header,
-                                glbl.det_image_field)).squeeze()
-    for ev in glbl.db.get_events(light_header, fill=True):
-        img = ev['data'][glbl.det_image_field]
+        dark_header = xpd_configuration['db'][dark_uid]
+        dark_img = np.asarray(xpd_configuration['db'].get_images(dark_header,
+                              glbl['det_image_field'])).squeeze()
+    for ev in xpd_configuration['db'].get_events(light_header, fill=True):
+        img = ev['data'][glbl['det_image_field']]
         if dark_sub_bool:
             img -= dark_img
 
     img /= ai.polarization(img.shape, polarization_factor)
     mask = mask_img(img, ai, **mask_dict)
-    print("INFO: add mask to global state")
-    glbl.mask = mask
+    #FIXME : numpy array can't be yamlize
+    #print("INFO: add mask to global state")
+    #glbl.mask = mask
 
     if save_name is None:
-        save_name = os.path.join(glbl.config_base, glbl.mask_name)
+        save_name = os.path.join(glbl['config_base'], glbl['mask_name'])
     # still save the most recent mask, as we are in file-based
     np.save(save_name, mask)
 
