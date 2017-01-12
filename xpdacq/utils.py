@@ -324,7 +324,7 @@ class ExceltoYaml:
             bkgd_name = d.get('bkgd_sample_name')
             sample_name = d.get('sample_name')
             if bkgd_name not in sample_name_set:
-                no_bkgd_name_list.append(sample_name)
+                no_bkgd_sample_name_list.append(sample_name)
             Sample(bt, d)
         if no_bkgd_sample_name_list:
             warnings.warn("If you want to associate a background sample,"

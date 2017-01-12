@@ -48,7 +48,7 @@ class ImportSamplTest(unittest.TestCase):
                                   wavelength=self.wavelength)
         # expect FileNotFoundError as no spreadsheet
         xlf = '300000_sample.xlsx'
-        self.assertFalse(os.path.isfile(os.path.join(glbl.import_dir,
+        self.assertFalse(os.path.isfile(os.path.join(glbl['import_dir'],
                                                      xlf)))
         self.assertRaises(FileNotFoundError,
                           lambda: _import_sample_info(bt=self.bt))
@@ -88,7 +88,7 @@ class ImportSamplTest(unittest.TestCase):
             # Trigger a warning.
             _import_sample_info(300000, self.bt)
             # Verify number of warnings
-            assert len(w) == 4
+            assert len(w) == 1
             for el in w:
                 assert issubclass(el.category, UserWarning)
 
@@ -104,7 +104,7 @@ class ImportSamplTest(unittest.TestCase):
             for el in w:
                 print(el.message)
             # Verify
-            assert len(w) == 2+4  # 2 from "." in key and 4 from background
+            assert len(w) == 1  # 1 from background
             for warning in w:
                 assert issubclass(warning.category, UserWarning)
         # error when validate the md

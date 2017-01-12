@@ -81,7 +81,7 @@ def validate_dict_key(input_dict, invalid_chr, suggested_chr):
                            " for example, you could replace {} with {} in "
                            "your spreadsheet."
                            .format(invalid_key_list, invalid_chr,
-                                   suggested_chr))
+                                   invalid_chr, suggested_chr))
 
 class xpdAcqException(Exception):
 
