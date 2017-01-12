@@ -73,9 +73,9 @@ def validate_dict_key(input_dict, invalid_chr, suggested_chr):
                 invalid_key_list.append(k)
     if invalid_key_list:
         raise RuntimeError("Sadly our database can't digest periods in "
-                           "dictionary keys. We have found a number entries"
-                           "in your spreadsheet that will violate this."
-                           "these are listed below:\n{}\n"
+                           "dictionary keys. We have found a number of "
+                           "entries in your spreadsheet that will "
+                           "violate this. these are listed below:\n{}\n"
                            "As annoying as this is, we suggest you change "
                            "the sample name to remove the {} characters,"
                            " for example, you could replace {} with {} in "

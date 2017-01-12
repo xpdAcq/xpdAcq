@@ -327,17 +327,16 @@ class ExceltoYaml:
                 no_bkgd_sample_name_list.append(sample_name)
             Sample(bt, d)
         if no_bkgd_sample_name_list:
-            warnings.warn("If you want to associate a background sample,"
-                          " e.g., empty kapton tube, with samples, place the"
-                          " sample-name of the background sample in the"
-                          " column: {}.\n"
-                          "The following samples do not have "
-                          "background_samples associated with them\n"
-                          "(typically background samples won't have "
-                          "associated background samples):\n{}\n"
-                          .format(self._BKGD_SAMPLE_NAME_FIELD,
-                                  no_bkgd_sample_name_list),
-                          UserWarning)
+            print("INFO: If you want to associate a background sample,"
+                  " e.g., empty kapton tube, with samples,\nplace the"
+                  " sample-name of the background sample in the"
+                  " column {}\nof the sample excel spreadsheet.\n"
+                  "The following samples do not have "
+                  "background_samples associated with them\n"
+                  "(typically background samples won't have "
+                  "associated background samples):\n{}\n"
+                  .format(self._BKGD_SAMPLE_NAME_FIELD,
+                          no_bkgd_sample_name_list))
         print("*** End of import Sample object ***")
 
 
