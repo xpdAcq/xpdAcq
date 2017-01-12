@@ -128,10 +128,10 @@ def load_beamtime(directory=None):
         bt = load_yaml(f, known_uids)
 
     # get the most recent order
-    with open(os.path.join(glbl.config_base,
+    with open(os.path.join(glbl_dict['config_base'],
                            '.scanplan_order.yml')) as f:
         scanplan_order = yaml.load(f)
-    with open(os.path.join(glbl.config_base,
+    with open(os.path.join(glbl_dict['config_base'],
                            '.sample_order.yml')) as f:
         sample_order = yaml.load(f)
 

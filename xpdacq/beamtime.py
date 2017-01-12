@@ -431,7 +431,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
         # yaml sync list
         self._referenced_by.append(scanplan)
         # save order
-        with open(os.path.join(glbl.config_base,
+        with open(os.path.join(glbl['config_base'],
                                '.scanplan_order.yml'),'w+') as f:
             scanplan_order = {}
             for i, name in enumerate(self.scanplans.keys()):
@@ -448,7 +448,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
         # yaml sync list
         self._referenced_by.append(sample)
         # save order
-        with open(os.path.join(glbl.config_base,
+        with open(os.path.join(glbl['config_base'],
                                '.sample_order.yml'),'w+') as f:
             sample_order = {}
             for i, name in enumerate(self.samples.keys()):
