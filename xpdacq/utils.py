@@ -252,12 +252,11 @@ def _copy_and_delete(f_name, src_full_path, dst_dir):
 class ExceltoYaml:
     # maintain regularly, aligned with spreadsheet header
     NAME_FIELD = ['Collaborators', 'Sample Maker', 'Lead Experimenter', ]
-    COMMA_SEP_FIELD = ['cif name', 'Tags']
+    COMMA_SEP_FIELD = ['cif name(if exists)', 'User supplied tags']
     PHASE_FIELD = ['Phase Info [required]']
     SAMPLE_NAME_FIELD = ['Sample Name [required]']
-    BKGD_SAMPLE_NAME_FIELD = ['Bkgd Sample Name']
-    GEOMETRY_FIELD = ['Geometry']
-    DICT_LIKE_FIELD = ['database id'] # return a dict
+    BKGD_SAMPLE_NAME_FIELD = ['Sample-name of sample background']
+    DICT_LIKE_FIELD = ['structural database ID for phases'] # return a dict
     # special key for high-dimensional sample phase mapping
     HIGH_D_MD_MAP_KEYWORD = ['gridscan_mappedin']
 
@@ -272,8 +271,6 @@ class ExceltoYaml:
                                        BKGD_SAMPLE_NAME_FIELD))
     _PHASE_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
                             PHASE_FIELD))
-    _GEOMETRY_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
-                               GEOMETRY_FIELD))
     _DICT_LIKE_FIELD = list(map(lambda x: x.lower().replace(' ', '_'),
                                 DICT_LIKE_FIELD))
 
