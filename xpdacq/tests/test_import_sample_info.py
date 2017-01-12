@@ -56,7 +56,7 @@ class ImportSamplTest(unittest.TestCase):
         # expect to pass with explicit argument
         _import_sample_info(300000, self.bt)
         # check imported sample metadata
-        for sample in self.bt.samples:
+        for sample in self.bt.samples.values():
             # Sample is a ChainMap with self.maps[1] == bt
             self.assertEqual(sample.maps[1], self.bt)
 
@@ -69,3 +69,8 @@ class ImportSamplTest(unittest.TestCase):
 
         # expct TypeError with incorrect beamtime
         self.assertRaises(TypeError, lambda: _import_sample_info(bt=set()))
+
+        # test get_md_method
+        sample_obj_list = [el for el in self.bt.samples.values()]
+        for i, el in enumerate(sample_obj_list):
+            self.assertEqual(dict(el), self.bt.samples.get_md(i))

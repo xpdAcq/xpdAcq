@@ -297,7 +297,6 @@ class CustomizedRunEngine(RunEngine):
         self._beamtime = bt_obj
         self.md.update(bt_obj.md)
         print("INFO: beamtime object has been linked\n")
-        # from xpdacq.calib import run_calibration
         if not glbl['is_simulation']:
             pass
             # let user deal with suspender
@@ -322,7 +321,7 @@ class CustomizedRunEngine(RunEngine):
 
         if isinstance(sample, int):
             try:
-                sample = self.beamtime.samples[sample]
+                sample = list(self.beamtime.samples.values())[sample]
             except IndexError:
                 print("WARNING: hmm, there is no sample with index `{}`"
                       ", please do `bt.list()` to check if it exists yet"
@@ -331,7 +330,7 @@ class CustomizedRunEngine(RunEngine):
         # If a plan is given as a string, look in up in the global registry.
         if isinstance(plan, int):
             try:
-                plan = self.beamtime.scanplans[plan]
+                plan = list(self.beamtime.scanplans.values())[plan]
             except IndexError:
                 print("WARNING: hmm, there is no scanplan with index `{}`"
                       ", please do `bt.list()` to check if it exists yet"
