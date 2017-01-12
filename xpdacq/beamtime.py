@@ -340,7 +340,9 @@ def _clean_info(obj):
 
 class MDOrderedDict(OrderedDict):
     def get_md(self, ind):
-        """ special method to get metadata of a objects based on index """
+        """special method to get metadata of sample object based on
+        bt.list index
+        """
         obj_list = list(self.values())
         md_dict = dict(obj_list[ind])
         return md_dict
