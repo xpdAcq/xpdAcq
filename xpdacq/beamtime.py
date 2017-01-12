@@ -17,8 +17,9 @@ import os
 import uuid
 import yaml
 import inspect
-from collections import ChainMap
+from collections import ChainMap, OrderedDict
 
+import bluesky.plans as bp
 import numpy as np
 import bluesky.plans as bp
 from bluesky.callbacks import LiveTable
@@ -337,6 +338,14 @@ def _clean_info(obj):
     """ stringtify and replace space"""
     return str(obj).strip().replace(' ', '_')
 
+class MDOrderedDict(OrderedDict):
+    def get_md(self, ind):
+        """special method to get metadata of sample object based on
+        bt.list index
+        """
+        obj_list = list(self.values())
+        md_dict = dict(obj_list[ind])
+        return md_dict
 
 class Beamtime(ValidatedDictLike, YamlDict):
     """
@@ -384,11 +393,10 @@ class Beamtime(ValidatedDictLike, YamlDict):
                          bt_experimenters=experimenters,
                          bt_wavelength=wavelength, **kwargs)
         self._wavelength = wavelength
-        # self.experiments = []
-        self.scanplans = []
-        self.samples = []
+        self.scanplans = MDOrderedDict()
+        self.samples = MDOrderedDict()
         self._referenced_by = []
-        # used by YamlDict
+        # used by YamlDict when reload
         self.setdefault('bt_uid', new_short_uid())
 
     @property
@@ -401,25 +409,6 @@ class Beamtime(ValidatedDictLike, YamlDict):
     def wavelength(self, val):
         self._wavelength = val
         self.update(bt_wavelength=val)
-
-    def register_scanplan(self, scanplan):
-        # Notify this Beamtime about an ScanPlan that should be re-synced
-        # whenever the contents of the Beamtime are edited.
-        sp_name_list = [el.short_summary() for el in self.scanplans]
-        # manage bt.list
-        if scanplan.short_summary() not in sp_name_list:
-            self.scanplans.append(scanplan)
-        else:
-            old_obj = [obj for obj in self.scanplans if
-                       obj.short_summary() == scanplan.short_summary()].pop()
-            old_obj_ind = self.scanplans.index(old_obj)
-            self.scanplans.remove(old_obj)
-            self.scanplans.insert(old_obj_ind, scanplan)
-        # yaml sync list
-        # simply append object to list to increase speed
-        #self._referenced_by.extend([el for el in self.scanplans if el
-        #                            not in self._referenced_by])
-        self._referenced_by.append(scanplan)
 
     @property
     def md(self):
@@ -436,27 +425,39 @@ class Beamtime(ValidatedDictLike, YamlDict):
         return os.path.join(glbl['yaml_dir'],
                             'bt_bt.yml').format(**self)
 
+    def register_scanplan(self, scanplan):
+        # Notify this Beamtime about an ScanPlan that should be re-synced
+        # whenever the contents of the Beamtime are edited. 
+        scanplan_name = scanplan.short_summary()
+        self.scanplans.update({scanplan_name: scanplan})
+        # yaml sync list
+        self._referenced_by.append(scanplan)
+        # save order
+        with open(os.path.join(glbl['config_base'],
+                               '.scanplan_order.yml'),'w+') as f:
+            scanplan_order = {}
+            for i, name in enumerate(self.scanplans.keys()):
+                scanplan_order.update({i: name+'.yml'})
+            # debug line
+            self._scanplan_order = scanplan_order
+            yaml.dump(scanplan_order, f)
+
     def register_sample(self, sample):
         # Notify this Beamtime about an Sample that should be re-synced
         # whenever the contents of the Beamtime are edited.
-        sa_name_list = [el.get('sample_name', None) for el in self.samples]
-        # manage bt.list
-        if sample.get('sample_name') not in sa_name_list:
-            self.samples.append(sample)
-        else:
-            old_obj = [obj for obj in self.samples if obj.get('sample_name') ==
-                       sample.get('sample_name')].pop()
-            old_obj_ind = self.samples.index(old_obj)
-            self.samples.remove(old_obj)
-            self.samples.insert(old_obj_ind, sample)
+        sample_name = sample.get('sample_name', None)
+        self.samples.update({sample_name: sample})
         # yaml sync list
-        # simply append object to list to increase speed
-        # filtering logic is handle when importing sample
-        #self._referenced_by.extend([el for el in self.samples if el
-        #                            not in self._referenced_by])
-        # simply append object to list to increase speed
-        # filtering logic is handle when importing sample
         self._referenced_by.append(sample)
+        # save order
+        with open(os.path.join(glbl['config_base'],
+                               '.sample_order.yml'),'w+') as f:
+            sample_order = {}
+            for i, name in enumerate(self.samples.keys()):
+                sample_order.update({i: name+'.yml'})
+            # debug line
+            self._sample_order = sample_order
+            yaml.dump(sample_order, f)
 
     @classmethod
     def from_yaml(cls, f):
@@ -477,12 +478,13 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     def __str__(self):
         contents = (['', 'ScanPlans:'] +
-                    ['{i}: {sp!r}'.format(i=i, sp=sp.short_summary())
-                     for i, sp in enumerate(self.scanplans)] +
+                    ['{}: {}'.format(i, sp_name)
+                     for i, sp_name in enumerate(self.scanplans.keys())] +
                     ['', 'Samples:'] +
-                    ['{i}: {sample_name}'.format(i=i, **s)
-                     for i, s in enumerate(self.samples)])
+                    ['{}: {}'.format(i, sa_name)
+                     for i, sa_name in enumerate(self.samples.keys())])
         return '\n'.join(contents)
+
 
     def list(self):
         """ method to list out all ScanPlan and Sample objects related
@@ -494,9 +496,10 @@ class Beamtime(ValidatedDictLike, YamlDict):
     def list_bkg(self):
         """ method to list background object only """
 
-        contents = ['', 'Background:'] + ['{i}: {sample_name}'.format(i=i, **s)
-                                          for i, s in enumerate(self.samples)
-                                          if s['sample_name'].startswith('bkgd')]
+        contents = ['', 'Background:'] + ['{}: {}'.format(i, sa_name)
+                                          for i, sa_name in
+                                          enumerate(self.samples.keys())
+                                          if sa_name.startswith('bkgd')]
         print('\n'.join(contents))
 
 class Sample(ValidatedDictLike, YamlChainMap):

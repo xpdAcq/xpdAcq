@@ -93,7 +93,8 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertEqual(os.getcwd(), self.home_dir)
         # test prepoluate ScanPlan
         self.assertEqual(len(self.bt.scanplans), len(EXPO_LIST))
-        for sp, expect_arg in zip(self.bt.scanplans, EXPO_LIST):
+        for sp, expect_arg in zip(list(self.bt.scanplans.values()),
+                                  EXPO_LIST):
             self.assertEqual(sp['sp_args'], (expect_arg,))
         # test if yml files are saved properly
         for expo in EXPO_LIST:
@@ -101,7 +102,7 @@ class NewBeamtimeTest(unittest.TestCase):
                                   'ct_{}.yml'.format(expo))
             self.assertTrue(os.path.isfile(f_path))
         # test if it can be reloaded
-        for current_sp in self.bt.scanplans:
+        for current_sp in self.bt.scanplans.values():
             reload_sp = ScanPlan.from_yaml(current_sp.to_yaml())
             self.assertEqual(reload_sp, current_sp)
             self.assertFalse(id(reload_sp) ==  id(current_sp))

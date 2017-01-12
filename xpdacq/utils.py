@@ -26,7 +26,7 @@ import pandas as pd
 
 from .glbl import glbl
 from .tools import _check_obj, _graceful_exit
-from .beamtime import Beamtime, Sample, ScanPlan
+from .beamtime import Beamtime, Sample
 
 def composition_analysis(compstring):
     """Pulls out elements and their ratios from the config file.
@@ -530,11 +530,6 @@ def _import_sample_info(saf_num=None, bt=None):
             return
     print('INFO: using SAF_number = {}'.format(saf_num))
 
-    bt.samples = []
-    # exclude Sample objects from reference list
-    # logic: only update Sample objects that are currently in bt.list
-    sp_ref = [el for el in bt._referenced_by if isinstance(el, ScanPlan)]
-    bt._referenced_by = sp_ref
     excel_to_yaml.load(saf_num)
     excel_to_yaml.create_yaml(bt)
     return excel_to_yaml
