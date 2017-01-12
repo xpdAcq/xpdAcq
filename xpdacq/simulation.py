@@ -23,7 +23,7 @@ from time import strftime
 from unittest.mock import MagicMock
 
 import bluesky.examples as be
-
+from .glbl import glbl
 
 # faking plug in:
 class PutGet:

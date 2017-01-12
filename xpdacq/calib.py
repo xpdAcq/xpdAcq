@@ -22,25 +22,21 @@ import datetime
 import numpy as np
 from IPython import get_ipython
 
-#FIXME : this import is intentionally left as we will save calib_img
-#FIXME : leave for separate PR
-import tifffile as tif
-
 from .glbl import glbl
-from .beamtime import ScanPlan, Sample, ct
+from .xpdacq_conf import xpd_configuration
+from .beamtime import Beamtime, ScanPlan, Sample, ct
+from .xpdacq import CustomizedRunEngine
 from xpdan.tools import mask_img, compress_mask
 
-from pyFAI.gui_utils import update_fig
-from pyFAI.detectors import Perkin, Detector
+from pyFAI.gui.utils import update_fig
 from pyFAI.calibration import Calibration, PeakPicker
-from pyFAI.calibrant import Calibrant
 from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 
-_REQUIRED_OBJ_LIST = ['xrun', 'bt']
+_REQUIRED_OBJ_LIST = ['xrun']
 
 
 def _check_obj(required_obj_list):
-    """ function to check if object(s) exist
+    """function to check if object(s) exist
 
     Parameter
     ---------
@@ -57,103 +53,213 @@ def _check_obj(required_obj_list):
 
 
 def _timestampstr(timestamp):
-    """ convert timestamp to strftime formate """
+    """convert timestamp to strftime formate"""
     timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime(
         '%Y%m%d-%H%M')
     return timestring
 
 
-def run_calibration(exposure=60, dark_sub_bool=True, calibrant_file=None,
-                    wavelength=None, detector=None, gaussian=None):
+def run_calibration(exposure=5, dark_sub_bool=True,
+                    calibrant=None, wavelength=None,
+                    detector=None, *, RE_instance=None,
+                    calib_collection_uid=None, **kwargs):
 
-    """ function to run entire calibration process.
+    # TODO: discuss default calibrant
+    """function to run entire calibration process.
 
-    Entire process includes: collect calibration image, trigger pyFAI
-    calibration process, store calibration parameters as a yaml file
-    under xpdUser/config_base/ and inject uid of calibration image to
-    following scans, until this function is run again.
+    Entire process includes:
+    1) collect calibration image,
+    2) trigger pyFAI interactive calibration process,
+    3) store calibration parameters as a yaml file
+
+    calibration parameters will be saved under xpdUser/config_base/
+    and this set of parameters will be injected as metadata to
+    subsequent scans until you perform this process again
 
     Parameters
     ----------
     exposure : int, optional
-        total exposure time in sec. Default is 60s
+        total exposure time in sec. default is 5s
     dark_sub_bool : bool, optional
         option of turn on/off dark subtraction on this calibration
         image. default is True.
-    calibrant_file : str, optional
-        calibrant file being used, default is 'Ni.D' under
-        xpdUser/userAnalysis/. File name except for extention will be
-        used as sample name.
+   calibrant : str, optional
+        calibrant being used, default is 'Ni'.
+        input could be full file path to customized d-spacing file with
+        ".D" extension or one of pre-defined calibrant names.
+        List of pre-defined calibrant names is:
+        ['NaCl', 'AgBh', 'quartz', 'Si_SRM640', 'Ni', 'Si_SRM640d',
+         'Si_SRM640a', 'alpha_Al2O3', 'LaB6_SRM660b', 'TiO2', 'CrOx',
+         'LaB6_SRM660c', 'CeO2', 'Si_SRM640c', 'CuO', 'Si_SRM640e',
+         'PBBA', 'ZnO', 'Si', 'C14H30O', 'cristobaltite', 'LaB6_SRM660a',
+         'Au', 'Cr2O3', 'Si_SRM640b', 'LaB6', 'Al', 'mock']
     wavelength : float, optional
-        current of x-ray wavelength, in angstrom. Default value is
-        read out from existing xpdacq.Beamtime object
-    detector : pyfai.detector.Detector, optional.
-        instance of detector which defines pxiel size in x- and
-        y-direction. Default is set to Perkin Elmer detector
-    gaussian : int, optional
-        gaussian width between rings, Default is 100.
+        x-ray wavelength in angstrom. default to value stored in
+        existing Beamtime object
+    detector : str or pyFAI.detector.Detector instance, optional.
+        detector used to collect data. default value is 'perkin-elmer'.
+        other allowed values are in pyFAI documentation.
+    RE_instance : bluesky.run_engine.RunEngine instance, optional
+        instance of run engine. Default is xrun. Do not change under
+        normal circumstances.
+    calib_collection_uid : str, optional
+        uid for this calibration run. By default a new uid is generated.
+        Do not change under normal circumstances. override default when
+        you want to associate this new calibration with an existing
+        calibration-uid in previously collected run headers.
+    kwargs:
+        Additional keyword argument for calibration. please refer to
+        pyFAI documentation for all options.
+
+    Reference
+    ---------
+    pyFAI documentation:
+    http://pyfai.readthedocs.io/en/latest/
     """
+    # configure calibration instance
+    c = _configure_calib_instance(calibrant, detector, wavelength)
 
-    _check_obj(_REQUIRED_OBJ_LIST)
-    ips = get_ipython()
-    bto = ips.ns_table['user_global']['bt']
-    xrun = ips.ns_table['user_global']['xrun']
+    # collect & pull subtracted image
+    if calib_collection_uid is None:
+        calib_collection_uid = str(uuid.uuid4())
+    if RE_instance is None:
+        _check_obj(_REQUIRED_OBJ_LIST)
+        ips = get_ipython()
+        xrun = ips.ns_table['user_global']['xrun']
+    img = _collect_calib_img(exposure, dark_sub_bool,
+                             c, xrun, calib_collection_uid)
 
-    # d-spacing
-    if calibrant_file is not None:
-        calibrant_name = os.path.split(calibrant_file)[1]
-        calibrant_name = os.path.splitext(calibrant_name)[0]
-    else:
-        calibrant_name = 'Ni'
+    # pyFAI calibration
+    calib_c, timestr = _calibration(img, c, **kwargs)
 
-    # scan
-    calib_collection_uid = str(uuid.uuid4())
+    # save param for xpdAcq
+    _save_and_attach_calib_param(calib_c, timestr,
+                                 calib_collection_uid)
+
+
+def _configure_calib_instance(calibrant, detector, wavelength):
+    """function to configure calibration instance"""
+    if wavelength is None:
+        bt_fp = os.path.join(glbl['yaml_dir'], 'bt_bt.yml')
+        if not os.path.isfile(bt_fp):
+            raise FileNotFoundError("Can't find your Beamtime yaml file.\n"
+                                    "Did you accidentally delete it? "
+                                    "Please contact beamline staff "
+                                    "ASAP")
+        bto = Beamtime.from_yaml(open(bt_fp))
+        wavelength = bto.wavelength
+    if detector is None:
+        detector = 'perkin_elmer'
+    if calibrant is None:
+        calibrant = 'Ni'
+    c = Calibration(calibrant=calibrant, detector=detector,
+                    wavelength=wavelength*10**(-10))
+
+    return c
+
+
+def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
+                       RE_instance, calib_collection_uid):
+    """helper function to collect calibration image and return it"""
+    c = calibration_instance  # shorthand notation
+    calibrant_name = c.calibrant.__repr__().split(' ')[0]
     calibration_dict = {'sample_name':calibrant_name,
                         'sample_composition':{calibrant_name :1},
                         'is_calibration': True,
                         'calibration_collection_uid': calib_collection_uid}
+    bto = RE_instance.beamtime  # grab beamtime object linked to run_engine
     sample = Sample(bto, calibration_dict)
-    xrun_uid = xrun(sample, ScanPlan(bto, ct, exposure))
-    light_header = glbl.db[-1]
+    uid = RE_instance(sample, ScanPlan(bto, ct, exposure))
+    light_header = xpd_configuration['db'][uid[-1]]  # last one must be light
+    dark_uid = light_header.start.get('sc_dk_field_uid')
+    dark_header = xpd_configuration['db'][dark_uid]
+    dark_img = np.asarray(xpd_configuration['db'].get_images(dark_header,
+                                      glbl['det_image_field'])).squeeze()
+    img = np.asarray(xpd_configuration['db'].get_images(light_header,
+                                      glbl['det_image_field'])).squeeze()
     if dark_sub_bool:
-        dark_uid = light_header.start['sc_dk_field_uid']
-        dark_header = glbl.db[dark_uid]
-        dark_img = np.asarray(glbl.db.get_images(dark_header,
-                                glbl.det_image_field)).squeeze()
-    for ev in glbl.db.get_events(light_header, fill=True):
-        img = ev['data'][glbl.det_image_field]
-        if dark_sub_bool:
-            img -= dark_img
+        img -= dark_img
 
-    print('{:=^20}'.format("INFO: you are able to calib, please refer"
-                           "to guid here:\n"))
-    print('{:^20}'
-          .format("http://xpdacq.github.io/usb_Running.html#calib-manual"))
-    print()
-    # calibration, return a azimuthal integrator
-    ai = calibration(img, calibrant_file=calibrant_file,
-                     calib_collection_uid=calib_collection_uid,
-                     wavelength=wavelength, detector=detector,
-                     gaussian=gaussian)
+    return img
 
+
+def _save_and_attach_calib_param(calib_c, timestr,
+                                 calib_collection_uid):
+    """save calibration parameters and attach to glbl class instance
+
+    Parameters
+    ----------
+    calib_c : pyFAI.calibration.Calibration instance
+        pyFAI Calibration instance with parameters after calibration
+    time_str : str
+        human readable time string
+    calibration_uid : str
+        uid associated with this calibration
+    """
     # save glbl attribute for xpdAcq
-    timestr = _timestampstr(time.time())
-    basename = '_'.join(['pyFAI_calib', calibrant_name, timestr])
-    glbl.calib_config_dict = ai.getPyFAI()
-    Fit2D_dict = ai.getFit2D()
-    glbl.calib_config_dict.update(Fit2D_dict)
-    glbl.calib_config_dict.update({'file_name':basename})
-    glbl.calib_config_dict.update({'time':timestr})
-    # FIXME: need a solution for selecting desired calibration image
-    # based on calibration_collection_uid later
-    glbl.calib_config_dict.update({'calibration_collection_uid':
+    glbl['calib_config_dict'] = calib_c.ai.getPyFAI()
+    glbl['calib_config_dict'].update(calib_c.ai.getFit2D())
+    glbl['calib_config_dict'].update({'file_name':calib_c.basename})
+    glbl['calib_config_dict'].update({'time':timestr})
+    glbl['calib_config_dict'].update({'calibration_collection_uid':
                                    calib_collection_uid})
     # save yaml dict used for xpdAcq
-    yaml_name = glbl.calib_config_name
-    with open(os.path.join(glbl.config_base, yaml_name), 'w') as f:
-        yaml.dump(glbl.calib_config_dict, f)
+    yaml_name = glbl['calib_config_name']
+    with open(os.path.join(glbl['config_base'], yaml_name), 'w') as f:
+        yaml.dump(glbl['calib_config_dict'], f)
 
-    return ai
+    print(calib_c.geoRef)
+    print("INFO: End of calibration process. Your parameter set will be "
+          "saved inside {}. this set of parameters will be injected "
+          "as metadata to subsequent scans until you perform this "
+          "process again".format(yaml_name))
+    print("INFO: To save your calibration image as a tiff file run\n"
+          "save_last_tiff()\nnow.")
+    return
+
+def _calibration(img, calibration, **kwargs):
+    """engine for performing calibration on a image with geometry
+    correction software. current backend is ``pyFAI``.
+
+    Parameters
+    ----------
+    img : ndarray
+        image to perfrom calibration process.
+    calibration : pyFAI.calibration.Calibration instance
+        pyFAI Calibration instance with wavelength, calibrant and
+        detector configured.
+    kwargs:
+        additional keyword argument for calibration. please refer to
+        pyFAI documentation for all options.
+    """
+    print('{:=^20}'.format("INFO: you are able to perform calibration, "
+                           "please refer to pictorial guide here:\n"))
+    print('{:^20}'
+          .format("http://xpdacq.github.io/usb_Running.html#calib-manual\n"))
+    # default params
+    interactive = True
+    dist = 0.1
+    # calibration
+    c = calibration  # shorthand notation
+    timestr = _timestampstr(time.time())
+    f_name  = '_'.join([timestr, 'pyFAI_calib',
+                        c.calibrant.__repr__().split(' ')[0]])
+    w_name = os.path.join(glbl['config_base'], f_name)  # poni name
+    poni_name = w_name + ".npt"
+    c.gui = interactive
+    c.basename = w_name
+    c.pointfile = poni_name
+    c.peakPicker = PeakPicker(img, reconst=True,
+                              pointfile=poni_name,
+                              calibrant=c.calibrant,
+                              wavelength=c.wavelength,
+                              **kwargs)
+    c.peakPicker.gui(log=True, maximize=True, pick=True)
+    update_fig(c.peakPicker.fig)
+    c.gui_peakPicker()
+
+    return c, timestr
+
 
 
 def run_mask_builder(exposure=300, dark_sub_bool=True,
@@ -208,11 +314,11 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
         sample_name = 'mask_target'
 
     if mask_dict is None:
-        mask_dict = glbl.mask_dict
+        mask_dict = glbl['mask_dict']
     print("INFO: use mask options: {}".format(mask_dict))
 
     if calib_dict is None:
-        calib_dict = getattr(glbl, 'calib_config_dict', None)
+        calib_dict = glbl.get('calib_config_dict', None)
         if calib_dict is None:
             print("INFO: there is no glbl calibration dictionary linked\n"
                   "Please do ``run_calibration()`` or provide your own"
@@ -231,113 +337,26 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
                         'mask_collection_uid': mask_collection_uid}
     sample = Sample(bto, mask_builder_dict)
     xrun_uid = xrun(sample, ScanPlan(bto, ct, exposure))
-    light_header = glbl.db[-1]
+    light_header = xpd_configuration['db'][-1]
     if dark_sub_bool:
         dark_uid = light_header.start['sc_dk_field_uid']
-        dark_header = glbl.db[dark_uid]
-        dark_img = np.asarray(glbl.db.get_images(dark_header,
-                                glbl.det_image_field)).squeeze()
-    for ev in glbl.db.get_events(light_header, fill=True):
-        img = ev['data'][glbl.det_image_field]
+        dark_header = xpd_configuration['db'][dark_uid]
+        dark_img = np.asarray(xpd_configuration['db'].get_images(dark_header,
+                              glbl['det_image_field'])).squeeze()
+    for ev in xpd_configuration['db'].get_events(light_header, fill=True):
+        img = ev['data'][glbl['det_image_field']]
         if dark_sub_bool:
             img -= dark_img
 
     img /= ai.polarization(img.shape, polarization_factor)
     mask = mask_img(img, ai, **mask_dict)
-    print("INFO: add mask to global state")
-    glbl.mask = mask
+    #FIXME : numpy array can't be yamlize
+    #print("INFO: add mask to global state")
+    #glbl.mask = mask
 
     if save_name is None:
-        save_name = os.path.join(glbl.config_base, glbl.mask_name)
+        save_name = os.path.join(glbl['config_base'], glbl['mask_name'])
     # still save the most recent mask, as we are in file-based
     np.save(save_name, mask)
 
     return mask
-
-
-def calibration(img, calibrant_file=None, wavelength=None,
-                calib_collection_uid=None, save_file_name=None,
-                detector=None, gaussian=None):
-    """ run calibration process on a image with geometry correction
-    software
-
-    current backend is ``pyFAI``.
-
-    Parameters
-    ----------
-    img : ndarray
-        image to be calibrated
-    calibrant_file : str, optional
-        calibrant file being used, default is 'Ni.D' under
-        xpdUser/userAnalysis/
-    wavelength : flot, optional
-        current of x-ray wavelength, in angstrom. Default value is
-        read out from existing xpdacq.Beamtime object
-    calibration_collection_uid : str, optional
-        uid of calibration collection. default is generated from run
-        calibration
-    save_file_name : str, optional
-        file name for yaml that carries resultant calibration parameters
-    detector : pyfai.detector.Detector, optional.
-        instance of detector which defines pixel size in x- and
-        y-direction. Default is set to Perkin Elmer detector
-    gaussian : int, optional
-        gaussian width between rings, Default is 100.
-    """
-    # default params
-    interactive = True
-    dist = 0.1
-
-    _check_obj(_REQUIRED_OBJ_LIST)
-    ips = get_ipython()
-    bto = ips.ns_table['user_global']['bt']
-    xrun = ips.ns_table['user_global']['xrun']
-
-    calibrant = Calibrant()
-    # d-spacing
-    if calibrant_file is not None:
-        calibrant.load_file(calibrant_file)
-        calibrant_name = os.path.split(calibrant_file)[1]
-        calibrant_name = os.path.splitext(calibrant_name)[0]
-    else:
-        calibrant.load_file(os.path.join(glbl.usrAnalysis_dir, 'Ni.D'))
-        calibrant_name = 'Ni'
-    # wavelength
-    if wavelength is None:
-        _wavelength = bto['bt_wavelength']
-    else:
-        _wavelength = wavelength
-    calibrant.wavelength = _wavelength * 10 ** (-10)
-    # detector
-    if detector is None:
-        detector = Perkin()
-    # calibration
-    timestr = _timestampstr(time.time())
-    basename = '_'.join(['pyFAI_calib', calibrant_name, timestr])
-    w_name = os.path.join(glbl.config_base, basename)  # poni name
-    c = Calibration(wavelength=calibrant.wavelength,
-                    detector=detector,
-                    calibrant=calibrant,
-                    gaussianWidth=gaussian)
-    c.gui = interactive
-    c.basename = w_name
-    c.pointfile = w_name + ".npt"
-    c.ai = AzimuthalIntegrator(dist=dist, detector=detector,
-                               wavelength=calibrant.wavelength)
-    c.peakPicker = PeakPicker(img, reconst=True, mask=detector.mask,
-                              pointfile=c.pointfile, calibrant=calibrant,
-                              wavelength=calibrant.wavelength)
-    # method=method)
-    if gaussian is not None:
-        c.peakPicker.massif.setValleySize(gaussian)
-    else:
-        c.peakPicker.massif.initValleySize()
-
-    if interactive:
-        c.peakPicker.gui(log=True, maximize=True, pick=True)
-        update_fig(c.peakPicker.fig)
-    c.gui_peakPicker()
-    c.ai.setPyFAI(**c.geoRef.getPyFAI())
-    c.ai.wavelength = c.geoRef.wavelength
-
-    return c.ai
