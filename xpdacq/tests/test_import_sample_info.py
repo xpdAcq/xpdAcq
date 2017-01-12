@@ -18,7 +18,7 @@ from xpdacq.utils import import_sample_info, _import_sample_info
 class ImportSamplTest(unittest.TestCase):
 
     def setUp(self):
-        self.base_dir = glbl.base
+        self.base_dir = glbl['base']
         self.home_dir = os.path.join(self.base_dir,'xpdUser')
         self.config_dir = os.path.join(self.base_dir,'xpdConfig')
         self.PI_name = 'Billinge '
@@ -55,22 +55,22 @@ class ImportSamplTest(unittest.TestCase):
         # copy spreadsheet
         xlf = '300000_sample.xlsx'
         src = os.path.join(self.pkg_rs, xlf)
-        shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
+        shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
         # porblematic ones
         xlf2 = '999999_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf2)
-        shutil.copyfile(src, os.path.join(glbl.import_dir, xlf2))
+        shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf2))
         ## test with ordinary import ##
         # expect to pass with explicit argument
         _import_sample_info(300000, self.bt)
         # check imported sample metadata
-        for sample in self.bt.samples:
+        for sample in self.bt.samples.values():
             # Sample is a ChainMap with self.maps[1] == bt
             self.assertEqual(sample.maps[1], self.bt)
 
         # expect ValueError with inconsistent SAF_num between bt and input
         self.bt['bt_safN'] = str(300179)
-        self.assertTrue(os.path.isfile(os.path.join(glbl.import_dir,
+        self.assertTrue(os.path.isfile(os.path.join(glbl['import_dir'],
                                                     xlf)))
         self.assertRaises(ValueError,
                           lambda: _import_sample_info(300000, self.bt))
@@ -111,3 +111,8 @@ class ImportSamplTest(unittest.TestCase):
         self.assertRaises(RuntimeError,
                           lambda: _import_sample_info(999999, self.bt,
                                                       validate_only=True))
+
+        # test get_md_method
+        sample_obj_list = [el for el in self.bt.samples.values()]
+        for i, el in enumerate(sample_obj_list):
+            self.assertEqual(dict(el), self.bt.samples.get_md(i))

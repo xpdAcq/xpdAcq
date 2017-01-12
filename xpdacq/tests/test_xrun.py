@@ -8,15 +8,15 @@ import uuid
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import *
 from xpdacq.utils import import_sample_info
-from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
-                                  _configure_devices)
+from xpdacq.xpdacq_conf import configure_device
+from xpdacq.simulation import pe1c, cs700, shctl1, db
+from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
 from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
-                           _auto_load_calibration_file,
-                           open_collection)
+                           _auto_load_calibration_file)
 
 class xrunTest(unittest.TestCase):
     def setUp(self):
-        self.base_dir = glbl.base
+        self.base_dir = glbl['base']
         self.home_dir = os.path.join(self.base_dir, 'xpdUser')
         self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
         self.PI_name = 'Billinge '
@@ -27,16 +27,16 @@ class xrunTest(unittest.TestCase):
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
         # set simulation objects
-        _configure_devices(glbl)
+        configure_device(area_det=pe1c, temp_controller=cs700,
+                         shutter=shctl1, db=db)
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
         xlf = '300000_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf)
-        shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
+        shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
         import_sample_info(self.saf_num, self.bt)
         self.xrun = CustomizedRunEngine(self.bt)
-        open_collection('unittest')
 
 
     def tearDown(self):
@@ -51,17 +51,17 @@ class xrunTest(unittest.TestCase):
     def test_validate_dark(self):
         """ test login in this function """
         # no dark_dict_list
-        glbl._dark_dict_list = []
+        glbl['_dark_dict_list'] = []
         rv = _validate_dark()
         assert rv == None
         # initiate dark_dict_list
         dark_dict_list = []
         now = time.time()
         # configure area detector
-        glbl.area_det.cam.acquire_time.put(0.1)
-        glbl.area_det.images_per_set.put(5)
-        acq_time = glbl.area_det.cam.acquire_time.get()
-        num_frame = glbl.area_det.images_per_set.get()
+        xpd_configuration['area_det'].cam.acquire_time.put(0.1)
+        xpd_configuration['area_det'].images_per_set.put(5)
+        acq_time = xpd_configuration['area_det'].cam.acquire_time.get()
+        num_frame = xpd_configuration['area_det'].images_per_set.get()
         light_cnt_time = acq_time*num_frame
         # case1: adjust exposure time
         for i in range(5):
@@ -69,8 +69,8 @@ class xrunTest(unittest.TestCase):
                                    'exposure': (i + 1) * 0.1,
                                    'timestamp': now,
                                    'acq_time': acq_time})
-        glbl._dark_dict_list = dark_dict_list
-        rv = _validate_dark(glbl.dk_window)
+        glbl['_dark_dict_list'] = dark_dict_list
+        rv = _validate_dark(glbl['dk_window'])
         correct_set = [el for el in dark_dict_list if
                        abs(el['exposure']-light_cnt_time)<10**(-4)]
         print(dark_dict_list)
@@ -84,7 +84,7 @@ class xrunTest(unittest.TestCase):
                                    'exposure': light_cnt_time,
                                    'timestamp': now - (i + 1) * 60,
                                    'acq_time': acq_time})
-        glbl._dark_dict_list = dark_dict_list
+        glbl['_dark_dict_list'] = dark_dict_list
         # large window -> still find the best (freshest) one
         rv = _validate_dark()
         assert rv == dark_dict_list[0].get('uid')
@@ -102,19 +102,20 @@ class xrunTest(unittest.TestCase):
                                    'exposure': light_cnt_time,
                                    'timestamp': now,
                                    'acq_time': acq_time * (i+1)})
-        glbl._dark_dict_list = dark_dict_list
+        glbl['_dark_dict_list'] = dark_dict_list
         # leave for future debug
         #print("dark_dict_list = {}"
         #      .format([(el.get('exposure'),
         #                el.get('timestamp'),
         #                el.get('uid'),
-        #                el.get('acq_time'))for el in glbl._dark_dict_list]))
+        #                el.get('acq_time'))for el in
+        #                glbl['_dark_dict_list']]))
         rv = _validate_dark()
         assert rv == dark_dict_list[0].get('uid')
 
         # case4: with real xrun
-        if glbl._dark_dict_list:
-            glbl._dark_dict_list = []
+        if glbl['_dark_dict_list']:
+            glbl['_dark_dict_list'] = []
         xrun_uid = self.xrun({}, 0)
         print(xrun_uid)
         assert len(xrun_uid) == 2  # first one is auto_dark
@@ -130,24 +131,24 @@ class xrunTest(unittest.TestCase):
                     if el.command == 'open_run'][0]
         assert dark_uid == open_run['sc_dk_field_uid']
         # no auto-dark
-        glbl.auto_dark = False
+        glbl['auto_dark'] = False
         new_xrun_uid = self.xrun(0, 0)
         assert len(new_xrun_uid) == 1  # no dark frame
-        assert glbl._dark_dict_list[-1]['uid'] == dark_uid  # no update
+        assert glbl['_dark_dict_list'][-1]['uid'] == dark_uid  # no update
 
     def test_auto_load_calibration(self):
         # no config file in xpdUser/config_base
         auto_calibration_md_dict = _auto_load_calibration_file()
         assert auto_calibration_md_dict == None
         # one config file in xpdUser/config_base:
-        cfg_f_name = glbl.calib_config_name
+        cfg_f_name = glbl['calib_config_name']
         cfg_src = os.path.join(os.path.dirname(__file__), cfg_f_name)
         # __file__ gives relative path
-        cfg_dst = os.path.join(glbl.config_base, cfg_f_name)
+        cfg_dst = os.path.join(glbl['config_base'], cfg_f_name)
         shutil.copy(cfg_src, cfg_dst)
         with open(cfg_dst) as f:
             config_from_file = yaml.load(f)
-        glbl.calib_config_dict = config_from_file
+        glbl['calib_config_dict'] = config_from_file
         auto_calibration_md_dict = _auto_load_calibration_file()
         # is file loaded??
         self.assertTrue('time' in auto_calibration_md_dict)
@@ -158,10 +159,11 @@ class xrunTest(unittest.TestCase):
                          'pyFAI_calib_Ni_20160813-1659.poni')
         self.assertEqual(auto_calibration_md_dict['time'],
                         '20160813-1815')
-        # file-based config_dict is different from glbl.calib_config_dict
+        # file-based config_dict is different from
+        # glbl['calib_config_dict']
         self.assertTrue(os.path.isfile(cfg_dst))
-        glbl.calib_config_dict = dict(auto_calibration_md_dict)
-        glbl.calib_config_dict['new_filed']='i am new'
+        glbl['calib_config_dict'] = dict(auto_calibration_md_dict)
+        glbl['calib_config_dict']['new_filed']='i am new'
         reload_auto_calibration_md_dict = _auto_load_calibration_file()
         # trust file-based solution
         self.assertEqual(reload_auto_calibration_md_dict, config_from_file)
@@ -171,7 +173,7 @@ class xrunTest(unittest.TestCase):
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
-        glbl.auto_load_calib = False
+        glbl['auto_load_calib'] = False
         xrun_uid = self.xrun(0,0)
         open_run = [el.kwargs for el in msg_list
                     if el.command =='open_run'][0]
@@ -181,7 +183,7 @@ class xrunTest(unittest.TestCase):
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
-        glbl.auto_load_calib = True
+        glbl['auto_load_calib'] = True
         xrun_uid = self.xrun(0,0)
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'][0]
@@ -247,14 +249,3 @@ class xrunTest(unittest.TestCase):
         self.assertEqual(open_run['sp_type'], 'Tlist')
         self.assertEqual(open_run['sp_requested_exposure'], exp)
         self.assertEqual(open_run['sp_T_list'], T_list)
-
-    # deprecate from v0.5 release
-    #def test_open_collection(self):
-    #    # no collection
-    #    delattr(glbl, 'collection')
-    #    self.assertRaises(RuntimeError, lambda: self.xrun(0, 0))
-    #    # test collection num
-    #    open_collection('unittest_collection')
-    #    self.assertEqual(glbl.collection, [])
-    #    self.xrun(0, 0)
-    #    self.assertEqual(glbl.collection_num, 1)

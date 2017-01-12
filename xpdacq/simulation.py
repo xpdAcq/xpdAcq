@@ -23,7 +23,7 @@ from time import strftime
 from unittest.mock import MagicMock
 
 import bluesky.examples as be
-
+from .glbl import glbl
 
 # faking plug in:
 class PutGet:
@@ -40,7 +40,6 @@ class PutGet:
     def get(self):
         """read current value"""
         return self._val
-
 
 class SimulatedCam:
     """class to simulate Camera class"""
@@ -177,6 +176,7 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
                         uid=str(uuid.uuid4()),
                         time=time.time())
     return save_dir
+
 
 # instantiate simulation objects
 db = build_pymongo_backed_broker()

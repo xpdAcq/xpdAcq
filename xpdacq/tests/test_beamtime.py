@@ -5,10 +5,12 @@ import unittest
 from mock import MagicMock
 
 from xpdacq.glbl import glbl
+from xpdacq.xpdacq_conf import configure_device
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
-                                  load_beamtime, _configure_devices)
+                                  load_beamtime)
 from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
+from xpdacq.simulation import pe1c, db, shctl1, cs700
 import bluesky.examples as be
 from xpdacq.xpdacq import CustomizedRunEngine
 
@@ -17,7 +19,7 @@ from xpdacq.xpdacq import CustomizedRunEngine
 
 class BeamtimeObjTest(unittest.TestCase):
     def setUp(self):
-        self.base_dir = glbl.base
+        self.base_dir = glbl['base']
         self.home_dir = os.path.join(self.base_dir, 'xpdUser')
         self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
         self.PI_name = 'Billinge '
@@ -28,13 +30,14 @@ class BeamtimeObjTest(unittest.TestCase):
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
         # set simulation objects
-        _configure_devices(glbl)
+        configure_device(db=db, shutter=shctl1,
+                         area_det=pe1c,temp_controller=cs700)
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
         xlf = '300000_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf)
-        shutil.copyfile(src, os.path.join(glbl.import_dir, xlf))
+        shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -235,7 +238,7 @@ class BeamtimeObjTest(unittest.TestCase):
 
         bt2 = load_beamtime()
         self.assertEqual(bt2, bt)
-        self.assertEqual(bt2.samples[0], sa)
+        self.assertEqual(list(bt2.samples.values())[0], sa)
 
     def test_list_bkg_smoke(self):
         bt = Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
@@ -245,22 +248,20 @@ class BeamtimeObjTest(unittest.TestCase):
     def test_min_exposure_time(self):
         bt = Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
         # shorter than acq time -> ValueError
-        #set_frame_acq_time(0.5)  # method will be used in the future
-        glbl.frame_acq_time = 0.5
-        print('glbl frame acq time = {}'.format(glbl.frame_acq_time))
+        glbl['frame_acq_time'] = 0.5
+        print('frame acq time = {}'.format(glbl['frame_acq_time']))
         # exposure as arg
         self.assertRaises(ValueError, lambda: ScanPlan(bt, ct, 0.2))
         # exposure as kwarg
         self.assertRaises(ValueError, lambda: ScanPlan(bt, ct,
                                                        exposure=0.2))
         # proper frame acq time -> pass
-        #set_frame_acq_time(0.1)  # method will be used in the future
-        glbl.frame_acq_time = 0.1
+        glbl['frame_acq_time'] = 0.1
         ScanPlan(bt, ct, 0.2)  
         # test with xrun
         xrun = CustomizedRunEngine(bt)
         xrun({}, ScanPlan(bt, ct, 0.2))  # safe, should pass
-        glbl.frame_acq_time = 0.5
+        glbl['frame_acq_time'] = 0.5
         self.assertRaises(ValueError,
                           lambda: xrun({},ScanPlan(bt, ct, 0.2)))
-        glbl.frame_acq_time = 0.1  # reset after test
+        glbl['frame_acq_time'] = 0.1  # reset after test
