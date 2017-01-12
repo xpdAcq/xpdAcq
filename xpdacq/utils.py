@@ -385,21 +385,25 @@ class ExceltoYaml:
         """
         sample_name_set = set([d['sample_name'] for d in
                                self.parsed_sa_md_list])
+        no_bkgd_sample_name_list = []
         for d in self.parsed_sa_md_list:
             bkgd_name = d.get('bkgd_sample_name')
             sample_name = d.get('sample_name')
             if bkgd_name not in sample_name_set:
-                warnings.warn("Bkgd Sample Name `{}` of Smaple `{}` "
-                              "does not appear as any of sample_name "
-                              "defined in spreadsheet.\n"
-                              "This will degrade the workflow of "
-                              "auto-reduction. It is recommended to"
-                              "enter it correctly\n"
-                              "(please ignore if this Sample is "
-                              "intentionally created as background"
-                              .format(bkgd_name,sample_name),
-                              UserWarning)
+                no_bkgd_name_list.append(sample_name)
             Sample(bt, d)
+        if no_bkgd_sample_name_list:
+            warnings.warn("If you want to associate a background sample,"
+                          " e.g., empty kapton tube, with samples, place the"
+                          " sample-name of the background sample in the"
+                          " column: {}.\n"
+                          "The following samples do not have "
+                          "background_samples associated with them\n"
+                          "(typically background samples won't have "
+                          "associated background samples):\n{}\n"
+                          .format(self._BKGD_SAMPLE_NAME_FIELD,
+                                  no_bkgd_sample_name_list),
+                          UserWarning)
         print("*** End of import Sample object ***")
 
 
@@ -536,9 +540,6 @@ class ExceltoYaml:
             # construct phase dict
             # special case: mapping 
             if com in self.HIGH_D_MD_MAP_KEYWORD:
-                print("INFO: you assigned customized mapping {} for"
-                      " high dimensional sample mapping scheme {}"
-                      .format(amount, com))
                 phase_dict.update({com.strip(): amount.strip()})
                 composition_str = 'N/A'
                 composition_dict = {}
