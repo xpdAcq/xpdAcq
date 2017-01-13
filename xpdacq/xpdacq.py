@@ -261,11 +261,15 @@ def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
     xrun : instance of RunEngine
         the run engine instance suspender will be installed
     suspend_thres : float, optional
-        suspend if ring current falls below this threshold. default
-        is the larger value between 50 mA or 50% of current ring current
+        suspend if ring current value falls below this threshold. ring
+        current value is read out from ring current signal when
+        set_beamdump_suspender function is executed. default is the
+        larger value between 50 mA or 50% of ring current
     resume_thres : float, optional
-        resume if tha ring current ramps higher than this value. default
-        is the larger value among 50 mA or 80% of current ring current
+        resume if ring current value falls below this threshold. ring
+        current value is read out from ring current signal when
+        set_beamdump_suspender function is executed. default is the
+        larger value among 50 mA or 80% of current ring current
     wait_time : float, optional
         wait time in seconds after the resume condition is met. default
         is 1200s (20 mins)
@@ -292,8 +296,12 @@ def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
         warnings.warn("suspender set when beam current is low.\n"
                       "For the best operation, run:\n"
                       ">>> {}\n"
-                      "when beam current is at its full value"
-                      .format("set_suspender(xrun)"),
+                      "when beam current is at its full value."
+                      "To interrogate suspenders have"
+                      " been installed, please run :\n"
+                      ">>> {}\n"
+                      .format("set_suspender(xrun)",
+                              "xrun.suspenders"),
                       UserWarning)
     sus = SuspendFloor(signal, suspend_thres,
                        resume_thresh=resume_thres, sleep=wait_time)
