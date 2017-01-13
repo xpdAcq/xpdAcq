@@ -325,11 +325,62 @@ def _nstep(start, stop, step_size):
     return computed_nsteps, computed_step_size
 
 
+def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
+              bt=None):
+    """
+    Parameters:
+    -----------
+    sample_mapping : dict
+        {'sample_ind': croysta_motor_pos}
+    """
+    pe1c, = dets
+    # setting up area_detector
+    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
+    area_det = xpd_configuration['area_det']
+    temp_controller = xpd_configuration['temp_controller']
+    stat_motor = xpd_configuration['stat_motor']
+    # compute Nsteps
+    (Nsteps, computed_step_size) = _nstep(Tstart, Tstop, Tstep)
+    # stat_list
+    _sorted_mapping = sorted(sample_mapping.items(), key=lambda x: x[1])
+    xpdacq_md = {'sp_time_per_frame': acq_time,
+                'sp_num_frames': num_frame,
+                'sp_requested_exposure': exposure,
+                'sp_computed_exposure': computed_exposure,
+                'sp_type': 'statTramp',
+                'sp_startingT': Tstart,
+                'sp_endingT': Tstop,
+                'sp_requested_Tstep': Tstep,
+                'sp_computed_Tstep': computed_step_size,
+                'sp_Nsteps': Nsteps,
+                'sp_uid': str(uuid.uuid4()),
+                'sp_plan_name': 'statTramp'}
+    # plan
+    uids = {k: [] for k in sample_mapping.keys()}
+    yield from bp.mv(temp_controller, Tstart)
+    for t in np.linspace(Tstart, Tstop, Nsteps):
+        yield from bp.mv(temp_controller, t)
+        for s, pos in _sorted_mapping: # sample ind
+            yield from bp.mv(stat_motor, pos)
+            # update md
+            md = list(bt.samples.values())[int(s)]
+            _md = ChainMap(md, xpdacq_md)
+            plan = bp.count([temp_controller, stat_motor]+dets, md=_md)
+            plan = bp.subs_wrapper(plan, LiveTable([area_det,
+                                                    temp_controller,
+                                                    stat_motor]))
+            #plan = bp.baseline_wrapper(plan, [temp_controller,
+            #                                  stat_motor])
+            uid = yield from plan
+    return uids
+
+#stream_name='primary'
+
 register_plan('ct', ct)
 register_plan('Tramp', Tramp)
 register_plan('tseries', tseries)
 register_plan('Tlist', Tlist)
-
+register_plan('statTramp', statTramp)
 
 def new_short_uid():
     return str(uuid.uuid4())[:8]
@@ -620,6 +671,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         _check_mini_expo(exposure, glbl['frame_acq_time'])
         super().__init__(sp_dict, beamtime)  # ChainMap signature
         self.setdefault('sp_uid', new_short_uid())
+        self._bt = beamtime
         beamtime.register_scanplan(self)
 
     @property
@@ -636,7 +688,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         # empty list is for [pe1c]
         bound_arguments = signature.bind([], *self['sp_args'],
                                          **self['sp_kwargs'])
-        # bound_arguments.apply_defaults() # only valid in py 3.5
+        #bound_arguments.apply_defaults() # only valid in py 3.5
         complete_kwargs = bound_arguments.arguments
         # remove place holder for [pe1c]
         complete_kwargs.popitem(False)
@@ -645,13 +697,19 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
     def factory(self):
         # grab the area detector used in current configuration
         pe1c = xpd_configuration['area_det']
+        extra_kw = {}
         # pass parameter to plan_func
-        plan = self.plan_func([pe1c], *self['sp_args'], **self['sp_kwargs'])
+        if 'bt' in inspect.signature(self.plan_func).parameters:
+            extra_kw['bt'] = self._bt
+        plan = self.plan_func([pe1c], *self['sp_args'],
+                              **self['sp_kwargs'], **extra_kw)
         return plan
 
     def short_summary(self):
         arg_value_str = map(str, self.bound_arguments.values())
-        fn = '_'.join([self['sp_plan_name']] + list(arg_value_str))
+        ss = list(arg_value_str)
+        #print("IN short summary {}".format(ss))
+        fn = '_'.join([self['sp_plan_name']] + ss)
         return fn
 
     def __str__(self):
