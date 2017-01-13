@@ -127,21 +127,25 @@ def load_beamtime(directory=None):
     with open(beamtime_fn, 'r') as f:
         bt = load_yaml(f, known_uids)
 
-    # get the most recent order
-    with open(os.path.join(glbl_dict['config_base'],
-                           '.scanplan_order.yml')) as f:
-        scanplan_order = yaml.load(f)
-    with open(os.path.join(glbl_dict['config_base'],
-                           '.sample_order.yml')) as f:
-        sample_order = yaml.load(f)
-
-    for fn in sorted(scanplan_fns, key=list(scanplan_order.values()).index):
-        with open(os.path.join(directory, 'scanplans', fn), 'r') as f:
-            load_yaml(f, known_uids)
-
-    for fn in sorted(sample_fns, key=list(sample_order.values()).index):
-        with open(os.path.join(directory, 'samples', fn), 'r') as f:
-            load_yaml(f, known_uids)
+    # most recent scanplan order
+    scanplan_order_fn = os.path.join(glbl_dict['config_base'],
+                                     '.scanplan_order.yml')
+    if os.path.isfile(scanplan_order_fn):
+        with open(scanplan_order_fn) as f:
+            scanplan_order = yaml.load(f)
+        for fn in sorted(scanplan_fns,
+                         key=list(scanplan_order.values()).index):
+            with open(os.path.join(directory, 'scanplans', fn), 'r') as f:
+                load_yaml(f, known_uids)
+    # most recent sample order
+    sample_order_fn = os.path.join(glbl_dict['config_base'],
+                                   '.sample_order.yml')
+    if os.path.isfile(sample_order_fn):
+        with open(sample_order_fn) as f:
+            sample_order = yaml.load(f)
+        for fn in sorted(sample_fns, key=list(sample_order.values()).index):
+            with open(os.path.join(directory, 'samples', fn), 'r') as f:
+                load_yaml(f, known_uids)
 
     return bt
 
