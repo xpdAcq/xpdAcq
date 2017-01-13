@@ -1,8 +1,9 @@
 import os
 import yaml
 import shutil
+import warnings
 import unittest
-from mock import MagicMock
+from pkg_resources import resource_filename as rs_fn
 
 from xpdacq.glbl import glbl
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
@@ -25,6 +26,7 @@ class ImportSamplTest(unittest.TestCase):
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee','S0ham',1),
                               ('Terban ',' Max',2)]
+        self.pkg_rs = rs_fn('xpdacq', 'examples/')
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
 
@@ -37,7 +39,6 @@ class ImportSamplTest(unittest.TestCase):
         if os.path.isdir(os.path.join(self.base_dir,'pe2_data')):
             shutil.rmtree(os.path.join(self.base_dir,'pe2_data'))
 
-
     def test_import_sample_info_core_function(self):
         # no bt, default argument will fail
         self.assertRaises(TypeError, lambda: _import_sample_info(bt=None))
@@ -46,13 +47,20 @@ class ImportSamplTest(unittest.TestCase):
                                   self.experimenters,
                                   wavelength=self.wavelength)
         # expect FileNotFoundError as no spreadsheet
+        xlf = '300000_sample.xlsx'
+        self.assertFalse(os.path.isfile(os.path.join(glbl['import_dir'],
+                                                     xlf)))
         self.assertRaises(FileNotFoundError,
                           lambda: _import_sample_info(bt=self.bt))
         # copy spreadsheet
         xlf = '300000_sample.xlsx'
-        src = os.path.join(os.path.dirname(__file__), xlf)
+        src = os.path.join(self.pkg_rs, xlf)
         shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
-
+        # porblematic ones
+        xlf2 = '999999_sample.xlsx'
+        src = os.path.join(os.path.dirname(__file__), xlf2)
+        shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf2))
+        ## test with ordinary import ##
         # expect to pass with explicit argument
         _import_sample_info(300000, self.bt)
         # check imported sample metadata
@@ -61,15 +69,20 @@ class ImportSamplTest(unittest.TestCase):
             self.assertEqual(sample.maps[1], self.bt)
 
         # expect ValueError with inconsistent SAF_num between bt and input
-        self.bt['bt_safN'] = 300179
+        self.bt['bt_safN'] = str(300179)
         self.assertTrue(os.path.isfile(os.path.join(glbl['import_dir'],
                                                     xlf)))
         self.assertRaises(ValueError,
                           lambda: _import_sample_info(300000, self.bt))
 
         # expct TypeError with incorrect beamtime
-        self.assertRaises(TypeError, lambda: _import_sample_info(bt=set()))
-
+        self.assertRaises(TypeError, lambda:
+                          _import_sample_info(bt=set()))
+        # error when validate the md
+        self.bt['bt_safN'] = str(999999)
+        self.assertRaises(RuntimeError,
+                          lambda: _import_sample_info(999999, self.bt,
+                                                      validate_only=True))
         # test get_md_method
         sample_obj_list = [el for el in self.bt.samples.values()]
         for i, el in enumerate(sample_obj_list):

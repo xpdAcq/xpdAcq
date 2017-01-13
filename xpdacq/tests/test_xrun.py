@@ -38,6 +38,7 @@ class xrunTest(unittest.TestCase):
         import_sample_info(self.saf_num, self.bt)
         self.xrun = CustomizedRunEngine(self.bt)
 
+
     def tearDown(self):
         os.chdir(self.base_dir)
         if os.path.isdir(self.home_dir):
