@@ -350,9 +350,6 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
 
     img /= ai.polarization(img.shape, polarization_factor)
     mask = mask_img(img, ai, **mask_dict)
-    #FIXME : numpy array can't be yamlize
-    #print("INFO: add mask to global state")
-    #glbl.mask = mask
 
     if save_name is None:
         save_name = os.path.join(glbl['config_base'], glbl['mask_name'])
