@@ -255,7 +255,7 @@ class xrunTest(unittest.TestCase):
         self.assertEqual(open_run['sp_requested_exposure'], exp)
         self.assertEqual(open_run['sp_T_list'], T_list)
 
-    def test_suspender(self):
+    def test_set_beamdump_suspender(self):
         loop = self.xrun._loop
         # no suspender
         self.xrun({}, ScanPlan(self.bt, ct, 1))
