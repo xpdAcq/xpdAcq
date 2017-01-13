@@ -36,8 +36,10 @@ class _YamlDictLike:
     @filepath.setter
     def filepath(self, fname):
         self._filepath = fname
-        os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
-        self.flush()
+        # dont create dir if parent doesn't exist yet
+        #os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
+        if os.path.isdir(os.path.dirname(self.filepath)):
+            self.flush()
 
     @abc.abstractclassmethod
     def from_yaml(self, f):

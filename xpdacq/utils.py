@@ -1,5 +1,19 @@
+#!/usr/bin/env python
+##############################################################################
+#
+# xpdacq            by Billinge Group
+#                   Simon J. L. Billinge sb2896@columbia.edu
+#                   (c) 2016 trustees of Columbia University in the City of
+#                        New York.
+#                   All rights reserved
+#
+# File coded by:    Timothy Liu
+#
+# See AUTHORS.txt for a list of people who contributed.
+# See LICENSE.txt for license information.
+#
+##############################################################################
 import os
-import sys
 import yaml
 import shutil
 import tarfile as tar
@@ -8,47 +22,11 @@ from time import strftime
 from shutil import ReadError
 from IPython import get_ipython
 
-
 import pandas as pd
 
 from .glbl import glbl
-from .beamtime import Beamtime, Sample, ScanPlan
-
-
-def _check_obj(obj_name, error_msg=None):
-    """ function to check if an object exists in current namespace
-
-    Parameter
-    ---------
-    obj_name : str
-        object name in string format
-    error_msg : str
-        error msg when target object can't be found in current
-        namespace
-    """
-    if error_msg is None:
-        error_msg = "Required object {} doesn't exist in"\
-                    "current namespace".format(obj_name)
-    ips = get_ipython()
-    if not ips.ns_table['user_global'].get(obj_name, None):
-        raise NameError(error_msg)
-    return
-
-def _timestampstr(timestamp):
-    """ convert timestamp to strftime formate """
-    timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime(
-        '%Y%m%d-%H%M%S')
-    return timestring
-
-
-def _graceful_exit(error_message):
-    try:
-        raise RuntimeError(error_message)
-        return 0
-    except Exception as err:
-        sys.stderr.write('WHOOPS: {}'.format(str(err)))
-        return 1
-
+from .tools import _check_obj, _graceful_exit
+from .beamtime import Beamtime, Sample
 
 def composition_analysis(compstring):
     """Pulls out elements and their ratios from the config file.
@@ -80,35 +58,6 @@ def composition_analysis(compstring):
     return names, fractions
 
 
-def _RE_state_wrapper(RE_obj):
-    """ a wrapper to check state of bluesky runengine object after pausing
-
-        it provides control to stop/abort/resume runengine under current package structure
-    """
-    usr_input = input('')
-    # while loop gives chance to iteratively confirm user's input
-    while RE_obj.state == 'paused':
-        if usr_input in 'resume()':
-            RE_obj.resume()
-        elif usr_input in 'abort()':
-            abort_all = input(
-                '''current scan will be aborted. Do you want to abort all successive scans (if you are running a script)? y/[n]  ''')
-            while True:
-                if abort_all in ('y', 'yes'):
-                    sys.exit(_graceful_exit(
-                        '''INFO: All successive scans are aborted'''))
-                elif abort_all in ('n', 'no'):
-                    print(
-                        '''INFO: Current scan is aborted and successive ones are kept''')
-                    RE_obj.abort()
-                else:
-                    print('please reenter your input')
-        elif usr_input in 'stop()':
-            RE_obj.stop()
-        else:
-            print('please renter your input')
-
-
 def export_userScriptsEtc():
     """ function that exports user defined objects/scripts stored under
         config_base and userScript.
@@ -121,23 +70,23 @@ def export_userScriptsEtc():
         path to archive file just created
     """
     F_EXT = '.tar'
-    root_dir = glbl.home
+    root_dir = glbl['home']
     os.chdir(root_dir)
     f_name = strftime('userScriptsEtc_%Y-%m-%dT%H%M') + F_EXT
     # extra work to avoid comple directory structure in tarball
-    tar_f_name = os.path.join(glbl.home, f_name)
+    tar_f_name = os.path.join(root_dir, f_name)
     export_dir_list = list(
-        map(lambda x: os.path.basename(x), glbl._export_tar_dir))
+        map(lambda x: os.path.basename(x), glbl['_export_tar_dir']))
     with tar.open(tar_f_name, 'w') as f:
         for el in export_dir_list:
             f.add(el)
-    archive_path = os.path.join(glbl.home, f_name)
+    archive_path = os.path.join(root_dir, f_name)
     if os.path.isfile(archive_path):
         return archive_path
     else:
         _graceful_exit(
             'Did you accidentally change write privilege to {}'.format(
-                glbl.home))
+                root_dir))
         print(
             'Please check your setting and try `export_userScriptsEtc()` again at command prompt')
         return
@@ -161,7 +110,7 @@ def import_userScriptsEtc():
         a list of file names that have been moved successfully
     """
     _f_ext_dst_dict = ['py', 'npy', 'yml']
-    src_dir = glbl.import_dir
+    src_dir = glbl['import_dir']
     f_list = os.listdir(src_dir)
     if len(f_list) == 0:
         print(
@@ -183,15 +132,15 @@ def import_userScriptsEtc():
             src_full_path = os.path.join(src_dir, f_name)
             (root, ext) = os.path.splitext(f_name)
             if ext == '.yml':
-                dst_dir = glbl.yaml_dir
+                dst_dir = glbl['yaml_dir']
                 yml_dst_name = _copy_and_delete(f_name, src_full_path, dst_dir)
                 moved_list.append(yml_dst_name)
             elif ext == '.py':
-                dst_dir = glbl.usrScript_dir
+                dst_dir = glbl['usrScript_dir']
                 py_dst_name = _copy_and_delete(f_name, src_full_path, dst_dir)
                 moved_list.append(py_dst_name)
             elif ext == '.npy':
-                dst_dir = glbl.config_base
+                dst_dir = glbl['config_base']
                 npy_dst_name = _copy_and_delete(f_name, src_full_path, dst_dir)
                 moved_list.append(npy_dst_name)
             elif ext in ('.tar', '.zip', '.gztar'):
@@ -259,7 +208,7 @@ class ExceltoYaml:
     def __init__(self):
         self.pd_dict = None
         self.sa_md_list = None
-        self.src_dir = glbl.import_dir
+        self.src_dir = glbl['import_dir']
 
     def load(self, saf_num):
         xl_f = [f for f in os.listdir(self.src_dir) if
@@ -581,11 +530,6 @@ def _import_sample_info(saf_num=None, bt=None):
             return
     print('INFO: using SAF_number = {}'.format(saf_num))
 
-    bt.samples = []
-    # exclude Sample objects from reference list
-    # logic: only update Sample objects that are currently in bt.list
-    sp_ref = [el for el in bt._referenced_by if isinstance(el, ScanPlan)]
-    bt._referenced_by = sp_ref
     excel_to_yaml.load(saf_num)
     excel_to_yaml.create_yaml(bt)
     return excel_to_yaml

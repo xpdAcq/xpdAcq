@@ -1,3 +1,18 @@
+#!/usr/bin/env python
+##############################################################################
+#
+# xpdacq            by Billinge Group
+#                   Simon J. L. Billinge sb2896@columbia.edu
+#                   (c) 2016 trustees of Columbia University in the City of
+#                        New York.
+#                   All rights reserved
+#
+# File coded by:    Timothy Liu, Christopher J. Wright
+#
+# See AUTHORS.txt for a list of people who contributed.
+# See LICENSE.txt for license information.
+#
+##############################################################################
 import os
 import sys
 import uuid
@@ -8,7 +23,7 @@ from time import strftime
 from unittest.mock import MagicMock
 
 import bluesky.examples as be
-
+from .glbl import glbl
 
 # faking plug in:
 class PutGet:
@@ -26,7 +41,6 @@ class PutGet:
         """read current value"""
         return self._val
 
-
 class SimulatedCam:
     """class to simulate Camera class"""
 
@@ -37,29 +51,19 @@ class SimulatedCam:
 
 
 # define simulated PE1C
-class SimulatedPE1C(be.Reader):
+class SimulatedPE1C(be.ReaderWithFileStore):
     """Subclass the bluesky plain detector examples ('Reader');
 
     also add realistic attributes.
     """
 
-    def __init__(self, name, read_fields):
+    def __init__(self, name, read_fields, fs):
         self.images_per_set = PutGet()
         self.number_of_sets = PutGet()
         self.cam = SimulatedCam()
         self._staged = False
-        super().__init__(name, read_fields)
-
+        super().__init__(name, read_fields, fs=fs)
         self.ready = True  # work around a hack in Reader
-
-    def stage(self):
-        if self._staged:
-            raise RuntimeError("Device is already staged.")
-        self._staged = True
-        return [self]
-
-    def unstage(self):
-        self._staged = False
 
 
 def build_pymongo_backed_broker():
@@ -173,8 +177,10 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
                         time=time.time())
     return save_dir
 
+
 # instantiate simulation objects
 db = build_pymongo_backed_broker()
-pe1c = SimulatedPE1C('pe1c', {'pe1_image': lambda: 5})
+db.fs.register_handler('RWFS_NPY', be.ReaderWithFSHandler)
+pe1c = SimulatedPE1C('pe1c', {'pe1_image': lambda: np.ones((5,5))}, fs=db.fs)
 shctl1 = be.Mover('shctl1', {'rad': lambda x: x}, {'x':0})
 cs700 = be.Mover('cs700', {'temperature': lambda x: x}, {'x':300})

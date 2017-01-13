@@ -1,3 +1,18 @@
+#!/usr/bin/env python
+##############################################################################
+#
+# xpdacq            by Billinge Group
+#                   Simon J. L. Billinge sb2896@columbia.edu
+#                   (c) 2016 trustees of Columbia University in the City of
+#                        New York.
+#                   All rights reserved
+#
+# File coded by:    Timothy Liu, Dan Allan, Simon Billinge
+#
+# See AUTHORS.txt for a list of people who contributed.
+# See LICENSE.txt for license information.
+#
+##############################################################################
 import os
 import sys
 import yaml
@@ -5,10 +20,9 @@ import shutil
 from time import strftime
 from IPython import get_ipython
 
-from .glbl import glbl, glbl_filepath, simulation
 from .beamtime import *
-from .utils import _graceful_exit
-from .simulation import db, pe1c, shctl1, cs700
+from .tools import _graceful_exit
+from .xpdacq_conf import glbl_dict
 
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime
@@ -16,44 +30,37 @@ EXPO_LIST = [5, 0.1, 1, 10, 30, 60]
 
 def _start_beamtime(PI_last, saf_num, experimenters=[],
                     wavelength=None):
-    """ function for start beamtime """
-    # TODO - allow config file later
-
-    if not os.path.exists(glbl.home):
+    """function for start a beamtime"""
+    home_dir = glbl_dict['home']
+    if not os.path.exists(home_dir):
         raise RuntimeError("WARNING: fundamental directory {} does not "
                            "exist.\nPlease contact beamline staff immediately"
-                           .format(glbl.home))
+                           .format(home_dir))
 
-    dir_list = os.listdir(glbl.home)
-    if len(dir_list) != 0:
+    f_list = os.listdir(home_dir)
+    if len(f_list) != 0:
         raise FileExistsError("There are more than one files/directories:\n"
                               "{}\n"
                               "under {}.\n"
                               "have you run '_end_beamtime()' yet?"
-                              .format(os.listdir(glbl.home), glbl.home))
-    elif len(dir_list) == 0:
+                              .format(f_list, home_dir))
+    elif len(f_list) == 0:
         _make_clean_env()
         print("INFO: initiated requried directories for experiment")
         bt = Beamtime(PI_last, saf_num, experimenters,
                       wavelength=wavelength)
-        os.chdir(glbl.home)
+        os.chdir(home_dir)
         print("INFO: to link newly created beamtime object to xrun, "
-              "please do `xrun.beamtime = bt`")
+              "please do\n"
+              ">>> xrun.beamtime = bt")
         # copy default Ni24.D to xpdUser/user_analysis
         src = os.path.join(os.path.dirname(__file__), 'Ni24.D')
-        dst = os.path.join(glbl.usrAnalysis_dir, 'Ni.D')
+        dst = os.path.join(glbl_dict['usrAnalysis_dir'], 'Ni.D')
         shutil.copy(src, dst)
 
         # pre-populated scan plan
         for expo in EXPO_LIST:
             ScanPlan(bt, ct, expo)
-
-        # set ring current attribute
-        if not simulation:
-            from ophyd import EpicsSignalRO
-            ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
-                                         name='ring_current')
-            glbl.ring_current = ring_current
 
         return bt
 
@@ -62,7 +69,7 @@ def _make_clean_env():
     """Make a clean environment for a new user
     """
     out = []
-    for d in glbl.allfolders:
+    for d in glbl_dict['allfolders']:
         os.makedirs(d, exist_ok=True)
         out.append(d)
     return out
@@ -71,9 +78,9 @@ def _make_clean_env():
 def start_xpdacq():
     """ function to reload beamtime """
     try:
-        bt_list = [f for f in os.listdir(glbl.yaml_dir) if
+        bt_list = [f for f in os.listdir(glbl_dict['yaml_dir']) if
                    f.startswith('bt') and
-                   os.path.isfile(os.path.join(glbl.yaml_dir, f))]
+                   os.path.isfile(os.path.join(glbl_dict['yaml_dir'], f))]
     except FileNotFoundError:
         return _no_beamtime()
 
@@ -98,62 +105,20 @@ def _no_beamtime():
           "to initiate beamtime")
 
 
-def _load_glbl(glbl_obj, filepath=None):
-    """function to reload glbl object
-
-    Parameters
-    ----------
-    glbl_obj : instance of xpdacq.glbl.Glbl
-        glbl obj object that is going to be reloaded
-    filepath : str, default
-        filepath to the yaml file stores options going to be reloaded
-        defaulted to glbl_filepath determined in glbl.py
-    """
-    if filepath is None:
-        filepath = glbl_filepath
-    # fresh start
-    if not os.path.isfile(filepath):
-        glbl_obj.flush()
-    # reload
-    else:
-        print("INFO: reload your glbl object\n")
-        with open(filepath) as f:
-            glbl_dict = yaml.load(f)
-        for key, val in glbl_dict.items():
-            setattr(glbl_obj, key, val)
-
-
-def _configure_devices(glbl_obj, *, area_det=pe1c, shutter=shctl1,
-                      temp_controller=cs700, db=db, **kwargs):
-    """function to configure devices used in glbl class
-
-    function takes simulated objects by default and it's overwritten at
-    beamline.
-    """
-    # specifically configured required objects
-    glbl_obj.area_det = area_det
-    glbl_obj.shutter = shutter
-    glbl_obj.temp_controller = temp_controller
-    glbl_obj.db = db
-    # additional objects
-    for key, val in kwargs.items():
-        print("configure device: glbl.{} = {}".format(key, val))
-        setattr(glbl_obj, key, val)
-
-
 def load_beamtime(directory=None):
     """
     Load a Beamtime and associated objects.
 
     Expected directory structure:
 
-    <glbl.yaml_dir>/
+    <glbl['yaml_dir']>/
       bt_bt.yml
+      glbl.yml
       samples/
       scanplans/
     """
     if directory is None:
-        directory = glbl.yaml_dir  # leave room for future multi-beamtime
+        directory = glbl_dict['yaml_dir']  # leave room for multi-beamtime
     known_uids = {}
     beamtime_fn = os.path.join(directory, 'bt_bt.yml')
     sample_fns = os.listdir(os.path.join(directory, 'samples'))
@@ -162,11 +127,19 @@ def load_beamtime(directory=None):
     with open(beamtime_fn, 'r') as f:
         bt = load_yaml(f, known_uids)
 
-    for fn in scanplan_fns:
+    # get the most recent order
+    with open(os.path.join(glbl_dict['config_base'],
+                           '.scanplan_order.yml')) as f:
+        scanplan_order = yaml.load(f)
+    with open(os.path.join(glbl_dict['config_base'],
+                           '.sample_order.yml')) as f:
+        sample_order = yaml.load(f)
+
+    for fn in sorted(scanplan_fns, key=list(scanplan_order.values()).index):
         with open(os.path.join(directory, 'scanplans', fn), 'r') as f:
             load_yaml(f, known_uids)
 
-    for fn in sample_fns:
+    for fn in sorted(sample_fns, key=list(sample_order.values()).index):
         with open(os.path.join(directory, 'samples', fn), 'r') as f:
             load_yaml(f, known_uids)
 
@@ -211,12 +184,12 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
     """
     _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']
     if archive_dir is None:
-        archive_dir = glbl.archive_dir
+        archive_dir = glbl_dict['archive_dir']
     if base_dir is None:
-        base_dir = glbl.base
-    os.makedirs(glbl.home, exist_ok=True)
+        base_dir = glbl_dict['base']
+    os.makedirs(glbl_dict['home'], exist_ok=True)
     # check env
-    files = os.listdir(glbl.home)
+    files = os.listdir(glbl_dict['home'])
     if len(files) == 0:
         raise FileNotFoundError("It appears that end_beamtime may have been "
                                 "run. If so, do not run again but proceed to\n"
@@ -264,16 +237,17 @@ def _load_bt_info(bt_obj, required_fields):
 def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
     """ Create a remote tarball of all user folders under xpdUser directory
     """
-    archive_full_name = os.path.join(glbl.archive_dir, archive_name)
+    archive_full_name = os.path.join(glbl_dict['archive_dir'], archive_name)
     if root_dir is None:
-        root_dir = glbl.base
+        root_dir = glbl_dict['base']
     cur_path = os.getcwd()
     try:
-        os.chdir(glbl.base)
+        os.chdir(root_dir)
         print("INFO: Archiving your data now. That may take several"
               "minutes. please be patient :)")
         tar_return = shutil.make_archive(archive_full_name,
-                                         archive_format, root_dir=glbl.base,
+                                         archive_format,
+                                         root_dir=root_dir,
                                          base_dir='xpdUser', verbose=1,
                                          dry_run=False)
     finally:
@@ -282,15 +256,15 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
 
 
 def _load_bt(bt_yaml_path):
-    btoname = os.path.join(glbl.yaml_dir, 'bt_bt.yml')
+    btoname = os.path.join(glbl_dict['yaml_dir'], 'bt_bt.yml')
     if not os.path.isfile(btoname):
         sys.exit(_graceful_exit("{} does not exist in {}. User might have"
                                 "deleted it accidentally.Please create it"
                                 "based on user information or contect user"
                                 .format(os.path.basename(btoname),
-                                        glbl.yaml_dir)))
-    with open(btoname, 'r') as fi:
-        bto = yaml.load(fi)
+                                        glbl_dict['yaml_dir'])))
+    with open(btoname, 'r') as f:
+        bto = yaml.load(f)
     return bto
 
 
@@ -315,10 +289,10 @@ def _confirm_archive(archive_f_name):
 
 
 def _delete_home_dir_tree():
-    os.chdir(glbl.base)  # move out from xpdUser before deletion
-    shutil.rmtree(glbl.home)
-    os.makedirs(glbl.home, exist_ok=True)
-    os.chdir(glbl.home)  # now move back into xpdUser
+    os.chdir(glbl_dict['base'])  # move out from xpdUser before deletion
+    shutil.rmtree(glbl_dict['home'])
+    os.makedirs(glbl_dict['home'], exist_ok=True)
+    os.chdir(glbl_dict['home'])  # now move back into xpdUser
     return
 
 

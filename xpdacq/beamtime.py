@@ -1,13 +1,31 @@
+#!/usr/bin/env python
+##############################################################################
+#
+# xpdacq            by Billinge Group
+#                   Simon J. L. Billinge sb2896@columbia.edu
+#                   (c) 2016 trustees of Columbia University in the City of
+#                        New York.
+#                   All rights reserved
+#
+# File coded by:    Timothy Liu, Dan Allan
+#
+# See AUTHORS.txt for a list of people who contributed.
+# See LICENSE.txt for license information.
+#
+##############################################################################
 import os
 import uuid
 import yaml
 import inspect
-from collections import ChainMap
+from collections import ChainMap, OrderedDict
+
 import bluesky.plans as bp
 import numpy as np
+import bluesky.plans as bp
 from bluesky.callbacks import LiveTable
 
 from .glbl import glbl
+from .xpdacq_conf import xpd_configuration
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 
@@ -53,18 +71,16 @@ def _summarize(plan):
     return '\n'.join(output)
 
 
-def _configure_pe1c(exposure):
-    """
-    private function to configure pe1c with continuous acquisition mode
-    """
+def _configure_area_det(exposure):
+    """private function to configure pe1c with continuous acquisition mode"""
     # cs studio configuration doesn't propagate to python level
-    glbl.area_det.cam.acquire_time.put(glbl.frame_acq_time)
+    xpd_configuration['area_det'].cam.acquire_time.put(glbl['frame_acq_time'])
     # compute number of frames
-    acq_time = glbl.area_det.cam.acquire_time.get()
+    acq_time = xpd_configuration['area_det'].cam.acquire_time.get()
     _check_mini_expo(exposure, acq_time)
     num_frame = np.ceil(exposure / acq_time)
     computed_exposure = num_frame * acq_time
-    glbl.area_det.images_per_set.put(num_frame)
+    xpd_configuration['area_det'].images_per_set.put(num_frame)
     # print exposure time
     print("INFO: requested exposure time = {} - > computed exposure time"
           "= {}".format(exposure, computed_exposure))
@@ -92,7 +108,7 @@ def _check_mini_expo(exposure, acq_time):
                          "0.1s)\n in which case you cannot set it to a"
                          "lower value"
                          .format(exposure, acq_time,
-                                 ">>> glbl.frame_acq_time = 0.5  #set"
+                                 ">>> glbl['frame_acq_time'] = 0.5  #set"
                                  " to 0.5s"))
 
 def ct(dets, exposure, *, md=None):
@@ -118,7 +134,8 @@ def ct(dets, exposure, *, md=None):
     if md is None:
         md = {}
     # setting up area_detector
-    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
+    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
+    area_det = xpd_configuration['area_det']
     # update md
     _md = ChainMap(md, {'sp_time_per_frame': acq_time,
                         'sp_num_frames': num_frame,
@@ -129,8 +146,8 @@ def ct(dets, exposure, *, md=None):
                         # 'sp_name': 'ct_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'ct'})
-    plan = bp.count([glbl.area_det], md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
+    plan = bp.count([area_det], md=_md)
+    plan = bp.subs_wrapper(plan, LiveTable([area_det]))
     yield from plan
 
 
@@ -166,7 +183,9 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
     if md is None:
         md = {}
     # setting up area_detector
-    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
+    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
+    area_det = xpd_configuration['area_det']
+    temp_controller = xpd_configuration['temp_controller']
     # compute Nsteps
     (Nsteps, computed_step_size) = _nstep(Tstart, Tstop, Tstep)
     # update md
@@ -184,10 +203,10 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
                         # 'sp_name': 'Tramp_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'Tramp'})
-    plan = bp.scan([glbl.area_det], glbl.temp_controller, Tstart, Tstop,
+    plan = bp.scan([area_det], temp_controller, Tstart, Tstop,
                    Nsteps, md=_md)
     plan = bp.subs_wrapper(plan,
-                           LiveTable([glbl.area_det, glbl.temp_controller]))
+                           LiveTable([area_det, temp_controller]))
     yield from plan
 
 
@@ -205,7 +224,7 @@ def Tlist(dets, exposure, T_list):
     exposure : float
         total time of exposure in seconds for area detector
     T_list : list
-        a list of temperature where a scan will be run
+        a list of temperatures where a scan will be run
 
     Note
     ----
@@ -213,16 +232,17 @@ def Tlist(dets, exposure, T_list):
     configured in global state. To find out which these are, please
     using following commands:
 
-        >>> glbl.area_det
-        >>> glbl.temp_controller
+        >>> xpd_configuration['area_det']
+        >>> xpd_configuration['temp_controller']
 
     To interrogate which devices are currently in use.
     """
 
     pe1c, = dets
     # setting up area_detector and temp_controller
-    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
-    T_controller = glbl.temp_controller
+    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
+    area_det = xpd_configuration['area_det']
+    T_controller = xpd_configuration['temp_controller']
     xpdacq_md = {'sp_time_per_frame': acq_time,
                  'sp_num_frames': num_frame,
                  'sp_requested_exposure': exposure,
@@ -233,8 +253,8 @@ def Tlist(dets, exposure, T_list):
                  'sp_plan_name': 'Tlist'
                 }
     # pass xpdacq_md to as additional md to bluesky plan
-    plan = bp.list_scan([glbl.area_det], T_controller, T_list, md=xpdacq_md)
-    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det, T_controller]))
+    plan = bp.list_scan([area_det], T_controller, T_list, md=xpdacq_md)
+    plan = bp.subs_wrapper(plan, LiveTable([area_det, T_controller]))
     yield from plan
 
 
@@ -265,7 +285,8 @@ def tseries(dets, exposure, delay, num, *, md=None):
     if md is None:
         md = {}
     # setting up area_detector
-    (num_frame, acq_time, computed_exposure) = _configure_pe1c(exposure)
+    area_det = xpd_configuration['area_det']
+    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
     real_delay = max(0, delay - computed_exposure)
     period = max(computed_exposure, real_delay + computed_exposure)
     print('INFO: requested delay = {}s  -> computed delay = {}s'
@@ -284,8 +305,8 @@ def tseries(dets, exposure, delay, num, *, md=None):
                         # 'sp_name': 'tseries_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'tseries'})
-    plan = bp.count([glbl.area_det], num, delay, md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([glbl.area_det]))
+    plan = bp.count([area_det], num, delay, md=_md)
+    plan = bp.subs_wrapper(plan, LiveTable([area_det]))
     yield from plan
 
 
@@ -317,6 +338,14 @@ def _clean_info(obj):
     """ stringtify and replace space"""
     return str(obj).strip().replace(' ', '_')
 
+class MDOrderedDict(OrderedDict):
+    def get_md(self, ind):
+        """special method to get metadata of sample object based on
+        bt.list index
+        """
+        obj_list = list(self.values())
+        md_dict = dict(obj_list[ind])
+        return md_dict
 
 class Beamtime(ValidatedDictLike, YamlDict):
     """
@@ -364,11 +393,10 @@ class Beamtime(ValidatedDictLike, YamlDict):
                          bt_experimenters=experimenters,
                          bt_wavelength=wavelength, **kwargs)
         self._wavelength = wavelength
-        # self.experiments = []
-        self.scanplans = []
-        self.samples = []
+        self.scanplans = MDOrderedDict()
+        self.samples = MDOrderedDict()
         self._referenced_by = []
-        # used by YamlDict
+        # used by YamlDict when reload
         self.setdefault('bt_uid', new_short_uid())
 
     @property
@@ -382,25 +410,6 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self._wavelength = val
         self.update(bt_wavelength=val)
 
-    def register_scanplan(self, scanplan):
-        # Notify this Beamtime about an ScanPlan that should be re-synced
-        # whenever the contents of the Beamtime are edited. 
-        sp_name_list = [el.short_summary() for el in self.scanplans]
-        # manage bt.list
-        if scanplan.short_summary() not in sp_name_list:
-            self.scanplans.append(scanplan)
-        else:
-            old_obj = [obj for obj in self.scanplans if
-                       obj.short_summary() == scanplan.short_summary()].pop()
-            old_obj_ind = self.scanplans.index(old_obj)
-            self.scanplans.remove(old_obj)
-            self.scanplans.insert(old_obj_ind, scanplan)
-        # yaml sync list
-        # simply append object to list to increase speed
-        #self._referenced_by.extend([el for el in self.scanplans if el
-        #                            not in self._referenced_by])
-        self._referenced_by.append(scanplan)
-
     @property
     def md(self):
         """ metadata of current object """
@@ -413,30 +422,42 @@ class Beamtime(ValidatedDictLike, YamlDict):
             raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
-        return os.path.join(glbl.yaml_dir,
+        return os.path.join(glbl['yaml_dir'],
                             'bt_bt.yml').format(**self)
+
+    def register_scanplan(self, scanplan):
+        # Notify this Beamtime about an ScanPlan that should be re-synced
+        # whenever the contents of the Beamtime are edited. 
+        scanplan_name = scanplan.short_summary()
+        self.scanplans.update({scanplan_name: scanplan})
+        # yaml sync list
+        self._referenced_by.append(scanplan)
+        # save order
+        with open(os.path.join(glbl['config_base'],
+                               '.scanplan_order.yml'),'w+') as f:
+            scanplan_order = {}
+            for i, name in enumerate(self.scanplans.keys()):
+                scanplan_order.update({i: name+'.yml'})
+            # debug line
+            self._scanplan_order = scanplan_order
+            yaml.dump(scanplan_order, f)
 
     def register_sample(self, sample):
         # Notify this Beamtime about an Sample that should be re-synced
         # whenever the contents of the Beamtime are edited.
-        sa_name_list = [el.get('sample_name', None) for el in self.samples]
-        # manage bt.list
-        if sample.get('sample_name') not in sa_name_list:
-            self.samples.append(sample)
-        else:
-            old_obj = [obj for obj in self.samples if obj.get('sample_name') ==
-                       sample.get('sample_name')].pop()
-            old_obj_ind = self.samples.index(old_obj)
-            self.samples.remove(old_obj)
-            self.samples.insert(old_obj_ind, sample)
+        sample_name = sample.get('sample_name', None)
+        self.samples.update({sample_name: sample})
         # yaml sync list
-        # simply append object to list to increase speed
-        # filtering logic is handle when importing sample
-        #self._referenced_by.extend([el for el in self.samples if el
-        #                            not in self._referenced_by])
-        # simply append object to list to increase speed
-        # filtering logic is handle when importing sample
         self._referenced_by.append(sample)
+        # save order
+        with open(os.path.join(glbl['config_base'],
+                               '.sample_order.yml'),'w+') as f:
+            sample_order = {}
+            for i, name in enumerate(self.samples.keys()):
+                sample_order.update({i: name+'.yml'})
+            # debug line
+            self._sample_order = sample_order
+            yaml.dump(sample_order, f)
 
     @classmethod
     def from_yaml(cls, f):
@@ -457,12 +478,13 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     def __str__(self):
         contents = (['', 'ScanPlans:'] +
-                    ['{i}: {sp!r}'.format(i=i, sp=sp.short_summary())
-                     for i, sp in enumerate(self.scanplans)] +
+                    ['{}: {}'.format(i, sp_name)
+                     for i, sp_name in enumerate(self.scanplans.keys())] +
                     ['', 'Samples:'] +
-                    ['{i}: {sample_name}'.format(i=i, **s)
-                     for i, s in enumerate(self.samples)])
+                    ['{}: {}'.format(i, sa_name)
+                     for i, sa_name in enumerate(self.samples.keys())])
         return '\n'.join(contents)
+
 
     def list(self):
         """ method to list out all ScanPlan and Sample objects related
@@ -474,9 +496,10 @@ class Beamtime(ValidatedDictLike, YamlDict):
     def list_bkg(self):
         """ method to list background object only """
 
-        contents = ['', 'Background:'] + ['{i}: {sample_name}'.format(i=i, **s)
-                                          for i, s in enumerate(self.samples)
-                                          if s['sample_name'].startswith('bkgd')]
+        contents = ['', 'Background:'] + ['{}: {}'.format(i, sa_name)
+                                          for i, sa_name in
+                                          enumerate(self.samples.keys())
+                                          if sa_name.startswith('bkgd')]
         print('\n'.join(contents))
 
 class Sample(ValidatedDictLike, YamlChainMap):
@@ -529,7 +552,7 @@ class Sample(ValidatedDictLike, YamlChainMap):
             raise ValueError("Missing required fields: {}".format(missing))
 
     def default_yaml_path(self):
-        return os.path.join(glbl.yaml_dir, 'samples',
+        return os.path.join(glbl['yaml_dir'], 'samples',
                             '{sample_name}.yml').format(**self)
 
     @classmethod
@@ -593,7 +616,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         if exposure is None:
             # input as args
             exposure, *rest = args  # predefined scan signature
-        _check_mini_expo(exposure, glbl.frame_acq_time)
+        _check_mini_expo(exposure, glbl['frame_acq_time'])
         super().__init__(sp_dict, beamtime)  # ChainMap signature
         self.setdefault('sp_uid', new_short_uid())
         beamtime.register_scanplan(self)
@@ -620,7 +643,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
 
     def factory(self):
         # grab the area detector used in current configuration
-        pe1c = glbl.area_det
+        pe1c = xpd_configuration['area_det']
         # pass parameter to plan_func
         plan = self.plan_func([pe1c], *self['sp_args'], **self['sp_kwargs'])
         return plan
@@ -659,5 +682,5 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
     def default_yaml_path(self):
         arg_value_str = map(str, self.bound_arguments.values())
         fn = '_'.join([self['sp_plan_name']] + list(arg_value_str))
-        return os.path.join(glbl.yaml_dir, 'scanplans',
+        return os.path.join(glbl['yaml_dir'], 'scanplans',
                             '%s.yml' % fn)
