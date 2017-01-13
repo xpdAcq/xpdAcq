@@ -17,12 +17,13 @@ import os
 import uuid
 import time
 import yaml
+import warnings
 import numpy as np
 
 import bluesky.plans as bp
 from bluesky import RunEngine
-from bluesky.utils import normalize_subs_input
 from bluesky.suspenders import SuspendFloor
+from bluesky.utils import normalize_subs_input
 
 from xpdacq.glbl import glbl
 from xpdacq.xpdacq_conf import xpd_configuration
@@ -251,6 +252,66 @@ def _inject_mask(msg):
 
     return msg
 
+def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
+                           wait_time=None, clear=True):
+    """helper function to set suspender based on ring_current
+
+    Parameters
+    ----------
+    xrun : instance of RunEngine
+        the run engine instance suspender will be installed
+    suspend_thres : float, optional
+        suspend if ring current value falls below this threshold. ring
+        current value is read out from ring current signal when
+        set_beamdump_suspender function is executed. default is the
+        larger value between 50 mA or 50% of ring current
+    resume_thres : float, optional
+        resume if ring current value falls below this threshold. ring
+        current value is read out from ring current signal when
+        set_beamdump_suspender function is executed. default is the
+        larger value among 50 mA or 80% of current ring current
+    wait_time : float, optional
+        wait time in seconds after the resume condition is met. default
+        is 1200s (20 mins)
+    clear : bool, optional
+        option on whether to clear all the existing suspender(s).
+        default is True (only newly added suspender will be applied)
+    """
+    signal = xpd_configuration.get('ring_current', None)
+    if signal is None:
+        # edge case, attribute is accidentally removed
+        raise RuntimeError("no ring current signal is found in "
+                           "current configuration, please reach out to "
+                           "local contact for more help.")
+    signal_val = signal.get()
+    default_suspend_thres = 50
+    default_resume_thres = 50
+    if suspend_thres is None:
+        suspend_thres = max(default_suspend_thres, 0.5*signal_val)
+    if resume_thres is None :
+        resume_thres = max(default_resume_thres, 0.8*signal_val)
+    if wait_time is None:
+        wait_time = 1200
+    if suspend_thres <= 50:
+        warnings.warn("suspender set when beam current is low.\n"
+                      "For the best operation, run:\n"
+                      ">>> {}\n"
+                      "when beam current is at its full value."
+                      "To interrogate suspenders have"
+                      " been installed, please run :\n"
+                      ">>> {}\n"
+                      .format("set_suspender(xrun)",
+                              "xrun.suspenders"),
+                      UserWarning)
+    sus = SuspendFloor(signal, suspend_thres,
+                       resume_thresh=resume_thres, sleep=wait_time)
+    if clear:
+        xrun.clear_suspenders()
+    xrun.install_suspender(sus)
+    print("INFO: suspender on signal {}, with suspend threshold {} and "
+          "resume threshold={}, wait time ={}s has been installed.\n"
+          .format(signal.name, suspend_thres, resume_thres, wait_time))
+
 
 class CustomizedRunEngine(RunEngine):
     def __init__(self, beamtime, *args, **kwargs):
@@ -298,19 +359,7 @@ class CustomizedRunEngine(RunEngine):
         self.md.update(bt_obj.md)
         print("INFO: beamtime object has been linked\n")
         if not glbl['is_simulation']:
-            pass
-            # let user deal with suspender
-            #beamdump_sus = SuspendFloor(glbl.ring_current, 50,
-            #                            resume_thresh=glbl.ring_current.get() * 0.9,
-            #                            sleep=1200)
-            #glbl.suspender = beamdump_sus
-            # FIXME : print info for user
-            # self.install_suspender(beamdump_sus)
-            # print("INFO: beam dump suspender has been created."
-            #        " to check, please do\n:"
-            #        ">>> xrun.suspenders")
-        else:
-            pass
+            set_beamdump_suspender(self)
 
     def __call__(self, sample, plan, subs=None, *,
                  verify_write=False, dark_strategy=periodic_dark,

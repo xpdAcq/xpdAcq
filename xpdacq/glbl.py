@@ -1,4 +1,4 @@
-#module to create single instance of glbl
+"""module to create single instance of glbl"""
 ##############################################################################
 #
 # xpdacq            by Billinge Group

@@ -4,7 +4,7 @@ import shutil
 import time
 import yaml
 import uuid
-
+import warnings
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import *
 from xpdacq.utils import import_sample_info
@@ -12,7 +12,13 @@ from xpdacq.xpdacq_conf import configure_device
 from xpdacq.simulation import pe1c, cs700, shctl1, db
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
 from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
-                           _auto_load_calibration_file)
+                           _auto_load_calibration_file,
+                           set_beamdump_suspender)
+from xpdacq.simulation import pe1c, cs700, shctl1, SimulatedPE1C
+
+import ophyd
+import bluesky.examples as be
+from bluesky import Msg
 
 class xrunTest(unittest.TestCase):
     def setUp(self):
@@ -249,3 +255,40 @@ class xrunTest(unittest.TestCase):
         self.assertEqual(open_run['sp_type'], 'Tlist')
         self.assertEqual(open_run['sp_requested_exposure'], exp)
         self.assertEqual(open_run['sp_T_list'], T_list)
+
+    def test_set_beamdump_suspender(self):
+        loop = self.xrun._loop
+        # no suspender
+        self.xrun({}, ScanPlan(self.bt, ct, 1))
+
+        # operate at full current
+        sig = ophyd.Signal()
+        def putter(val):
+            sig.put(val)
+        xpd_configuration['ring_current'] = sig
+        putter(200)
+        wait_time = 0.2
+        set_beamdump_suspender(self.xrun, wait_time=wait_time)
+        # test
+        start = time.time()
+        # queue up fail and resume conditions
+        loop.call_later(.1, putter, 90)  # lower than 50%, trigger
+        loop.call_later( 1., putter, 190)  # higher than 90%, resume
+        # start the scan
+        self.xrun({}, ScanPlan(self.bt, ct, .1))
+        stop = time.time()
+        # assert we waited at least 2 seconds +
+        # the settle time
+        delta = stop - start
+        print(delta)
+        assert delta > .1 + wait_time + 1.
+
+        # operate at low current, test user warnning
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # trigger warning
+            putter(30)  # low current
+            set_beamdump_suspender(self.xrun, wait_time=wait_time)
+            # check warning
+            assert len(w)==1
+            assert issubclass(w[-1].category, UserWarning)
