@@ -265,9 +265,9 @@ def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
         is the larger value between 50 mA or 50% of current ring current
     resume_thres : float, optional
         resume if tha ring current ramps higher than this value. default
-        is the larger value among 150 mA or 80% of current ring current
+        is the larger value among 50 mA or 80% of current ring current
     wait_time : float, optional
-        wait time in seconds after the reusme condition is met. default
+        wait time in seconds after the resume condition is met. default
         is 1200s (20 mins)
     clear : bool, optional
         option on whether to clear all the existing suspender(s).
@@ -275,19 +275,21 @@ def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
     """
     signal = xpd_configuration.get('ring_current', None)
     if signal is None:
-        # edgy case, attribute is accidentally removed
-        raise RuntimeError("no ring current signal is set to global "
-                           "configuration, please reach out local "
-                           "contact for more help.")
+        # edge case, attribute is accidentally removed
+        raise RuntimeError("no ring current signal is found in "
+                           "current configuration, please reach out to "
+                           "local contact for more help.")
     signal_val = signal.get()
+    default_suspend_thres = 50
+    default_resume_thres = 50
     if suspend_thres is None:
-        suspend_thres = max(50, 0.5*signal_val)
+        suspend_thres = max(default_suspend_thres, 0.5*signal_val)
     if resume_thres is None :
-        resume_thres = max(150, 0.8*signal_val)
+        resume_thres = max(default_resume_thres, 0.8*signal_val)
     if wait_time is None:
         wait_time = 1200
     if suspend_thres <= 50:
-        warnings.warn("suspender set when beam current was below 50mA.\n"
+        warnings.warn("suspender set when beam current is low.\n"
                       "For the best operation, run:\n"
                       ">>> {}\n"
                       "when beam current is at its full value"
