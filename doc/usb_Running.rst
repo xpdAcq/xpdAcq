@@ -33,7 +33,7 @@ The allowed scan types are:
 
 
 Here are some examples of a workflow.  Assume a Ni_calibrant sample is loaded on the diffractometer
-and the ``Ni_calibrant`` Sample object is created as well as all the ``ScanPlan`` we need.
+and the ``Ni`` Sample object is created as well as all the ``ScanPlan`` we need.
 We will start by doing a scan with ``Sample`` object ``Setup`` on our ``ct_1`` ScanPlan.
 
 
@@ -59,14 +59,14 @@ Remember, always start with ``bt.list()``
 
   Samples:
   0: Setup
-  1: Ni_calibrant
-  2: bkgd_kapton_0.9mmOD
-  3: bkgd_kapton_1mmOD
-  4: bkgd_kapton_0.5mmOD
+  1: Ni
+  2: kapton_0.9mmOD
+  3: kapton_1mmOD
+  4: kapton_0.5mmOD
   5: activated_carbon_1
   6: activated_carbon_2
   7: activated_carbon_3
-...
+  ...
 
 
 The Sample object I want has list index 0 and the ScanPlan has list index 2.
@@ -197,7 +197,7 @@ The definition of **fresh and appropriate** is:
     In short,
 
     * acquisition time is the collection time for a single frame from area detector.
-    This can take values between 0.1s to 5s.
+      This can take values between 0.1s to 5s.
 
     * exposure time is the user-defined total acquisition time
 
@@ -205,8 +205,8 @@ The definition of **fresh and appropriate** is:
 
   .. code-block:: python
 
-    glbl.auto_dark = False
-    glbl.shutter_control = False
+    glbl['auto_dark'] = False
+    glbl['shutter_control'] = False
 
 
   And the duration of your dark window can be modified by:
@@ -214,7 +214,7 @@ The definition of **fresh and appropriate** is:
 
   .. code-block:: python
 
-    glbl.dk_window = 200 # in minutes. default is 3000 minutes
+    glbl['dk_window'] = 200 # in minutes. default is 3000 minutes
 
 
   Having ``auto_dark`` set to ``True`` is strongly recommended as this enables
@@ -231,7 +231,7 @@ Automated calibration capture
 
 Often times, keeping track of which calibration file is associated with a specific scan is very tiring. ``xpdAcq`` makes this easier or you. Before every
 scan is being collected, the program goes to grab the most recent calibration
-parameters in ``/home/xf28id1/xpdUser/config_base`` and load them as part of the
+parameters in ``xpdUser/config_base`` and load them as part of the
 metadata so that you can reference them whenever you want, and make in-situ data
 reduction possible!
 
@@ -269,9 +269,9 @@ Quick guide of calibration steps with pyFAI
 
 
 2. After ring selection, click on the *original* terminal and hit ``<enter>``.
-  Then you will be requested to supply indices of rings you just selected.
-  Remember index **starts from 0** as we are using ``python``.
-  After supplying all indices, you should have a window to show your calibration:
+   Then you will be requested to supply indices of rings you just selected.
+   Remember index **starts from 0** as we are using ``python``.
+   After supplying all indices, you should have a window to show your calibration:
 
 
   .. image:: ./img/calib_08.png
@@ -298,7 +298,7 @@ Quick guide of calibration steps with pyFAI
   saved under ``/home/xf28id1/xpdUser/config_base``
 
 
-Alright, you are done then! With ``automated calibration capture`` feature, ``xpdAcq``
+Alright, you are done then! With **automated calibration capture** feature, ``xpdAcq``
 will load calibration parameters from the most recent config file.
 
 
@@ -319,25 +319,20 @@ turns out to be the solution.
 
 
 In order import sample metadata from spreadsheet, we would need you to have a
-pre-filled spreadsheet with name ``<saf_number>_sample.xls`` sit in ``xpdConfig``
+pre-filled spreadsheet with name ``<saf_number>_sample.xls`` sit in ``xpduser/import``
 directory. Then the import process is simply:
 
 
 .. code-block:: python
 
 
-  import_sample(300564, bt) # SAF number is 300564 to current beamtime
-                            # beamtime object , bt, with SAF number 300564 has created
-                            # file with 300564_sample.xls exists in ``xpdConfig`` directory
+  import_sample_info()
 
+``xpdAcq`` will grab the ``saf_number`` and ``bt`` for current beamtime, so make sure you have your spreadsheet named with proper format. For example, if your SAF number is ``300179``, then you should have your pre-populated spreadsheet with the name as ``300179_sample.xls``, sit inside ``xpdUser/import`` directory.
+  
 
-.. note::
-
-
-  Usually ``xpdAcq`` will grab the ``saf_number`` and ``bt`` to current beamtime for you,
-  so you can simply run ``import_sample()``. However, if you want to load in different
-  spreadsheets, you can also import it by explicitly typing in ``saf_number``.
-
+To parse the information filled inside your spreadsheet, we have designed
+several rules and here are the explantion to each of the rules.
 
 comma separated fields
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -352,13 +347,13 @@ comma separated fields
   Fields following this parsing rule are:
 
 
-  ============= ========================================================
-  ``cif name``  pointer of potential structures for your sample, if any.
-  ``Tags``      any comment you want to put on for this measurement.
-  ============= ========================================================
+  ======================  ========================================================
+  ``cif name``            pointer of potential structures for your sample, if any.
+  ``User supplied tags``  any comment you want to put on for this measurement.
+  ======================  ========================================================
 
 
-  Example on ``Tags``:
+  Example on ``User supplied tags``:
 
 
   .. code-block:: none
@@ -377,7 +372,7 @@ name fields
 ^^^^^^^^^^^
 
 
-  Fields used to store a person's name in ``first name last name`` format.
+  Fields that are used to store a person's name in ``first name last name`` format.
 
 
   Each person's first and last name will be searchable later on.
@@ -430,7 +425,7 @@ phase string
   ``phase_1: amount, phase_2: amount``.
 
 
-  An example of 0.9% sodium chloride water will be:
+  An example of 0.9% sodium chloride solution will be:
 
 
   .. code-block:: none
@@ -459,7 +454,26 @@ phase string
   header. Also a search on ``Nacl=0.09`` will include this header as well.
 
 
-.. _background_obj:
+dictonary-like fields
+^^^^^^^^^^^^^^^^^^^^^
+
+  Fields that are utilized to store information as ``key-value pair`` format.
+  Standard format of it is ``key: value`` and it also follows the comma-separate rule
+
+  Fields following this parsing rule are:
+
+  =====================================  ===================================
+  ``structrual database ID for phases``  database name and the ID for 
+                                         sample phases
+  =====================================  ===================================
+
+  Example on dictionary-like fields:
+
+
+  .. code-block:: none
+
+
+    ICSD:41120, CCDC:850926 ----> {'ICSD': '41120', 'CCDC': '850926'}
 
 
 Sample Objects
@@ -473,19 +487,15 @@ Sample Objects
   will be parsed based on the contents you type in with above parsing rule.
 
 
-
-
-Generally, after successfully importing sample from spreadsheet, that is what
-you would see:
+  Generally, after successfully importing sample from spreadsheet, that is what
+  you would see:
 
 
 .. code-block:: python
 
 
-  In [1]: import_sample(300564, bt)
+  In [1]: import_sample_info()
   *** End of import Sample object ***
-  Out[1]: <xpdacq.utils.ExceltoYaml at 0x7fae8ab659b0>
-
 
   In [2]: bt.list()
 
@@ -519,8 +529,44 @@ you would see:
   48: bkg_0.5mm_OD_capillary
   49: bkg_film_on_substrate
 
+.. _background_obj:
 
+* **Background**:
 
+  It is recommended to run a background scan before your sample so it is available for
+  the automated data reduction steps.  It also allows you to see problems with the 
+  experimental setup, for example, crystalline peaks due to the beam hitting a shutter.
+
+  You can associate a Sample as the background for the desired
+  Sample freely. Linking the background with the sample together also makes the
+  data-reduction workflow easier.
+  
+  We specify this grouping by entering background sample name into the 
+  ``Sample-name of sample background``  column in the spreadsheet. You can 
+  fill in the *Sample Name of your background* to whichever sample you want to relate.
+  
+  For example, in our `spreadsheet template <https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_ we created pure background
+  objects kapton_1mmOD, kapton_0.9mmOD and kapton_0.5mmOD
+  and we link Ni with background kapton_1mmOD by specifying it
+  at ``Sample-name of sample background`` column.
+
+  A proper linking between **Sample** and **Background** can be seen
+  from metadata stored inside the ``Sample`` object. As usual, let's
+  interrogate the metadata:
+
+  .. code-block:: python
+
+    In[]: bt.samples.get_md(15)  # that's for example, index depends on
+                                 # your spreadsheet
+    out[]:
+    {'bkgd_sample_name': 'kapton_0.9mmOD',
+     'bt_piLast': 'Billinge',
+     ...
+    }
+
+  The example above shows your ``Sample`` with index ``15`` has been
+  linked with background ``kapton_0.9mmOD``. This can largely speeds up
+  the automated data-reduction workflow that we will have in the future!
 
 .. _auto_mask:
 
@@ -587,8 +633,9 @@ Applied masks
 Using the auto-masker
 ^^^^^^^^^^^^^^^^^^^^^
 To use the auto-masker once, creating masks used for subsequent images,
- just run the command:
-.. code-block:: python
+just run the command:
+
+ .. code-block:: python
 
 
   run_mask_builder()

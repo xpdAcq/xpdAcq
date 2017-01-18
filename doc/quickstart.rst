@@ -378,7 +378,7 @@ It is recommended to run a background scan before your sample so it is available
 the automated data reduction steps.  It also allows you to see problems with the experimental
 setup, for example, crystalline peaks due to the beam hitting a shutter.
 
-In general, you can associate the background with your sample :ref:`as you wish <import_sample>` and we can bundle them together in our analysis workflow later. Running a background scan then becomes exactly the same as running a normal scan. Here is how we suggest to do:
+In general, you can associate the background with your sample :ref:`as you wish <background_obj>` and we can bundle them together in our analysis workflow later. Running a background scan then becomes exactly the same as running a normal scan. Here is how we suggest to do:
 
  1. Load the background sample (e.g., empty kapton tube) on the instrument
  2. In your ``collection-yyQn.x`` terminal type
@@ -387,7 +387,7 @@ In general, you can associate the background with your sample :ref:`as you wish 
 
     bt.list()
 
-  to local your sample objects that will be used as backgrounds.
+  to locate your sample objects that will be used as backgrounds.
 
  3. In the ``collection-yyQn.x`` terminal, run ``xrun`` (see below) on the background sample with a ``ct`` ScanPlan object of the desired exposure
 
