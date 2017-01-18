@@ -15,7 +15,7 @@ Funtionality related options
 
     glbl
 
-  Here are few possible scenarios:
+  You can also change them if needed. Here are few possible scenarios:
 
   **No automated dark collection logic at all:**
 
@@ -36,6 +36,11 @@ Funtionality related options
   .. code-block:: python
 
     glbl['frame_acq_time'] = 0.2
+
+  changes made to ``glbl`` will be recovered after coming back to ``ipython`` session.
+  So you don't have to redo the changes from time to time.
+
+
 
 .. _usb_DeviceOptions:
 

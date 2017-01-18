@@ -36,33 +36,30 @@ the software, please post it as a new thread at `XPD-Users
 What's new?
 +++++++++++
 
-current version : ``v0.5``
-"""""""""""""""""""""""""""
+current version : ``v0.5.2``
+""""""""""""""""""""""""""""
 
 This is a stable release of ``xpdAcq`` software.
 
-New features introduced to this version:
+Addition to all the features of ``v0.5.0``, new features introduced to this version are:
 
-  * flexibility of running customized ``bluesky`` plans while keeping ``xpdAcq`` dark collection logic.
+  * functionality to reload beamtime configuration when reenter into ``ipython`` session
 
-  * ability of importing metadata from a spreadsheet, open the door for data driven studies.
+  * improved logic of importing metadata from a spreadsheet, information is parsed in a 
+    way that would facilitate data driven studies.
 
-  * data reduction tools:
-
-    * azimuthal integration using ``pyFAI`` as the back-end
-    * auto-masking based on statistics on pixel counts
-
-``v0.5`` supports three kinds of built-in scans:
+``v0.5.2`` supports three kinds of built-in scans:
 
 .. code-block:: none
 
   single-frame (ct)
   time-series (tseries)
   temperature-series scans (Tramp)
+  temperature-list scans (Tlist)
 
 Additional built-in scan types will be added in future releases.
 
-``v0.5`` supports following automated logics :
+``v0.5.2`` also supports following automated logics :
 
   * :ref:`automated dark subtraction <auto_dark>`
 
