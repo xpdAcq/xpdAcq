@@ -265,6 +265,14 @@ command
 ``ScanPlan(bt, Tlist, 5, [250, 180, 200])`` exposure detector for 5s at 250K, 180K and 200K
 =========================================== ===================================================================================
 
+which devices am I using?
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+So far, we have talked about how to use templated ``ScanPlan`` but we haven't mentioned about which *devices* are used to do your experiment.
+
+To know more about what devices are triggered by ``ScanPlan`` and how to
+possibly change them, please see :ref:`usb_DeviceOptions`
+
 write your own scan plan
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -370,7 +378,7 @@ It is recommended to run a background scan before your sample so it is available
 the automated data reduction steps.  It also allows you to see problems with the experimental
 setup, for example, crystalline peaks due to the beam hitting a shutter.
 
-In general, you can associate the background with your sample :ref:`as you wish <label-name>` and we can bundle them together in our analysis workflow later. Running a background scan then becomes exactly the same as running a normal scan. Here is how we suggest to do:
+In general, you can associate the background with your sample :ref:`as you wish <import_sample>` and we can bundle them together in our analysis workflow later. Running a background scan then becomes exactly the same as running a normal scan. Here is how we suggest to do:
 
  1. Load the background sample (e.g., empty kapton tube) on the instrument
  2. In your ``collection-yyQn.x`` terminal type
