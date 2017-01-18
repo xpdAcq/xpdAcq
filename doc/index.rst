@@ -46,9 +46,12 @@ Addition to all the features of ``v0.5.0``, new features introduced to this vers
   * functionality to reload beamtime configuration when reenter into ``ipython`` session
 
   * improved logic of importing metadata from a spreadsheet, information is parsed in a 
-    way that would facilitate data driven studies.
+    way that facilitates data driven studies.
 
-``v0.5.2`` supports three kinds of built-in scans:
+  * new ScanPlan: temperature list scan ``Tlist``. User can collect data at desired
+    temperature points.
+
+``v0.5.2`` supports following built-in scans:
 
 .. code-block:: none
 
