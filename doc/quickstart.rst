@@ -280,11 +280,11 @@ and assign it to the object we have called ``mybsplan`` in this example:
   from bluesky.plans import list_scan
 
   # it is entirely optional to add metadata to the scan, but here is what you would do:
-  mymd = {'memoy_aid': 'This metadata should be about the scan, not the sample which would be added when the scanplan is run',
+  mymd = {'memory_aid': 'This metadata should be about the scan, not the sample which would be added when the scanplan is run',
           'author': 'Simon',
           'etc': 'make up any key-value pairs'}
 
-  mybsplan = list_scan([glbl.area_det], motor, [1,3,5,7,9], md=mymd) # drives motor to postions 1,3,5,7,9 and fires area_detector at each position
+  mybsplan = list_scan([glbl.area_det], motor, [1,3,5,7,9], md=mymd) # drives motor to positions 1,3,5,7,9 and fires area_detector at each position
   mybsplan = subs_wrapper(mybsplan, LiveTable([glbl.area_det])) # set up the scan so LiveTable will give updates on how the scan is progressing
 
 Then to use it successfully in xpdAcq you have to do a bit of configuration of global parameters.  This work is done
@@ -528,20 +528,76 @@ User scripts
 Your experiment commands can be sequenced into scripts,
 to be executed one after the other as you desire.  To set this up, write a sequence of commands into a text file,
 save it with the extension ``.py`` in the ``userScripts`` directory with a memorable name, like ``myNightShiftScript.py``.
-Double and triple check your script, then when you are ready to execute it, in ``ipython`` session type:
 
+Here is an example for a script that runs two grid scans with different mesh sizes.
+
+.. code-block:: python
+
+  # import necessary modules, just in case it is not imported yet
+  from bluesky.plans import outer_product_scan, subs_wrapper
+  from databroker import db
+
+  # define a list of detectors we want to record.
+  # Here, we want to read signal of area_detector(glbl.area_det), motor_x(diff_x), motor_y(diff_y)
+  detectors = [glbl.area_det, diff_x, diff_y]
+
+  ### setup the first grid scan plan which with rougher mesh ###
+
+  # setup a grid scan plan that moves "diff_x" motor from 10 to 20 with 10 steps and "diff_y" motor from -5 to 5 in 5 steps
+  # the final argument True is to allow sneak-like pattern, i.e. always scan with the shortest path
+  plan1 = outer_product_scan(detectors, diff_x, 10, 20, 10, diff_y, -5, 5, 5, True)
+
+  # let's add LiveTable to monitor progress
+  plan1 = sub_wrapper(plan1, LiveTable(detectors))
+
+  # run with xrun and Sample object 51
+  xrun(51, plan1)
+
+  # save tiff files from the first grid scan plan
+  save_last_tiff()
+
+  # save event metadata (gird location and corresponding timestamps) as a txt file
+  table1 = db.get_table(db[-1])
+  table1.to_csv(userAnalysis/grid_scan_event_md_01.txt)
+
+  ### setup the second grid scan plan which with finer mesh ###
+
+  # setup another grid scan plan that moves "diff_x" motor from 10 to 20 with 20 steps and "diff_y" motor from -5 to 5 with 10 steps
+  # the final argument is to allow sneak-like pattern, i.e. always scan with the shortest path
+  plan2 = outer_product_scan(detectors, diff_x, 10, 20, 20, diff_y, -5, 5, 10, True)
+
+  # rest are the same as before
+  plan2 = sub_wrapper(plan2, LiveTable(detectors))
+  xrun(51, plan2)
+
+  save_last_tiff()
+
+  table2 = db.get_table(db[-1])
+
+  table2.to_csv(userAnalysis/grid_scan_event_md_02.txt)
+
+  # display both tables so that we can check them by the next morning we come!
+  print('=== Table1 ===')
+  table1
+
+  print('=== Table2 ===')
+  table2
+
+
+Double and triple check your script, then when you are ready to execute it, in ``ipython`` session type:
 
   .. code-block:: python
 
-    %run -i ~/xpdUser/userScripts/myNightShiftScript.py
+    %run -i userScripts/myNightShiftScript.py
 
   Stay there for a while to make sure everything is running as expected and then go to bed!
 
-.. Note::
-These scripts should execute as desired under normal circumstances.  Runs will automatically pause if
-there is a beam-dump and then resume, for example.  However, there are some situations where the scans
-can be tricked into hanging, or continuing to run without scans completing, so please check your data
-carefully.  We are working on solutions for these edge cases.
+.. note::
+
+  These scripts should execute as desired under normal circumstances.  Runs will automatically pause if
+  there is a beam-dump and then resume, for example.  However, there are some situations where the scans
+  can be tricked into hanging, or continuing to run without scans completing, so please check your data
+  carefully.  We are working on solutions for these edge cases.
 
 Interrupt your scan
 --------------------
