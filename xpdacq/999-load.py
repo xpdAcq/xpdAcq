@@ -76,7 +76,7 @@ else:
 from xpdacq.calib import *
 
 # analysis functions, only at beamline
-# from xpdan.data_reduction import *
+from xpdan.data_reduction import *
 
 print('OK, ready to go.  To continue, follow the steps in the xpdAcq')
 print('documentation at http://xpdacq.github.io/xpdacq\n')
