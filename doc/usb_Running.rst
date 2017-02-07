@@ -242,9 +242,10 @@ reduction possible!
 Quick guide of calibration steps with pyFAI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
-1. First you will see an image window like this:
-
+1. We assume that you have run ``run_calibration()`` in the ``collection`` window
+with Ni as your calibrant.  This will automatically expose the Ni, and after a
+pause a 2D plot window should pop up on the acquisition computer, looking
+something like this:
 
   .. image:: ./img/calib_05.png
     :width: 400px
@@ -253,25 +254,38 @@ Quick guide of calibration steps with pyFAI
 
 
   That is the image we want to perform our  calibration with. Use **magnify
-  tool** at the tool bar to zoom in and **right click** on rings (tip: deselect the zoom toggle before ring selection). Typically a few rings (~5) should be enough.
-
-
+  tool** at the tool bar to zoom in to something that looks like the figure below.
+  The magnifying tool is enabled by clicking on the button on the toolbar that
+  looks like a magnifying glass. 
+  
+  Now we will select five rings that PyFai will use to do the calibration.  To do this
+  click on the magnifying glass button again to deselect the magnifying tool so the cursor 
+  looks like an arrow.  You will place the tip
+  of the arrow on the first ring and then **RIGHT click**.  you will see dots going around the
+  ring you have selected.  Then repeat this for the other four rings you will select.
+  `For the highest accuracy, We recommend that you select the first, second, third and 
+  6th ring, as shown in the figure.`  The 6th ring is weaker but well separated from its neighbor.
+  
   .. image:: ./img/calib_07.png
     :width: 400px
     :align: center
     :height: 300px
 
+2. If you don't like what you have selected, you can exit out using ``CTL-C`` and start again
+   by running `run_calibration()`.  However, if you are happy with your selections accept them by first
+   making the collection terminal window active by clicking on it, then hitting ``<enter>``.
+   
+   You will now follow the instructions coming from PyFai.  It asks you to supply the
+   indices of the rings you have selected.  Because PyFai was written by a computer 
+   scientist and not a scientist, **the first ring has index 0**, the second has
+   index 1, the third has index 2 and the fifth has index 5.
 
-  .. note::
-
-    * For a better calibration, we suggest you to select rings that are
-      **well separated/resolved** from their neighbors, and make sure that points are assigned to the correct ring.
-
-
-2. After ring selection, click on the *original* terminal and hit ``<enter>``.
-   Then you will be requested to supply indices of rings you just selected.
-   Remember index **starts from 0** as we are using ``python``.
-   After supplying all indices, you should have a window to show your calibration:
+   If everything has gone well, after supplying all the indices, PyFai will pop
+   up a number of plots that can give an expert eye some indication of the quality
+   of the calibration.  If the dashed lines look as if they are lining up well with
+   the peaks you have a good calibration.  If not, `CTL-C` and start again.  If yes,
+   activate the terminal window by clicking on it, hit ``<enter>`` at the command prompt
+   then type ``done``.
 
 
   .. image:: ./img/calib_08.png
@@ -279,27 +293,29 @@ Quick guide of calibration steps with pyFAI
     :align: center
     :height: 300px
 
-
-  The program will ask you if you want to modify parameters.
-  To finish entire calibration process, please type ``done`` in the terminal.
-
+  PyFai can be a bit finicky.  If it hangs, type CTL-C and start over and make
+  sure the follow the instruction exactly.
+  
   You may find more information about calibration process from `pyFAI documentation <http://pyfai.readthedocs.io/en/latest/calibration.html>`_
 
+3. You are done! ``xpdAcq`` has saved the calibration parameters and will store them will all subsequent scans until you 
+   run another calibration.  
+   
+   To see the current calibration parameters, type ``show_calib()``.
+   
+   You can also find the calibration parameters in a file called 
+   ``pyFAI_calib.yml`` in ``/home/xf28id1/xpdUser/config_base``
 
-3. Finally 1D integration and 2D regrouping results will pop out:
-
+3. To clean up you can close all the PyFai windows, including
+   the 1D integration and 2D regrouping results that pop out (see below).
+   Return to the ``Quick start tutorial`` by hitting the browser back-arrow.
 
   .. image:: ./img/calib_09.png
     :width: 400px
     :align: center
     :height: 300px
 
-  After this step, a calibration file with name ``pyFAI_calib.yml`` will be
-  saved under ``/home/xf28id1/xpdUser/config_base``
 
-
-Alright, you are done then! With **automated calibration capture** feature, ``xpdAcq``
-will load calibration parameters from the most recent config file.
 
 
 .. _import_sample:

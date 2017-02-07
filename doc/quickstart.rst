@@ -6,8 +6,9 @@ Quick Start
 This quick-start contains an overview of how the ``xpdAcq`` software works.
 To understand more details about it, please refer to the detailed documentation in :ref:`xpdu`
 
-Please use this page as a reminder of the workflow and to copy & paste code snippets into your
-active ``collection-yyQn.x`` and ``analysis-yyQn.x`` ipython environments (then hit return).
+Please use this page as a reminder of the workflow and to copy & paste code snippets into the
+ipython environments that are controlling your experiment and analysis.  After
+pasting, hit enter.
 
 Remember, to post questions about anything XPD, including software, and to see archived answers, at the `XPD-Users Google group
 <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ .  If you are not already a member please request to join
@@ -18,27 +19,20 @@ OK, let's get started.
 Check your data collection environment is correctly set up
 ----------------------------------------------------------
 
-1. Make sure you are working in the correct environment. For data acquisition you should be
-in the ``collection-yyQn.x`` ipython environment, where ``yy`` is the year and ``Qn.x`` means version x under quarter n.
-For example, ``collection-17Q1.0`` would mean the fist version of quarter 1, in 2017. You should see ``In[#]:`` which
-indicates you are in an ipython environment. To check what the environment is type
+1. You will do all your work in special IPython working environments. These should already be open, you just need
+to find them.  IPython environments start the line with something like ``In[49]:`` and ``Out[50]``, so you should
+see that in a terminal.  Try typing ``show_env()``.  If you see something like ``collection-17Q1.0`` or ``analysis-17Q1.1``
+(the numbers will change with time) then you are good, you will use these environments to run your 
+experiment and to visualize and analyze your data.
 
-.. code-block:: python
-
-  !conda list
-
-It lists all the python packages in your environment, but the name of the environment
-is at the end of the line at the top.  It should say ``something something/something/collection-yyQn.x``
-which tell you that you are in the correct environment.
-
-If you see something more like ``/direct/pe2_data/xpdUser`` then
-type
+If you can't find the right environments, please ask the instrument scientist.  This is important to make sure
+that there is a clean start for your experiment.  However, if later in your experiment you ever have to restart
+your collection environmnet, then you type
 
 .. code-block:: python
 
   bsui
 
-to activate the collection environment.
 
 2. Make sure that the software has been properly configured for your beamtime. In
 your ``collection-yyQn.x`` environment, type:
@@ -59,28 +53,18 @@ set up by the instrument scientist (IS) before proceeding.
   a clean environment for the next user.  You can, of course, take anything home from within ``xpdUser``,
   or if you forgot something have the IS fetch it for you from the archive later.
 
-Check that your data analysis environment is correctly set up
+Check that your analysis environment is correctly set up
 -------------------------------------------------------------
 
 1. Analysis is done in a separate (but very similar) environment to acquisition.
-This will be in a separate terminal window on the computer (or even on a different computer)
-to the collection environment.  Try and find the right terminal window.
-For data analysis you should be
-in the ``analysis-yyQn.x`` ipython environment. Following the same naming convention as collection environment,
-``yy`` is the year and ``Qn.x`` means version X under quarter N. For example, ``analysis-17Q1.0`` would mean the fist
-version of quarter 1, in 2017. You should see ``In[#]:`` which indicates you are
-in an ipython environment. To check what the environment is type
+This will be in a separate terminal window.  At XPD we recommend 
+that you run this on work-station 3 (it is the computer on the right-hand side. 
+Look for ``ws3`` in the terminal title field)
+so make sure that you also look there for the analysis environmnet.
+Use the instructions given above for ``collection`` to check you have found the right terminal window.
+For data analysis ``show_env()`` should return something like ``analysis-17Q1.0``.
 
-.. code-block:: python
-
-  !conda list
-
-now you are looking for ``something something/something/analysis-yyQn.x``
-on the top line of the output,
-which tell you that you are in the right analysis environment.
-
-If you see something more like ``/direct/pe2_data/xpdUser`` then
-type.
+If you need to restart the analysis environment later you can do it by typing
 
 .. code-block:: python
 
@@ -93,7 +77,8 @@ your ``analysis-yyQn.x`` environment, type:
 
   an.md
 
-This should return a list of metadata about your experiment, such as PI last name.  If not
+This will return the same list of metadata about your experiment as bt.md does.  It means 
+that your analysis environment is linked to the right experiment.  If not
 please get your analysis environment set up by the instrument scientist before proceeding.
 
 3. Make sure the visualization software is running. We will use ``SrXgui`` and ``XPDsuite`` for visualizing data.
@@ -113,7 +98,11 @@ Check that they are running by finding windows that looks like:
   :align: center
   :height: 300px
 
-If you can't find them, contact your IS to get them running correctly.
+If you can't find them, you will need to open them.  On your analysis computer (we recommend ``ws3``, 
+open a new terminal window and type ``SrXgui``, then open another
+terminal window and type ``xPDsuite``.  If you want to use Fit2D for visualizing your data,
+type ``fit2d`` at a terminal prompt on the analysis computer.
+
 
 Set up your experiment
 ----------------------
@@ -132,8 +121,8 @@ If you can't remember what functions are available, but can remember the first l
 letters, type those letters and hit ``tab`` to see a list of all available functions that begin with
 those letters. This will include Python imported and built-in functions as well as xpdAcq ones.
 
-0.5 quick look
-""""""""""""""
+0.5 quick look at some data
+"""""""""""""""""""""""""""
 
 Place any sample, but maybe the Ni calibrant, at the sample position.  Let's make sure we are getting a nice
 Ni diffraction pattern. In your ``collection-yyQn.x`` terminal type:
@@ -146,64 +135,14 @@ Ni diffraction pattern. In your ``collection-yyQn.x`` terminal type:
 Note, if the software gives an error that it cannot find the sample object, then you will need
 to load a sample spreadsheet.  See section 3 below: `set up Sample objects to use later`
 
-Navigate to the ``SrXgui`` image viewer. Click on the folder icon and navigate to
-the ``tiff_base/Setup`` folder and look for a list of one or more tiff files.
-Double-click on the most recent one to view the one you just collected.
+Navigate to the ``SrXgui`` image viewer. Click on the folder icon called "Input dir" and navigate to
+the ``tiff_base/Setup`` folder then select "Choose".
+You should now see a list of (or maybe just one) tiff files.
+Double-click on the most recent one (in name order it will be the bottom one) 
+to view the one you just collected.
 
-
-1. calibration
-""""""""""""""
-run this first, then run it again each time the geometry of your measurement changes.
-
-Place the Ni calibrant at the sample position, close the hutch and open the shutter then type in your ``collection-yyQn.x`` terminal:
-
-.. code-block:: python
-
-  run_calibration() # default values (calibrant_file='Ni.D' and exposure=5) don't need to be typed
-
-and follow the instructions in :ref:`calib_manual`.
-
-The resulting calibration parameters will be saved in the header of every scan you run until you
-run ``run_calibration()`` again.
-
-2. set up a mask
-""""""""""""""""
-
-The standard mask removes problematic pixels at the edge of the detector, shadows
-the beamstop, and uses an auto-masking scheme to get rid of outlier pixels.
-The automasking has been extensively tested on a low-scattering sample so our mask
-building function has been designed to run on data from an empty kapton tube.
-Load an empty kapton tube on the diffractometer, then in your ``collection-yyQn.x`` terminal type
-
-.. code-block:: python
-
-  run_mask_builder() # be patient, the process takes 10 minutes!
-
-A mask will be generated based on the image collected from this sample. This mask
-will be saved in the header of all future scans until you run ``run_mask_builder()``
-again.  You will always be able to extract your data unmasked, or apply a different mask,
-at analysis time, but if this mask works well, it will save you a lot of time later if
-you do this step now.
-
-You can look at the 2D image with and without the mask in SrXgui.
-You can load the mask file by clicking the 'folder' icon in SrXgui, navigating
-to the ``config_base`` folder and looking for a file named ``xpdacq_mask.npy``. Select and load this file in the SrXgui mask dialog box.
-
-.. image:: ./img/select_mask_00.png
-  :width: 400px
-  :align: center
-  :height: 200px
-
-.. image:: ./img/select_mask_01.png
-  :width: 400px
-  :align: center
-  :height: 300px
-
-
-For more info: :ref:`auto_mask`.
-
-3. set up ``Sample`` objects to use later
-"""""""""""""""""""""""""""""""""""""""""
+1. load ``Sample`` information
+""""""""""""""""""""""""""""""
 
 Your sample information should be loaded in an excel spreadsheet, with a well
 defined format (a template file may be found at `xpdUser Google Group
@@ -241,15 +180,75 @@ we recommend to just edit existing or add new samples to the sheet but not to de
 For more info :ref:`import_sample`.
 
 
+2. Calibration
+""""""""""""""
+run this first, then run it again each time the geometry of your measurement changes.
+
+Place the Ni calibrant at the sample position, close the hutch and open the shutter then type in your ``collection-yyQn.x`` terminal:
+
+.. code-block:: python
+
+  run_calibration() # default values (calibrant_file='Ni.D' and exposure=5) don't need to be typed
+
+and follow the instructions in :ref:`calib_manual`.
+
+The resulting calibration parameters will be saved in the header of every scan you run until you
+run ``run_calibration()`` again.
+
+3. set up a mask
+""""""""""""""""
+
+The standard mask removes problematic pixels at the edge of the detector, shadows
+the beamstop, and uses an auto-masking scheme to get rid of outlier pixels.
+The automasking has been extensively tested on a low-scattering sample so our mask
+building function has been designed to run on data from an empty kapton tube.
+Load an empty kapton tube on the diffractometer, then in your ``collection-yyQn.x`` terminal type
+
+.. code-block:: python
+
+  run_mask_builder() # be patient, the process takes 10 minutes!
+
+A mask will be generated based on the image collected from this sample. This mask
+will be saved in the header of all future scans until you run ``run_mask_builder()``
+again.  You will always be able to extract your data unmasked, or apply a different mask,
+at analysis time, but if this mask works well, it will save you a lot of time later if
+you do this step now.
+
+You can look at the 2D image with and without the mask in SrXgui.
+You can load the mask file by clicking the 'folder' icon called "Input dir"
+in SrXgui, navigating
+to the ``config_base`` folder and click `choose`.  You will likely not see any files
+because the default filter looks for tif files.  Select ``nyp`` from the 
+'Type:' dropdown menu.  Now you should see the file ``xpdacq_mask.npy``. 
+double-click this file in the list to open it.  Masked pixels will have value
+0.0 (blue) and unmasked pixels will have values 1.0 (red).  You should see
+masked pixels around the edge of detector (edge-mask), pixels in the location
+of the beam-stop, and various other pixels that have anomalous counts in them
+as determined by the auto-masking process.
+
+.. image:: ./img/select_mask_00.png
+  :width: 400px
+  :align: center
+  :height: 200px
+
+.. image:: ./img/select_mask_01.png
+  :width: 400px
+  :align: center
+  :height: 300px
+
+For more info: :ref:`auto_mask`.
+
+
 4. set up ``ScanPlan`` objects to use later
 """""""""""""""""""""""""""""""""""""""""""
 
 use an xpdAcq template
 ^^^^^^^^^^^^^^^^^^^^^^
 
-``xpdAcq`` has templates for three common scans (more will follow, please request yours at `xpd-users Google group!
+``xpdAcq`` has templates for four common scans (more will follow, please request yours at `xpd-users Google group!
 <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ ): a
-simple count, a series of counts, and a temperature scan.  You can create ``ScanPlans`` now to use later, or you can create
+simple count, a series of counts, a temperature scan, and a user-supplied list of temperatures.  
+You can create ``ScanPlans`` now to use later, or you can create
 them when you need them (and reuse them after that).  Examples of what to type to create different example ``ScanPlans`` are shown
 in the table below.  Adapt these as you need to by changing the numbers in the arguments.
 
@@ -265,66 +264,6 @@ command
 ``ScanPlan(bt, Tlist, 5, [250, 180, 200])`` exposure detector for 5s at 250K, 180K and 200K
 =========================================== ===================================================================================
 
-which devices am I using?
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-So far, we have talked about how to use templated ``ScanPlan`` but we haven't mentioned about which *devices* are used to do your experiment.
-
-To know more about what devices are triggered by ``ScanPlan`` and how to
-possibly change them, please see :ref:`usb_DeviceOptions`
-
-write your own scan plan
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-``xpdAcq`` also consumes any scan plan from ``bluesky``. Here we will show a brief example
-for illustration. This is a more advanced topic that is beyond the scope of this quick-start,
-but this gives you the idea of what is possible.
-
-The specific illustration is a scan that drives a motor called ``motor`` through a specific list of points while collecting
-an image at each point from the detector ``area_detector``.  It uses a predefined bluesky
-plan for this purpose, ``list_scan``.  To use this in ``xpdAcq`` you would first define your ``bluesky`` plan
-and assign it to the object we have called ``mybsplan`` in this example:
-
-.. code-block:: python
-
-  from bluesky.plans import list_scan
-
-  # it is entirely optional to add metadata to the scan, but here is what you would do:
-  mymd = {'memoy_aid': 'This metadata should be about the scan, not the sample which would be added when the scanplan is run',
-          'author': 'Simon',
-          'etc': 'make up any key-value pairs'}
-
-  mybsplan = list_scan([xpd_configuration['area_det'], motor, [1,3,5,7,9], md=mymd) # drives motor to postions 1,3,5,7,9 and fires area_detector at each position
-  mybsplan = subs_wrapper(mybsplan, LiveTable([xpd_configuration['area_det']])) # set up the scan so LiveTable will give updates on how the scan is progressing
-
-Then to use it successfully in xpdAcq you have to do a bit of configuration of global parameters.  This work is done
-automatically for you in the ``xpdAcq`` built-in plans.  There are many things you could set up, but the simplest example
-is that we want the detector to collect 50 frames each time we fire it, which would give a 50s exposure at a framerate of 0.1s (framerate
-is another glbl option that you could reset).
-
-.. code-block:: python
-
-  xpd_configuration['area_det'].images_per_set.put(50)  # set detector to collect 50 frames, so 5 s exposure if continuous acquisition with 0.1s framerate
-
-Finally, later on in the experiment when you are ready to run it, you would run this plan just the same as a regular ``xpdAcq`` scanPlan object:
-
-.. code-block:: python
-
-  xrun(56, myplan) # on sample 56 in the sample list, run the myplan scan plan.
-  xrun(57, myplan)
-
-The ability to write your own bluesky plans gives enormous flexibility
-but has a steep learning curve, but you should be able to get help
-setting these up from your local contact.
-For more details about how to write a ``bluesky`` scan plan,
-please see `here <http://nsls-ii.github.io/bluesky/plans.html>`_.
-
-We recommend that you use ``xpdAcq`` built-in plans wherever possible.  If there
-is a new scan plan that you think could be useful to other users, please post it to
-the `XPD-Users Google group
-<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ ,
-and suggest that perhaps it would be great to have that
-as an ``xpdAcq`` built-in ScanPlan in the future!
 
 5. list objects by categories
 """""""""""""""""""""""""""""
@@ -533,6 +472,68 @@ The metadata associated with the image will be saved to a ``.yml`` file which is
 text file and can be opened with a text editor.  Masking and calibration behavior
 can be modified by overriding the default function arguments.  Type, for example, ``integrate_and_save_last?``
 to see the allowed values.
+
+which devices am I using?
+-------------------------
+
+So far, we have talked about how to use templated ``ScanPlan`` but we haven't mentioned about which *devices* are used to do your experiment.
+
+To know more about what devices are triggered by ``ScanPlan`` and how to
+possibly change them, please see :ref:`usb_DeviceOptions`
+
+write your own scan plan
+------------------------
+
+``xpdAcq`` also consumes any scan plan from ``bluesky``. Here we will show a brief example
+for illustration. This is a more advanced topic that is beyond the scope of this quick-start,
+but this gives you the idea of what is possible.
+
+The specific illustration is a scan that drives a motor called ``motor`` through a specific list of points while collecting
+an image at each point from the detector ``area_detector``.  It uses a predefined bluesky
+plan for this purpose, ``list_scan``.  To use this in ``xpdAcq`` you would first define your ``bluesky`` plan
+and assign it to the object we have called ``mybsplan`` in this example:
+
+.. code-block:: python
+
+  from bluesky.plans import list_scan
+
+  # it is entirely optional to add metadata to the scan, but here is what you would do:
+  mymd = {'memoy_aid': 'This metadata should be about the scan, not the sample which would be added when the scanplan is run',
+          'author': 'Simon',
+          'etc': 'make up any key-value pairs'}
+
+  mybsplan = list_scan([xpd_configuration['area_det'], motor, [1,3,5,7,9], md=mymd) # drives motor to postions 1,3,5,7,9 and fires area_detector at each position
+  mybsplan = subs_wrapper(mybsplan, LiveTable([xpd_configuration['area_det']])) # set up the scan so LiveTable will give updates on how the scan is progressing
+
+Then to use it successfully in xpdAcq you have to do a bit of configuration of global parameters.  This work is done
+automatically for you in the ``xpdAcq`` built-in plans.  There are many things you could set up, but the simplest example
+is that we want the detector to collect 50 frames each time we fire it, which would give a 50s exposure at a framerate of 0.1s (framerate
+is another glbl option that you could reset).
+
+.. code-block:: python
+
+  xpd_configuration['area_det'].images_per_set.put(50)  # set detector to collect 50 frames, so 5 s exposure if continuous acquisition with 0.1s framerate
+
+Finally, later on in the experiment when you are ready to run it, you would run this plan just the same as a regular ``xpdAcq`` scanPlan object:
+
+.. code-block:: python
+
+  xrun(56, myplan) # on sample 56 in the sample list, run the myplan scan plan.
+  xrun(57, myplan)
+
+The ability to write your own bluesky plans gives enormous flexibility
+but has a steep learning curve, but you should be able to get help
+setting these up from your local contact.
+For more details about how to write a ``bluesky`` scan plan,
+please see `here <http://nsls-ii.github.io/bluesky/plans.html>`_.
+
+We recommend that you use ``xpdAcq`` built-in plans wherever possible.  If there
+is a new scan plan that you think could be useful to other users, please post it to
+the `XPD-Users Google group
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ ,
+and suggest that perhaps it would be great to have that
+as an ``xpdAcq`` built-in ScanPlan in the future!
+
 
 User scripts
 ------------
