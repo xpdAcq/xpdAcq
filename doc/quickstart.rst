@@ -133,7 +133,7 @@ Ni diffraction pattern. In your ``collection-yyQn.x`` terminal type:
   save_last_tiff() # will save the image in the tiff_base/Setup directory
 
 Note, if the software gives an error that it cannot find the sample object, then you will need
-to load a sample spreadsheet.  See section 3 below: `set up Sample objects to use later`
+to load a sample spreadsheet.  See below: `load Sample information`
 
 Navigate to the ``SrXgui`` image viewer. Click on the folder icon called "Input dir" and navigate to
 the ``tiff_base/Setup`` folder then select "Choose".
@@ -171,10 +171,10 @@ Next type:
 
   import_sample_info()
 
-which loads the sample information and makes all the sample objects available in the current beamtime.
+which loads the sample information from the spreadsheet into the ``xpdAcq`` program and makes all the sample objects available to use in the current beamtime to collect data (see below).
 
-Updates and additions may be made by editing existing sample information, and by adding more samples, in the excel file and rerunning ``import_sample_info()``
-at any time during the experiment.  The ``Sample`` object list will be updated based on contents of this new sheet so
+Updates and additions may be made at any time by editing the Excel spreadsheet in the import directory and rerunning ``import_sample_info()``.  
+The ``Sample`` object list will be updated based on contents of this new sheet so
 we recommend to just edit existing or add new samples to the sheet but not to delete any.
 
 For more info :ref:`import_sample`.
@@ -218,7 +218,7 @@ You can look at the 2D image with and without the mask in SrXgui.
 You can load the mask file by clicking the 'folder' icon called "Input dir"
 in SrXgui, navigating
 to the ``config_base`` folder and click `choose`.  You will likely not see any files
-because the default filter looks for tif files.  Select ``nyp`` from the 
+because the default filter looks for tif files.  Select ``npy`` from the 
 'Type:' dropdown menu.  Now you should see the file ``xpdacq_mask.npy``. 
 double-click this file in the list to open it.  Masked pixels will have value
 0.0 (blue) and unmasked pixels will have values 1.0 (red).  You should see
@@ -239,16 +239,148 @@ as determined by the auto-masking process.
 For more info: :ref:`auto_mask`.
 
 
-4. set up ``ScanPlan`` objects to use later
-"""""""""""""""""""""""""""""""""""""""""""
+4. measuring a dataset from a sample: overview
+""""""""""""""""""""""""""""""""""""""""""""""
 
-use an xpdAcq template
-^^^^^^^^^^^^^^^^^^^^^^
+Now it is time to collect some data.  Load one of your samples on the diffractometer
+and close up the hutch.  To collect a dataset from a sample you will type at the 
+``collection-yyQn.x`` terminal: ``xrun(<sample-object>,<ScanPlan-object>)``
 
-``xpdAcq`` has templates for four common scans (more will follow, please request yours at `xpd-users Google group!
+where the ``<sample-object>`` contains sample information from the Excel spreadsheet,
+and ``<ScanPlan-object>`` contains information about the scan.  You will make your
+own ``ScanPlan`` objects, as we describe below, but once they are made you can reuse
+them again and again, for example, running the same ScanPlan on different samples.  We
+keep all the ScanPlans and Samples you have defined in a list that you can see by
+typing ``bt.list()`` which will result in output similar to the following:
+
+.. code-block:: python
+
+  ScanPlans:
+  0: 'ct_5'
+  1: 'Tramp_5_300_200_5'
+  2: 'tseries_5_50_15'
+  3: 'ct_900'
+  ...
+
+  Samples:
+  0: Setup
+  1: Ni
+  2: kapton_1mm
+  ...
+
+You can refer to the objects by using their name, or simply
+by giving their position in the list, for example, 
+
+.. code-block:: python
+
+  xrun(bt.samples['Setup'], bt.scanplan['ct_5']) # referencing objects by name...or...
+  xrun(0,0)                          # reference the objects by their position (index) in
+                                     # the ``bt`` list
+
+
+4.a figuring out what is the right exposure time for your sample
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+How long you should expose your sample for depends on many factors such as the
+scattering power of your sample and the incident intensity and energy.  We can
+use a somewhat trial and error approach to determine a good exposure time.  First 
+we will run some setup scans to find a good exposure.  When you want scans to be
+labelled as ``setup`` scans in the database, and not get muddled with your 
+production runs, always use the <sample-object> called 'setup', which is in
+the position 0 in the ``bt.list()``.  So while setting things up you will always
+type xrun(0,<something scanplan object>), regardless of what your sample your is.
+
+begin by typing
+
+.. code-block:: python
+
+  xrun(0,1) 
+  
+where number 1 in the list is a count-scan of 10 s.
+When the scan has completed, type
+
+.. code-block:: python
+
+  integrate_and_save_last()    #remember you can use tab-complete to see what is available 
+
+This function saves the just-measured dataset as a tif file in the ``xpdUser/tiff_base/Setup``
+directory (as long as you are using the Setup sample-object at position 0).  To view the raw
+data, find your SrXgui window, click on the "input" folder icon and navigate to that directory
+and click choose.  If the 'Type' filter is set to tif, it should be possible to see the dataset.
+You can double-click on the name in the list to open it.  To zoom, click on the window to make
+it active and then press z.  The using the mouse click and drag from the top left corner to the bottom
+right corner of the selection you want to zoom to, then let go the mouse button.  The window will
+zoom. You can adjust the color scale and toggle from linear to log scaling.
+
+One of the best ways to see if you have enough counts in your measurement is to look at the
+integrated data.  Assuming that you have already done the calibration, the ``integrate_and_save_last()``
+function should also have saved a ``.chi`` file in the same directory.  This can be viewed in 
+xPDFsuite.  Again, click on the folder icon (second from left in the main toolbar) and navigate to
+``xpdUser/tiff_base/Setup`` and hit choose.  Make sure the filter is looking for ``.chi`` files,
+make your way to the most recent one (at the bottom of the list, but you can check the date-time in the name.
+Click on this and then select 1D plot, or just double click it. By default a window shows up that has
+a PDF curve in it, but at the top there are i(q) (raw integrated data), S(Q) and F(Q) as well as g(r).  
+select whichever of these you want to look at (you can select multiple), then play around with the 
+sliders if you like to try and find reliable parameters for the Fourier transform.  Make sure that 
+``Q(nm-1)`` radio-button is selected.
+
+If there is too much noise in the data at high-Q you will have to try a new setup scan with a longer
+exposure, and keep doing this until you have sufficient counts.
+
+4.a measure your background file
+"""""""""""""""""""""""""""""""
+
+This step is not required at this point, but it is recommended.  
+The background-to-sample association is made in the Excel sample spreadsheet.
+Check the sheet to make sure that all your background samples are listed as samples, 
+and that they are correctly linked to the samples for which they are the background.
+More documentation is avaliable :ref:`here <background_obj>`. 
+
+ 1. Load the background sample (e.g., empty kapton tube) on the instrument
+ 2. In your ``collection-yyQn.x`` terminal type
+
+  .. code-block:: python
+
+    bt.list()
+
+  to locate the relevant background sample object, for example ``kapton-1mmID`` [check]
+  at position 3 [check] in the list.
+ 
+
+
+ 3. In the ``collection-yyQn.x`` terminal, run ``xrun`` (see below) on the background sample with a ``ct`` ScanPlan object of the desired exposure
+
+.. code-block:: python
+
+  # if you are running this as a tutorial don't type this.  It will take >30 mins to complete because
+  # scanplan[3] is a 15 minute exposure and there is no stored 15 minute dark exposure for subtraction
+  # so the code will automatically collect that too!
+  # but to test it you could replace bt.scanplan[3] with bt.scanplan[0]....
+  xrun(bt.samples['kepton_1mmOD'], bt.scanplan['ct_900']) # referencing objects explicitly...or...
+  xrun(2,3)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
+                                     # index from the ``bt`` list
+
+Please see :ref:`background_obj` for more information.
+
+How long should you run your background scan for? See discussion
+`here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
+but for kapton we often do it for 15-30 minutes, though it can be highly dependent
+on the scattering properties of your sample.  For example, strongly scattering samples
+like Ni often need no background subtraction at all.
+
+
+4.b Define your own xpdAcq ScanPlans
+"""""""""""""""""""""""""""""""""""
+
+xpdAcq can consume any bluesky Plan, but these can be challenging for the beginner to make, and beyond the scope of this
+quickstart.  Please see the Bluesky documentation for more details on defining bluesky Plans.
+
+Many, if not most, of XPD's measurements can be carried out using ``xpdAcq`` ScanPlan templates.
+We currently support four common scans-types (more will follow, please request yours at `xpd-users Google group!
 <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ ): a
 simple count, a series of counts, a temperature scan, and a user-supplied list of temperatures.  
-You can create ``ScanPlans`` now to use later, or you can create
+You can create particular ``ScanPlans`` now to use later, with all the parameters such as start-temperature, 
+stop-temperature and temperature-step, or you can create
 them when you need them (and reuse them after that).  Examples of what to type to create different example ``ScanPlans`` are shown
 in the table below.  Adapt these as you need to by changing the numbers in the arguments.
 
@@ -264,37 +396,11 @@ command
 ``ScanPlan(bt, Tlist, 5, [250, 180, 200])`` exposure detector for 5s at 250K, 180K and 200K
 =========================================== ===================================================================================
 
-
-5. list objects by categories
-"""""""""""""""""""""""""""""
-
-To list out currently available ``Sample`` and ``ScanPlan`` objects you can do:
-
-.. code-block:: python
-
-  in[1]: bt.list()
-  Out[1]:
-
-and you should similar output as following:
-
-.. code-block:: python
-
-  ScanPlans:
-  0: 'ct_5'
-  1: 'Tramp_5_300_200_5'
-  2: 'tseries_5_50_15'
-  3: 'ct_900'
-  ...
-
-  Samples:
-  0: setup
-  1: Ni
-  2: mt_kapton_1mm
-  ...
-
-
-6. interrogate metadata in objects
+4.c interrogate metadata in objects
 """"""""""""""""""""""""""""""""""
+
+If you want to see what is in those objects in your ``bt.list()`` you can interrogate
+them:
 
 .. code-block:: python
 
@@ -315,39 +421,8 @@ background scan
 
 It is recommended to run a background scan before your sample so it is available for
 the automated data reduction steps.  It also allows you to see problems with the experimental
-setup, for example, crystalline peaks due to the beam hitting a shutter.
+setup, for example, unexpected crystalline peaks due to the beam hitting a shutter.
 
-In general, you can associate the background with your sample :ref:`as you wish <background_obj>` and we can bundle them together in our analysis workflow later. Running a background scan then becomes exactly the same as running a normal scan. Here is how we suggest to do:
-
- 1. Load the background sample (e.g., empty kapton tube) on the instrument
- 2. In your ``collection-yyQn.x`` terminal type
-
-  .. code-block:: python
-
-    bt.list()
-
-  to locate your sample objects that will be used as backgrounds.
-
- 3. In the ``collection-yyQn.x`` terminal, run ``xrun`` (see below) on the background sample with a ``ct`` ScanPlan object of the desired exposure
-
-.. code-block:: python
-
-  # if you are running this as a tutorial don't type this.  It will take >30 mins to complete because
-  # scanplan[3] is a 15 minute exposure and there is no stored 15 minute dark exposure for subtraction
-  # so the code will automatically collect that too!
-  # but to test it you could replace bt.scanplan[3] with bt.scanplan[0]....
-  xrun(bt.samples['kepton_1mmOD'], bt.scanplan['ct_900']) # referencing objects explicitly...or...
-  xrun(2,3)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
-                                     # index from the ``bt`` list
-
-Please see :ref:`background_obj` for more information.
-
-How long should you run your background scan for? See discussion
-`here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
-but for kapton we often do it for 15-30 minutes, though it can be highly dependent
-on the scattering properties of your sample.  For example, strongly scattering samples
-like Ni often need
-no background subtraction at all.
 
 setup scans
 ^^^^^^^^^^^
