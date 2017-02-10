@@ -253,7 +253,7 @@ something like this:
     :height: 300px
 
 
-  That is the image we want to perform our  calibration with. Use **magnify
+  That is the image we want to perform our  calibration with. Use the **magnify
   tool** at the tool bar to zoom in to something that looks like the figure below.
   The magnifying tool is enabled by clicking on the button on the toolbar that
   looks like a magnifying glass. 
@@ -277,8 +277,8 @@ something like this:
    
    You will now follow the instructions coming from PyFai.  It asks you to supply the
    indices of the rings you have selected.  Because PyFai was written by a computer 
-   scientist and not a scientist, **the first ring has index 0**, the second has
-   index 1, the third has index 2 and the fifth has index 5.
+   scientist and not a scientist, **the first ring has number 0**, the second has
+   number 1, the third has number 2 and the 6th has number 5.
 
    If everything has gone well, after supplying all the indices, PyFai will pop
    up a number of plots that can give an expert eye some indication of the quality
@@ -294,7 +294,7 @@ something like this:
     :height: 300px
 
   PyFai can be a bit finicky.  If it hangs, type CTL-C and start over and make
-  sure the follow the instruction exactly.
+  sure you follow the instruction exactly.
   
   You may find more information about calibration process from `pyFAI documentation <http://pyfai.readthedocs.io/en/latest/calibration.html>`_
 
@@ -304,7 +304,7 @@ something like this:
    To see the current calibration parameters, type ``show_calib()``.
    
    You can also find the calibration parameters in a file called 
-   ``pyFAI_calib.yml`` in ``/home/xf28id1/xpdUser/config_base``
+   ``pyFAI_calib.yml`` in ``.../xpdUser/config_base``
 
 3. To clean up you can close all the PyFai windows, including
    the 1D integration and 2D regrouping results that pop out (see below).
