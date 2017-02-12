@@ -24,46 +24,6 @@ from xpdsim.movers import cs700, shctl1
 from xpdsim.dets import det_factory, nsls_ii_path, chess_path
 import bluesky.examples as be
 
-# faking plug in:
-class PutGet:
-    """basic class to have set/put method"""
-
-    def __init__(self, numeric_val=1):
-        self._val = numeric_val
-
-    def put(self, val):
-        """set value"""
-        self._val = val
-        return self._val
-
-    def get(self):
-        """read current value"""
-        return self._val
-
-class SimulatedCam:
-    """class to simulate Camera class"""
-
-    def __init__(self, frame_acq_time=0.1, acquire=1):
-        # default acq_time = 0.1s and detector is turned on
-        self.acquire_time = PutGet(frame_acq_time)
-        self.acquire = PutGet(acquire)
-
-
-# define simulated PE1C
-class SimulatedPE1C(be.ReaderWithFileStore):
-    """Subclass the bluesky plain detector examples ('Reader');
-
-    also add realistic attributes.
-    """
-
-    def __init__(self, name, read_fields, fs):
-        self.images_per_set = PutGet()
-        self.number_of_sets = PutGet()
-        self.cam = SimulatedCam()
-        self._staged = False
-        super().__init__(name, read_fields, fs=fs)
-        self.ready = True  # work around a hack in Reader
-
 
 def build_pymongo_backed_broker():
     """Provide a function level scoped MDS instance talking to
@@ -97,6 +57,14 @@ def build_pymongo_backed_broker():
     #insert_imgs(db.mds, db.fs, 1, (20, 20))
 
     return db
+
+# instantiate simulation objects
+db = build_pymongo_backed_broker()
+db.fs.register_handler('RWFS_NPY', be.ReaderWithFSHandler)
+pe1c = det_factory('pe1c', db.fs, nsls_ii_path, shutter=shctl1,
+                   save_path=tempfile.mkdtemp())
+pe1c_chess = det_factory('pe1c_chess', db.fs, chess_path, shutter=shctl1,
+                         save_path=tempfile.mkdtemp())
 
 
 def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
@@ -175,10 +143,3 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
                         uid=str(uuid.uuid4()),
                         time=time.time())
     return save_dir
-
-
-# instantiate simulation objects
-db = build_pymongo_backed_broker()
-db.fs.register_handler('RWFS_NPY', be.ReaderWithFSHandler)
-pe1c = det_factory('pe1c', db.fs, nsls_ii_path, shutter=shctl1)
-pe1c_chess = det_factory('pe1c_chess', db.fs, chess_path, shutter=shctl1)
