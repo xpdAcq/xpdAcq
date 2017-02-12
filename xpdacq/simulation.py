@@ -20,7 +20,8 @@ import time
 import tempfile
 import numpy as np
 from time import strftime
-
+from xpdsim.movers import cs700, shctl1
+from xpdsim.dets import det_factory, nsls_ii_path, chess_path
 import bluesky.examples as be
 
 # faking plug in:
@@ -179,6 +180,5 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
 # instantiate simulation objects
 db = build_pymongo_backed_broker()
 db.fs.register_handler('RWFS_NPY', be.ReaderWithFSHandler)
-pe1c = SimulatedPE1C('pe1c', {'pe1_image': lambda: np.ones((5,5))}, fs=db.fs)
-shctl1 = be.Mover('shctl1', {'rad': lambda x: x}, {'x':0})
-cs700 = be.Mover('cs700', {'temperature': lambda x: x}, {'x':300})
+pe1c = det_factory('pe1c', db.fs, nsls_ii_path, shutter=shctl1)
+pe1c_chess = det_factory('pe1c_chess', db.fs, chess_path, shutter=shctl1)
