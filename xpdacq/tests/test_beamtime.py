@@ -10,7 +10,7 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
                                   load_beamtime)
 from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
-from xpdacq.simulation import pe1c, db, shctl1, cs700, nsls_ii_path
+from xpdacq.simulation import pe1c, db, shctl1, cs700
 import bluesky.examples as be
 from xpdacq.xpdacq import CustomizedRunEngine
 
