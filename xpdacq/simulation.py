@@ -65,7 +65,7 @@ pe1c = det_factory('pe1c', db.fs, nsls_ii_path, shutter=shctl1,
                    save_path=tempfile.mkdtemp())
 pe1c_chess = det_factory('pe1c_chess', db.fs, chess_path, shutter=shctl1,
                          save_path=tempfile.mkdtemp())
-
+print(chess_path)
 
 def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
     """
