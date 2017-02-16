@@ -53,7 +53,7 @@ before_install:
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
-  - conda create -n testenv nose python=$TRAVIS_PYTHON_VERSION scipy jsonschema traitlets pytest coverage pip databroker ophyd historydict boltons doct pyepics super_state_machine xray-vision lmfit jinja2 icu pyzmq mongoquery mock xlrd -c lightsource2 -c conda-forge -c soft-matter
+  - conda create -n testenv nose python=$TRAVIS_PYTHON_VERSION scipy jsonschema traitlets pytest coverage pip databroker ophyd historydict boltons doct pyepics super_state_machine xray-vision lmfit jinja2 icu pyzmq mongoquery mock xlrd pyFAI -c lightsource2 -c conda-forge -c soft-matter
   - source activate testenv
   - 'pip install python-coveralls'
   - 'pip install https://github.com/NSLS-II/event-model/zipball/master#egg=event_model'
@@ -65,7 +65,6 @@ install:
   - 'pip install https://github.com/NSLS-II/bluesky/zipball/master#egg=bluesky'
   - 'pip install https://github.com/xpdAcq/xpdAn/zipball/master#egg=xpdan'
   - 'pip install https://github.com/xpdAcq/xpdSim/zipball/master#egg=xpdsim'
-  - 'pip install https://github.com/silx-kit/pyFAI/zipball/0.13#egg=pyFAI'
   - pip install codecov flake8
   - python setup.py install
   # Need to clean the python build directory (and other cruft) or pytest is
