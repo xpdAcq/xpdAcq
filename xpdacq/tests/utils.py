@@ -4,8 +4,7 @@ import time
 from uuid import uuid4
 
 import numpy as np
-from xpdsim.dets import nsls_ii_path
-print(nsls_ii_path)
+
 
 def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
     """

@@ -3,6 +3,8 @@ import sys
 import pytest
 
 if __name__ == '__main__':
+    from xpdsim.dets import nsls_ii_path
+    print(nsls_ii_path)
     # show output results from every test function
     args = ['-v', '-vrxs']
     # show the message output for skipped and expected failure tests
