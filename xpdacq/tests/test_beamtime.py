@@ -10,7 +10,7 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
                                   load_beamtime)
 from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
-from xpdacq.simulation import pe1c, db, shctl1, cs700
+from xpdacq.simulation import pe1c, db, shctl1, cs700, nsls_ii_path
 import bluesky.examples as be
 from xpdacq.xpdacq import CustomizedRunEngine
 
@@ -19,6 +19,7 @@ from xpdacq.xpdacq import CustomizedRunEngine
 
 class BeamtimeObjTest(unittest.TestCase):
     def setUp(self):
+        print(nsls_ii_path)
         self.base_dir = glbl['base']
         self.home_dir = os.path.join(self.base_dir, 'xpdUser')
         self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
