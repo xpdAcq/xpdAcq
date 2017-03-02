@@ -18,7 +18,7 @@ Overview
 --------
 The XPD end-station is run by the NSLS-II Bluesky software, a very powerful suite of Python language programs for controlling motors
 and detectors and running experiments to collect data.  On top of Bluesky, at XPD we have put another software layer that
-is designed to help you do better powder diffraction experiments more easily.  It is really a "user Interface" 
+is designed to help you do better powder diffraction experiments more easily.  It is really a "user Interface"
 to Bluesky that simplifies some of the tasks and also helps you to collect rich metadata with your experiment that will
 help you to do analysis.  As time goes on, there will be more analysis functionality also in the XPD software library.
 
@@ -35,12 +35,12 @@ about the sample being run and the scan parameters, so it knows what to do.  Thi
 calibrated the instrument (and we strongly encourage you to do this first!) ``integrate_and_save_last()`` which will save the
 images, but also 1D integrated patterns that you could do Rietveld refinement or PDF analysis on right away.  The data are saved in your
 own special directories, ``.../xpdUser/tiff_base/<sample-name>`` where you can go to visualize them using ``SrXgui`` for the tiff images
-and ``xPDsuite`` for the 1D data.  You can also use ``Fit2d`` if you like.  You can copy the data from there to an external hard-drive 
+and ``xPDsuite`` for the 1D data.  You can also use ``Fit2d`` if you like.  You can copy the data from there to an external hard-drive
 to take home.  You can do your own analyses, saving data in the ``xpdUser`` directory tree.  Everything in there will
 be archived at the end of your experiment, and then this directory tree will be deleted leaving a clean workspace for the next user
 and keeping your data secure.
 
-Below we give a step-by-step guide to setting up and running a successful experiment.  We can't cover all possibilies, and there is
+Below we give a step-by-step guide to setting up and running a successful experiment.  We can't cover all possibilities, and there is
 much more power within the ``xpdAcq`` and ``Bluesky`` software that you can explore as you get more advanced, but we recommend that
 you follow through the following guide step-by-step, typing the commands and seeing what happens, to get used to the software and,
 more importantly, to do things in the right order set up your experiment for success.
@@ -53,8 +53,8 @@ Check your data collection environment is correctly set up
 1. You will do all your work in special IPython working environments. These should already be open, you just need
 to find them.  IPython environments start the line with something like ``In[49]:`` and ``Out[50]``, so you should
 see that in a terminal.  Try typing ``show_env()``.  If you see something like ``collection-17Q1.0`` or ``analysis-17Q1.1``
-(the numbers will change with time) then you are good, you will use these environments to run your 
-experiment and to visualize and analyze your data, respectively.  We recommend that you run ``collection`` on 
+(the numbers will change with time) then you are good, you will use these environments to run your
+experiment and to visualize and analyze your data, respectively.  We recommend that you run ``collection`` on
 work-station 2 (the central computer, look for ``ws2`` in the title at the top of the terminal windows) and
 ``analysis`` on the ``ws3`` computer on the right.
 
@@ -87,7 +87,7 @@ Check that your analysis environment is correctly set up
 
 1. Analysis is done in a separate (but very similar) environment to acquisition.
 This will be in a separate terminal window.  You can run an analysis
-environment on ``ws2`` and on work-station 3 (it is the computer on the right-hand side. 
+environment on ``ws2`` and on work-station 3 (it is the computer on the right-hand side.
 Look for ``ws3`` in the terminal title field)
 so make sure that you also look there for the analysis environment.
 Use the instructions given above for ``collection`` to check you have found the right terminal window.
@@ -106,7 +106,7 @@ your ``analysis-yyQn.x`` environment, type:
 
   an.md
 
-This will return the same list of metadata about your experiment as bt.md does.  It means 
+This will return the same list of metadata about your experiment as bt.md does.  It means
 that your analysis environment is linked to the right experiment.  If not
 please get your analysis environment set up by the instrument scientist before proceeding.
 
@@ -128,7 +128,7 @@ Check that they are running by finding windows that look like:
   :align: center
   :height: 300px
 
-If you can't find them, you will need to open them.  
+If you can't find them, you will need to open them.
 Open a new terminal window and type ``SrXgui`` at the command (note, you don't type this from
 inside the ``collection`` or ``analysis`` environments but from a new terminal), then open another
 terminal window and type ``xPDsuite``.  If you want to use Fit2D for visualizing your data,
@@ -144,13 +144,13 @@ You do things in ``xpdAcq`` and ``xpdAn`` by running 'functions' that have a nam
 by parentheses, for example, ``show_env()``.  If the function needs to know some parameters to work,
 we pass these to the function as 'arguments' by putting them in a comma-separated sequence in the parentheses,
 e.g., ``xrun(5,7)`` (more on this later).
-This is standard Python syntax. 
+This is standard Python syntax.
 
 If you don't know what functions are available to you (and you don't)
 you can discover them by typing a few letters and then hitting the 'Tab' key.  All
 functions that the xpd software knows about that start with that sequence of letters
 will be revealed. Try typing ``s`` then Tab.  Too many in the list?  Then add another
-letter (e.g., type ``h``so you have ``sh``) then 'Tab'.  Can you find ``show_env()``? 
+letter (e.g., type ``h``so you have ``sh``) then 'Tab'.  Can you find ``show_env()``?
 You can navigate to the one you want using the arrow keys and hit enter.
 
 Now, if you don't know what that function does and what arguments it needs or has as optional (and you don't)
@@ -175,7 +175,7 @@ to load a sample spreadsheet.  See below: `load Sample information`
 Now find the ``SrXgui`` image viewer. Click on the folder icon called "Input dir" and navigate to
 the ``.../xpdUser/tiff_base/Setup`` folder then select "Choose".
 You should now see a list of (or maybe just one) tiff files.
-Double-click on the most recent one (in name order it will be the bottom one) 
+Double-click on the most recent one (in name order it will be the bottom one)
 to view the one you just collected. By default, ``save_last_tiff()`` saves a dark-subtracted
 image so you will see a dark corrected image of your sample.
 
@@ -183,7 +183,7 @@ To zoom in to part of the image, click on the plot with the mouse to make it act
 then type ``z`` on the keyboard.  The cursor should change to a '+'.  Move the cross
 to the top left of the selection you want to make, then hold down the left mouse
 button and move the mouse to the bottom-right corner and let go the left mouse
-button.   To reset the figure type ``Esc`` on the keyboard.  `Remember, for the 
+button.   To reset the figure type ``Esc`` on the keyboard.  `Remember, for the
 keyboard inputs to work you have to first click on the plot window to make it active`.
 You can toggle linear and log scales using the button, and change the color scale
 using the slider.  To open a new image, double-click on the new sample name in the
@@ -222,7 +222,7 @@ Next type:
 
 which loads the sample information from the spreadsheet into the ``xpdAcq`` program and makes all the sample objects available to use in the current beamtime to collect data (see below).
 
-Updates and additions may be made at any time by editing the Excel spreadsheet in the import directory and rerunning ``import_sample_info()``.  
+Updates and additions may be made at any time by editing the Excel spreadsheet in the import directory and rerunning ``import_sample_info()``.
 The ``Sample`` object list will be updated based on contents of this new sheet so
 we recommend to just edit existing or add new samples to the sheet but not to delete any.
 
@@ -267,8 +267,8 @@ You can look at the 2D image with and without the mask in SrXgui.
 You can load the mask file by clicking the 'folder' icon by the "Mask file" field
 in SrXgui, navigating
 to the ``.../xpdUser/config_base`` folder and click `choose`.  If you do not see any files
-the filter is likely not set correctly.  Select ``npy`` from the 
-'Type:' dropdown menu.  Now you should see the file ``xpdacq_mask.npy``. 
+the filter is likely not set correctly.  Select ``npy`` from the
+'Type:' dropdown menu.  Now you should see the file ``xpdacq_mask.npy``.
 double-click this file in the list to select it.  Masked pixels will have value
 0.0 (blue) and unmasked pixels will have values 1.0 (red).  You should see
 masked pixels around the edge of detector (edge-mask), pixels in the location
@@ -292,7 +292,7 @@ For more info: :ref:`auto_mask`.
 """"""""""""""""""""""""""""""""""""""""""""""
 
 Now it is time to collect some data.  Load one of your samples on the diffractometer
-and close up the hutch.  To collect a dataset from a sample you will type at the 
+and close up the hutch.  To collect a dataset from a sample you will type at the
 ``collection-yyQn.x`` terminal: ``xrun(<sample-object>,<ScanPlan-object>)``
 
 where the ``<sample-object>`` contains sample information from the Excel spreadsheet,
@@ -305,24 +305,40 @@ typing ``bt.list()`` which will result in output similar to the following:
 .. code-block:: python
 
   ScanPlans:
-  0: 'ct_5'
-  1: 'ct_1' 
-  .
-  .
-  .
-  15:'Tramp_5_300_200_5'
-  16: 'tseries_5_50_15'
-  17: 'ct_900'
-  ...
+  0: ct_5
+  1: ct_0.1
+  2: ct_1
+  3: ct_10
+  4: ct_30
+  5: ct_60
 
   Samples:
   0: Setup
   1: Ni
-  2: kapton_1mm
-  ...
+  2: kapton_1mmOD
+  3: kapton_0.9mmOD
+  4: kapton_0.5mmOD
+  5: activated_carbon_1
+  6: activated_carbon_2
+  7: activated_carbon_3
+  8: activated_carbon_4
+  9: activated_carbon_5
+  10: activated_carbon_6
+  11: FeF3(4,4'-bipyridyl)
+  12: TPT_0.9MM
+  13: TPB_0.9MM
+  14: TPP_0.9MM
+  15: BTB_0.9MM
+  16: BTC_0.9MM
+  17: JVL400_LiFePO4_IL
+  18: Film_array_on_silicon_substrate
+  19: ScN_on_Si_Pos1
+  20: ScN_on_Si_Pos2
+  21: ScN_on_Si_Pos3
+  22: nano_particle_grid
 
 You can refer to the objects by using their name, or simply
-by giving their position in the list, for example, 
+by giving their position in the list, for example,
 
 .. code-block:: python
 
@@ -336,26 +352,26 @@ by giving their position in the list, for example,
 
 How long you should expose your sample for depends on many factors such as the
 scattering power of your sample and the incident intensity and energy.  We can
-use a somewhat trial and error approach to determine a good exposure time.  First 
+use a somewhat trial and error approach to determine a good exposure time.  First
 we will run some setup scans to find a good exposure.  When you want scans to be
-labelled as ``setup`` scans in the database, and not get muddled with your 
+labeled as ``setup`` scans in the database, and not get muddled with your
 production runs, always use the ``<sample-object>`` called ``Setup``, which is always in
 the position `0` in the ``bt.list()``.  So while setting things up you will `always`
-type ``xrun(0,<some scanplan object you are testing>)``, regardless of what your 
+type ``xrun(0, <some scanplan object you are testing>)``, regardless of what your
 actual sample is.
 
 begin by typing
 
 .. code-block:: python
 
-  xrun(0,1) 
-  
+  xrun(0,1)
+
 where number 1 in our list is a count-scan of 10 s.
 When the scan has completed, type
 
 .. code-block:: python
 
-  integrate_and_save_last()    #remember you can use tab-complete to see what is available 
+  integrate_and_save_last()    #remember you can use tab-complete to see what is available
 
 This function saves the just-measured dataset as a tif file in the ``.../xpdUser/tiff_base/Setup``
 directory (as long as you are using the Setup sample-object at position 0).  To view the raw
@@ -363,14 +379,14 @@ data, find your SrXgui window, and use the instructions above to play around wit
 
 One of the best ways to see if you have enough counts in your measurement is to look at the
 `integrated` data.  Assuming that you have already done the calibration, the ``integrate_and_save_last()``
-function should also have saved a ``.chi`` file in the same directory.  This can be viewed in 
+function should also have saved a ``.chi`` file in the same directory.  This can be viewed in
 `xPDsuite`.  Locate the xPDsuite window, click on the folder icon (second from left in the main toolbar) and navigate to
 ``.../xpdUser/tiff_base/Setup`` and hit choose.  Make sure the filter is looking for ``.chi`` files,
 make your way to the most recent one (at the bottom of the list, but you can check the date-time in the name).
 Click on this and then select 1D plot, or just double click it. By default a window shows up that has
-a PDF curve in it, but at the top there are radio buttons for `i(q)` (raw integrated data), `S(Q)` and `F(Q)` as well as `g(r)`.  
-Select all of these you want to look at (you can select multiple), then play around with the 
-sliders if you like to try and find reliable parameters for the corrections.  Make sure that 
+a PDF curve in it, but at the top there are radio buttons for `i(q)` (raw integrated data), `S(Q)` and `F(Q)` as well as `g(r)`.
+Select all of these you want to look at (you can select multiple), then play around with the
+sliders if you like to try and find reliable parameters for the corrections.  Make sure that
 the ``Q(nm-1)`` radio-button is selected as ``integrate_and_save_last()`` saves the integrated data on a Q-grid in
 units of inverse nm.
 
@@ -387,10 +403,10 @@ quickstart.  Please see the Bluesky documentation for more details on defining b
 Many, if not most, of XPD's measurements can be carried out using ``xpdAcq`` ScanPlan templates.
 We currently support four common scans-types (more will follow, please request yours at `xpd-users Google group!
 <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ ): a
-simple count, a series of counts, a temperature scan, and a user-supplied list of temperatures.  
-You can create particular ``ScanPlans`` now to use later, with all the parameters such as start-temperature, 
+simple count, a series of counts, a temperature scan, and a user-supplied list of temperatures.
+You can create particular ``ScanPlans`` now to use later, with all the parameters such as start-temperature,
 stop-temperature and temperature-step, or you can create
-them when you need them (and reuse them after that).  Examples of what to type (followed by ``Enter``) 
+them when you need them (and reuse them after that).  Examples of what to type (followed by ``Enter``)
 to create different example ``ScanPlans`` are shown
 in the table below.  Adapt these as you need to by changing the numbers in the arguments.
 
@@ -410,11 +426,11 @@ command
 4.c measure your background file
 """""""""""""""""""""""""""""""
 
-This step is not required at this point, but it is recommended.  
+This step is not required at this point, but it is recommended.
 The background-to-sample association is made in the Excel sample spreadsheet.
-Check the sheet to make sure that all your background samples are listed as samples, 
+Check the sheet to make sure that all your background samples are listed as samples,
 and that they are correctly linked to the samples for which they are the background.
-More documentation is avaliable :ref:`here <background_obj>`. 
+More documentation is avaliable :ref:`here <background_obj>`.
 
  1. Load the background sample (e.g., empty kapton tube) on the instrument
  2. In your ``collection-yyQn.x`` terminal type
@@ -423,10 +439,10 @@ More documentation is avaliable :ref:`here <background_obj>`.
 
     bt.list()
 
-  to locate the relevant background sample object, for example it might be ``kapton-1mmID`` 
+  to locate the relevant background sample object, for example it might be ``kapton-1mmID``
   at position 3 in the list.
- 
- 3. Then in the ``collection-yyQn.x`` terminal, you will type ``xrun`` giving as arguments the background sample-object with a ``ct`` 
+
+ 3. Then in the ``collection-yyQn.x`` terminal, you will type ``xrun`` giving as arguments the background sample-object with a ``ct``
  ScanPlan object of the desired exposure
 
 .. code-block:: python
