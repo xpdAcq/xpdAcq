@@ -248,7 +248,7 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
     try:
         os.chdir(root_dir)
         print("INFO: Archiving your data now. That may take several"
-              "minutes. please be patient :)")
+              " minutes. please be patient :)")
         tar_return = shutil.make_archive(archive_full_name,
                                          archive_format,
                                          root_dir=root_dir,
