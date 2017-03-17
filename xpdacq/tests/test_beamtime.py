@@ -19,6 +19,7 @@ from xpdacq.xpdacq import CustomizedRunEngine
 
 class BeamtimeObjTest(unittest.TestCase):
     def setUp(self):
+        print(nsls_ii_path)
         self.base_dir = glbl['base']
         self.home_dir = os.path.join(self.base_dir, 'xpdUser')
         self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
