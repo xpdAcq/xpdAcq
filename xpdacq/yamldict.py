@@ -21,6 +21,7 @@ class _YamlDictLike:
     Supports the dict-like (MutableMapping) interface plus a `flush` method
     to manually update the file to the state of the dict.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._referenced_by = []  # to be flushed whenever this is flushed
@@ -37,7 +38,7 @@ class _YamlDictLike:
     def filepath(self, fname):
         self._filepath = fname
         # dont create dir if parent doesn't exist yet
-        #os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
+        # os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
         if os.path.isdir(os.path.dirname(self.filepath)):
             self.flush()
 

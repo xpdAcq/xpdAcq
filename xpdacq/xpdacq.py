@@ -27,32 +27,9 @@ from bluesky.utils import normalize_subs_input
 
 from xpdacq.glbl import glbl
 from xpdacq.xpdacq_conf import xpd_configuration
-from xpdacq.beamtime import ScanPlan
+from xpdacq.beamtime import ScanPlan, _summarize
 
 from xpdan.tools import compress_mask
-
-
-def _summarize(plan):
-    """based on bluesky.utils.print_summary"""
-    output = []
-    read_cache = []
-    for msg in plan:
-        cmd = msg.command
-        if cmd == 'open_run':
-            output.append('{:=^80}'.format(' Open Run '))
-        elif cmd == 'close_run':
-            output.append('{:=^80}'.format(' Close Run '))
-        elif cmd == 'set':
-            output.append('{motor.name} -> {args[0]}'.format(motor=msg.obj,
-                                                             args=msg.args))
-        elif cmd == 'create':
-            pass
-        elif cmd == 'read':
-            read_cache.append(msg.obj.name)
-        elif cmd == 'save':
-            output.append('  Read {}'.format(read_cache))
-            read_cache = []
-    return '\n'.join(output)
 
 
 def _update_dark_dict_list(name, doc):
@@ -69,11 +46,8 @@ def _update_dark_dict_list(name, doc):
     num_frame = area_det.images_per_set.get()
     light_cnt_time = acq_time * num_frame
 
-    dark_dict = {}
-    dark_dict['acq_time'] = acq_time
-    dark_dict['exposure'] = light_cnt_time
-    dark_dict['timestamp'] = doc['time']
-    dark_dict['uid'] = doc['run_start']
+    dark_dict = {'acq_time': acq_time, 'exposure': light_cnt_time,
+                 'timestamp': doc['time'], 'uid': doc['run_start']}
     dark_dict_list.append(dark_dict)
     glbl['_dark_dict_list'] = dark_dict_list  # update glbl._dark_dict_list
 
@@ -169,9 +143,9 @@ def _validate_dark(expire_time=None):
     for el in dark_dict_list:
         expo_diff = abs(el['exposure'] - light_cnt_time)
         time_diff = abs(el['timestamp'] - now)
-        if (expo_diff < acq_time) and\
-           (time_diff < expire_time*60) and\
-           (el['acq_time'] ==  acq_time):
+        if (expo_diff < acq_time) and \
+                (time_diff < expire_time * 60) and \
+                (el['acq_time'] == acq_time):
             qualified_dark_list.append((el.get('uid'), expo_diff,
                                         time_diff))
     if qualified_dark_list:
@@ -219,7 +193,7 @@ def _auto_load_calibration_file():
 
 
 def _inject_qualified_dark_frame_uid(msg):
-    if msg.command == 'open_run' and msg.kwargs.get('dark_frame') != True:
+    if msg.command == 'open_run' and msg.kwargs.get('dark_frame') is not True:
         dark_uid = _validate_dark(glbl['dk_window'])
         msg.kwargs['sc_dk_field_uid'] = dark_uid
     return msg
@@ -232,7 +206,7 @@ def _inject_calibration_md(msg):
         if calibration_md:
             injected_calib_dict = dict(calibration_md)
             injected_calib_uid = injected_calib_dict.pop(
-                                 'calibration_collection_uid')
+                'calibration_collection_uid')
             msg.kwargs['calibration_md'] = injected_calib_dict
             msg.kwargs['calibration_collection_uid'] = injected_calib_uid
     return msg
@@ -251,6 +225,7 @@ def _inject_mask(msg):
             print("INFO: no mask has been built, scan will keep going...")
 
     return msg
+
 
 def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
                            wait_time=None, clear=True):
@@ -287,9 +262,9 @@ def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
     default_suspend_thres = 50
     default_resume_thres = 50
     if suspend_thres is None:
-        suspend_thres = max(default_suspend_thres, 0.5*signal_val)
-    if resume_thres is None :
-        resume_thres = max(default_resume_thres, 0.8*signal_val)
+        suspend_thres = max(default_suspend_thres, 0.5 * signal_val)
+    if resume_thres is None:
+        resume_thres = max(default_resume_thres, 0.8 * signal_val)
     if wait_time is None:
         wait_time = 1200
     if suspend_thres <= 50:

@@ -63,7 +63,6 @@ def run_calibration(exposure=5, dark_sub_bool=True,
                     calibrant=None, wavelength=None,
                     detector=None, *, RE_instance=None,
                     calib_collection_uid=None, **kwargs):
-
     # TODO: discuss default calibrant
     """function to run entire calibration process.
 
@@ -83,7 +82,7 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     dark_sub_bool : bool, optional
         option of turn on/off dark subtraction on this calibration
         image. default is True.
-   calibrant : str, optional
+    calibrant : str, optional
         calibrant being used, default is 'Ni'.
         input could be full file path to customized d-spacing file with
         ".D" extension or one of pre-defined calibrant names.
@@ -153,7 +152,7 @@ def _configure_calib_instance(calibrant, detector, wavelength):
     if calibrant is None:
         calibrant = 'Ni'
     c = Calibration(calibrant=calibrant, detector=detector,
-                    wavelength=wavelength*10**(-10))
+                    wavelength=wavelength * 10 ** (-10))
 
     return c
 
@@ -163,8 +162,8 @@ def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
     """helper function to collect calibration image and return it"""
     c = calibration_instance  # shorthand notation
     calibrant_name = c.calibrant.__repr__().split(' ')[0]
-    calibration_dict = {'sample_name':calibrant_name,
-                        'sample_composition':{calibrant_name :1},
+    calibration_dict = {'sample_name': calibrant_name,
+                        'sample_composition': {calibrant_name: 1},
                         'is_calibration': True,
                         'calibration_collection_uid': calib_collection_uid}
     bto = RE_instance.beamtime  # grab beamtime object linked to run_engine
@@ -173,10 +172,13 @@ def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
     light_header = xpd_configuration['db'][uid[-1]]  # last one must be light
     dark_uid = light_header.start.get('sc_dk_field_uid')
     dark_header = xpd_configuration['db'][dark_uid]
-    dark_img = np.asarray(xpd_configuration['db'].get_images(dark_header,
-                                      glbl['det_image_field'])).squeeze()
-    img = np.asarray(xpd_configuration['db'].get_images(light_header,
-                                      glbl['det_image_field'])).squeeze()
+
+    dark_img = np.asarray(xpd_configuration['db'].get_images(
+        dark_header, glbl['det_image_field'])).squeeze()
+
+    img = np.asarray(xpd_configuration['db'].get_images(
+        light_header, glbl['det_image_field'])).squeeze()
+
     if dark_sub_bool:
         img -= dark_img
 
@@ -199,10 +201,10 @@ def _save_and_attach_calib_param(calib_c, timestr,
     # save glbl attribute for xpdAcq
     glbl['calib_config_dict'] = calib_c.ai.getPyFAI()
     glbl['calib_config_dict'].update(calib_c.ai.getFit2D())
-    glbl['calib_config_dict'].update({'file_name':calib_c.basename})
-    glbl['calib_config_dict'].update({'time':timestr})
+    glbl['calib_config_dict'].update({'file_name': calib_c.basename})
+    glbl['calib_config_dict'].update({'time': timestr})
     glbl['calib_config_dict'].update({'calibration_collection_uid':
-                                   calib_collection_uid})
+                                          calib_collection_uid})
     # save yaml dict used for xpdAcq
     yaml_name = glbl['calib_config_name']
     with open(os.path.join(glbl['config_base'], yaml_name), 'w') as f:
@@ -216,6 +218,7 @@ def _save_and_attach_calib_param(calib_c, timestr,
     print("INFO: To save your calibration image as a tiff file run\n"
           "save_last_tiff()\nnow.")
     return
+
 
 def _calibration(img, calibration, **kwargs):
     """engine for performing calibration on a image with geometry
@@ -242,8 +245,8 @@ def _calibration(img, calibration, **kwargs):
     # calibration
     c = calibration  # shorthand notation
     timestr = _timestampstr(time.time())
-    f_name  = '_'.join([timestr, 'pyFAI_calib',
-                        c.calibrant.__repr__().split(' ')[0]])
+    f_name = '_'.join([timestr, 'pyFAI_calib',
+                       c.calibrant.__repr__().split(' ')[0]])
     w_name = os.path.join(glbl['config_base'], f_name)  # poni name
     poni_name = w_name + ".npt"
     c.gui = interactive
@@ -259,7 +262,6 @@ def _calibration(img, calibration, **kwargs):
     c.gui_peakPicker()
 
     return c, timestr
-
 
 
 def run_mask_builder(exposure=300, dark_sub_bool=True,
@@ -331,18 +333,20 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
 
     # scan
     mask_collection_uid = str(uuid.uuid4())
-    mask_builder_dict = {'sample_name':sample_name,
-                        'sample_composition':{sample_name :1},
-                        'is_mask': True,
-                        'mask_collection_uid': mask_collection_uid}
+    mask_builder_dict = {'sample_name': sample_name,
+                         'sample_composition': {sample_name: 1},
+                         'is_mask': True,
+                         'mask_collection_uid': mask_collection_uid}
     sample = Sample(bto, mask_builder_dict)
     xrun_uid = xrun(sample, ScanPlan(bto, ct, exposure))
     light_header = xpd_configuration['db'][-1]
     if dark_sub_bool:
         dark_uid = light_header.start['sc_dk_field_uid']
         dark_header = xpd_configuration['db'][dark_uid]
-        dark_img = np.asarray(xpd_configuration['db'].get_images(dark_header,
-                              glbl['det_image_field'])).squeeze()
+
+        dark_img = np.asarray(xpd_configuration['db'].get_images(
+            dark_header, glbl['det_image_field'])).squeeze()
+
     for ev in xpd_configuration['db'].get_events(light_header, fill=True):
         img = ev['data'][glbl['det_image_field']]
         if dark_sub_bool:

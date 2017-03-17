@@ -11,9 +11,11 @@ from xpdacq.xpdacq_conf import (GlblYamlDict, glbl_dict,
 
 from xpdacq.simulation import pe1c, cs700, shctl1, db
 
+
 class glblTest(unittest.TestCase):
     def setUp(self):
-        self._glbl  = GlblYamlDict('glbl', **glbl_dict) # glbl going to be tested
+        self._glbl = GlblYamlDict('glbl',
+                                  **glbl_dict)  # glbl going to be tested
         for el in self._glbl['allfolders']:
             os.makedirs(el, exist_ok=True)
         # set simulation objects
@@ -27,14 +29,14 @@ class glblTest(unittest.TestCase):
 
     def test_glbl_reload(self):
         # fresh start, test default values
-        for k,v in glbl_dict.items():
+        for k, v in glbl_dict.items():
             assert self._glbl[k] == v
         # update value
         self._glbl['dk_window'] = 20
         self._glbl['auto_dark'] = False
         self._glbl['_dark_dict_list'] = [{'acq_time': 0.1, 'exposure': 0.5,
                                           'timestamp': time.time(),
-                                          'uid':str(uuid.uuid4())}]
+                                          'uid': str(uuid.uuid4())}]
         # after update, local yaml should exist
         assert os.path.isfile(self._glbl['glbl_yaml_path'])
         reload_glbl_dict = _reload_glbl()

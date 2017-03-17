@@ -12,20 +12,20 @@ from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
 from xpdacq.utils import import_sample_info, _import_sample_info
 
+
 # print messages for debugging
-#xrun.msg_hook = print
+# xrun.msg_hook = print
 
 class ImportSamplTest(unittest.TestCase):
-
     def setUp(self):
         self.base_dir = glbl['base']
-        self.home_dir = os.path.join(self.base_dir,'xpdUser')
-        self.config_dir = os.path.join(self.base_dir,'xpdConfig')
+        self.home_dir = os.path.join(self.base_dir, 'xpdUser')
+        self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
         self.PI_name = 'Billinge '
         self.saf_num = 300000  # must be 300000  => don't change
         self.wavelength = 0.1812
-        self.experimenters = [('van der Banerjee','S0ham',1),
-                              ('Terban ',' Max',2)]
+        self.experimenters = [('van der Banerjee', 'S0ham', 1),
+                              ('Terban ', ' Max', 2)]
         self.pkg_rs = rs_fn('xpdacq', 'examples/')
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
@@ -34,10 +34,10 @@ class ImportSamplTest(unittest.TestCase):
         os.chdir(self.base_dir)
         if os.path.isdir(self.home_dir):
             shutil.rmtree(self.home_dir)
-        if os.path.isdir(os.path.join(self.base_dir,'xpdConfig')):
-            shutil.rmtree(os.path.join(self.base_dir,'xpdConfig'))
-        if os.path.isdir(os.path.join(self.base_dir,'pe2_data')):
-            shutil.rmtree(os.path.join(self.base_dir,'pe2_data'))
+        if os.path.isdir(os.path.join(self.base_dir, 'xpdConfig')):
+            shutil.rmtree(os.path.join(self.base_dir, 'xpdConfig'))
+        if os.path.isdir(os.path.join(self.base_dir, 'pe2_data')):
+            shutil.rmtree(os.path.join(self.base_dir, 'pe2_data'))
 
     def test_import_sample_info_core_function(self):
         # no bt, default argument will fail
@@ -56,7 +56,7 @@ class ImportSamplTest(unittest.TestCase):
         xlf = '300000_sample.xlsx'
         src = os.path.join(self.pkg_rs, xlf)
         shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
-        # porblematic ones
+        # problematic ones
         xlf2 = '999999_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf2)
         shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf2))
@@ -76,8 +76,7 @@ class ImportSamplTest(unittest.TestCase):
                           lambda: _import_sample_info(300000, self.bt))
 
         # expct TypeError with incorrect beamtime
-        self.assertRaises(TypeError, lambda:
-                          _import_sample_info(bt=set()))
+        self.assertRaises(TypeError, lambda: _import_sample_info(bt=set()))
         # error when validate the md
         self.bt['bt_safN'] = str(999999)
         self.assertRaises(RuntimeError,

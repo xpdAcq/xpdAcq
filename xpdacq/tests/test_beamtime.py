@@ -14,6 +14,7 @@ from xpdacq.simulation import pe1c, db, shctl1, cs700
 import bluesky.examples as be
 from xpdacq.xpdacq import CustomizedRunEngine
 
+
 # print messages for debugging
 # xrun.msg_hook = print
 
@@ -23,7 +24,8 @@ class BeamtimeObjTest(unittest.TestCase):
         self.home_dir = os.path.join(self.base_dir, 'xpdUser')
         self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
         self.PI_name = 'Billinge '
-        self.saf_num = 30079  # must be 30079 for proper load of config yaml => don't change
+        # must be 30079 for proper load of config yaml => don't change
+        self.saf_num = 30079
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee', 'S0ham', 1),
                               ('Terban ', ' Max', 2)]
@@ -31,7 +33,7 @@ class BeamtimeObjTest(unittest.TestCase):
         os.makedirs(self.home_dir, exist_ok=True)
         # set simulation objects
         configure_device(db=db, shutter=shctl1,
-                         area_det=pe1c,temp_controller=cs700)
+                         area_det=pe1c, temp_controller=cs700)
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength)
@@ -224,12 +226,13 @@ class BeamtimeObjTest(unittest.TestCase):
             self.assertTrue('new_bt_field' in reloaded_sa)
 
     def test_chaining(self):
-        """All contents of Beamtime and Experiment should propagate into Sample."""
+        """All contents of Beamtime and Experiment should propagate into
+        Sample."""
         bt = Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
         sa_dict = {'sample_name': 'Ni', 'sample_composition': {'Ni': 1}}
         sa = Sample(bt, sa_dict, custom3='C')
         for k, v in bt.items():
-            sa[k] == bt[k]
+            assert sa[k] == bt[k]
 
     def test_load_beamtime(self):
         bt = Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
@@ -244,7 +247,6 @@ class BeamtimeObjTest(unittest.TestCase):
         bt = Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
         bt.list_bkg()
 
-
     def test_min_exposure_time(self):
         bt = Beamtime('Simon', 123, [], wavelength=0.1828, custom1='A')
         # shorter than acq time -> ValueError
@@ -257,11 +259,11 @@ class BeamtimeObjTest(unittest.TestCase):
                                                        exposure=0.2))
         # proper frame acq time -> pass
         glbl['frame_acq_time'] = 0.1
-        ScanPlan(bt, ct, 0.2)  
+        ScanPlan(bt, ct, 0.2)
         # test with xrun
         xrun = CustomizedRunEngine(bt)
         xrun({}, ScanPlan(bt, ct, 0.2))  # safe, should pass
         glbl['frame_acq_time'] = 0.5
         self.assertRaises(ValueError,
-                          lambda: xrun({},ScanPlan(bt, ct, 0.2)))
+                          lambda: xrun({}, ScanPlan(bt, ct, 0.2)))
         glbl['frame_acq_time'] = 0.1  # reset after test
