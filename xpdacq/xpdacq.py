@@ -19,6 +19,9 @@ import time
 import yaml
 import warnings
 import numpy as np
+import jsonschema
+from functools import partial
+from xpdschema import schemas
 
 import bluesky.plans as bp
 from bluesky import RunEngine
@@ -316,7 +319,8 @@ class CustomizedRunEngine(RunEngine):
         Or use completely custom dark frame logic
         >>> xrun(3, 'ct', dark_strategy=some_custom_func)
         """
-        super().__init__(*args, **kwargs)
+        f = partial(jsonschema.validate(schema=schemas['start']))
+        super().__init__(*args, md_validator=f, **kwargs)
         self._beamtime = beamtime
 
     @property
