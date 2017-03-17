@@ -1,5 +1,5 @@
 """main module of configuring xpdacq"""
-#!/usr/bin/env python
+# !/usr/bin/env python
 ##############################################################################
 #
 # xpdacq            by Billinge Group
@@ -25,6 +25,8 @@ from .tools import xpdAcqException
 
 # special function and dict to store all necessary objects
 xpd_configuration = {}
+
+
 def configure_device(*, area_det, shutter,
                      temp_controller, db, **kwargs):
     """function to set up required device/objects for xpdacq"""
@@ -110,7 +112,6 @@ ALL_FOLDERS = [
 # directories that won't be tar in the end of beamtime
 _EXCLUDE_DIR = [HOME_DIR, BLCONFIG_DIR, YAML_DIR]
 _EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
-
 
 glbl_dict = dict(is_simulation=simulation,
                  # beamline info
@@ -203,7 +204,6 @@ def _set_glbl(glbl_obj, reload_dict):
 
 
 class GlblYamlDict(YamlDict):
-
     """
     class holds global options of xpdAcq.
 
@@ -231,7 +231,7 @@ class GlblYamlDict(YamlDict):
                        'det_image_field']
 
     def __init__(self, name, **kwargs):
-        super().__init__(name=name,**kwargs)
+        super().__init__(name=name, **kwargs)
         self._referenced_by = []
         self._name = name
 
@@ -255,7 +255,7 @@ class GlblYamlDict(YamlDict):
 
     def __setattr__(self, key, val):
         if key not in self._VALID_ATTRS:
-            if key in (self._MUTABLE_FIELDS):
+            if key in self._MUTABLE_FIELDS:
                 # back-support
                 raise DeprecationWarning("{} has been changed, please do "
                                          "this command instead\n"
@@ -282,4 +282,3 @@ class GlblYamlDict(YamlDict):
     def from_dict(cls, d):
         """method to reload object from dict"""
         return cls(**d)
-

@@ -28,6 +28,7 @@ from .xpdacq_conf import glbl_dict
 # _start_beamtime
 EXPO_LIST = [5, 0.1, 1, 10, 30, 60]
 
+
 def _start_beamtime(PI_last, saf_num, experimenters=[],
                     wavelength=None):
     """function for start a beamtime"""

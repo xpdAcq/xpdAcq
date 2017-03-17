@@ -8,7 +8,6 @@ import unittest
 import numpy as np
 from pathlib import Path
 
-
 from pyFAI.calibration import Calibration
 
 from xpdacq.glbl import glbl
@@ -30,7 +29,8 @@ class calibTest(unittest.TestCase):
         self.home_dir = os.path.join(self.base_dir, 'xpdUser')
         self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
         self.PI_name = 'Billinge '
-        self.saf_num = 300000  # must be 30000 for proper load of config yaml => don't change
+        # must be 30000 for proper load of config yaml => don't change
+        self.saf_num = 300000
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee', 'S0ham', 1),
                               ('Terban ', ' Max', 2)]
@@ -47,7 +47,7 @@ class calibTest(unittest.TestCase):
         self.xrun = CustomizedRunEngine(self.bt)
         # set simulation objects
         configure_device(db=db, shutter=shctl1,
-                         area_det=pe1c,temp_controller=cs700)
+                         area_det=pe1c, temp_controller=cs700)
         # link mds
         self.xrun.subscribe('all', xpd_configuration['db'].mds.insert)
         # calib yaml 
@@ -68,13 +68,13 @@ class calibTest(unittest.TestCase):
         # calibrant is None, which default to Ni
         assert c.calibrant.__repr__().split(' ')[0] == 'Ni'
         # wavelength is None, so it should get the value from bt
-        assert c.wavelength == self.bt.wavelength*10**(-10)
+        assert c.wavelength == self.bt.wavelength * 10 ** (-10)
         # detector is None, which default to Perkin detector 
         assert c.detector.get_name() == 'Perkin detector'
 
         c2 = _configure_calib_instance(None, None, wavelength=999)
         # wavelength is given, so it should get customized value
-        assert c2.wavelength == 999*10**(-10)
+        assert c2.wavelength == 999 * 10 ** (-10)
 
     def test_smoke_collect_calb_img(self):
         c = _configure_calib_instance(None, None, wavelength=None)
@@ -85,11 +85,11 @@ class calibTest(unittest.TestCase):
         assert calib_uid == h.start['calibration_collection_uid']
         assert c.calibrant.__repr__().split(' ')[0] == h.start['sample_name']
         # is image shape as expected?
-        assert img.shape == (5,5)
+        assert img.shape == (5, 5)
         # is dark subtraction operated as expected?
         # since simulated pe1c always generate the same array, so
         # subtracted image should be zeors
-        assert img.all() == np.zeros((5,5)).all()
+        assert img.all() == np.zeros((5, 5)).all()
 
     def test_save_and_attach_calib_param(self):
         # reload yaml to produce pre-calib Calibration instance
@@ -102,7 +102,7 @@ class calibTest(unittest.TestCase):
         # test information attached to glbl
         assert glbl['calib_config_dict']['file_name'] == c.basename
         assert glbl['calib_config_dict']['calibration_collection_uid'] == \
-                                                                    calib_uid
+               calib_uid
         for k, v in c.ai.getPyFAI().items():
             assert glbl['calib_config_dict'][k] == v
         # verify calib params are saved as expected
@@ -115,4 +115,3 @@ class calibTest(unittest.TestCase):
             # use list to exhaust generator so pop are applied to both
             list(map(lambda x: x.pop(k), [reload_dict, calib_dict]))
         assert reload_dict == calib_dict
-

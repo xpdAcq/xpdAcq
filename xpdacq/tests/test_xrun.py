@@ -20,13 +20,15 @@ import ophyd
 import bluesky.examples as be
 from bluesky import Msg
 
+
 class xrunTest(unittest.TestCase):
     def setUp(self):
         self.base_dir = glbl['base']
         self.home_dir = os.path.join(self.base_dir, 'xpdUser')
         self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
         self.PI_name = 'Billinge '
-        self.saf_num = 300000  # must be 30000 for proper load of config yaml => don't change
+        # must be 30000 for proper load of config yaml => don't change
+        self.saf_num = 300000
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee', 'S0ham', 1),
                               ('Terban ', ' Max', 2)]
@@ -44,7 +46,6 @@ class xrunTest(unittest.TestCase):
         import_sample_info(self.saf_num, self.bt)
         self.xrun = CustomizedRunEngine(self.bt)
 
-
     def tearDown(self):
         os.chdir(self.base_dir)
         if os.path.isdir(self.home_dir):
@@ -59,7 +60,7 @@ class xrunTest(unittest.TestCase):
         # no dark_dict_list
         glbl['_dark_dict_list'] = []
         rv = _validate_dark()
-        assert rv == None
+        assert rv is None
         # initiate dark_dict_list
         dark_dict_list = []
         now = time.time()
@@ -68,7 +69,7 @@ class xrunTest(unittest.TestCase):
         xpd_configuration['area_det'].images_per_set.put(5)
         acq_time = xpd_configuration['area_det'].cam.acquire_time.get()
         num_frame = xpd_configuration['area_det'].images_per_set.get()
-        light_cnt_time = acq_time*num_frame
+        light_cnt_time = acq_time * num_frame
         # case1: adjust exposure time
         for i in range(5):
             dark_dict_list.append({'uid': str(uuid.uuid4()),
@@ -78,7 +79,7 @@ class xrunTest(unittest.TestCase):
         glbl['_dark_dict_list'] = dark_dict_list
         rv = _validate_dark(glbl['dk_window'])
         correct_set = [el for el in dark_dict_list if
-                       abs(el['exposure']-light_cnt_time)<10**(-4)]
+                       abs(el['exposure'] - light_cnt_time) < 10 ** (-4)]
         print(dark_dict_list)
         print("correct_set = {}".format(correct_set))
         assert rv == correct_set[0].get('uid')
@@ -96,7 +97,7 @@ class xrunTest(unittest.TestCase):
         assert rv == dark_dict_list[0].get('uid')
         # small window -> find None
         rv = _validate_dark(0.1)
-        assert rv == None
+        assert rv is None
         # medium window -> find the first one as it's within 1 min window
         rv = _validate_dark(1.5)
         assert rv == dark_dict_list[0].get('uid')
@@ -107,10 +108,10 @@ class xrunTest(unittest.TestCase):
             dark_dict_list.append({'uid': str(uuid.uuid4()),
                                    'exposure': light_cnt_time,
                                    'timestamp': now,
-                                   'acq_time': acq_time * (i+1)})
+                                   'acq_time': acq_time * (i + 1)})
         glbl['_dark_dict_list'] = dark_dict_list
         # leave for future debug
-        #print("dark_dict_list = {}"
+        # print("dark_dict_list = {}"
         #      .format([(el.get('exposure'),
         #                el.get('timestamp'),
         #                el.get('uid'),
@@ -129,8 +130,10 @@ class xrunTest(unittest.TestCase):
         assert xrun_uid[0] == dark_uid
         # test sc_dark_field_uid
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
+
         self.xrun.msg_hook = msg_rv
         self.xrun(0, 0)
         open_run = [el.kwargs for el in msg_list
@@ -145,7 +148,7 @@ class xrunTest(unittest.TestCase):
     def test_auto_load_calibration(self):
         # no config file in xpdUser/config_base
         auto_calibration_md_dict = _auto_load_calibration_file()
-        assert auto_calibration_md_dict == None
+        assert auto_calibration_md_dict is None
         # one config file in xpdUser/config_base:
         cfg_f_name = glbl['calib_config_name']
         cfg_src = os.path.join(os.path.dirname(__file__), cfg_f_name)
@@ -164,33 +167,37 @@ class xrunTest(unittest.TestCase):
         self.assertEqual(auto_calibration_md_dict['file_name'],
                          'pyFAI_calib_Ni_20160813-1659.poni')
         self.assertEqual(auto_calibration_md_dict['time'],
-                        '20160813-1815')
+                         '20160813-1815')
         # file-based config_dict is different from
         # glbl['calib_config_dict']
         self.assertTrue(os.path.isfile(cfg_dst))
         glbl['calib_config_dict'] = dict(auto_calibration_md_dict)
-        glbl['calib_config_dict']['new_filed']='i am new'
+        glbl['calib_config_dict']['new_filed'] = 'i am new'
         reload_auto_calibration_md_dict = _auto_load_calibration_file()
         # trust file-based solution
         self.assertEqual(reload_auto_calibration_md_dict, config_from_file)
         self.assertFalse('new_field' in reload_auto_calibration_md_dict)
         # test with xrun : auto_load_calib = False -> nothing happpen
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
+
         self.xrun.msg_hook = msg_rv
         glbl['auto_load_calib'] = False
-        xrun_uid = self.xrun(0,0)
+        xrun_uid = self.xrun(0, 0)
         open_run = [el.kwargs for el in msg_list
-                    if el.command =='open_run'][0]
+                    if el.command == 'open_run'][0]
         self.assertFalse('calibration_md' in open_run)
         # test with xrun : auto_load_calib = True -> full calib_md
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
+
         self.xrun.msg_hook = msg_rv
         glbl['auto_load_calib'] = True
-        xrun_uid = self.xrun(0,0)
+        xrun_uid = self.xrun(0, 0)
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'][0]
         # modify in place
@@ -207,8 +214,10 @@ class xrunTest(unittest.TestCase):
         exp = 5
         # test with ct
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
+
         self.xrun.msg_hook = msg_rv
         self.xrun({}, ScanPlan(self.bt, ct, exp))
         open_run = [el.kwargs for el in msg_list
@@ -218,8 +227,10 @@ class xrunTest(unittest.TestCase):
         # test with Tramp
         Tstart, Tstop, Tstep = 300, 200, 10
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
+
         self.xrun.msg_hook = msg_rv
         self.xrun({}, ScanPlan(self.bt, Tramp, exp, Tstart,
                                Tstop, Tstep))
@@ -233,11 +244,13 @@ class xrunTest(unittest.TestCase):
         # test with tseries
         delay, num = 0.1, 5
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
+
         self.xrun.msg_hook = msg_rv
         self.xrun({}, ScanPlan(self.bt, tseries, exp, delay, num))
-        open_run = [el.kwargs for el in msg_list\
+        open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'].pop()
         self.assertEqual(open_run['sp_type'], 'tseries')
         self.assertEqual(open_run['sp_requested_exposure'], exp)
@@ -246,8 +259,10 @@ class xrunTest(unittest.TestCase):
         # test with Tlist
         T_list = [300, 256, 128]
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
+
         self.xrun.msg_hook = msg_rv
         self.xrun({}, ScanPlan(self.bt, Tlist, exp, T_list))
         open_run = [el.kwargs for el in msg_list
@@ -263,8 +278,10 @@ class xrunTest(unittest.TestCase):
 
         # operate at full current
         sig = ophyd.Signal()
+
         def putter(val):
             sig.put(val)
+
         xpd_configuration['ring_current'] = sig
         putter(200)
         wait_time = 0.2
@@ -273,7 +290,7 @@ class xrunTest(unittest.TestCase):
         start = time.time()
         # queue up fail and resume conditions
         loop.call_later(.1, putter, 90)  # lower than 50%, trigger
-        loop.call_later( 1., putter, 190)  # higher than 90%, resume
+        loop.call_later(1., putter, 190)  # higher than 90%, resume
         # start the scan
         self.xrun({}, ScanPlan(self.bt, ct, .1))
         stop = time.time()
@@ -290,5 +307,5 @@ class xrunTest(unittest.TestCase):
             putter(30)  # low current
             set_beamdump_suspender(self.xrun, wait_time=wait_time)
             # check warning
-            assert len(w)==1
+            assert len(w) == 1
             assert issubclass(w[-1].category, UserWarning)

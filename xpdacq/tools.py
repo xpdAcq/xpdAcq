@@ -20,6 +20,7 @@ import warnings
 from time import strftime
 from IPython import get_ipython
 
+
 def regularize_dict_key(input_dict, target_chr, replace_chr):
     """recursively replace target character in keys with desired one
 
@@ -83,8 +84,8 @@ def validate_dict_key(input_dict, invalid_chr, suggested_chr):
                            .format(invalid_key_list, invalid_chr,
                                    invalid_chr, suggested_chr))
 
-class xpdAcqException(Exception):
 
+class xpdAcqException(Exception):
     """
     customized class for xpdAcq-related exception
     """
@@ -113,7 +114,7 @@ def _check_obj(obj_name, error_msg=None):
         namespace
     """
     if error_msg is None:
-        error_msg = "Required object {} doesn't exist in"\
+        error_msg = "Required object {} doesn't exist in" \
                     "current namespace".format(obj_name)
     ips = get_ipython()
     if not ips.ns_table['user_global'].get(obj_name, None):

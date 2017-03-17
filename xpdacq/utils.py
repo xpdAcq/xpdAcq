@@ -29,6 +29,7 @@ from .glbl import glbl
 from .tools import validate_dict_key, _check_obj, _graceful_exit
 from .beamtime import Beamtime, Sample
 
+
 def composition_analysis(compstring):
     """Pulls out elements and their ratios from the config file.
 
@@ -89,7 +90,8 @@ def export_userScriptsEtc():
             'Did you accidentally change write privilege to {}'.format(
                 root_dir))
         print(
-            'Please check your setting and try `export_userScriptsEtc()` again at command prompt')
+            'Please check your setting and try `export_userScriptsEtc()` '
+            'again at command prompt')
         return
 
 
@@ -190,7 +192,7 @@ class ExceltoYaml:
     PHASE_FIELD = ['Phase Info [required]']
     SAMPLE_NAME_FIELD = ['Sample Name [required]']
     BKGD_SAMPLE_NAME_FIELD = ['Sample-name of sample background']
-    DICT_LIKE_FIELD = ['structural database ID for phases'] # return a dict
+    DICT_LIKE_FIELD = ['structural database ID for phases']  # return a dict
     # special key for high-dimensional sample phase mapping
     HIGH_D_MD_MAP_KEYWORD = ['gridscan_mappedin']
 
@@ -215,8 +217,8 @@ class ExceltoYaml:
 
     def load(self, saf_num):
         xl_f = [f for f in os.listdir(self.src_dir) if
-                f in (str(saf_num)+'_sample.xls',
-                      str(saf_num)+'_sample.xlsx')]
+                f in (str(saf_num) + '_sample.xls',
+                      str(saf_num) + '_sample.xlsx')]
         if not xl_f:
             raise FileNotFoundError("no spreadsheet exists in {}\n"
                                     "have you put it in with correct "
@@ -282,14 +284,14 @@ class ExceltoYaml:
 
                 # sample name field
                 elif k in self._SAMPLE_NAME_FIELD:
-                    _k = 'sample_name' # normalized name
-                    parsed_sa_md.update({_k: v.replace(' ','_')})
+                    _k = 'sample_name'  # normalized name
+                    parsed_sa_md.update({_k: v.replace(' ', '_')})
 
                 # bkgd name field
                 elif k in self._BKGD_SAMPLE_NAME_FIELD:
                     _k = 'bkgd_sample_name'
                     parsed_sa_md.update({_k:
-                                         v.strip().replace(' ', '_')})
+                                             v.strip().replace(' ', '_')})
 
                 # dict-like field
                 elif k in self._DICT_LIKE_FIELD:
@@ -338,7 +340,6 @@ class ExceltoYaml:
                   .format(self._BKGD_SAMPLE_NAME_FIELD,
                           no_bkgd_sample_name_list))
         print("*** End of import Sample object ***")
-
 
     def _pd_dict_to_dict_list(self, pd_dict):
         """ parser of pd generated dict to a list of valid sample dicts
@@ -464,7 +465,7 @@ class ExceltoYaml:
             else:
                 meta = el.split(':')
                 # there is a ":" but nothing follows
-                if len(meta[1])==0:
+                if len(meta[1]) == 0:
                     com = meta[0]
                     amount = 1.0
                 # presumably valid input
@@ -487,7 +488,7 @@ class ExceltoYaml:
         # normalize phase ratio for composition dict
         total = sum(phase_dict.values())
         for k, v in phase_dict.items():
-            ratio = round(v/total, 2)
+            ratio = round(v / total, 2)
             phase_dict[k] = ratio
 
         # construct composition_dict
@@ -504,10 +505,11 @@ class ExceltoYaml:
                     composition_dict.update({el: sto * ratio})
 
         # finally, construct composition_str
-        for k,v in sorted(composition_dict.items()):
-            composition_str += str(k)+str(v)
+        for k, v in sorted(composition_dict.items()):
+            composition_str += str(k) + str(v)
 
         return composition_dict, phase_dict, composition_str
+
 
 excel_to_yaml = ExceltoYaml(glbl['import_dir'])
 
@@ -536,13 +538,13 @@ def import_sample_info(saf_num=None, bt=None, validate_only=False):
     """
 
     if bt is None:
-        error_msg = "WARNING: Beamtime object does not exist in current"\
-                    "ipython session. Please make sure:\n"\
-                    "1. a beamtime has been started\n"\
-                    "2. double check 'bt_bt.yml' exists under "\
-                    "xpdUser/config_base/yml directory.\n"\
-                    "\n"\
-                    "If any of these checks fails or problem "\
+        error_msg = "WARNING: Beamtime object does not exist in current" \
+                    "ipython session. Please make sure:\n" \
+                    "1. a beamtime has been started\n" \
+                    "2. double check 'bt_bt.yml' exists under " \
+                    "xpdUser/config_base/yml directory.\n" \
+                    "\n" \
+                    "If any of these checks fails or problem " \
                     "persists, please contact beamline staff immediately"
         _check_obj('bt', error_msg)  # raise NameError if bt is not alive
         ips = get_ipython()

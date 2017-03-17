@@ -20,7 +20,8 @@ class NewBeamtimeTest(unittest.TestCase):
         self.home_dir = os.path.join(self.base_dir, 'xpdUser')
         self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
         self.PI_name = 'Billinge '
-        self.saf_num = '123'  # must be 123 for proper load of config yaml => don't change
+        # must be 123 for proper load of config yaml => don't change
+        self.saf_num = '123'
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee', 'S0ham', 1),
                               ('Terban ', ' Max', 2)]
@@ -105,7 +106,7 @@ class NewBeamtimeTest(unittest.TestCase):
         for current_sp in self.bt.scanplans.values():
             reload_sp = ScanPlan.from_yaml(current_sp.to_yaml())
             self.assertEqual(reload_sp, current_sp)
-            self.assertFalse(id(reload_sp) ==  id(current_sp))
+            self.assertFalse(id(reload_sp) == id(current_sp))
 
     def test_end_beamtime(self):
         _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']
@@ -121,8 +122,7 @@ class NewBeamtimeTest(unittest.TestCase):
         shutil.move(bt_path_src, bt_path_dst)
         self.assertTrue(os.path.isfile(bt_path_dst))
         self.assertFalse(os.path.isfile(bt_path_src))
-        self.assertRaises(SystemExit, lambda:
-                          _load_bt(glbl_dict['yaml_dir']))
+        self.assertRaises(SystemExit, lambda: _load_bt(glbl_dict['yaml_dir']))
         # move back and test archieving funtionality
         shutil.move(bt_path_dst, bt_path_src)
         self.assertTrue(os.path.isfile(bt_path_src))
@@ -189,7 +189,8 @@ class NewBeamtimeTest(unittest.TestCase):
         cwd = os.getcwd()
         os.chdir(src)  # inevitable step for compression
         tar_name = 'HappyMeal'
-        shutil.make_archive(tar_name, 'tar')  # now data should be in xpdUser/Import/
+        shutil.make_archive(tar_name,
+                            'tar')  # now data should be in xpdUser/Import/
         full_tar_name = os.path.join(src, tar_name + '.tar')
         os.chdir(cwd)
         moved_list_1 = import_userScriptsEtc()

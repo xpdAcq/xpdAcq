@@ -19,7 +19,6 @@ import yaml
 import inspect
 from collections import ChainMap, OrderedDict
 
-import bluesky.plans as bp
 import numpy as np
 import bluesky.plans as bp
 from bluesky.callbacks import LiveTable
@@ -112,13 +111,14 @@ def _check_mini_expo(exposure, acq_time):
                                  ">>> glbl['frame_acq_time'] = 0.5  #set"
                                  " to 0.5s"))
 
+
 def ct(dets, exposure, *, md=None):
     """
     Take one reading from area detectors with given exposure time
 
     Parameters
     ----------
-    detectors : list
+    dets : list
         list of 'readable' objects
     exposure : float
         total time of exposrue in seconds
@@ -161,7 +161,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
 
     Parameters
     ----------
-    detectors : list
+    dets : list
         list of 'readable' objects
     exposure : float
         exposure time at each temeprature step in seconds
@@ -252,7 +252,7 @@ def Tlist(dets, exposure, T_list):
                  'sp_type': 'Tlist',
                  'sp_uid': str(uuid.uuid4()),
                  'sp_plan_name': 'Tlist'
-                }
+                 }
     # pass xpdacq_md to as additional md to bluesky plan
     plan = bp.list_scan([area_det], T_controller, T_list, md=xpdacq_md)
     plan = bp.subs_wrapper(plan, LiveTable([area_det, T_controller]))
@@ -265,7 +265,7 @@ def tseries(dets, exposure, delay, num, *, md=None):
 
     Parameters
     ----------
-    detectors : list
+    dets : list
         list of 'readable' objects
     exposure : float
         exposure time at each reading from area detector in seconds
@@ -339,6 +339,7 @@ def _clean_info(obj):
     """ stringtify and replace space"""
     return str(obj).strip().replace(' ', '_')
 
+
 class MDOrderedDict(OrderedDict):
     def get_md(self, ind):
         """special method to get metadata of sample object based on
@@ -347,6 +348,7 @@ class MDOrderedDict(OrderedDict):
         obj_list = list(self.values())
         md_dict = dict(obj_list[ind])
         return md_dict
+
 
 class Beamtime(ValidatedDictLike, YamlDict):
     """
@@ -435,10 +437,10 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self._referenced_by.append(scanplan)
         # save order
         with open(os.path.join(glbl['config_base'],
-                               '.scanplan_order.yml'),'w+') as f:
+                               '.scanplan_order.yml'), 'w+') as f:
             scanplan_order = {}
             for i, name in enumerate(self.scanplans.keys()):
-                scanplan_order.update({i: name+'.yml'})
+                scanplan_order.update({i: name + '.yml'})
             # debug line
             self._scanplan_order = scanplan_order
             yaml.dump(scanplan_order, f)
@@ -452,10 +454,10 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self._referenced_by.append(sample)
         # save order
         with open(os.path.join(glbl['config_base'],
-                               '.sample_order.yml'),'w+') as f:
+                               '.sample_order.yml'), 'w+') as f:
             sample_order = {}
             for i, name in enumerate(self.samples.keys()):
-                sample_order.update({i: name+'.yml'})
+                sample_order.update({i: name + '.yml'})
             # debug line
             self._sample_order = sample_order
             yaml.dump(sample_order, f)
@@ -486,7 +488,6 @@ class Beamtime(ValidatedDictLike, YamlDict):
                      for i, sa_name in enumerate(self.samples.keys())])
         return '\n'.join(contents)
 
-
     def list(self):
         """ method to list out all ScanPlan and Sample objects related
         to this Beamtime object
@@ -502,6 +503,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
                                           enumerate(self.samples.keys())
                                           if sa_name.startswith('bkgd')]
         print('\n'.join(contents))
+
 
 class Sample(ValidatedDictLike, YamlChainMap):
     """
@@ -611,7 +613,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
             scanplan_uid = sp_dict['sp_kwargs'].pop('sp_uid')
             sp_dict.update({'sp_uid': scanplan_uid})
         # test if that is a valid plan
-        exposure = kwargs.get('exposure') # input as kwargs
+        exposure = kwargs.get('exposure')  # input as kwargs
         if exposure is None:
             # input as args
             exposure, *rest = args  # predefined scan signature

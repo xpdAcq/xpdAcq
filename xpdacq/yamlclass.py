@@ -17,6 +17,7 @@
 import os
 import yaml
 
+
 class YamlClass:
     """
     special class automatically yamlize user-defined attributes
@@ -31,7 +32,7 @@ class YamlClass:
         for key in self.tracked_attributes():
             try:
                 val = self.__getattribute__(str(key))
-                self._internal_dict.update({key:val})
+                self._internal_dict.update({key: val})
             except AttributeError:
                 print("pass {}".format(key))
 

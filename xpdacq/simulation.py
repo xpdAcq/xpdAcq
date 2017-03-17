@@ -23,6 +23,7 @@ from time import strftime
 
 import bluesky.examples as be
 
+
 # faking plug in:
 class PutGet:
     """basic class to have set/put method"""
@@ -38,6 +39,7 @@ class PutGet:
     def get(self):
         """read current value"""
         return self._val
+
 
 class SimulatedCam:
     """class to simulate Camera class"""
@@ -79,7 +81,7 @@ def build_pymongo_backed_broker():
     mds_test_conf = dict(database=db_name, host='localhost',
                          port=27017, timezone='US/Eastern')
     try:
-       # nasty details: to save MacOS user
+        # nasty details: to save MacOS user
         mds = MDS(mds_test_conf, 1, auth=False)
     except TypeError:
         mds = MDS(mds_test_conf, 1)
@@ -93,7 +95,7 @@ def build_pymongo_backed_broker():
     fs.register_handler('npy', NpyHandler)
 
     db = Broker(mds, fs)
-    #insert_imgs(db.mds, db.fs, 1, (20, 20))
+    # insert_imgs(db.mds, db.fs, 1, (20, 20))
 
     return db
 
@@ -179,6 +181,6 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
 # instantiate simulation objects
 db = build_pymongo_backed_broker()
 db.fs.register_handler('RWFS_NPY', be.ReaderWithFSHandler)
-pe1c = SimulatedPE1C('pe1c', {'pe1_image': lambda: np.ones((5,5))}, fs=db.fs)
-shctl1 = be.Mover('shctl1', {'rad': lambda x: x}, {'x':0})
-cs700 = be.Mover('cs700', {'temperature': lambda x: x}, {'x':300})
+pe1c = SimulatedPE1C('pe1c', {'pe1_image': lambda: np.ones((5, 5))}, fs=db.fs)
+shctl1 = be.Mover('shctl1', {'rad': lambda x: x}, {'x': 0})
+cs700 = be.Mover('cs700', {'temperature': lambda x: x}, {'x': 300})
