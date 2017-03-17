@@ -14,25 +14,23 @@
 #
 ##############################################################################
 import os
-import uuid
 import time
-import yaml
 import warnings
-import numpy as np
-import jsonschema
 from functools import partial
-from xpdschema import schemas
+
+import jsonschema
+import numpy as np
+import yaml
 
 import bluesky.plans as bp
 from bluesky import RunEngine
 from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input
-
+from xpdacq.beamtime import ScanPlan
 from xpdacq.glbl import glbl
 from xpdacq.xpdacq_conf import xpd_configuration
-from xpdacq.beamtime import ScanPlan, _summarize
-
 from xpdan.tools import compress_mask
+from xpdschema import schemas
 
 
 def _update_dark_dict_list(name, doc):
