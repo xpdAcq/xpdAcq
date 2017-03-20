@@ -170,7 +170,7 @@ def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
     sample = Sample(bto, calibration_dict)
     uid = RE_instance(sample, ScanPlan(bto, ct, exposure))
     light_header = xpd_configuration['db'][uid[-1]]  # last one must be light
-    dark_uid = light_header.start.get('sc_dk_field_uid')
+    dark_uid = light_header.start.get('dark_client_uid')
     dark_header = xpd_configuration['db'][dark_uid]
 
     dark_img = np.asarray(xpd_configuration['db'].get_images(
@@ -341,7 +341,7 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
     xrun_uid = xrun(sample, ScanPlan(bto, ct, exposure))
     light_header = xpd_configuration['db'][-1]
     if dark_sub_bool:
-        dark_uid = light_header.start['sc_dk_field_uid']
+        dark_uid = light_header.start['dark_client_uid']
         dark_header = xpd_configuration['db'][dark_uid]
 
         dark_img = np.asarray(xpd_configuration['db'].get_images(
