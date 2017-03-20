@@ -45,11 +45,15 @@ def _update_dark_dict_list(name, doc):
     acq_time = area_det.cam.acquire_time.get()
     num_frame = area_det.images_per_set.get()
     light_cnt_time = acq_time * num_frame
-
     dark_dict = {'acq_time': acq_time, 'exposure': light_cnt_time,
                  'timestamp': doc['time'], 'dark_server_uid': doc['run_start']}
-    dark_dict_list.append(dark_dict)
-    glbl['_dark_dict_list'] = dark_dict_list  # update glbl._dark_dict_list
+    if doc['exit_status'] == 'success':
+        dark_dict_list.append(dark_dict)
+        # update glbl._dark_dict_list
+        glbl['_dark_dict_list'] = dark_dict_list
+    else:
+        print("INFO: dark scan was not successfully executed.\n"
+              "gobal dark frame information will not be updated!")
 
 
 def take_dark():
