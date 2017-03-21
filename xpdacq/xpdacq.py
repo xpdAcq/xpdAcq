@@ -45,8 +45,10 @@ def _update_dark_dict_list(name, doc):
     acq_time = area_det.cam.acquire_time.get()
     num_frame = area_det.images_per_set.get()
     light_cnt_time = acq_time * num_frame
+
     dark_dict = {'acq_time': acq_time, 'exposure': light_cnt_time,
-                 'timestamp': doc['time'], 'dark_server_uid': doc['run_start']}
+                 'timestamp': doc['time'],
+                 'dark_server_uid': str(uuid.uuid4())}
     if doc['exit_status'] == 'success':
         dark_dict_list.append(dark_dict)
         # update glbl._dark_dict_list
@@ -96,7 +98,6 @@ def periodic_dark(plan):
         qualified_dark_uid = _validate_dark(expire_time=glbl['dk_window'])
         area_det = xpd_configuration['area_det']
         shutter = xpd_configuration['shutter']
-        # FIXME: should we do "or" or "and"?
         if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
         if need_dark \
