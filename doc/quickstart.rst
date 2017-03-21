@@ -11,8 +11,30 @@ ipython environments that are controlling your experiment and analysis.  After
 pasting, hit enter.
 
 Remember, to post questions about anything XPD, including software, and to see archived answers, at the `XPD-Users Google group
-<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ .  If you are not already a member please request to join
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ . If you are not already a member please request to join
 the community
+
+XPD Data Collection Workflow Summary
+------------------------------------
+
+This is the summary of the steps for collection data at XPD. They are explained below.
+Carry out the steps in this order to ensure a successful experiment.
+
+  1. If you haven't already, join `XPD-Users Google group <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ . Look here for answers if you get stuck and if the answer to your question is not already there, please ask it!
+
+  2. ``run_calibration()`` (rerun if the experiment geometry changes)
+
+  3. Run ``run_mask_builder()`` (rerun if there are any changes in detector shadowing)
+
+  4. Run ``bt.list()`` to see what ``ScanPlans`` and ``Samples`` you have pre-defined. Define new ``ScanPlans`` as needed.  To add additional samples add them to the sample excel spreadsheet and run ``import_sample_info()``
+
+  5. Run setup scans on your sample to assess data quality and required exposure time by running ``xrun(0, <a_count_ScanPlan>)`` followed by ``integrate_and_save_last()``. Navigate to ``.../xpdUser/tiff_base/Setup`` directory to preview the data using plotting tools such as ``SrXgui``, ``XPDSuite``, ``Fit2D`` etc.
+
+  6. Run your experiment by running ``xrun(<sample>, <scanplan>)``
+
+  7. Save your data using ``integrate_and_save_last()``. Navigate to ``.../xpdUser/tiff_base/<Sample_name_from_spreadsheet>`` directory to preview the data using plotting tools such as ``SrXgui``, ``XPDSuite``, ``Fit2D`` etc.
+
+These and many more things are explained below and elsewhere in the documentation.
 
 Overview
 --------
@@ -190,14 +212,16 @@ using the slider.  To open a new image, double-click on the new sample name in t
 files dialog box.  You may have to click the 'Refresh' button if the file was
 just written and doesn't show.
 
+.. _load_sample:
+
 1. load ``Sample`` information
 """"""""""""""""""""""""""""""
 
 Your sample information should be loaded in an excel spreadsheet, with a well
-defined format (a template file may be found at `xpdUser Google Group
-<https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_
-). If the IS didn't already
-do it, save your sample xls file to the ``.../xpdUser/import`` directory using the name
+defined format (a template file may be found at`xpdUser Google Group
+<https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_).
+
+If the IS didn't already do it, save your sample xls file to the ``.../xpdUser/import`` directory using the name
 ``<saf_number>_sample.xlsx``, where you replace ``<saf_number>`` with the number
 of the safety approval form associated with your experiment.  If you are not sure
 what your ``saf_number`` is you can get it by typing the following command in your ````collection-yyQn.x`` terminal:
@@ -394,6 +418,8 @@ If there is too much noise in the data at high-Q you will have to try a new setu
 exposure, and keep doing this until you have found a count time that gives you sufficient counting statistics.
 You may have to make some new scans with different count times during this process, which brings us to...
 
+.. _def_scanplan:
+
 4.b Define your own xpdAcq ScanPlans
 """""""""""""""""""""""""""""""""""
 
@@ -479,6 +505,8 @@ them:
 Get your data
 -------------
 
+.. _save_data:
+
 1. Save images and metadata from scans
 """"""""""""""""""""""""""""""""""""""
 
@@ -530,7 +558,7 @@ We use "h", short for "header", for the object given back by the NSLS-II databro
 This is a software object that contains all the information about your scan and can
 be passed to different functions to do analysis.
 more information on headers is `here <http://nsls-ii.github.io/databroker/headers.html>`_
-/
+
 
 2. Save images and also integrate images to a 1D patterns
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -644,6 +672,8 @@ These scripts should execute as desired under normal circumstances.  Runs will a
 there is a beam-dump and then resume, for example.  However, there are some situations where the scans
 can be tricked into hanging, or continuing to run without scans completing, so please check your data
 carefully.  We are working on solutions for these edge cases.
+
+.. _cancel_scan:
 
 Interrupt your scan
 --------------------
