@@ -339,10 +339,12 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
     area_det = xpd_configuration['area_det']
     temp_controller = xpd_configuration['temp_controller']
     stat_motor = xpd_configuration['stat_motor']
+    ring_current = xpd_configuration['ring_current']
     # compute Nsteps
     (Nsteps, computed_step_size) = _nstep(Tstart, Tstop, Tstep)
     # stat_list
     _sorted_mapping = sorted(sample_mapping.items(), key=lambda x: x[1])
+    sp_uid = str(uuid.uuid4())
     xpdacq_md = {'sp_time_per_frame': acq_time,
                 'sp_num_frames': num_frame,
                 'sp_requested_exposure': exposure,
@@ -353,7 +355,7 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
                 'sp_requested_Tstep': Tstep,
                 'sp_computed_Tstep': computed_step_size,
                 'sp_Nsteps': Nsteps,
-                'sp_uid': str(uuid.uuid4()),
+                'sp_uid': sp_uid,
                 'sp_plan_name': 'statTramp'}
     # plan
     uids = {k: [] for k in sample_mapping.keys()}
@@ -365,13 +367,32 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
             # update md
             md = list(bt.samples.values())[int(s)]
             _md = ChainMap(md, xpdacq_md)
-            plan = bp.count([temp_controller, stat_motor]+dets, md=_md)
+            plan = bp.count([temp_controller, stat_motor,
+                             ring_current]+dets, md=_md)
             plan = bp.subs_wrapper(plan, LiveTable([area_det,
                                                     temp_controller,
-                                                    stat_motor]))
+                                                    stat_motor,
+						    ring_current]))
             #plan = bp.baseline_wrapper(plan, [temp_controller,
-            #                                  stat_motor])
+            #                                  stat_motor,
+            #                                  ring_current])
+            
+	    
             uid = yield from plan
+            if uid is not None:
+                from xpdan.data_reduction import save_last_tiff
+                save_last_tiff()
+                uids[s].append(uid)
+    for s, uid_list in uids.items():
+        from databroker import db
+        import pandas as pd
+        hdrs = db[uid_list]
+        dfs = [db.get_table(h, stream_name='primary') for h in hdrs]
+        df = pd.concat(dfs)
+        fn_md = list(bt.samples.keys())[int(s)]
+        fn_md = '_'.join([fn_md, sp_uid]) + '.csv'
+        fn = os.path.join(glbl['tiff_base'], fn_md)
+        df.to_csv(fn)
     return uids
 
 #stream_name='primary'
