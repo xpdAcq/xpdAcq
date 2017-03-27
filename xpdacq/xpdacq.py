@@ -46,9 +46,11 @@ def _update_dark_dict_list(name, doc):
     num_frame = area_det.images_per_set.get()
     light_cnt_time = acq_time * num_frame
 
-    dark_dict = {'acq_time': acq_time, 'exposure': light_cnt_time,
-                 'timestamp': doc['time'], 'uid': doc['run_start']}
-    dark_dict_list.append(dark_dict)
+    dark_dict = {}
+    dark_dict['acq_time'] = acq_time
+    dark_dict['exposure'] = light_cnt_time
+    dark_dict['timestamp'] = doc['time']
+    dark_dict['uid'] = doc['run_start']
     if doc['exit_status'] == 'success':
         print('dark frame complete, update dark dict')
         dark_dict_list.append(dark_dict)
