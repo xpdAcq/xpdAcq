@@ -3,44 +3,90 @@
 Quick Start
 ===========
 
-This quick-start contains little explanation of how the ``xpdAcq`` software works.
-To understand this, please refer to the detailed documentation in :ref:`xpdu`
+This quick-start contains an overview of how the ``xpdAcq`` software works.
+To understand more details about it, please refer to the detailed documentation in :ref:`xpdu`
 
-Please use this page as a reminder of the workflow and to copy & paste code snippets into your
-active ``collection`` and ``analysis-dev`` ipython environments (then hit return).
+Please use this page as a reminder of the workflow and to copy & paste code snippets into the
+ipython environments that are controlling your experiment and analysis.  After
+pasting, hit enter.
 
 Remember, to post questions about anything XPD, including software, and to see archived answers, at the `XPD-Users Google group
-<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ .  If you are not already a member please request to join
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ . If you are not already a member please request to join
 the community
+
+XPD Data Collection Workflow Summary
+------------------------------------
+
+This is the summary of the steps for collection data at XPD. They are explained below.
+Carry out the steps in this order to ensure a successful experiment.
+
+  1. If you haven't already, join `XPD-Users Google group <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ . Look here for answers if you get stuck and if the answer to your question is not already there, please ask it!
+
+  2. ``run_calibration()`` (rerun if the experiment geometry changes)
+
+  3. Run ``run_mask_builder()`` (rerun if there are any changes in detector shadowing)
+
+  4. Run ``bt.list()`` to see what ``ScanPlans`` and ``Samples`` you have pre-defined. Define new ``ScanPlans`` as needed.  To add additional samples add them to the sample excel spreadsheet and run ``import_sample_info()``
+
+  5. Run setup scans on your sample to assess data quality and required exposure time by running ``xrun(0, <a_count_ScanPlan>)`` followed by ``integrate_and_save_last()``. Navigate to ``.../xpdUser/tiff_base/Setup`` directory to preview the data using plotting tools such as ``SrXgui``, ``XPDSuite``, ``Fit2D`` etc.
+
+  6. Run your experiment by running ``xrun(<sample>, <scanplan>)``
+
+  7. Save your data using ``integrate_and_save_last()``. Navigate to ``.../xpdUser/tiff_base/<Sample_name_from_spreadsheet>`` directory to preview the data using plotting tools such as ``SrXgui``, ``XPDSuite``, ``Fit2D`` etc.
+
+These and many more things are explained below and elsewhere in the documentation.
+
+Overview
+--------
+The XPD end-station is run by the NSLS-II Bluesky software, a very powerful suite of Python language programs for controlling motors
+and detectors and running experiments to collect data.  On top of Bluesky, at XPD we have put another software layer that
+is designed to help you do better powder diffraction experiments more easily.  It is really a "user Interface"
+to Bluesky that simplifies some of the tasks and also helps you to collect rich metadata with your experiment that will
+help you to do analysis.  As time goes on, there will be more analysis functionality also in the XPD software library.
+
+You will use the ``xpdAcq`` software library to "acquire" data and you will use ``xpdAn`` to "analyze" the data.  The software
+is evolving rapidly and will become more powerful with time.  Please check back to the documentation each time you come.
+We hope you like it.  All the software is built using the Python language and runs in an interactive ``IPython`` session.
+You don't need to know too much about this, but the more familiar you are with Python and IPython, the more empowered you will be.
+There are many books and websites on these topics, and we gives some usage tips below too.
+
+The heart of ``xpdAcq`` is the ``xrun()`` function which  you will type to collect data, giving it as "arguments" (i.e., within the
+parentheses) information
+about the sample being run and the scan parameters, so it knows what to do.  This will execute the scan and save the results
+(both data and metadata) to NSLS-II databases.  To get your data you will then type ``save_last_tiff()``, or if you have already
+calibrated the instrument (and we strongly encourage you to do this first!) ``integrate_and_save_last()`` which will save the
+images, but also 1D integrated patterns that you could do Rietveld refinement or PDF analysis on right away.  The data are saved in your
+own special directories, ``.../xpdUser/tiff_base/<sample-name>`` where you can go to visualize them using ``SrXgui`` for the tiff images
+and ``xPDsuite`` for the 1D data.  You can also use ``Fit2d`` if you like.  You can copy the data from there to an external hard-drive
+to take home.  You can do your own analyses, saving data in the ``xpdUser`` directory tree.  Everything in there will
+be archived at the end of your experiment, and then this directory tree will be deleted leaving a clean workspace for the next user
+and keeping your data secure.
+
+Below we give a step-by-step guide to setting up and running a successful experiment.  We can't cover all possibilities, and there is
+much more power within the ``xpdAcq`` and ``Bluesky`` software that you can explore as you get more advanced, but we recommend that
+you follow through the following guide step-by-step, typing the commands and seeing what happens, to get used to the software and,
+more importantly, to do things in the right order set up your experiment for success.
 
 OK, let's get started.
 
 Check your data collection environment is correctly set up
 ----------------------------------------------------------
 
-1. Make sure you are working in the correct environment. For data acquisition you should be
-in the ``collection`` ipython environment. You should see ``In[#]:`` which indicates you are
-in an ipython environment. To check what the environment is type
+1. You will do all your work in special IPython working environments. These should already be open, you just need
+to find them.  IPython environments start the line with something like ``In[49]:`` and ``Out[50]``, so you should
+see that in a terminal.  Try typing ``show_env()``.  If you see something like ``collection-17Q1.0`` or ``analysis-17Q1.1``
+(the numbers will change with time) then you are good, you will use these environments to run your
+experiment and to visualize and analyze your data, respectively.  We recommend that you run ``collection`` on
+work-station 2 (the central computer, look for ``ws2`` in the title at the top of the terminal windows) and
+``analysis`` on the ``ws3`` computer on the right.
 
-.. code-block:: python
+If you can't find the right environments, please ask the instrument scientist.  This is important to make sure
+that there is a clean start for your experiment.  However, if later in your experiment you ever have to restart
+your environments, then you type at the command line ``bsui`` for the collection and ``ianalysis`` for the analysis environments, respectively.
 
-  !conda list
-
-It lists all the python packages in your environment, but the name of the environment
-is at the end of the line at the top.  It should say ``something something/something/collection``
-which tell you that you are in the ``collection`` environment.
-
-If you see something more like ``/direct/pe1_data/userArea/XPDhome/xpdUser`` then
-type
-
-.. code-block:: python
-
-  icollection
-
-to activate the collection environment.
 
 2. Make sure that the software has been properly configured for your beamtime. In
-your ``collection`` environment, type:
+your ``collection-yyQn.x`` environment, type:
 
 .. code-block:: python
 
@@ -58,50 +104,37 @@ set up by the instrument scientist (IS) before proceeding.
   a clean environment for the next user.  You can, of course, take anything home from within ``xpdUser``,
   or if you forgot something have the IS fetch it for you from the archive later.
 
-Check that your data analysis environment is correctly set up
+Check that your analysis environment is correctly set up
 -------------------------------------------------------------
 
 1. Analysis is done in a separate (but very similar) environment to acquisition.
-This will be in a separate terminal window on the computer (or even on a different computer)
-to the collection environment.  Try and find the right terminal window.
-For data analysis you should be
-in the ``analysis-dev`` ipython environment You should see ``In[#]:`` which indicates you are
-in an ipython environment. To check what the environment is type
+This will be in a separate terminal window.  You can run an analysis
+environment on ``ws2`` and on work-station 3 (it is the computer on the right-hand side.
+Look for ``ws3`` in the terminal title field)
+so make sure that you also look there for the analysis environment.
+Use the instructions given above for ``collection`` to check you have found the right terminal window.
+For data analysis ``show_env()`` should return something like ``analysis-17Q1.0``.
 
-.. code-block:: python
-
-  !conda list
-
-now you are looking for ``something something/something/analysis-dev``
-on the top line of the output,
-which tell you that you are in the right analysis environment.
-
-If you see something more like ``/direct/pe1_data/userArea/XPDhome/xpdUser`` then
-type.
+If you need to restart the analysis environment later you can do it by typing
 
 .. code-block:: python
 
   ianalysis
 
 2. Make sure that the software has been properly configured for your beamtime. In
-your ``analysis`` environment, type:
+your ``analysis-yyQn.x`` environment, type:
 
 .. code-block:: python
 
   an.md
 
-This should return a list of metadata about your experiment, such as PI last name.  If not
+This will return the same list of metadata about your experiment as bt.md does.  It means
+that your analysis environment is linked to the right experiment.  If not
 please get your analysis environment set up by the instrument scientist before proceeding.
 
-3. Make sure the visualization software is running. We will use ``SrXgui`` and ``XPDsuite`` for visualizing data.
-Check that they are running by finding windows that looks like:
-
-**XPDsuite**
-
-.. image:: ./img/XPDsuite.png
-  :width: 400px
-  :align: center
-  :height: 300px
+3. Make sure the visualization software is running. We will use ``SrXgui`` to visualize 2D plots
+and ``XPDsuite`` for visualizing 1D plots and getting PDFs.
+Check that they are running by finding windows that look like:
 
 **SrXgui**
 
@@ -110,107 +143,88 @@ Check that they are running by finding windows that looks like:
   :align: center
   :height: 300px
 
-If you can't find them, contact your IS to get them running correctly.
+**XPDsuite**
+
+.. image:: ./img/XPDsuite.png
+  :width: 400px
+  :align: center
+  :height: 300px
+
+If you can't find them, you will need to open them.
+Open a new terminal window and type ``SrXgui`` at the command (note, you don't type this from
+inside the ``collection`` or ``analysis`` environments but from a new terminal), then open another
+terminal window and type ``xPDsuite``.  If you want to use Fit2D for visualizing your data,
+type ``fit2d`` at a terminal prompt on the analysis computer.
+
 
 Set up your experiment
 ----------------------
 0. general
 """"""""""
 
-If you want to query any ``xpdAcq`` or ``xpdAn`` function, type the function name with a ``?`` at the end and hit
-return.  Documentation for what parameters the function takes, and any default values, and what
-the function returns will be printed.  For example, in your ``collection`` terminal type:
+You do things in ``xpdAcq`` and ``xpdAn`` by running 'functions' that have a name followed
+by parentheses, for example, ``show_env()``.  If the function needs to know some parameters to work,
+we pass these to the function as 'arguments' by putting them in a comma-separated sequence in the parentheses,
+e.g., ``xrun(5,7)`` (more on this later).
+This is standard Python syntax.
 
-.. code-block:: python
+If you don't know what functions are available to you (and you don't)
+you can discover them by typing a few letters and then hitting the 'Tab' key.  All
+functions that the xpd software knows about that start with that sequence of letters
+will be revealed. Try typing ``s`` then Tab.  Too many in the list?  Then add another
+letter (e.g., type ``h``so you have ``sh``) then 'Tab'.  Can you find ``show_env()``?
+You can navigate to the one you want using the arrow keys and hit enter.
 
-  run_calibration?
+Now, if you don't know what that function does and what arguments it needs or has as optional (and you don't)
+then type the name of the function but without the parentheses, add a `?` at the end, and hit return.
+This information will then be printed to the terminal screen. For example, try typing ``xrun?`` in the
+collection environment.
 
-If you can't remember what functions are available, but can remember the first letter or first few
-letters, type those letters and hit ``tab`` to see a list of all available functions that begin with
-those letters. This will include Python imported and built-in functions as well as xpdAcq ones.
-
-0.5 quick look
-""""""""""""""
+0.5 quick look at some data
+"""""""""""""""""""""""""""
 
 Place any sample, but maybe the Ni calibrant, at the sample position.  Let's make sure we are getting a nice
-Ni diffraction pattern. In your ``collection`` terminal type:
+Ni diffraction pattern. In your ``collection-yyQn.x`` terminal type:
 
 .. code-block:: python
 
   xrun(0,0) # will run an exposure of 60 seconds on your setup sample
-  save_last_tiff() # will save the image in the tiff_base/Setup directory
+  save_last_tiff() # will save the image in the .../xpdUser/tiff_base/Setup directory
 
 Note, if the software gives an error that it cannot find the sample object, then you will need
-to load a sample spreadsheet.  See section 3 below: `set up Sample objects to use later`
+to load a sample spreadsheet.  See below: `load Sample information`
 
-Navigate to the ``SrXgui`` image viewer. Click on the folder icon and navigate to
-the ``tiff_base/Setup`` folder and look for a list of one or more tiff files.
-Double-click on the most recent one to view the one you just collected.
+Now find the ``SrXgui`` image viewer. Click on the folder icon called "Input dir" and navigate to
+the ``.../xpdUser/tiff_base/Setup`` folder then select "Choose".
+You should now see a list of (or maybe just one) tiff files.
+Double-click on the most recent one (in name order it will be the bottom one)
+to view the one you just collected. By default, ``save_last_tiff()`` saves a dark-subtracted
+image so you will see a dark corrected image of your sample.
 
+To zoom in to part of the image, click on the plot with the mouse to make it active,
+then type ``z`` on the keyboard.  The cursor should change to a '+'.  Move the cross
+to the top left of the selection you want to make, then hold down the left mouse
+button and move the mouse to the bottom-right corner and let go the left mouse
+button.   To reset the figure type ``Esc`` on the keyboard.  `Remember, for the
+keyboard inputs to work you have to first click on the plot window to make it active`.
+You can toggle linear and log scales using the button, and change the color scale
+using the slider.  To open a new image, double-click on the new sample name in the
+files dialog box.  You may have to click the 'Refresh' button if the file was
+just written and doesn't show.
 
-1. calibration
-""""""""""""""
-run this first, then run it again each time the geometry of your measurement changes.
+.. _load_sample:
 
-Place the Ni calibrant at the sample position, close the hutch and open the shutter then type in your ``collection`` terminal:
-
-.. code-block:: python
-
-  run_calibration() # default values (calibrant_file='Ni.D' and exposure=60) don't need to be typed
-
-and follow the instructions in :ref:`calib_manual`.
-
-The resulting calibration parameters will be saved in the header of every scan you run until you
-run ``run_calibration()`` again.
-
-2. set up a mask
-""""""""""""""""
-
-The standard mask removes problematic pixels at the edge of the detector, shadows
-the beamstop, and uses an auto-masking scheme to get rid of outlier pixels.
-The automasking has been extensively tested on a low-scattering sample so our mask
-building function has been designed to run on data from an empty kapton tube.
-Load an empty kapton tube on the diffractometer, then in your ``collection`` terminal type
-
-.. code-block:: python
-
-  run_mask_builder() # be patient, the process takes 10 minutes!
-
-A mask will be generated based on the image collected from this sample. This mask
-will be saved in the header of all future scans until you run ``run_mask_builder()``
-again.  You will always be able to extract your data unmasked, or apply a different mask,
-at analysis time, but if this mask works well, it will save you a lot of time later if
-you do this step now.
-
-You can look at the 2D image with and without the mask in SrXgui.
-You can load the mask file by clicking the 'folder' icon in SrXgui, navigating
-to the ``tiff_base/setup`` folder and looking for a file with a long sample name
-and the extension ``.npy``. Select and load this file in the SrXgui mask dialog box.
-
-.. image:: ./img/select_mask_00.png
-  :width: 400px
-  :align: center
-  :height: 200px
-
-.. image:: ./img/select_mask_01.png
-  :width: 400px
-  :align: center
-  :height: 300px
-
-
-For more info: :ref:`auto_mask`.
-
-3. set up ``Sample`` objects to use later
-"""""""""""""""""""""""""""""""""""""""""
+1. load ``Sample`` information
+""""""""""""""""""""""""""""""
 
 Your sample information should be loaded in an excel spreadsheet, with a well
-defined format (a template file may be found `here
-<https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_
-). If the IS didn't already
-do it, save your sample xls file to the ``xpdUser/import`` directory using the name
+defined format (a template file may be found at`xpdUser Google Group
+<https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_).
+
+If the IS didn't already do it, save your sample xls file to the ``.../xpdUser/import`` directory using the name
 ``<saf_number>_sample.xlsx``, where you replace ``<saf_number>`` with the number
 of the safety approval form associated with your experiment.  If you are not sure
-what your ``saf_number`` is you can get it by typing following command in your ``collection`` terminal:
+what your ``saf_number`` is you can get it by typing the following command in your ````collection-yyQn.x`` terminal:
 
 .. code-block:: python
 
@@ -230,25 +244,196 @@ Next type:
 
   import_sample_info()
 
-which loads the sample information and makes all the sample objects available in the current beamtime.
+which loads the sample information from the spreadsheet into the ``xpdAcq`` program and makes all the sample objects available to use in the current beamtime to collect data (see below).
 
-Updates and additions may be made by editing existing sample information, and by adding more samples, in the excel file and rerunning ``import_sample_info()``
-at any time during the experiment.  The ``Sample`` object list will be updated based on contents of this new sheet so
+Updates and additions may be made at any time by editing the Excel spreadsheet in the import directory and rerunning ``import_sample_info()``.
+The ``Sample`` object list will be updated based on contents of this new sheet so
 we recommend to just edit existing or add new samples to the sheet but not to delete any.
 
 For more info :ref:`import_sample`.
 
 
-4. set up ``ScanPlan`` objects to use later
-"""""""""""""""""""""""""""""""""""""""""""
+2. Calibration
+""""""""""""""
+run this first, then run it again each time the geometry of your measurement changes.
 
-use an xpdAcq template
-^^^^^^^^^^^^^^^^^^^^^^
+Place the Ni calibrant at the sample position, close the hutch and open the shutter then type in your ``collection-yyQn.x`` terminal:
 
-``xpdAcq`` has templates for three common scans (more will follow, please request yours at `xpd-users Google group!
+.. code-block:: python
+
+  run_calibration() # default values (calibrant_file='Ni.D' and exposure=5) don't need to be typed
+
+and follow the instructions in :ref:`calib_manual`.
+
+The resulting calibration parameters will be saved in the header of every scan you run until you
+run ``run_calibration()`` again.
+
+3. set up a mask
+""""""""""""""""
+
+The standard mask removes problematic pixels at the edge of the detector, shadows
+the beamstop, and uses an auto-masking scheme to get rid of outlier pixels.
+The automasking has been extensively tested on a low-scattering sample so our mask
+building function has been designed to run on data from an empty kapton tube.
+Load an empty kapton tube, or something similar, on the diffractometer, then in your ``collection-yyQn.x`` terminal type
+
+.. code-block:: python
+
+  run_mask_builder() # be patient, the process takes 10 minutes!
+
+A mask will be generated based on the image collected from this sample. This mask
+will be saved in the header of all future scans until you run ``run_mask_builder()``
+again.  You will always be able to extract your data unmasked, or apply a different mask,
+at analysis time, but if this mask works well, it will save you a lot of time later if
+you do this step now.
+
+You can look at the 2D image with and without the mask in SrXgui.
+You can load the mask file by clicking the 'folder' icon by the "Mask file" field
+in SrXgui, navigating
+to the ``.../xpdUser/config_base`` folder and click `choose`.  If you do not see any files
+the filter is likely not set correctly.  Select ``npy`` from the
+'Type:' dropdown menu.  Now you should see the file ``xpdacq_mask.npy``.
+double-click this file in the list to select it.  Masked pixels will have value
+0.0 (blue) and unmasked pixels will have values 1.0 (red).  You should see
+masked pixels around the edge of detector (edge-mask), pixels in the location
+of the beam-stop, and various other pixels that have anomalous counts in them
+as determined by the auto-masking process.
+
+.. image:: ./img/select_mask_00.png
+  :width: 400px
+  :align: center
+  :height: 200px
+
+.. image:: ./img/select_mask_01.png
+  :width: 400px
+  :align: center
+  :height: 300px
+
+For more info: :ref:`auto_mask`.
+
+
+4. measuring a dataset from a sample: overview
+""""""""""""""""""""""""""""""""""""""""""""""
+
+Now it is time to collect some data.  Load one of your samples on the diffractometer
+and close up the hutch.  To collect a dataset from a sample you will type at the
+``collection-yyQn.x`` terminal: ``xrun(<sample-object>,<ScanPlan-object>)``
+
+where the ``<sample-object>`` contains sample information from the Excel spreadsheet,
+and ``<ScanPlan-object>`` contains information about the scan.  You will make your
+own ``ScanPlan`` objects, as we describe below, but once they are made you can reuse
+them again and again, for example, running the same ScanPlan on different samples.  We
+keep all the ScanPlans and Samples you have defined in a list that you can see by
+typing ``bt.list()`` which will result in output similar to the following:
+
+.. code-block:: python
+
+  ScanPlans:
+  0: ct_5
+  1: ct_0.1
+  2: ct_1
+  3: ct_10
+  4: ct_30
+  5: ct_60
+
+  Samples:
+  0: Setup
+  1: Ni
+  2: kapton_1mmOD
+  3: kapton_0.9mmOD
+  4: kapton_0.5mmOD
+  5: activated_carbon_1
+  6: activated_carbon_2
+  7: activated_carbon_3
+  8: activated_carbon_4
+  9: activated_carbon_5
+  10: activated_carbon_6
+  11: FeF3(4,4'-bipyridyl)
+  12: TPT_0.9MM
+  13: TPB_0.9MM
+  14: TPP_0.9MM
+  15: BTB_0.9MM
+  16: BTC_0.9MM
+  17: JVL400_LiFePO4_IL
+  18: Film_array_on_silicon_substrate
+  19: ScN_on_Si_Pos1
+  20: ScN_on_Si_Pos2
+  21: ScN_on_Si_Pos3
+  22: nano_particle_grid
+
+You can refer to the objects by using their name, or simply
+by giving their position in the list, for example,
+
+.. code-block:: python
+
+  xrun(bt.samples['Setup'], bt.scanplan['ct_5']) # referencing objects by name...or...
+  xrun(0,0)                          # reference the objects by their position (index) in
+                                     # the ``bt`` list
+
+
+4.a figuring out what is the right exposure time for your sample
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+How long you should expose your sample for depends on many factors such as the
+scattering power of your sample and the incident intensity and energy.  We can
+use a somewhat trial and error approach to determine a good exposure time.  First
+we will run some setup scans to find a good exposure.  When you want scans to be
+labeled as ``setup`` scans in the database, and not get muddled with your
+production runs, always use the ``<sample-object>`` called ``Setup``, which is always in
+the position `0` in the ``bt.list()``.  So while setting things up you will `always`
+type ``xrun(0, <some scanplan object you are testing>)``, regardless of what your
+actual sample is.
+
+begin by typing
+
+.. code-block:: python
+
+  xrun(0,1)
+
+where number 1 in our list is a count-scan of 10 s.
+When the scan has completed, type
+
+.. code-block:: python
+
+  integrate_and_save_last()    #remember you can use tab-complete to see what is available
+
+This function saves the just-measured dataset as a tif file in the ``.../xpdUser/tiff_base/Setup``
+directory (as long as you are using the Setup sample-object at position 0).  To view the raw
+data, find your SrXgui window, and use the instructions above to play around with the image.
+
+One of the best ways to see if you have enough counts in your measurement is to look at the
+`integrated` data.  Assuming that you have already done the calibration, the ``integrate_and_save_last()``
+function should also have saved a ``.chi`` file in the same directory.  This can be viewed in
+`xPDsuite`.  Locate the xPDsuite window, click on the folder icon (second from left in the main toolbar) and navigate to
+``.../xpdUser/tiff_base/Setup`` and hit choose.  Make sure the filter is looking for ``.chi`` files,
+make your way to the most recent one (at the bottom of the list, but you can check the date-time in the name).
+Click on this and then select 1D plot, or just double click it. By default a window shows up that has
+a PDF curve in it, but at the top there are radio buttons for `i(q)` (raw integrated data), `S(Q)` and `F(Q)` as well as `g(r)`.
+Select all of these you want to look at (you can select multiple), then play around with the
+sliders if you like to try and find reliable parameters for the corrections.  Make sure that
+the ``Q(nm-1)`` radio-button is selected as ``integrate_and_save_last()`` saves the integrated data on a Q-grid in
+units of inverse nm.
+
+If there is too much noise in the data at high-Q you will have to try a new setup scan with a longer
+exposure, and keep doing this until you have found a count time that gives you sufficient counting statistics.
+You may have to make some new scans with different count times during this process, which brings us to...
+
+.. _def_scanplan:
+
+4.b Define your own xpdAcq ScanPlans
+"""""""""""""""""""""""""""""""""""
+
+xpdAcq can consume any bluesky Plan, but these can be challenging for the beginner to make, and beyond the scope of this
+quickstart.  Please see the Bluesky documentation for more details on defining bluesky Plans.
+
+Many, if not most, of XPD's measurements can be carried out using ``xpdAcq`` ScanPlan templates.
+We currently support four common scans-types (more will follow, please request yours at `xpd-users Google group!
 <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ ): a
-simple count, a series of counts, and a temperature scan.  You can create ``ScanPlans`` now to use later, or you can create
-them when you need them (and reuse them after that).  Examples of what to type to create different example ``ScanPlans`` are shown
+simple count, a series of counts, a temperature scan, and a user-supplied list of temperatures.
+You can create particular ``ScanPlans`` now to use later, with all the parameters such as start-temperature,
+stop-temperature and temperature-step, or you can create
+them when you need them (and reuse them after that).  Examples of what to type (followed by ``Enter``)
+to create different example ``ScanPlans`` are shown
 in the table below.  Adapt these as you need to by changing the numbers in the arguments.
 
 =========================================== ===================================================================================
@@ -263,8 +448,158 @@ command
 ``ScanPlan(bt, Tlist, 5, [250, 180, 200])`` exposure detector for 5s at 250K, 180K and 200K
 =========================================== ===================================================================================
 
+
+4.c measure your background file
+"""""""""""""""""""""""""""""""
+
+This step is not required at this point, but it is recommended.
+The background-to-sample association is made in the Excel sample spreadsheet.
+Check the sheet to make sure that all your background samples are listed as samples,
+and that they are correctly linked to the samples for which they are the background.
+More documentation is avaliable :ref:`here <background_obj>`.
+
+ 1. Load the background sample (e.g., empty kapton tube) on the instrument
+ 2. In your ``collection-yyQn.x`` terminal type
+
+  .. code-block:: python
+
+    bt.list()
+
+  to locate the relevant background sample object, for example it might be ``kapton-1mmID``
+  at position 3 in the list.
+
+ 3. Then in the ``collection-yyQn.x`` terminal, you will type ``xrun`` giving as arguments the background sample-object with a ``ct``
+ ScanPlan object of the desired exposure
+
+.. code-block:: python
+
+  # if you are running this as a tutorial don't type this.  It will take >30 mins to complete because
+  # scanplan[3] is a 15 minute exposure and there is no stored 15 minute dark exposure for subtraction
+  # so the code will automatically collect that too!
+  # but to test it you could replace bt.scanplan[3] with bt.scanplan[0]....
+  xrun(bt.samples['kepton_1mmOD'], bt.scanplan['ct_900']) # referencing objects explicitly...or...
+  xrun(2,3)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
+                                     # index from the ``bt`` list
+
+Please see :ref:`background_obj` for more information.
+
+How long should you run your background scan for? See discussion
+`here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
+but for kapton we often do it for 15-30 minutes, though it can be highly dependent
+on the scattering properties of your sample.  For example, strongly scattering samples
+like Ni often need no background subtraction at all.
+
+
+4.d interrogate metadata in objects
+"""""""""""""""""""""""""""""""""""
+
+If you want to see what is in those objects in your ``bt.list()`` you can interrogate
+them:
+
+.. code-block:: python
+
+  bt.samples.get_md(0)        # returns metadata for item 0 in the sample list, i.e., the dummy ``setup`` sample
+  bt.scanplans.get_md(0)      # returns metadata for item 0 in the scanplans list
+
+
+Get your data
+-------------
+
+.. _save_data:
+
+1. Save images and metadata from scans
+""""""""""""""""""""""""""""""""""""""
+
+These commands can be run in the ``collection-yyQn.x`` or the ``analysis-yyQn.x`` ipython environments.
+
+Data are saved in the directory ``.../xpdUser/tiff_base/<sample_name>`` where ``<sample_name>`` is the name of the
+sample that you used in the sample spreadsheet, and is the name of the ``Sample`` object.
+
+**save images from last scan:**
+
+.. code-block:: python
+
+  integrate_and_save_last()  # if you have all the calibration data, ... or...
+  save_last_tiff()           # if (naughty naughty) you haven't done all the calibrations up front
+
+With these functions, the image will be saved to a ``.tiff`` file with a recognizable
+name.
+The metadata associated with the image will be saved to a ``.yml`` file with the
+same name, which is a
+text file and can be opened with a text editor.  Saving behavior
+can be modified by changing the default function arguments.  Type ``save_last_tiff?``
+to see the allowed values.
+
+**Pro Tip**: this function is often typed just after ``xrun()`` in the collection environment,
+so that the data are extracted out of the NSLS-II database and delivered to you automatically when
+the scan finishes.  You can then play around with them and take them home as you like.  If
+you write a script to run your experiment, it will typically have ``xrun(<#>,<#>)`` followed by
+``integrate_and_save_last()``
+
+The following
+functions are more useful for running in the ``analysis-yyQn.x`` environment to fetch scans from the database
+selectively if you don't want a dump of every scan.
+
+**save images from last 2 scans:**
+
+.. code-block:: python
+
+  h = db[-2:]
+  integrate_and_save(h)
+
+**save images from scan 2 scans ago:**
+
+.. code-block:: python
+
+  h = db[-2]
+  integrate_and_save(h)
+
+We use "h", short for "header", for the object given back by the NSLS-II databroker (``db``) data-fetching software.
+This is a software object that contains all the information about your scan and can
+be passed to different functions to do analysis.
+more information on headers is `here <http://nsls-ii.github.io/databroker/headers.html>`_
+
+
+2. Save images and also integrate images to a 1D patterns
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+**save your images and also integrate to a 1D pattern:**
+
+.. code-block:: python
+
+  integrate_and_save_last()   # the most recent scan
+
+You could use this instead of ``save_last_tiff()`` as part of your acquisition
+sequence by typing it in the ``collection-yyQn.x`` environment.
+
+Or use these in the ``analysis-yyQn.x`` environment to be analyzing data over here as
+the data are being collected over there...
+
+.. code-block:: python
+
+  h = db[-2:]                               # the last 2 scans
+  integrate_and_save(h, save_image=False)   # saves a copy of the 1D diffraction pattern
+  h = db[-2]                                # 2 scan ago
+  integrate_and_save(h)                     # saves a copy of the image AND a copy of the 1D diffraction pattern
+
+With these functions, the image (if requested) will be saved to a ``.tif`` file, the mask
+(if there is one) will be saved
+to a ``.npy`` file, and the masked-image will be integrated and saved to a ``.chi`` file.
+The metadata associated with the image will be saved to a ``.yml`` file which is a
+text file and can be opened with a text editor.  Masking and calibration behavior
+can be modified by overriding the default function arguments.  Type, for example, ``integrate_and_save_last?``
+to see the allowed values.
+
+which devices am I using?
+-------------------------
+
+So far, we have talked about how to use templated ``ScanPlan`` but we haven't mentioned about which *devices* are used to do your experiment.
+
+To know more about what devices are triggered by ``ScanPlan`` and how to
+possibly change them, please see :ref:`usb_DeviceOptions`
+
 write your own scan plan
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 ``xpdAcq`` also consumes any scan plan from ``bluesky``. Here we will show a brief example
 for illustration. This is a more advanced topic that is beyond the scope of this quick-start,
@@ -284,8 +619,8 @@ and assign it to the object we have called ``mybsplan`` in this example:
           'author': 'Simon',
           'etc': 'make up any key-value pairs'}
 
-  mybsplan = list_scan([glbl.area_det], motor, [1,3,5,7,9], md=mymd) # drives motor to postions 1,3,5,7,9 and fires area_detector at each position
-  mybsplan = subs_wrapper(mybsplan, LiveTable([glbl.area_det])) # set up the scan so LiveTable will give updates on how the scan is progressing
+  mybsplan = list_scan([xpd_configuration['area_det'], motor, [1,3,5,7,9], md=mymd) # drives motor to postions 1,3,5,7,9 and fires area_detector at each position
+  mybsplan = subs_wrapper(mybsplan, LiveTable([xpd_configuration['area_det']])) # set up the scan so LiveTable will give updates on how the scan is progressing
 
 Then to use it successfully in xpdAcq you have to do a bit of configuration of global parameters.  This work is done
 automatically for you in the ``xpdAcq`` built-in plans.  There are many things you could set up, but the simplest example
@@ -294,7 +629,7 @@ is another glbl option that you could reset).
 
 .. code-block:: python
 
-  glbl.area_det.images_per_set.put(50)  # set detector to collect 50 frames, so 5 s exposure if continuous acquisition with 0.1s framerate
+  xpd_configuration['area_det'].images_per_set.put(50)  # set detector to collect 50 frames, so 5 s exposure if continuous acquisition with 0.1s framerate
 
 Finally, later on in the experiment when you are ready to run it, you would run this plan just the same as a regular ``xpdAcq`` scanPlan object:
 
@@ -316,211 +651,6 @@ the `XPD-Users Google group
 and suggest that perhaps it would be great to have that
 as an ``xpdAcq`` built-in ScanPlan in the future!
 
-5. list objects by categories
-"""""""""""""""""""""""""""""
-
-To list out currently available ``Sample`` and ``ScanPlan`` objects you can do:
-
-.. code-block:: python
-
-  in[1]: bt.list()
-  Out[1]:
-
-and you should similar output as following:
-
-.. code-block:: python
-
-  ScanPlans:
-  0: 'ct_5'
-  1: 'Tramp_5_300_200_5'
-  2: 'tseries_5_50_15'
-  3: 'ct_900'
-  ...
-
-  Samples:
-  0: setup
-  1: Ni
-  2: mt_kapton_1mm
-  ...
-
-
-6. interrogate metadata in objects
-""""""""""""""""""""""""""""""""""
-
-.. code-block:: python
-
-  bt.samples[0].md        # returns metadata for item 0 in the sample list, i.e., the dummy ``setup`` sample
-  bt.scanplans[0].md      # returns metadata for item 0 in the scanplans list
-
-Run your experiment
--------------------
-
-1. A scan is a scanplan executed on a sample
-""""""""""""""""""""""""""""""""""""""""""""
-
-The main philosophy of ``xpdAcq`` is : **on this sample run this scanplan** which
-is typed as ``xrun(<Sample.object>,<ScanPlan-object>)``
-
-background scan
-^^^^^^^^^^^^^^^
-
-It is recommended to run a background scan before your sample so it is available for
-the automated data reduction steps.  It also allows you to see problems with the experimental
-setup, for example, crystalline peaks due to the beam hitting a shutter.
-
- 1. Load the background sample (e.g., empty kapton tube) on the instrument
- 2. In your ``collection`` terminal type
-
- .. code-block:: python
-
-  bt.list_bkg()
-
-to list your sample objects tagged as backgrounds (that was done originally in your excel spreadsheet).
-
- 3. In the ``collection`` terminal, run ``xrun`` (see below) on the background sample with a ``ct`` ScanPlan object of the desired exposure
-
-.. code-block:: python
-
-  # if you are running this as a tutorial don't type this.  It will take >30 mins to complete because
-  # scanplan[3] is a 15 minute exposure and there is no stored 15 minute dark exposure for subtraction
-  # so the code will automatically collect that too!
-  # but to test it you could replace bt.scanplan[3] with bt.scanplan[0]....
-  xrun(bt.samples[2],bt.scanplan[3]) # referencing objects explicitly...or...
-  xrun(2,3)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
-                                     # index from the ``bt`` list
-
-Please see :ref:`background_obj` for more information.
-
-How long should you run your background scan for? See discussion
-`here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
-but for kapton we often do it for 15-30 minutes, though it can be highly dependent
-on the scattering properties of your sample.  For example, strongly scattering samples
-like Ni often need
-no background subtraction at all.
-
-setup scans
-^^^^^^^^^^^
-
-There is always a bit of setting up and testing to get things just right before you are
-ready to collect real production data, for example, figuring out the right exposure and so
-on.   **We strongly recommend that you use a
-``setup`` sample-object while you are doing this**. This will make it much easier later to separate
-your setup scans from your production scans.
-
-For nearly all cases you can use the setup sample we
-gave you (object ``bt.sample.[0]`` at position ``0`` in the sample list).
-
-However, if necessary you can
-create your own setup samples.  Any sample in the excel spreadsheet tagged as ``setup`` is a setup
-scan.  Note that output files are written in a directory with the sample name, so to separate your
-output files it is also a good idea to give your setup sample a name like ``mysample_setup``.
-
- 1. Load your sample
- 2. If you are not using the built-in setup sample, list your sample objects to find your setup sample object
- 3. type xrun with the desired sample object and ScanPlan (see below)
-
-.. code-block:: python
-
-  # In ``collection`` terminal
-  xrun(bt.samples[0],bt.scanplan[6]) # referencing objects explicitly. If you are doing this as a tutorial, bt.scanplan[6] may not exist yet
-  xrun(0,6)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
-                                     # index from the ``bt`` list
-
-For more info: FIXME
-
-production run
-^^^^^^^^^^^^^^
-
- 1. Load your sample (if it is not already loaded)
- 2. List your sample objects to find the right one for this sample
- 3. type xrun with the desired sample object and ScanPlan (see below)
-
-.. code-block:: python
-
-  xrun(5,16)
-
-For more info: FIXME
-
-Get your data
--------------
-
-1. Save images and metadata from scans
-""""""""""""""""""""""""""""""""""""""
-
-These commands can be run in the ``collection`` or the ``analysis`` ipython environments.
-
-Data are saved in the directory ``xpdUser/tiff_base/<sample_name>`` where ``<sample_name>`` is the name of the
-sample that you used in the sample spreadsheet, and is the name of the ``Sample`` object.
-
-**save images from last scan:**
-
-.. code-block:: python
-
-  save_last_tiff()
-
-With this function, the image will be saved to a ``.tiff`` file.
-The metadata associated with the image will be saved to a ``.yml`` file which is a
-text file and can be opened with a text editor.  Saving behavior
-can be modified by changing the default function arguments.  Type ``save_last_tiff?``
-to see the allowed values.
-
-**Pro Tip**: this function is often typed just after ``xrun()`` in the collection environment,
-so that the data are extracted out of the NSLS-II database and delivered to you automatically when
-the scan finishes.  You can then play around with them and take them home as you like.
-
-The following
-functions are more useful for running in the ``analysis`` environment to fetch scans from the database
-selectively if you don't want a dump of every scan.
-
-**save images from last 2 scans:**
-
-.. code-block:: python
-
-  h = db[-2:]
-  save_tiff(h)
-
-**save images from scan 2 scans ago:**
-
-.. code-block:: python
-
-  h = db[-2]
-  save_tiff(h)
-
-We use "h", short for "header", for the object given back by the NSLS-II databroker (``db``) data-fetching software.
-This is a software object that contains all the information about your scan and can
-be passed to different functions to do analysis.
-more information on headers is `here <http://nsls-ii.github.io/databroker/headers.html>`_
-
-
-2. Save images and also integrate images to a 1D patterns
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-**save your images and also integrate to a 1D pattern:**
-
-.. code-block:: python
-
-  integrate_and_save_last()   # the most recent scan
-
-You could use this instead of ``save_last_tiff()`` as part of your acquisition
-sequence by typing it in the ``collection`` environment.
-
-Or use these in the ``analysis`` environment to be analyzing data over here as
-the data are being collected over there...
-
-.. code-block:: python
-
-  h = db[-2:]                               # the last 2 scans
-  integrate_and_save(h, save_image=False)   # saves a copy of the 1D diffraction pattern
-  h = db[-2]                                # 2 scan ago
-  integrate_and_save(h)                     # saves a copy of the image AND a copy of the 1D diffraction pattern
-
-With these functions, the image (if requested) will be saved to a ``.tiff`` file, the mask
-(if there is one) will be saved
-to a ``.npy`` file, and the masked-image will be integrated and saved to a ``.chi`` file.
-The metadata associated with the image will be saved to a ``.yml`` file which is a
-text file and can be opened with a text editor.  Masking and calibration behavior
-can be modified by overriding the default function arguments.  Type, for example, ``integrate_and_save_last?``
-to see the allowed values.
 
 User scripts
 ------------
@@ -542,6 +672,8 @@ These scripts should execute as desired under normal circumstances.  Runs will a
 there is a beam-dump and then resume, for example.  However, there are some situations where the scans
 can be tricked into hanging, or continuing to run without scans completing, so please check your data
 carefully.  We are working on solutions for these edge cases.
+
+.. _cancel_scan:
 
 Interrupt your scan
 --------------------
@@ -572,7 +704,7 @@ b) Recovering from the paused state caused by an interrupt
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 After a pause, when you are ready to continue working, type one of these commands
-into the ``collection`` environment:
+into the ``collection-yyQn.x`` environment:
 
 ============== ===========
 Command        Outcome

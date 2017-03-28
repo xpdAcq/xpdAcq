@@ -3,8 +3,8 @@
 Release Notes
 --------------
 
-``v0.5``
-========
+``v0.5.0``
+==========
 
 This is a stable release of ``xpdAcq`` software.
 
@@ -19,7 +19,7 @@ New features introduced to this version:
     * azimuthal integration using ``pyFAI`` as the back-end
     * auto-masking based on statistics on pixel counts
 
-``v0.5`` supports three kinds of built-in scans:
+``v0.5.0`` supports three kinds of built-in scans:
 
 .. code-block:: none
 
@@ -29,7 +29,7 @@ New features introduced to this version:
 
 Additional built-in scan types will be added in future releases.
 
-``v0.5`` supports following automated logics :
+``v0.5.0`` supports following automated logics :
 
   * :ref:`automated dark subtraction <auto_dark>`
 
@@ -39,14 +39,14 @@ Additional built-in scan types will be added in future releases.
 
 This version is fully documented and extensively tested.
 
-``v0.3``
-========
+``v0.3.0``
+==========
 
 This is the first full, stable, release, of xpdAcq software.
 It offers functionality to acquire data at XPD but with very limited
 tools yet to analyze it.
 Future releases will focus more on analysis functionalities.
-``v0.3`` is still a limited functionality release in that it only supports three kinds of scans:
+``v0.3.0`` is still a limited functionality release in that it only supports three kinds of scans:
 
 .. code-block:: none
 

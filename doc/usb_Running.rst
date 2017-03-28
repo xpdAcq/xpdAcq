@@ -33,7 +33,7 @@ The allowed scan types are:
 
 
 Here are some examples of a workflow.  Assume a Ni_calibrant sample is loaded on the diffractometer
-and the ``Ni_calibrant`` Sample object is created as well as all the ``ScanPlan`` we need.
+and the ``Ni`` Sample object is created as well as all the ``ScanPlan`` we need.
 We will start by doing a scan with ``Sample`` object ``Setup`` on our ``ct_1`` ScanPlan.
 
 
@@ -59,14 +59,14 @@ Remember, always start with ``bt.list()``
 
   Samples:
   0: Setup
-  1: Ni_calibrant
-  2: bkgd_kapton_0.9mmOD
-  3: bkgd_kapton_1mmOD
-  4: bkgd_kapton_0.5mmOD
+  1: Ni
+  2: kapton_0.9mmOD
+  3: kapton_1mmOD
+  4: kapton_0.5mmOD
   5: activated_carbon_1
   6: activated_carbon_2
   7: activated_carbon_3
-...
+  ...
 
 
 The Sample object I want has list index 0 and the ScanPlan has list index 2.
@@ -197,7 +197,7 @@ The definition of **fresh and appropriate** is:
     In short,
 
     * acquisition time is the collection time for a single frame from area detector.
-    This can take values between 0.1s to 5s.
+      This can take values between 0.1s to 5s.
 
     * exposure time is the user-defined total acquisition time
 
@@ -205,8 +205,8 @@ The definition of **fresh and appropriate** is:
 
   .. code-block:: python
 
-    glbl.auto_dark = False
-    glbl.shutter_control = False
+    glbl['auto_dark'] = False
+    glbl['shutter_control'] = False
 
 
   And the duration of your dark window can be modified by:
@@ -214,7 +214,7 @@ The definition of **fresh and appropriate** is:
 
   .. code-block:: python
 
-    glbl.dk_window = 200 # in minutes. default is 3000 minutes
+    glbl['dk_window'] = 200 # in minutes. default is 3000 minutes
 
 
   Having ``auto_dark`` set to ``True`` is strongly recommended as this enables
@@ -231,7 +231,7 @@ Automated calibration capture
 
 Often times, keeping track of which calibration file is associated with a specific scan is very tiring. ``xpdAcq`` makes this easier or you. Before every
 scan is being collected, the program goes to grab the most recent calibration
-parameters in ``/home/xf28id1/xpdUser/config_base`` and load them as part of the
+parameters in ``xpdUser/config_base`` and load them as part of the
 metadata so that you can reference them whenever you want, and make in-situ data
 reduction possible!
 
@@ -242,9 +242,10 @@ reduction possible!
 Quick guide of calibration steps with pyFAI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
-1. First you will see an image window like this:
-
+1. We assume that you have run ``run_calibration()`` in the ``collection`` window
+with Ni as your calibrant.  This will automatically expose the Ni, and after a
+pause a 2D plot window should pop up on the acquisition computer, looking
+something like this:
 
   .. image:: ./img/calib_05.png
     :width: 400px
@@ -252,26 +253,39 @@ Quick guide of calibration steps with pyFAI
     :height: 300px
 
 
-  That is the image we want to perform our  calibration with. Use **magnify
-  tool** at the tool bar to zoom in and **right click** on rings (tip: deselect the zoom toggle before ring selection). Typically a few rings (~5) should be enough.
-
-
+  That is the image we want to perform our  calibration with. Use the **magnify
+  tool** at the tool bar to zoom in to something that looks like the figure below.
+  The magnifying tool is enabled by clicking on the button on the toolbar that
+  looks like a magnifying glass. 
+  
+  Now we will select five rings that PyFai will use to do the calibration.  To do this
+  click on the magnifying glass button again to deselect the magnifying tool so the cursor 
+  looks like an arrow.  You will place the tip
+  of the arrow on the first ring and then **RIGHT click**.  you will see dots going around the
+  ring you have selected.  Then repeat this for the other four rings you will select.
+  `For the highest accuracy, We recommend that you select the first, second, third and 
+  6th ring, as shown in the figure.`  The 6th ring is weaker but well separated from its neighbor.
+  
   .. image:: ./img/calib_07.png
     :width: 400px
     :align: center
     :height: 300px
 
+2. If you don't like what you have selected, you can exit out using ``CTL-C`` and start again
+   by running `run_calibration()`.  However, if you are happy with your selections accept them by first
+   making the collection terminal window active by clicking on it, then hitting ``<enter>``.
+   
+   You will now follow the instructions coming from PyFai.  It asks you to supply the
+   indices of the rings you have selected.  Because PyFai was written by a computer 
+   scientist and not a scientist, **the first ring has number 0**, the second has
+   number 1, the third has number 2 and the 6th has number 5.
 
-  .. note::
-
-    * For a better calibration, we suggest you to select rings that are
-      **well separated/resolved** from their neighbors, and make sure that points are assigned to the correct ring.
-
-
-2. After ring selection, click on the *original* terminal and hit ``<enter>``.
-  Then you will be requested to supply indices of rings you just selected.
-  Remember index **starts from 0** as we are using ``python``.
-  After supplying all indices, you should have a window to show your calibration:
+   If everything has gone well, after supplying all the indices, PyFai will pop
+   up a number of plots that can give an expert eye some indication of the quality
+   of the calibration.  If the dashed lines look as if they are lining up well with
+   the peaks you have a good calibration.  If not, `CTL-C` and start again.  If yes,
+   activate the terminal window by clicking on it, hit ``<enter>`` at the command prompt
+   then type ``done``.
 
 
   .. image:: ./img/calib_08.png
@@ -279,27 +293,29 @@ Quick guide of calibration steps with pyFAI
     :align: center
     :height: 300px
 
-
-  The program will ask you if you want to modify parameters.
-  To finish entire calibration process, please type ``done`` in the terminal.
-
+  PyFai can be a bit finicky.  If it hangs, type CTL-C and start over and make
+  sure you follow the instruction exactly.
+  
   You may find more information about calibration process from `pyFAI documentation <http://pyfai.readthedocs.io/en/latest/calibration.html>`_
 
+3. You are done! ``xpdAcq`` has saved the calibration parameters and will store them will all subsequent scans until you 
+   run another calibration.  
+   
+   To see the current calibration parameters, type ``show_calib()``.
+   
+   You can also find the calibration parameters in a file called 
+   ``pyFAI_calib.yml`` in ``.../xpdUser/config_base``
 
-3. Finally 1D integration and 2D regrouping results will pop out:
-
+3. To clean up you can close all the PyFai windows, including
+   the 1D integration and 2D regrouping results that pop out (see below).
+   Return to the ``Quick start tutorial`` by hitting the browser back-arrow.
 
   .. image:: ./img/calib_09.png
     :width: 400px
     :align: center
     :height: 300px
 
-  After this step, a calibration file with name ``pyFAI_calib.yml`` will be
-  saved under ``/home/xf28id1/xpdUser/config_base``
 
-
-Alright, you are done then! With ``automated calibration capture`` feature, ``xpdAcq``
-will load calibration parameters from the most recent config file.
 
 
 .. _import_sample:
@@ -319,25 +335,20 @@ turns out to be the solution.
 
 
 In order import sample metadata from spreadsheet, we would need you to have a
-pre-filled spreadsheet with name ``<saf_number>_sample.xls`` sit in ``xpdConfig``
+pre-filled spreadsheet with name ``<saf_number>_sample.xls`` sit in ``xpduser/import``
 directory. Then the import process is simply:
 
 
 .. code-block:: python
 
 
-  import_sample(300564, bt) # SAF number is 300564 to current beamtime
-                            # beamtime object , bt, with SAF number 300564 has created
-                            # file with 300564_sample.xls exists in ``xpdConfig`` directory
+  import_sample_info()
 
+``xpdAcq`` will grab the ``saf_number`` and ``bt`` for current beamtime, so make sure you have your spreadsheet named with proper format. For example, if your SAF number is ``300179``, then you should have your pre-populated spreadsheet with the name as ``300179_sample.xls``, sit inside ``xpdUser/import`` directory.
+  
 
-.. note::
-
-
-  Usually ``xpdAcq`` will grab the ``saf_number`` and ``bt`` to current beamtime for you,
-  so you can simply run ``import_sample()``. However, if you want to load in different
-  spreadsheets, you can also import it by explicitly typing in ``saf_number``.
-
+To parse the information filled inside your spreadsheet, we have designed
+several rules and here are the explantion to each of the rules.
 
 comma separated fields
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -352,13 +363,13 @@ comma separated fields
   Fields following this parsing rule are:
 
 
-  ============= ========================================================
-  ``cif name``  pointer of potential structures for your sample, if any.
-  ``Tags``      any comment you want to put on for this measurement.
-  ============= ========================================================
+  ======================  ========================================================
+  ``cif name``            pointer of potential structures for your sample, if any.
+  ``User supplied tags``  any comment you want to put on for this measurement.
+  ======================  ========================================================
 
 
-  Example on ``Tags``:
+  Example on ``User supplied tags``:
 
 
   .. code-block:: none
@@ -377,7 +388,7 @@ name fields
 ^^^^^^^^^^^
 
 
-  Fields used to store a person's name in ``first name last name`` format.
+  Fields that are used to store a person's name in ``first name last name`` format.
 
 
   Each person's first and last name will be searchable later on.
@@ -430,7 +441,7 @@ phase string
   ``phase_1: amount, phase_2: amount``.
 
 
-  An example of 0.9% sodium chloride water will be:
+  An example of 0.9% sodium chloride solution will be:
 
 
   .. code-block:: none
@@ -459,7 +470,26 @@ phase string
   header. Also a search on ``Nacl=0.09`` will include this header as well.
 
 
-.. _background_obj:
+dictonary-like fields
+^^^^^^^^^^^^^^^^^^^^^
+
+  Fields that are utilized to store information as ``key-value pair`` format.
+  Standard format of it is ``key: value`` and it also follows the comma-separate rule
+
+  Fields following this parsing rule are:
+
+  =====================================  ===================================
+  ``structrual database ID for phases``  database name and the ID for 
+                                         sample phases
+  =====================================  ===================================
+
+  Example on dictionary-like fields:
+
+
+  .. code-block:: none
+
+
+    ICSD:41120, CCDC:850926 ----> {'ICSD': '41120', 'CCDC': '850926'}
 
 
 Sample Objects
@@ -473,19 +503,15 @@ Sample Objects
   will be parsed based on the contents you type in with above parsing rule.
 
 
-
-
-Generally, after successfully importing sample from spreadsheet, that is what
-you would see:
+  Generally, after successfully importing sample from spreadsheet, that is what
+  you would see:
 
 
 .. code-block:: python
 
 
-  In [1]: import_sample(300564, bt)
+  In [1]: import_sample_info()
   *** End of import Sample object ***
-  Out[1]: <xpdacq.utils.ExceltoYaml at 0x7fae8ab659b0>
-
 
   In [2]: bt.list()
 
@@ -519,8 +545,44 @@ you would see:
   48: bkg_0.5mm_OD_capillary
   49: bkg_film_on_substrate
 
+.. _background_obj:
 
+* **Background**:
 
+  It is recommended to run a background scan before your sample so it is available for
+  the automated data reduction steps.  It also allows you to see problems with the 
+  experimental setup, for example, crystalline peaks due to the beam hitting a shutter.
+
+  You can associate a Sample as the background for the desired
+  Sample freely. Linking the background with the sample together also makes the
+  data-reduction workflow easier.
+  
+  We specify this grouping by entering background sample name into the 
+  ``Sample-name of sample background``  column in the spreadsheet. You can 
+  fill in the *Sample Name of your background* to whichever sample you want to relate.
+  
+  For example, in our `spreadsheet template <https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_ we created pure background
+  objects kapton_1mmOD, kapton_0.9mmOD and kapton_0.5mmOD
+  and we link Ni with background kapton_1mmOD by specifying it
+  at ``Sample-name of sample background`` column.
+
+  A proper linking between **Sample** and **Background** can be seen
+  from metadata stored inside the ``Sample`` object. As usual, let's
+  interrogate the metadata:
+
+  .. code-block:: python
+
+    In[]: bt.samples.get_md(15)  # that's for example, index depends on
+                                 # your spreadsheet
+    out[]:
+    {'bkgd_sample_name': 'kapton_0.9mmOD',
+     'bt_piLast': 'Billinge',
+     ...
+    }
+
+  The example above shows your ``Sample`` with index ``15`` has been
+  linked with background ``kapton_0.9mmOD``. This can largely speeds up
+  the automated data-reduction workflow that we will have in the future!
 
 .. _auto_mask:
 
@@ -587,8 +649,9 @@ Applied masks
 Using the auto-masker
 ^^^^^^^^^^^^^^^^^^^^^
 To use the auto-masker once, creating masks used for subsequent images,
- just run the command:
-.. code-block:: python
+just run the command:
+
+ .. code-block:: python
 
 
   run_mask_builder()

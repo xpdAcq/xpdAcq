@@ -3,16 +3,16 @@
 Cheat Sheet
 ===========
 
-Please use this page as a reminder and to copy  and paste code snippets into your ``collection``
-and ``analysis-dev`` ipython terminals.
+Please use this page as a reminder and to copy  and paste code snippets into your ``collection-yyQn.x``
+and ``analysis`` ipython terminals.
 
 To understand in more detail what the code does, please go to :ref:`xpdu`
 
 Start a beamtime
 ----------------
 
-1. run ``icollection`` to start a collection ipython environment
-2. run the end-beamtime sequence if it has not been run 
+1. run ``bsui`` to start a collection ipython environment
+2. run the end-beamtime sequence if it has not been run
 
 .. code-block:: python
 
@@ -40,13 +40,13 @@ where the <saf_number> must match that of the current beamtime.  If the user did
 
 .. code-block:: python
 
-  load_sample_info()
+  import_sample_info()
 
 .. Note::
 
   The sample objects may be updated at any time by editing the spreadsheet in the ``xpdUser/import`` directory
   and rerunning ``load_sample_info()``
-  
+
 8. calibrate the wavelength.
 
    FIXME

@@ -1,42 +1,76 @@
 .. _usb_GlobalOptions:
 
-Global options
---------------
+xpdAcq Configuration
+--------------------
 
-``xpdAcq`` has a ``glbl`` class that controls the overall behavior of the beamtime.
-All of the attributes of the ``glbl`` class have reasonable default values, but
-these can be interrogated and overwritten.
+``xpdAcq`` uses ``glbl`` and ``xpd_configuration`` to controls the overall behavior of the beamtime.
+All of the values of the ``glbl`` and ``xpd_configuration`` have reasonable default values, but these can be interrogated and overwritten.
 
-Possible scenarios
-""""""""""""""""""
+Funtionality related options
+""""""""""""""""""""""""""""
+  Functionality related options are managed by ``glbl`` and you can 
+  interrogate the default values by typing:
+    
+  .. code-block:: python
 
-    **No automated dark collection logic at all:**
+    glbl
+
+  You can also change them if needed. Here are few possible scenarios:
+
+  **No automated dark collection logic at all:**
+
+  .. code-block:: python
+
+    glbl['auto_dark'] = False
+    glbl['shutter_control'] = False
+
+  **Want a fresh dark frame every time ``xrun`` is triggered:**
+
+  .. code-block:: python
+
+    glbl['dk_window'] = 0.1 # dark window is 0.1 min = 6 secs
+
+
+  **Want a 0.2s exposure time per frame instead of 0.1s:**
+
+  .. code-block:: python
+
+    glbl['frame_acq_time'] = 0.2
+
+  changes made to ``glbl`` will be recovered after coming back to ``ipython`` session.
+  So you don't have to redo the changes from time to time.
+
+
+
+.. _usb_DeviceOptions:
+
+Device-related options
+""""""""""""""""""""""
+    Device related configurations are stored in ``xpd_configuration``
+    and you can interrogate the default values by typing:
+    
+    .. code-block:: python
+
+      xpd_configuration
+    
+    You may also change the defaults:
+
+    **Want to run temperature ramp with different device:**
 
     .. code-block:: python
 
-      glbl.auto_dark = False
-      glbl.shutter_control = False
+      xpd_configuration['temp_controller'] = eurotherm
 
-    **Want a fresh dark frame every time ``xrun`` is triggered:**
-
+    **Want to use alternative shutter:**
+    
     .. code-block:: python
 
-      glbl.dk_window = 0.001 # dark window is 0.001 min = 0.06 secs
+      xpd_configuration['shutter'] = shctl2
 
-
-    **Want a 0.2s exposure time per frame instead of 0.1s:**
-
-    .. code-block:: python
-
-      glbl.frame_acq_time = 0.2
-
-    **Want to run temperature ramp with different device and use alternative shutter:**
-
-    .. code-block:: python
-
-      glbl.temp_controller = eurotherm
-      glbl.shutter = shctl2
+    All of the changes applied to ``xpd_configuration`` only lives
+    within one ``ipython`` session. So if you exit out the terminal and 
+    come back, remeber to repeat the configuration step *again*.
 
     .. note::
 
-      desired objects should be properly *configured*. For more details, please contact beamline staff.
+      desired objects (``eurotherm`` and ``shctl2`` above, for example) should be properly *configured*. How to properly configure a device is beyond the scode of this website, if you have specific requests, please contact beamline staff for more details.

@@ -17,7 +17,7 @@ collection ``ipython`` environment is not so stable
 restarts of it.  How bad if we had to retype our metadata every
 time?  So every time you create an xpdAcq acquisition object,
 the details are saved to a file on the local hard-drive.  When
-``icollection`` is run, the main ``bt`` object (if it exists) is
+``bsui`` is run, the main ``bt`` object (if it exists) is
 automatically reloaded, but not the other acquisition objects.
 But don't worry, they are all safe and sound.
 
@@ -98,8 +98,8 @@ the same name as last time, so let's reload it as ``s1_again`` :
 
 .. code-block:: python
 
-  >>> s1_again = bt.samples[2]
-  >>> s1_again.md
+  >>> s1_again = bt.samples['GaAs'] # e.g., the sample name is GaAs
+  >>> s1_again
   {'bt_experimenters': ['Tim', 'Liu'],
    'bt_piLast': 'Billinge',
    'bt_safN': '300564',
@@ -124,8 +124,7 @@ from ``ScanPlan`` object ``ct_5``, you can do:
 
 .. code-block:: python
 
-  >>> sp1 = bt.scanplans[0]
-  >>> sp1.md
+  >>> bt.scanplans.get_md(0)
   INFO: requested exposure time = 5 - > computed exposure time= 5.0
   {'detectors': ['pe1c'],
    'num_steps': 1,
@@ -149,8 +148,8 @@ desired objects.
 
 .. _usb_gotchas:
 
-bt.list() and bt.get() Gotchas
-------------------------------
+bt.list() Gotchas
+-----------------
 
 Once you get used to this design we hope you will like it, but there are a
 couple of important `Gotchas` that you should bear in mind that could lead to
@@ -161,11 +160,10 @@ confusion until you get used to them.
     This is actually a feature of the code (we want each object to be unique and the only thing that makes it unique from one ``collection`` session to the next is its name and type).
     But please be careful about your naming! Why is it a feature?  You can use this to update an object by redefining it with the same name.
 
- #. Objects may change their position in the ``bt.list()`` as new objects are created.  Just because the object you want was in position ``4`` before, doesn't mean it will be now.
-   **So get used to always typing** ``bt.list()`` **FIRST then** ``bt.get()`` .
-
- #. At the time of writing, our xpdacq objects incorporate metadata from higher in the stack (e.g., ``Sample`` inheriting ``Beamtime`` metadata) dynamically. Any change on ``Beamtime``
-   metadata will automatically propagate down to all ``Sample`` and ``ScanPlan`` objects.
+ #. At the time of writing, our xpdacq objects incorporate metadata from higher 
+    in the stack (e.g., ``Sample`` inheriting ``Beamtime`` metadata) dynamically. 
+    Any change on ``Beamtime`` metadata will automatically propagate down 
+    to all ``Sample`` and ``ScanPlan`` objects.
 
 go to :ref:`usb_scan`
 

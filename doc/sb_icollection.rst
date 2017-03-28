@@ -1,25 +1,28 @@
 .. _sb_icollection:
 
 
-Overview of the icollection+xpdAcq environment
+Overview of the bsui+xpdAcq environment
 ----------------------------------------------
 
 All data collection at NSLS-II is carried out through a powerful
 Python-software-language based interface which runs in an ipython interactive
-session. By typing ``icollection`` at the unix prompt (command line) in a terminal
+session. By typing ``bsui`` at the unix prompt (command line) in a terminal
 window at the XPD computer you begin an ipython session and preload an ipython
 profile (called ``collection``) that contains all the software to run the NSLS-II
-data collection software.  You can tell when you are in the ``collection`` environment
-because you will see ``(collection)`` at the beginning of the command-line.  When
-you are not in the environment you won't see that. There is also an analysis
-environment, which is currently called ``analysis-dev``,
+data collection software.
+
+You can tell when you are in the ``collection`` environment
+because you will see ``(collection-yyQn.x)`` at the beginning of the command-line.
+``yy`` stands for year and ``Qn.x`` tells detailed information about the
+version. For example, ``collection-17Q1.0`` would mean the fist version of
+quarter 1, in 2017.When you are not in the environment you won't see that. There is also an analysis environment, which is currently called ``analysis``,
 that is very similar to the ``collection`` environment but it is for data
 analysis functions and you cannot control any XPD hardware from it.  This may
 be run on a different computer than the control software, as long as it can see
 the NSLS-II data database.   This environment is activated by typing ``ianalysis``
 in a fresh terminal on one of the XPD linux computers.
 
-Inside the ``collection`` environment you can type commands that will control the
+Inside the ``collection-yyQn.x`` environment you can type commands that will control the
 diffractometer, collect data, and also extract data from the NSLS-II database.
 The NSLS-II data acquisition environment is powerful and flexible, but there is a
 stiff learning curve to using it.  We have therefore added a layer on top that
