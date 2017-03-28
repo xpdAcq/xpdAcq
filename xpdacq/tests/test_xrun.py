@@ -72,7 +72,7 @@ class xrunTest(unittest.TestCase):
         light_cnt_time = acq_time * num_frame
         # case1: adjust exposure time
         for i in range(5):
-            dark_dict_list.append({'uid': str(uuid.uuid4()),
+            dark_dict_list.append({'dark_server_uid': str(uuid.uuid4()),
                                    'exposure': (i + 1) * 0.1,
                                    'timestamp': now,
                                    'acq_time': acq_time})
@@ -82,30 +82,30 @@ class xrunTest(unittest.TestCase):
                        abs(el['exposure'] - light_cnt_time) < 10 ** (-4)]
         print(dark_dict_list)
         print("correct_set = {}".format(correct_set))
-        assert rv == correct_set[0].get('uid')
+        assert rv == correct_set[0].get('dark_server_uid')
 
         # case2: adjust expire time
         dark_dict_list = []
         for i in range(5):
-            dark_dict_list.append({'uid': str(uuid.uuid4()),
+            dark_dict_list.append({'dark_server_uid': str(uuid.uuid4()),
                                    'exposure': light_cnt_time,
                                    'timestamp': now - (i + 1) * 60,
                                    'acq_time': acq_time})
         glbl['_dark_dict_list'] = dark_dict_list
         # large window -> still find the best (freshest) one
         rv = _validate_dark()
-        assert rv == dark_dict_list[0].get('uid')
+        assert rv == dark_dict_list[0].get('dark_server_uid')
         # small window -> find None
         rv = _validate_dark(0.1)
         assert rv is None
         # medium window -> find the first one as it's within 1 min window
         rv = _validate_dark(1.5)
-        assert rv == dark_dict_list[0].get('uid')
+        assert rv == dark_dict_list[0].get('dark_server_uid')
 
         # case3: adjust acqtime
         dark_dict_list = []
         for i in range(5):
-            dark_dict_list.append({'uid': str(uuid.uuid4()),
+            dark_dict_list.append({'dark_server_uid': str(uuid.uuid4()),
                                    'exposure': light_cnt_time,
                                    'timestamp': now,
                                    'acq_time': acq_time * (i + 1)})
@@ -118,7 +118,7 @@ class xrunTest(unittest.TestCase):
         #                el.get('acq_time'))for el in
         #                glbl['_dark_dict_list']]))
         rv = _validate_dark()
-        assert rv == dark_dict_list[0].get('uid')
+        assert rv == dark_dict_list[0].get('dark_server_uid')
 
         # case4: with real xrun
         if glbl['_dark_dict_list']:
@@ -138,12 +138,12 @@ class xrunTest(unittest.TestCase):
         self.xrun(0, 0)
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'][0]
-        assert dark_uid == open_run['sc_dk_field_uid']
+        assert dark_uid == open_run['dark_client_uid']
         # no auto-dark
         glbl['auto_dark'] = False
         new_xrun_uid = self.xrun(0, 0)
         assert len(new_xrun_uid) == 1  # no dark frame
-        assert glbl['_dark_dict_list'][-1]['uid'] == dark_uid  # no update
+        assert glbl['_dark_dict_list'][-1]['dark_server_uid'] == dark_uid  # no update
 
     def test_auto_load_calibration(self):
         # no config file in xpdUser/config_base

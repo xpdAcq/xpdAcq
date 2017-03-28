@@ -47,9 +47,15 @@ def _update_dark_dict_list(name, doc):
     light_cnt_time = acq_time * num_frame
 
     dark_dict = {'acq_time': acq_time, 'exposure': light_cnt_time,
-                 'timestamp': doc['time'], 'uid': doc['run_start']}
-    dark_dict_list.append(dark_dict)
-    glbl['_dark_dict_list'] = dark_dict_list  # update glbl._dark_dict_list
+                 'timestamp': doc['time'],
+                 'dark_server_uid': str(uuid.uuid4())}
+    if doc['exit_status'] == 'success':
+        dark_dict_list.append(dark_dict)
+        # update glbl._dark_dict_list
+        glbl['_dark_dict_list'] = dark_dict_list
+    else:
+        print("INFO: dark scan was not successfully executed.\n"
+              "global dark frame information will not be updated!")
 
 
 def take_dark():
@@ -92,7 +98,6 @@ def periodic_dark(plan):
         qualified_dark_uid = _validate_dark(expire_time=glbl['dk_window'])
         area_det = xpd_configuration['area_det']
         shutter = xpd_configuration['shutter']
-        # FIXME: should we do "or" or "and"?
         if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
         if need_dark \
@@ -146,8 +151,8 @@ def _validate_dark(expire_time=None):
         if (expo_diff < acq_time) and \
                 (time_diff < expire_time * 60) and \
                 (el['acq_time'] == acq_time):
-            qualified_dark_list.append((el.get('uid'), expo_diff,
-                                        time_diff))
+            qualified_dark_list.append((el.get('dark_server_uid'),
+                                        expo_diff, time_diff))
     if qualified_dark_list:
         # sort wrt expo_diff and time_diff for best candidate
         best_dark = sorted(qualified_dark_list,
@@ -195,7 +200,7 @@ def _auto_load_calibration_file():
 def _inject_qualified_dark_frame_uid(msg):
     if msg.command == 'open_run' and msg.kwargs.get('dark_frame') is not True:
         dark_uid = _validate_dark(glbl['dk_window'])
-        msg.kwargs['sc_dk_field_uid'] = dark_uid
+        msg.kwargs['dark_client_uid'] = dark_uid
     return msg
 
 
