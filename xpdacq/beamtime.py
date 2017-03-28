@@ -372,12 +372,10 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
             plan = bp.subs_wrapper(plan, LiveTable([area_det,
                                                     temp_controller,
                                                     stat_motor,
-						    ring_current]))
+                                                    ring_current]))
             #plan = bp.baseline_wrapper(plan, [temp_controller,
             #                                  stat_motor,
             #                                  ring_current])
-            
-	    
             uid = yield from plan
             if uid is not None:
                 from xpdan.data_reduction import save_last_tiff
