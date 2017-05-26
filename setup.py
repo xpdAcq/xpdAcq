@@ -1,8 +1,10 @@
 from setuptools import setup, find_packages
+import versioneer
 
 setup(
     name='xpdacq',
-    version='0.0.4',
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     packages=find_packages(),
     description='acquisition module',
     zip_safe=False,
