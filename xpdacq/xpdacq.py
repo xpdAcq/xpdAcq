@@ -49,7 +49,13 @@ def _update_dark_dict_list(name, doc):
     dark_dict = {'acq_time': acq_time, 'exposure': light_cnt_time,
                  'timestamp': doc['time'], 'uid': doc['run_start']}
     dark_dict_list.append(dark_dict)
-    glbl['_dark_dict_list'] = dark_dict_list  # update glbl._dark_dict_list
+    if doc['exit_status'] == 'success':
+        print('dark frame complete, update dark dict')
+        dark_dict_list.append(dark_dict)
+        glbl['_dark_dict_list'] = dark_dict_list  # update glbl._dark_dict_list
+    else:
+         print("INFO: dark scan was not successfully executed.\n"
+               "gobal dark frame information will not be updated!")
 
 
 def take_dark():
@@ -150,8 +156,10 @@ def _validate_dark(expire_time=None):
                                         time_diff))
     if qualified_dark_list:
         # sort wrt expo_diff and time_diff for best candidate
+        #best_dark = sorted(qualified_dark_list,
+        #                   key=lambda x: x[1] and x[2])[0]
         best_dark = sorted(qualified_dark_list,
-                           key=lambda x: x[1] and x[2])[0]
+                           key=lambda x: x[2])[0]
         best_dark_uid = best_dark[0]
         return best_dark_uid
     else:

@@ -43,7 +43,7 @@ def configure_device(*, area_det, shutter,
 HOME_DIR_NAME = 'xpdUser'
 BLCONFIG_DIR_NAME = 'xpdConfig'
 BEAMLINE_HOST_NAME = ['xf28id1-ws2', 'xf28id1-ws3']
-ARCHIVE_BASE_DIR_NAME = 'pe1_data/.userBeamtimeArchive'
+ARCHIVE_BASE_DIR_NAME = '.userBeamtimeArchive'
 USER_BACKUP_DIR_NAME = strftime('%Y')
 DARK_WINDOW = 3000  # default value, in terms of minute
 FRAME_ACQUIRE_TIME = 0.1  # pe1 frame acq time
@@ -65,14 +65,17 @@ else:
 if simulation:
     BASE_DIR = os.getcwd()
     ARCHIVE_BASE_DIR_NAME = 'userBeamtimeArchive'
+    ARCHIVE_BASE_DIR = os.path.join(BASE_DIR, ARCHIVE_BASE_DIR_NAME)
     USER_BACKUP_DIR_NAME = ARCHIVE_BASE_DIR_NAME
 else:
     BASE_DIR = os.path.abspath('/direct/XF28ID1/pe2_data')
+    ARCHIVE_BASE_DIR = os.path.join(os.path.abspath('/direct/XF28ID1/pe1_data'),
+                                    ARCHIVE_BASE_DIR_NAME)
 
 # top directories
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
 BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
-ARCHIVE_BASE_DIR = os.path.join(BASE_DIR, ARCHIVE_BASE_DIR_NAME)
+
 
 # aquire object directories
 CONFIG_BASE = os.path.join(HOME_DIR, 'config_base')

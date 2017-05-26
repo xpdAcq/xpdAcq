@@ -32,8 +32,18 @@ from pyFAI.gui.utils import update_fig
 from pyFAI.calibration import Calibration, PeakPicker
 from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 
+from pkg_resources import resource_filename as rs_fn
+rs_dir = rs_fn('xpdacq', '/')
+
 _REQUIRED_OBJ_LIST = ['xrun']
 
+
+def show_calib():
+    param = glbl.get('calib_config_dict', None)
+    if not param:
+        print("INFO: no calibration has been run yet")
+    else:
+        return param
 
 def _check_obj(required_obj_list):
     """function to check if object(s) exist
@@ -150,7 +160,7 @@ def _configure_calib_instance(calibrant, detector, wavelength):
     if detector is None:
         detector = 'perkin_elmer'
     if calibrant is None:
-        calibrant = 'Ni'
+        calibrant = os.path.join(rs_dir, 'Ni24.D')
     c = Calibration(calibrant=calibrant, detector=detector,
                     wavelength=wavelength * 10 ** (-10))
 
@@ -199,12 +209,12 @@ def _save_and_attach_calib_param(calib_c, timestr,
         uid associated with this calibration
     """
     # save glbl attribute for xpdAcq
-    glbl['calib_config_dict'] = calib_c.ai.getPyFAI()
-    glbl['calib_config_dict'].update(calib_c.ai.getFit2D())
-    glbl['calib_config_dict'].update({'file_name': calib_c.basename})
-    glbl['calib_config_dict'].update({'time': timestr})
+    glbl['calib_config_dict'] = calib_c.geoRef.getPyFAI()
+    glbl['calib_config_dict'].update(calib_c.geoRef.getFit2D())
+    glbl['calib_config_dict'].update({'file_name':calib_c.basename})
+    glbl['calib_config_dict'].update({'time':timestr})
     glbl['calib_config_dict'].update({'calibration_collection_uid':
-                                          calib_collection_uid})
+                                      calib_collection_uid})
     # save yaml dict used for xpdAcq
     yaml_name = glbl['calib_config_name']
     with open(os.path.join(glbl['config_base'], yaml_name), 'w') as f:
@@ -356,8 +366,8 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
     mask = mask_img(img, ai, **mask_dict)
 
     if save_name is None:
-        save_name = os.path.join(glbl['config_base'], glbl['mask_name'])
+        save_name = glbl['mask_path']
     # still save the most recent mask, as we are in file-based
     np.save(save_name, mask)
 
-    return mask
+    return
