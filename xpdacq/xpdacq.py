@@ -26,11 +26,12 @@ from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input
 
 from xpdacq.glbl import glbl
-from xpdacq.xpdacq_conf import xpd_configuration
+from xpdacq.xpdacq_conf import xpd_configuration, XPD_SHUTTER_CONF
 from xpdacq.beamtime import ScanPlan, _summarize
 
 from xpdan.tools import compress_mask
 
+XPD_shutter = xpd_configuration['shutter']
 
 def _update_dark_dict_list(name, doc):
     """ generate dark frame reference
@@ -63,8 +64,9 @@ def _update_dark_dict_list(name, doc):
 def take_dark():
     """a plan for taking a single dark frame"""
     print('INFO: closing shutter...')
-    # 0, means close, 60 means open at XPD, Oct.4, 2016
-    yield from bp.abs_set(xpd_configuration['shutter'], 0, wait=True)
+    yield from bp.abs_set(XPD_shutter,
+                          XPD_SHUTTER_CONF['close'],
+                          wait=True)
     print('INFO: taking dark frame....')
     # upto this stage, area_det has been configured to so exposure time is
     # correct
@@ -99,7 +101,7 @@ def periodic_dark(plan):
         nonlocal need_dark
         qualified_dark_uid = _validate_dark(expire_time=glbl['dk_window'])
         area_det = xpd_configuration['area_det']
-        shutter = xpd_configuration['shutter']
+
         # FIXME: should we do "or" or "and"?
         if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
@@ -117,10 +119,16 @@ def periodic_dark(plan):
                              take_dark(),
                              bp.stage(area_det),
                              bp.single_gen(msg),
-                             bp.abs_set(shutter, 60, wait=True)), None
+                             bp.abs_set(XPD_shutter,
+                                        XPD_SHUTTER_CONF['open'],
+                                        wait=True)
+                             ), None
         elif msg.command == 'open_run' and 'dark_frame' not in msg.kwargs:
             return bp.pchain(bp.single_gen(msg),
-                             bp.abs_set(shutter, 60, wait=True)), None
+                             bp.abs_set(XPD_shutter,
+                                        XPD_SHUTTER_CONF['open'],
+                                        wait=True)
+                             ), None
         else:
             # do nothing if (not need_dark)
             return None, None
@@ -385,7 +393,6 @@ class CustomizedRunEngine(RunEngine):
             print("WARNING: there is no wavelength information in current"
                   "beamtime object, scan will keep going....")
         metadata_kw.update(sample)
-        sh = xpd_configuration['shutter']
 
         if glbl['shutter_control']:
             # Alter the plan to incorporate dark frames.
@@ -394,7 +401,11 @@ class CustomizedRunEngine(RunEngine):
                 plan = dark_strategy(plan)
                 plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
             # force to close shutter after scan
-            plan = bp.finalize_wrapper(plan, bp.abs_set(sh, 0, wait=True))
+            plan = bp.finalize_wrapper(plan,
+                                       bp.abs_set(XPD_shutter,
+                                                  XPD_SHUTTER_CONF['open'],
+                                                  wait=True)
+                                       )
 
         # Load calibration file
         if glbl['auto_load_calib']:
