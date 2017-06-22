@@ -215,6 +215,7 @@ def _save_and_attach_calib_param(calib_c, timestr,
     glbl['calib_config_dict'].update({'time':timestr})
     glbl['calib_config_dict'].update({'calibration_collection_uid':
                                       calib_collection_uid})
+
     # save yaml dict used for xpdAcq
     yaml_name = glbl['calib_config_name']
     with open(os.path.join(glbl['config_base'], yaml_name), 'w') as f:
