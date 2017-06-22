@@ -24,7 +24,7 @@ import bluesky.plans as bp
 from bluesky.callbacks import LiveTable
 
 from .glbl import glbl
-from .xpdacq_conf import xpd_configuration
+from .xpdacq_conf import xpd_configuration, XPD_SHUTTER_CONF
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 from .tools import regularize_dict_key
@@ -152,7 +152,19 @@ def ct(dets, exposure, *, md=None):
     yield from plan
 
 
-def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
+def _shutter_step(detectors, motor, step):
+    """ customized step to open/close shutter at each motor point
+    """
+    yield from bp.checkpoint()
+    yield from bp.abs_set(motor, step, wait=True)
+    yield from bp.abs_set(xpd_configuration['shutter'],
+                          XPD_SHUTTER_CONF['open'], wait=True)
+    yield from bp.trigger_and_read(list(detectors) + [motor])
+    return(yield from bp.abs_set(xpd_configuration['shutter'],
+                          XPD_SHUTTER_CONF['close'], wait=True))
+
+def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
+          per_step=_shutter_step, md=None):
     """
     Scan over temeprature controller in steps.
 
@@ -171,6 +183,9 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
         stoping point of temperature sequence
     Tstep : float
         step size between Tstart and Tstop of this sequence
+    per_step : callable, optional
+        hook for cutomizing action at each temperature point.
+        Default to xpdAcq-managed action. Override if needed.
     md : dict, optional
         extra metadata
 
@@ -205,13 +220,13 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'Tramp'})
     plan = bp.scan([area_det], temp_controller, Tstart, Tstop,
-                   Nsteps, md=_md)
+                   Nsteps, per_step=per_step, md=_md)
     plan = bp.subs_wrapper(plan,
                            LiveTable([area_det, temp_controller]))
     yield from plan
 
 
-def Tlist(dets, exposure, T_list):
+def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
     """defines a flexible scan with user-specified temperatures
 
     A frame is exposed for the given exposure time at each of the
@@ -226,6 +241,9 @@ def Tlist(dets, exposure, T_list):
         total time of exposure in seconds for area detector
     T_list : list
         a list of temperatures where a scan will be run
+    per_step : callable, optional
+        hook for cutomizing action at each temperature point.
+        Default to xpdAcq-managed action. Override if needed.
 
     Note
     ----
@@ -254,7 +272,8 @@ def Tlist(dets, exposure, T_list):
                  'sp_plan_name': 'Tlist'
                  }
     # pass xpdacq_md to as additional md to bluesky plan
-    plan = bp.list_scan([area_det], T_controller, T_list, md=xpdacq_md)
+    plan = bp.list_scan([area_det], T_controller, T_list,
+                        per_step=_shutter_step, md=xpdacq_md)
     plan = bp.subs_wrapper(plan, LiveTable([area_det, T_controller]))
     yield from plan
 
