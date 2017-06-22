@@ -78,11 +78,12 @@ class xrunTest(unittest.TestCase):
                                    'acq_time': acq_time})
         glbl['_dark_dict_list'] = dark_dict_list
         rv = _validate_dark(glbl['dk_window'])
-        correct_set = [el for el in dark_dict_list if
-                       abs(el['exposure'] - light_cnt_time) < 10 ** (-4)]
+        correct_set = sorted([el for el in dark_dict_list if
+                             abs(el['exposure']-light_cnt_time)<acq_time],
+                            key=lambda x: x['exposure'])[0]
         print(dark_dict_list)
         print("correct_set = {}".format(correct_set))
-        assert rv == correct_set[0].get('uid')
+        assert rv == correct_set.get('uid')
 
         # case2: adjust expire time
         dark_dict_list = []
