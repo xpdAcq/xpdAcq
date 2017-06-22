@@ -31,7 +31,7 @@ from xpdacq.beamtime import ScanPlan, _summarize
 
 from xpdan.tools import compress_mask
 
-XPD_shutter = xpd_configuration['shutter']
+XPD_shutter = xpd_configuration.get('shutter')
 
 def _update_dark_dict_list(name, doc):
     """ generate dark frame reference
@@ -64,7 +64,7 @@ def _update_dark_dict_list(name, doc):
 def take_dark():
     """a plan for taking a single dark frame"""
     print('INFO: closing shutter...')
-    yield from bp.abs_set(XPD_shutter,
+    yield from bp.abs_set(xpd_configuration.get('shutter'),
                           XPD_SHUTTER_CONF['close'],
                           wait=True)
     print('INFO: taking dark frame....')
@@ -119,13 +119,13 @@ def periodic_dark(plan):
                              take_dark(),
                              bp.stage(area_det),
                              bp.single_gen(msg),
-                             bp.abs_set(XPD_shutter,
+                             bp.abs_set(xpd_configuration.get('shutter'),
                                         XPD_SHUTTER_CONF['open'],
                                         wait=True)
                              ), None
         elif msg.command == 'open_run' and 'dark_frame' not in msg.kwargs:
             return bp.pchain(bp.single_gen(msg),
-                             bp.abs_set(XPD_shutter,
+                             bp.abs_set(xpd_configuration.get('shutter'),
                                         XPD_SHUTTER_CONF['open'],
                                         wait=True)
                              ), None
@@ -402,9 +402,9 @@ class CustomizedRunEngine(RunEngine):
                 plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
             # force to close shutter after scan
             plan = bp.finalize_wrapper(plan,
-                                       bp.abs_set(XPD_shutter,
-                                                  XPD_SHUTTER_CONF['open'],
-                                                  wait=True)
+                                       bp.abs_set(xpd_configuration.get('shutter'),
+                                       XPD_SHUTTER_CONF['open'],
+                                       wait=True)
                                        )
 
         # Load calibration file
