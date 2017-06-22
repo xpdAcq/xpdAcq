@@ -9,6 +9,7 @@ import numpy as np
 from pathlib import Path
 
 from pyFAI.calibration import Calibration
+from pyFAI.geometry import Geometry
 
 from xpdacq.glbl import glbl
 from xpdacq.xpdacq_conf import configure_device, xpd_configuration
@@ -22,6 +23,9 @@ from xpdacq.utils import import_sample_info
 from xpdacq.xpdacq import CustomizedRunEngine
 from xpdacq.beamtimeSetup import _start_beamtime
 
+from pkg_resources import resource_filename as rs_fn
+rs_dir = rs_fn('xpdacq', '/')
+pytest_dir = rs_fn('xpdacq', 'tests/')
 
 class calibTest(unittest.TestCase):
     def setUp(self):
@@ -51,8 +55,10 @@ class calibTest(unittest.TestCase):
         # link mds
         self.xrun.subscribe('all', xpd_configuration['db'].mds.insert)
         # calib yaml 
-        p = Path(__file__).resolve().parent
-        self.calib_fp = next(p.glob('*calib.yml')).open()
+        calib_fn = [fn for fn in os.listdir(pytest_dir) if
+                fn.endswith('calib.yml')]
+        assert len(calib_fn) == 1
+        self.calib_yml_fn = os.path.join(pytest_dir, calib_fn[0])
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -66,7 +72,7 @@ class calibTest(unittest.TestCase):
     def test_configure_calib(self):
         c = _configure_calib_instance(None, None, wavelength=None)
         # calibrant is None, which default to Ni
-        assert c.calibrant.__repr__().split(' ')[0] == 'Ni'
+        assert c.calibrant.__repr__().split(' ')[0] == 'Ni24'  # no magic
         # wavelength is None, so it should get the value from bt
         assert c.wavelength == self.bt.wavelength * 10 ** (-10)
         # detector is None, which default to Perkin detector 
@@ -93,17 +99,22 @@ class calibTest(unittest.TestCase):
 
     def test_save_and_attach_calib_param(self):
         # reload yaml to produce pre-calib Calibration instance
-        calib_dict = yaml.load(self.calib_fp)
+        with open(self.calib_yml_fn) as f:
+            calib_dict = yaml.load(f)
         c = Calibration()
-        c.ai.setPyFAI(**calib_dict)
+        geo = Geometry()
+        geo.setPyFAI(**calib_dict)
+        c.geoRef = geo
+        #c.ai.setPyFAI(**calib_dict)
         timestr = _timestampstr(time.time())
         calib_uid = 'uuid1234'  # mark as test
         _save_and_attach_calib_param(c, timestr, calib_uid)
         # test information attached to glbl
         assert glbl['calib_config_dict']['file_name'] == c.basename
         assert glbl['calib_config_dict']['calibration_collection_uid'] == \
-               calib_uid
-        for k, v in c.ai.getPyFAI().items():
+                                                                    calib_uid
+        #for k, v in c.ai.getPyFAI().items():
+        for k, v in c.geoRef.getPyFAI().items():
             assert glbl['calib_config_dict'][k] == v
         # verify calib params are saved as expected
         local_f = open(os.path.join(glbl['config_base'],
