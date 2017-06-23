@@ -294,12 +294,34 @@ class xrunTest(unittest.TestCase):
 
     def test_shutter_step(self):
         # test with Tramp
-        Tstart, Tstop, Tstep = 300, 200, 10
+        shutter = xpd_configuration['shutter']
+        temp_controller = xpd_configuration['temp_controller']
+        exp, Tstart, Tstop, Tstep = 5, 300, 200, 10
         msg_list = []
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
-        pass
+        self.xrun({},
+                  ScanPlan(self.bt, Tramp, exp, Tstart, Tstop, Tstep))
+        set_msg_list = [msg for msg in msg_list if msg.command == 'set']
+        set_msgs = iter(set_msg_list)
+        while True:
+            try:
+                set_msg = next(set_msgs)
+                if set_msg.obj.name == temp_controller.name:
+                     # after set the temp_controller, must be:
+                     # open shutter -> read -> close
+                     open_msg = next(set_msgs)
+                     assert open_msg.obj.name == shutter.name
+                     assert len(open_msg.args) == 1
+                     assert open_msg.args[0] == 60 # open shutter first
+                     close_msg = next(set_msgs)
+                     assert close_msg.obj.name == shutter.name
+                     assert len(close_msg.args) == 1
+                     assert close_msg.args[0] == 0  # close then move
+            except StopIteration:
+                print('stop')
+                break
 
     def test_set_beamdump_suspender(self):
         loop = self.xrun._loop
