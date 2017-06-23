@@ -57,8 +57,9 @@ def _update_dark_dict_list(name, doc):
         dark_dict_list.append(dark_dict)
         glbl['_dark_dict_list'] = dark_dict_list  # update glbl._dark_dict_list
     else:
-         print("INFO: dark scan was not successfully executed.\n"
-               "gobal dark frame information will not be updated!")
+        #FIXME: replace with logging and detailed warning next PR
+        print("INFO: dark scan was not successfully executed.\n"
+              "gobal dark frame information will not be updated!")
 
 
 def take_dark():
