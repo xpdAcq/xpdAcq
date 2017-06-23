@@ -6,6 +6,7 @@ import yaml
 import uuid
 import warnings
 from xpdacq.glbl import glbl
+from xpdacq.beamtime import _nstep
 from xpdacq.beamtime import *
 from xpdacq.utils import import_sample_info
 from xpdacq.xpdacq_conf import configure_device
@@ -17,8 +18,10 @@ from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
 from xpdacq.simulation import pe1c, cs700, shctl1, SimulatedPE1C
 
 import ophyd
-import bluesky.examples as be
 from bluesky import Msg
+import bluesky.examples as be
+from bluesky.callbacks import collector
+
 
 
 class xrunTest(unittest.TestCase):
@@ -233,8 +236,18 @@ class xrunTest(unittest.TestCase):
             msg_list.append(msg)
 
         self.xrun.msg_hook = msg_rv
-        self.xrun({}, ScanPlan(self.bt, Tramp, exp, Tstart,
-                               Tstop, Tstep))
+        traj_list = [] # courtesy of bluesky test
+        temp_controller = xpd_configuration['temp_controller']
+        callback = collector(temp_controller.read_attrs[0],
+                             traj_list)
+        self.xrun({},
+                  ScanPlan(self.bt, Tramp, exp, Tstart, Tstop, Tstep),
+                  subs={'event': callback})
+        # verify trajectory
+        Num, diff = _nstep(Tstart, Tstop, Tstep)
+        expected_traj = np.linspace(Tstart, Tstop, Num)
+        assert np.all(traj_list == expected_traj)
+        # verify md
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'].pop()
         self.assertEqual(open_run['sp_type'], 'Tramp')
@@ -263,14 +276,30 @@ class xrunTest(unittest.TestCase):
 
         def msg_rv(msg):
             msg_list.append(msg)
-
+        traj_list = [] # courtesy of bluesky test
+        temp_controller = xpd_configuration['temp_controller']
+        callback = collector(temp_controller.read_attrs[0],
+                             traj_list)
         self.xrun.msg_hook = msg_rv
-        self.xrun({}, ScanPlan(self.bt, Tlist, exp, T_list))
+        self.xrun({}, ScanPlan(self.bt, Tlist, exp, T_list),
+                  subs={'event': callback})
+        # verify trajectory
+        assert T_list == traj_list
+        # verify md
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'].pop()
         self.assertEqual(open_run['sp_type'], 'Tlist')
         self.assertEqual(open_run['sp_requested_exposure'], exp)
         self.assertEqual(open_run['sp_T_list'], T_list)
+
+    def test_shutter_step(self):
+        # test with Tramp
+        Tstart, Tstop, Tstep = 300, 200, 10
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.xrun.msg_hook = msg_rv
+        pass
 
     def test_set_beamdump_suspender(self):
         loop = self.xrun._loop
