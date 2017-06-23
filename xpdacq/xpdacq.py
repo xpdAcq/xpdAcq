@@ -402,8 +402,8 @@ class CustomizedRunEngine(RunEngine):
                 plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
             # force to close shutter after scan
             plan = bp.finalize_wrapper(plan,
-                                       bp.abs_set(xpd_configuration.get('shutter'),
-                                       XPD_SHUTTER_CONF['open'],
+                                       bp.abs_set(xpd_configuration['shutter'],
+                                       XPD_SHUTTER_CONF['close'],
                                        wait=True)
                                        )
 

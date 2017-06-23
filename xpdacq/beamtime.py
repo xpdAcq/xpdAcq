@@ -112,6 +112,19 @@ def _check_mini_expo(exposure, acq_time):
                                  " to 0.5s"))
 
 
+def _shutter_step(detectors, motor, step):
+    """ customized step to ensure shutter is open before
+    reading at each motor point and close shutter after reading
+    """
+    yield from bp.checkpoint()
+    yield from bp.abs_set(motor, step, wait=True)
+    yield from bp.abs_set(xpd_configuration['shutter'],
+                          XPD_SHUTTER_CONF['open'], wait=True)
+    yield from bp.trigger_and_read(list(detectors) + [motor])
+    yield from bp.abs_set(xpd_configuration['shutter'],
+                          XPD_SHUTTER_CONF['close'], wait=True)
+
+
 def ct(dets, exposure, *, md=None):
     """
     Take one reading from area detectors with given exposure time
@@ -151,17 +164,6 @@ def ct(dets, exposure, *, md=None):
     plan = bp.subs_wrapper(plan, LiveTable([area_det]))
     yield from plan
 
-
-def _shutter_step(detectors, motor, step):
-    """ customized step to open/close shutter at each motor point
-    """
-    yield from bp.checkpoint()
-    yield from bp.abs_set(motor, step, wait=True)
-    yield from bp.abs_set(xpd_configuration['shutter'],
-                          XPD_SHUTTER_CONF['open'], wait=True)
-    yield from bp.trigger_and_read(list(detectors) + [motor])
-    return(yield from bp.abs_set(xpd_configuration['shutter'],
-                          XPD_SHUTTER_CONF['close'], wait=True))
 
 def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
           per_step=_shutter_step, md=None):
