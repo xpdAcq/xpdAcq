@@ -125,28 +125,31 @@ def _shutter_step(detectors, motor, step):
                           XPD_SHUTTER_CONF['close'], wait=True)
 
 
-def ct(dets, exposure, *, md=None):
+def ct(dets, exposure):
     """
-    Take one reading from area detectors with given exposure time
+    Take one reading from area detector with given exposure time
 
     Parameters
     ----------
     dets : list
-        list of 'readable' objects
+        list of 'readable' objects. default to area detector
+        linked to xpdAcq.
     exposure : float
         total time of exposrue in seconds
-    md : dict, optional
-        extra metadata
 
-    Note
-    ----
-    area detector that is triggered will always be the one configured in
-    global state. Please refer to http://xpdacq.github.io for more information
+    Notes
+    -----
+    area detector being triggered will  always be the one configured
+    in global state. To find out which these are, please using
+    following commands:
+
+        >>> xpd_configuration['area_det']
+
+    to see which device is being linked
     """
 
     pe1c, = dets
-    if md is None:
-        md = {}
+    md = {}
     # setting up area_detector
     (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
     area_det = xpd_configuration['area_det']
@@ -156,8 +159,6 @@ def ct(dets, exposure, *, md=None):
                         'sp_requested_exposure': exposure,
                         'sp_computed_exposure': computed_exposure,
                         'sp_type': 'ct',
-                        # need a name that shows all parameters values
-                        # 'sp_name': 'ct_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'ct'})
     plan = bp.count([area_det], md=_md)
@@ -166,7 +167,7 @@ def ct(dets, exposure, *, md=None):
 
 
 def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
-          per_step=_shutter_step, md=None):
+          per_step=_shutter_step):
     """
     Scan over temeprature controller in steps.
 
@@ -176,30 +177,34 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
     Parameters
     ----------
     dets : list
-        list of 'readable' objects
+        list of 'readable' objects. default to the temperature
+        controller and area detector linked to xpdAcq.
     exposure : float
-        exposure time at each temeprature step in seconds
+        exposure time at each temeprature step in seconds.
     Tstart : float
-        starting point of temperature sequence
+        starting point of temperature sequence.
     Tstop : float
-        stoping point of temperature sequence
+        stoping point of temperature sequence.
     Tstep : float
-        step size between Tstart and Tstop of this sequence
+        step size between Tstart and Tstop of this sequence.
     per_step : callable, optional
         hook for cutomizing action at each temperature point.
         Default to xpdAcq-managed action. Override if needed.
-    md : dict, optional
-        extra metadata
 
-    Note
-    ----
-    temperature controller that is driven will always be the one configured in
-    global state. Please refer to http://xpdacq.github.io for more information
+    Notes
+    -----
+    area detector and temperature controller will always be the one
+    configured in global state. To find out which these are, please
+    using following commands:
+
+        >>> xpd_configuration['area_det']
+        >>> xpd_configuration['temp_controller']
+
+    to see which device is being linked
     """
 
     pe1c, = dets
-    if md is None:
-        md = {}
+    md = {}
     # setting up area_detector
     (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
     area_det = xpd_configuration['area_det']
@@ -217,8 +222,6 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
                         'sp_requested_Tstep': Tstep,
                         'sp_computed_Tstep': computed_step_size,
                         'sp_Nsteps': Nsteps,
-                        # need a name that shows all parameters values
-                        # 'sp_name': 'Tramp_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'Tramp'})
     plan = bp.scan([area_det], temp_controller, Tstart, Tstop,
@@ -237,18 +240,18 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
     Parameters
     ----------
     dets : list
-        list of objects that represent instrument devices. In xpdAcq, it is
-        defaulted to area detector.
+        list of 'readable' objects. default to the temperature
+        controller and area detector linked to xpdAcq.
     exposure : float
-        total time of exposure in seconds for area detector
+        total time of exposure in seconds
     T_list : list
         a list of temperatures where a scan will be run
     per_step : callable, optional
         hook for cutomizing action at each temperature point.
         Default to xpdAcq-managed action. Override if needed.
 
-    Note
-    ----
+    Notes
+    -----
     area detector and temperature controller will always be the one
     configured in global state. To find out which these are, please
     using following commands:
@@ -256,7 +259,7 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
         >>> xpd_configuration['area_det']
         >>> xpd_configuration['temp_controller']
 
-    To interrogate which devices are currently in use.
+    to see which device is being linked
     """
 
     pe1c, = dets
@@ -280,32 +283,35 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
     yield from plan
 
 
-def tseries(dets, exposure, delay, num, *, md=None):
+def tseries(dets, exposure, delay, num):
     """
     time series scan with area detector.
 
     Parameters
     ----------
     dets : list
-        list of 'readable' objects
+        list of 'readable' objects. default to area detector
+        linked to xpdAcq.
     exposure : float
         exposure time at each reading from area detector in seconds
     delay : float
         delay between two adjustant reading from area detector in seconds
     num : int
         total number of readings
-    md : dict, optional
-        metadata
 
-    Note
-    ----
-    area detector that is triggered will always be the one configured in
-    global state. Please refer to http://xpdacq.github.io for more information
+    Notes
+    -----
+    area detector being triggered will  always be the one configured
+    in global state. To find out which these are, please using
+    following commands:
+
+        >>> xpd_configuration['area_det']
+
+    to see which device is being linked
     """
 
     pe1c, = dets
-    if md is None:
-        md = {}
+    md = {}
     # setting up area_detector
     area_det = xpd_configuration['area_det']
     (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
@@ -345,7 +351,8 @@ def _nstep(start, stop, step_size):
           .format(step_size, computed_step_size))
     return computed_nsteps, computed_step_size
 
-
+#FIXME: this scanplan is hot-fix for multi-sample scanplan. It serves as
+#       a prototype of the future scanplans but it's imcomplete.
 def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
               bt=None):
     """
@@ -738,7 +745,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         # grab the area detector used in current configuration
         pe1c = xpd_configuration['area_det']
         extra_kw = {}
-        # pass parameter to plan_func
+        # pass parameter to plan_func -> needed for statTramp-like plan
         if 'bt' in inspect.signature(self.plan_func).parameters:
             extra_kw['bt'] = self._bt
         plan = self.plan_func([pe1c], *self['sp_args'],
@@ -746,10 +753,8 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         return plan
 
     def short_summary(self):
-        arg_value_str = map(str, self.bound_arguments.values())
-        ss = list(arg_value_str)
-        #print("IN short summary {}".format(ss))
-        fn = '_'.join([self['sp_plan_name']] + ss)
+        arg_value_str = list(map(str, self.bound_arguments.values()))
+        fn = '_'.join([self['sp_plan_name']] + arg_value_str)
         return fn
 
     def __str__(self):
