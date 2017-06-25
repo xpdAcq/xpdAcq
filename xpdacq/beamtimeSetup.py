@@ -127,11 +127,9 @@ def load_beamtime(directory=None):
     known_uids = {}
     beamtime_fn = os.path.join(directory, 'bt_bt.yml')
     sample_fns =  [fn for fn in
-                   os.listdir(os.path.join(directory, 'samples'))
-                   if not fn.startswith('.DS_Store')]
+                   os.listdir(os.path.join(directory, 'samples'))]
     scanplan_fns = [fn for fn in
-                    os.listdir(os.path.join(directory, 'scanplans'))
-                    if not fn.startswith('.DS_Store')]
+                    os.listdir(os.path.join(directory, 'scanplans'))]
 
     with open(beamtime_fn, 'r') as f:
         bt = load_yaml(f, known_uids)
