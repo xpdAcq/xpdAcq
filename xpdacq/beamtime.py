@@ -188,19 +188,30 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
     Tstep : float
         step size between Tstart and Tstop of this sequence.
     per_step : callable, optional
-        hook for cutomizing action at each temperature point.
-        Default to xpdAcq-managed action. Override if needed.
+        hook for customizing action at each temperature point.
+        Default to xpdAcq-managed action, which is as following:
+        `` open shutter - collect data - close shutter ``
+        To make shutter always open during the temperature ramp,
+        pass ``None`` to this argument. See ``Notes`` below for more
+        detailed information.
 
     Notes
     -----
-    area detector and temperature controller will always be the one
+    1. Area detector and temperature controller will always be the one
     configured in global state. To find out which these are, please
-    using following commands:
+    use following commands:
 
         >>> xpd_configuration['area_det']
         >>> xpd_configuration['temp_controller']
 
     to see which device is being linked
+
+    2. To change ``per_step`` from default behavior, please followg:
+
+        >>> ScanPlan(bt, Tramp, 5, 300, 250, 10, per_step=None)
+
+    Above command will create a ``Tramp`` ScanPlan, with shutter always
+    open during the ramping.
     """
 
     pe1c, = dets
@@ -247,19 +258,30 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
     T_list : list
         a list of temperatures where a scan will be run
     per_step : callable, optional
-        hook for cutomizing action at each temperature point.
-        Default to xpdAcq-managed action. Override if needed.
+        hook for customizing action at each temperature point.
+        Default to xpdAcq-managed action, which is as following:
+        `` open shutter - collect data - close shutter ``
+        To make shutter always open during the temperature ramp,
+        pass ``None`` to this argument. See ``Notes`` below for more
+        detailed information.
 
     Notes
     -----
-    area detector and temperature controller will always be the one
+    1. Area detector and temperature controller will always be the one
     configured in global state. To find out which these are, please
-    using following commands:
+    use following commands:
 
         >>> xpd_configuration['area_det']
         >>> xpd_configuration['temp_controller']
 
     to see which device is being linked
+
+    2. To change ``per_step`` from default behavior, please followg:
+
+        >>> ScanPlan(bt, Tlist, 5, [300, 275, 195], per_step=None)
+
+    Above command will create a ``Tlist`` ScanPlan, with shutter always
+    open during the ramping.
     """
 
     pe1c, = dets
