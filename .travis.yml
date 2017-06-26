@@ -32,7 +32,7 @@ before_install:
   - git clone https://github.com/NSLS-II/nsls2-ci --branch master --single-branch ~/ci_scripts
   - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
   - "export DISPLAY=:99.0"
-  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b -p /home/travis/mc
   - export PATH=/home/travis/mc/bin:$PATH
@@ -51,18 +51,16 @@ before_install:
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
-  - conda create -n testenv nose python=$TRAVIS_PYTHON_VERSION scipy jsonschema pytest coverage pip databroker ophyd pyepics mock xlrd pyfai flake8 -c lightsource2 -c conda-forge -c soft-matter
+  - conda create -n testenv nose python=$TRAVIS_PYTHON_VERSION scipy jsonschema pytest coverage pip databroker ophyd pyepics mock xlrd pyfai flake8 codecov -c lightsource2 -c conda-forge -c soft-matter
   - source activate testenv
-  - 'pip install python-coveralls'
-  - 'pip install https://github.com/NSLS-II/event-model/zipball/master#egg=event_model'
-  - conda remove metadatastore databroker filestore --yes
-  - 'pip install https://github.com/NSLS-II/databroker/zipball/master#egg=databroker'
-  - 'pip install https://github.com/NSLS-II/filestore/zipball/master#egg=filestore'
-  - 'pip install https://github.com/NSLS-II/metadatastore/zipball/master#egg=metadatastore'
-  - 'pip install https://github.com/NSLS-II/portable-mds/zipball/master#egg=portable_mds'
+#  - 'pip install https://github.com/NSLS-II/event-model/zipball/master#egg=event_model'
+#  - conda remove metadatastore databroker filestore --yes
+#  - 'pip install https://github.com/NSLS-II/databroker/zipball/master#egg=databroker'
+#  - 'pip install https://github.com/NSLS-II/filestore/zipball/master#egg=filestore'
+#  - 'pip install https://github.com/NSLS-II/metadatastore/zipball/master#egg=metadatastore'
+#  - 'pip install https://github.com/NSLS-II/portable-mds/zipball/master#egg=portable_mds'
   - 'pip install https://github.com/NSLS-II/bluesky/zipball/master#egg=bluesky'
   - 'pip install https://github.com/xpdAcq/xpdAn/zipball/master#egg=xpdan'
-  - pip install codecov
   - python setup.py install
   # Need to clean the python build directory (and other cruft) or pytest is
   # going to find the build directory and get confused why there are two sets
@@ -79,4 +77,3 @@ script:
 after_script:
   - flake8 .
   - codecov
-  - coveralls
