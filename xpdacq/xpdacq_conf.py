@@ -98,6 +98,7 @@ TIFF_BASE = os.path.join(HOME_DIR, 'tiff_base')
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 GLBL_YAML_PATH = os.path.join(YAML_DIR, GLBL_YAML_NAME)
 MASK_PATH = os.path.join(CONFIG_BASE, MASK_NAME)
+LOGGING_PATH = os.path.join(CONFIG_BASE, 'xpdAcq_logging.log')
 
 ALL_FOLDERS = [
     HOME_DIR,
@@ -140,6 +141,7 @@ glbl_dict = dict(is_simulation=simulation,
                  archive_dir=USER_BACKUP_DIR,
                  glbl_yaml_path=GLBL_YAML_PATH,
                  mask_path=MASK_PATH,
+                 logging_path=LOGGING_PATH,
                  # options for functionalities
                  frame_acq_time=FRAME_ACQUIRE_TIME,
                  auto_dark=True,

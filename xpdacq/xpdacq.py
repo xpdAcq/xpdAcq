@@ -17,7 +17,7 @@ import os
 import uuid
 import time
 import yaml
-import warnings
+import logging
 import numpy as np
 
 import bluesky.plans as bp
@@ -30,6 +30,10 @@ from xpdacq.xpdacq_conf import xpd_configuration
 from xpdacq.beamtime import ScanPlan, _summarize
 
 from xpdan.tools import compress_mask
+
+
+# define logger in module level
+failed_dark_logger = logging.getLogger('xpdAcq_FailedDark')
 
 
 def _update_dark_dict_list(name, doc):
@@ -50,12 +54,18 @@ def _update_dark_dict_list(name, doc):
                  'timestamp': doc['time'], 'uid': doc['run_start']}
     dark_dict_list.append(dark_dict)
     if doc['exit_status'] == 'success':
-        print('dark frame complete, update dark dict')
         dark_dict_list.append(dark_dict)
         glbl['_dark_dict_list'] = dark_dict_list  # update glbl._dark_dict_list
     else:
-         print("INFO: dark scan was not successfully executed.\n"
-               "gobal dark frame information will not be updated!")
+        warnings.warn("Dark frame was not successfully collected. "
+                      "Global dark frame information will not be updated!\n"
+                      "For more information about the dark frame "
+                      "strategy in xpdAcq, please refer to our website:\n"
+                      "http://xpdacq.github.io\n")
+        print("INFO: if you wish to have a fresh dark frame, please "
+              "issue the scan again")
+        # write to file
+        failed_dark_logger.warnings(dark_dict)
 
 
 def take_dark():
