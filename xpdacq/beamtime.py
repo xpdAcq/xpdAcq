@@ -169,10 +169,14 @@ def ct(dets, exposure):
 def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
           per_step=_shutter_step):
     """
-    Scan over temeprature controller in steps.
+    Collect data over a range of temperatures
 
-    temeprature steps are defined by starting point,
-    stoping point and step size
+    This plan sets the sample temperature using a temp_controller device
+    and exposes a detector for a set time at each temperature.
+    It also has logic for equilibrating the temperature before each
+    acquisition. By default it closes the fast shutter at XPD in between 
+    exposures. This behavior may be overridden, leaving the fast shutter
+    open for the entire scan.
 
     Parameters
     ----------
@@ -180,37 +184,40 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
         list of 'readable' objects. default to the temperature
         controller and area detector linked to xpdAcq.
     exposure : float
-        exposure time at each temeprature step in seconds.
+        exposure time at each temperature step in seconds.
     Tstart : float
         starting point of temperature sequence.
     Tstop : float
-        stoping point of temperature sequence.
+        stooping point of temperature sequence.
     Tstep : float
         step size between Tstart and Tstop of this sequence.
     per_step : callable, optional
         hook for customizing action at each temperature point.
-        Default to xpdAcq-managed action, which is as following:
+        Tramp uses this for opening and closing the shutter at each
+        temperature acquisition.
+
+        Default behavior:
         `` open shutter - collect data - close shutter ``
+
         To make shutter always open during the temperature ramp,
         pass ``None`` to this argument. See ``Notes`` below for more
         detailed information.
 
     Notes
     -----
-    1. Area detector and temperature controller will always be the one
-    configured in global state. To find out which these are, please
-    use following commands:
+    1. To see which area detector and temperature controller 
+    will be used, type the following commands:
 
         >>> xpd_configuration['area_det']
         >>> xpd_configuration['temp_controller']
 
-    to see which device is being linked
-
-    2. To change ``per_step`` from default behavior, please followg:
+    2. To change the default behavior to shutter-always-open, 
+    please pass the argument for ``per_step`` in the ``ScanPlan``
+    definition, as follows:
 
         >>> ScanPlan(bt, Tramp, 5, 300, 250, 10, per_step=None)
 
-    Above command will create a ``Tramp`` ScanPlan, with shutter always
+    It will create a ``Tramp`` ScanPlan, with shutter always
     open during the ramping.
     """
 
@@ -243,10 +250,15 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
 
 
 def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
-    """defines a flexible scan with user-specified temperatures
+    """
+    Collect data over a list of user-specific temperatures
 
-    A frame is exposed for the given exposure time at each of the
-    user-specified temperatures
+    This plan sets the sample temperature using a temp_controller device
+    and exposes a detector for a set time at each temperature.
+    It also has logic for equilibrating the temperature before each
+    acquisition. By default it closes the fast shutter at XPD in between 
+    exposures. This behavior may be overridden, leaving the fast shutter
+    open for the entire scan.
 
     Parameters
     ----------
@@ -259,28 +271,31 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
         a list of temperatures where a scan will be run
     per_step : callable, optional
         hook for customizing action at each temperature point.
-        Default to xpdAcq-managed action, which is as following:
+        Tramp uses this for opening and closing the shutter at each
+        temperature acquisition.
+
+        Default behavior:
         `` open shutter - collect data - close shutter ``
+
         To make shutter always open during the temperature ramp,
         pass ``None`` to this argument. See ``Notes`` below for more
         detailed information.
 
     Notes
     -----
-    1. Area detector and temperature controller will always be the one
-    configured in global state. To find out which these are, please
-    use following commands:
+    1. To see which area detector and temperature controller 
+    will be used, type the following commands:
 
         >>> xpd_configuration['area_det']
         >>> xpd_configuration['temp_controller']
 
-    to see which device is being linked
+    2. To change the default behavior to shutter-always-open, 
+    please pass the argument for ``per_step`` in the ``ScanPlan``
+    definition, as follows:
 
-    2. To change ``per_step`` from default behavior, please followg:
+        >>> ScanPlan(bt, Tlist, 5, [300, 250, 198], per_step=None)
 
-        >>> ScanPlan(bt, Tlist, 5, [300, 275, 195], per_step=None)
-
-    Above command will create a ``Tlist`` ScanPlan, with shutter always
+    It will create a ``Tlist`` ScanPlan, with shutter always
     open during the ramping.
     """
 
@@ -317,19 +332,16 @@ def tseries(dets, exposure, delay, num):
     exposure : float
         exposure time at each reading from area detector in seconds
     delay : float
-        delay between two adjustant reading from area detector in seconds
+        delay between two consecutive readings from area detector in seconds
     num : int
         total number of readings
 
     Notes
     -----
-    area detector being triggered will  always be the one configured
-    in global state. To find out which these are, please using
-    following commands:
+    To see which area detector and temperature controller 
+    will be used, type the following commands:
 
         >>> xpd_configuration['area_det']
-
-    to see which device is being linked
     """
 
     pe1c, = dets
@@ -374,7 +386,7 @@ def _nstep(start, stop, step_size):
     return computed_nsteps, computed_step_size
 
 #FIXME: this scanplan is hot-fix for multi-sample scanplan. It serves as
-#       a prototype of the future scanplans but it's imcomplete.
+#       a prototype of the future scanplans but it's incomplete.
 def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
               bt=None):
     """
