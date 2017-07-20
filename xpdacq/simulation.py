@@ -57,13 +57,18 @@ class SimulatedPE1C(be.ReaderWithFileStore):
     also add realistic attributes.
     """
 
-    def __init__(self, name, read_fields, fs):
+    def __init__(self, name, read_fields, fs, broken=False):
         self.images_per_set = PutGet()
         self.number_of_sets = PutGet()
         self.cam = SimulatedCam()
         self._staged = False
         super().__init__(name, read_fields, fs=fs)
+        self.broken = broken  # useful attr for test
         self.ready = True  # work around a hack in Reader
+
+    def trigger(self):
+        if self.broken:
+            raise RuntimeError('da lahhh')
 
 
 def build_pymongo_backed_broker():
@@ -181,6 +186,7 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
 # instantiate simulation objects
 db = build_pymongo_backed_broker()
 db.fs.register_handler('RWFS_NPY', be.ReaderWithFSHandler)
-pe1c = SimulatedPE1C('pe1c', {'pe1_image': lambda: np.ones((5, 5))}, fs=db.fs)
+pe1c = SimulatedPE1C('pe1c', {'pe1_image': lambda: np.ones((5, 5))},
+                     fs=db.fs)
 shctl1 = be.Mover('shctl1', {'rad': lambda x: x}, {'x': 0})
 cs700 = be.Mover('cs700', {'temperature': lambda x: x}, {'x': 300})
