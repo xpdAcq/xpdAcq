@@ -193,12 +193,11 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
     """ funciton to end a beamtime.
 
     Detail steps are:
-        2) Archive ``xpdUser`` directory to remove backup
+        2) Arhcive ``xpdUser`` directory to remove backup
         3) Ask for user confirmation
         4.1) if user confirms, flush all sub-directories under
         ``xpdUser`` for a new beamtime.
-        4.2) if user disagree, leave ``xpdUser`` untouched and flush
-        remote backup to avoid duplicate archives.
+        4.2) if user doesn't confirm, leave ``xpdUser`` untouched.
     """
     # NOTE: to avoid network bottleneck, we actually only move all files
     # except for .tif.
@@ -262,6 +261,7 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
                                      archive_name)
     if root_dir is None:
         root_dir = glbl_dict['base']
+<<<<<<< HEAD
     try:
         os.chdir(root_dir)
         print("INFO: Archiving your data now. That may take several"
@@ -274,6 +274,25 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
                         glbl_dict['home'], archive_full_name],
                         check=True)
     finally:
+=======
+    #cur_path = os.getcwd()
+    try:
+        os.chdir(root_dir)
+        print("INFO: Archiving your data now. That may take several"
+              " minutes. please be patient :)")
+        # remove dir structure would be:
+        # <remote>/<PI_last+uid>/xpdUser/....
+        subprocess.run(['rsync', '-av', '--exclude=*.tif',
+                        glbl_dict['home'], archive_full_name],
+                        check=True)
+        #tar_return = shutil.make_archive(archive_full_name,
+        #                                 archive_format,
+        #                                 root_dir=root_dir,
+        #                                 base_dir='xpdUser', verbose=1,
+        #                                 dry_run=False)
+    finally:
+        #os.chdir(cur_path)
+>>>>>>> cd70228... REF: exclude .tif files and replace archive step with rsync
         os.chdir(glbl_dict['home'])
     return archive_full_name
 
