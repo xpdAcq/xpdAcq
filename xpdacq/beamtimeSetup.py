@@ -17,6 +17,7 @@ import os
 import sys
 import yaml
 import shutil
+import subprocess
 from time import strftime
 from IPython import get_ipython
 from pkg_resources import resource_filename as rs_fn
@@ -190,23 +191,31 @@ def load_yaml(f, known_uids=None):
 def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
     """ funciton to end a beamtime.
 
-    It check if directory structure is correct and flush directories
+    Detail steps are:
+        2) Arhcive ``xpdUser`` directory to remove backup
+        3) Ask for user confirmation
+        4.1) if user confirms, flush all sub-directories under
+        ``xpdUser`` for a new beamtime.
+        4.2) if user doesn't confirm, leave ``xpdUser`` untouched.
     """
+    # NOTE: to avoid network bottleneck, we actually only move all files
+    # except for .tif.
+
     _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']
     if archive_dir is None:
         archive_dir = glbl_dict['archive_dir']
     if base_dir is None:
         base_dir = glbl_dict['base']
-    os.makedirs(glbl_dict['home'], exist_ok=True)
     # check env
-    files = os.listdir(glbl_dict['home'])
-    if len(files) == 0:
-        raise FileNotFoundError("It appears that end_beamtime may have been "
-                                "run. If so, do not run again but proceed to\n"
-                                ">>> bt = _start_beamtime(pi_last, saf_num,"
-                                "experimenters, wavelength=<value>)\n")
-    ips = get_ipython()
+    if os.path.isdir(glbl_dict['home']):
+        files = os.listdir(glbl_dict['home'])
+        if len(files) == 0:
+            raise FileNotFoundError("It appears that end_beamtime may have been "
+                                    "run. If so, do not run again but proceed to\n"
+                                    ">>> bt = _start_beamtime(pi_last, saf_num,"
+                                    "experimenters, wavelength=<value>)\n")
     # laod bt yaml
+    ips = get_ipython()
     if not bto:
         # bto = _load_bt(glbl.yaml_dir)
         bto = ips.ns_table['user_global']['bt']
@@ -247,21 +256,28 @@ def _load_bt_info(bt_obj, required_fields):
 def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
     """ Create a remote tarball of all user folders under xpdUser directory
     """
-    archive_full_name = os.path.join(glbl_dict['archive_dir'], archive_name)
+    archive_full_name = os.path.join(glbl_dict['archive_dir'],
+                                     archive_name)
     if root_dir is None:
         root_dir = glbl_dict['base']
-    cur_path = os.getcwd()
+    #cur_path = os.getcwd()
     try:
         os.chdir(root_dir)
         print("INFO: Archiving your data now. That may take several"
               " minutes. please be patient :)")
-        tar_return = shutil.make_archive(archive_full_name,
-                                         archive_format,
-                                         root_dir=root_dir,
-                                         base_dir='xpdUser', verbose=1,
-                                         dry_run=False)
+        # remove dir structure would be:
+        # <remote>/<PI_last+uid>/xpdUser/....
+        subprocess.run(['rsync', '-av', '--exclude=*.tif',
+                        glbl_dict['home'], archive_full_name],
+                        check=True)
+        #tar_return = shutil.make_archive(archive_full_name,
+        #                                 archive_format,
+        #                                 root_dir=root_dir,
+        #                                 base_dir='xpdUser', verbose=1,
+        #                                 dry_run=False)
     finally:
-        os.chdir(cur_path)
+        #os.chdir(cur_path)
+        os.chdir(glbl_dict['home'])
     return archive_full_name
 
 
@@ -301,7 +317,7 @@ def _confirm_archive(archive_f_name):
 def _delete_home_dir_tree():
     os.chdir(glbl_dict['base'])  # move out from xpdUser before deletion
     shutil.rmtree(glbl_dict['home'])
-    os.makedirs(glbl_dict['home'], exist_ok=True)
+    os.makedirs(glbl_dict['home'])
     os.chdir(glbl_dict['home'])  # now move back into xpdUser
     return
 
