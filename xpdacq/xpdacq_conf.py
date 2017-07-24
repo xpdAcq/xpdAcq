@@ -70,9 +70,8 @@ else:
 
 if simulation:
     BASE_DIR = os.getcwd()
-    ARCHIVE_BASE_DIR_NAME = 'userBeamtimeArchive'
+    ARCHIVE_BASE_DIR_NAME = 'userSimulationArchive'
     ARCHIVE_BASE_DIR = os.path.join(BASE_DIR, ARCHIVE_BASE_DIR_NAME)
-    USER_BACKUP_DIR_NAME = ARCHIVE_BASE_DIR_NAME
 else:
     BASE_DIR = os.path.abspath('/direct/XF28ID1/pe2_data')
     ARCHIVE_BASE_DIR = os.path.join(os.path.abspath('/direct/XF28ID1/pe1_data'),
