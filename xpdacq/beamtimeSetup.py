@@ -261,7 +261,6 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
                                      archive_name)
     if root_dir is None:
         root_dir = glbl_dict['base']
-<<<<<<< HEAD
     try:
         os.chdir(root_dir)
         print("INFO: Archiving your data now. That may take several"
@@ -274,25 +273,6 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
                         glbl_dict['home'], archive_full_name],
                         check=True)
     finally:
-=======
-    #cur_path = os.getcwd()
-    try:
-        os.chdir(root_dir)
-        print("INFO: Archiving your data now. That may take several"
-              " minutes. please be patient :)")
-        # remove dir structure would be:
-        # <remote>/<PI_last+uid>/xpdUser/....
-        subprocess.run(['rsync', '-av', '--exclude=*.tif',
-                        glbl_dict['home'], archive_full_name],
-                        check=True)
-        #tar_return = shutil.make_archive(archive_full_name,
-        #                                 archive_format,
-        #                                 root_dir=root_dir,
-        #                                 base_dir='xpdUser', verbose=1,
-        #                                 dry_run=False)
-    finally:
-        #os.chdir(cur_path)
->>>>>>> cd70228... REF: exclude .tif files and replace archive step with rsync
         os.chdir(glbl_dict['home'])
     return archive_full_name
 
@@ -329,8 +309,13 @@ def _confirm_archive(archive_f_name):
     else:
         # flush remote backup
         shutil.rmtree(archive_f_name)
+<<<<<<< HEAD
         sys.exit(_graceful_exit("xpdUser directory delete operation cancelled "
                                 "at Users request."))
+=======
+        sys.exit(_graceful_exit("xpdUser directory delete operation cancelled."
+                                "at Users request"))
+>>>>>>> c37c46b... ENH: refine detailed logic regarding remote backup when archiving
 
 def _delete_home_dir_tree():
     os.chdir(glbl_dict['base'])  # move out from xpdUser before deletion
