@@ -267,6 +267,7 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
               " minutes. please be patient :)")
         # remove dir structure would be:
         # <remote>/<PI_last+uid>/xpdUser/....
+        os.makedirs(archive_full_name, exist_ok=True)
         subprocess.run(['rsync', '-av', '--exclude=*.tif',
                         glbl_dict['home'], archive_full_name],
                         check=True)
@@ -295,8 +296,9 @@ def _load_bt(bt_yaml_path):
 
 
 def _get_user_confirmation():
-    conf = input("Please confirm data are backed up. Are you ready to continue"
-                 "with xpdUser directory contents deletion (y,[n])?: ")
+    conf = input("Please confirm data are backed up.\n"
+                 "Are you ready to continue with xpdUser "
+                 "directory contents deletion (y,[n])?: ")
     return conf
 
 
@@ -310,9 +312,10 @@ def _confirm_archive(archive_f_name):
     if conf in ('y', 'Y'):
         return
     else:
+        # flush remote backup
+        shutil.rmtree(archive_f_name)
         sys.exit(_graceful_exit("xpdUser directory delete operation cancelled."
                                 "at Users request"))
-
 
 def _delete_home_dir_tree():
     os.chdir(glbl_dict['base'])  # move out from xpdUser before deletion
