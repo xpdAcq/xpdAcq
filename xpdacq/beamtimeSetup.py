@@ -19,6 +19,7 @@ import yaml
 import shutil
 import subprocess
 from time import strftime
+
 from IPython import get_ipython
 from pkg_resources import resource_filename as rs_fn
 
@@ -260,7 +261,6 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
                                      archive_name)
     if root_dir is None:
         root_dir = glbl_dict['base']
-    #cur_path = os.getcwd()
     try:
         os.chdir(root_dir)
         print("INFO: Archiving your data now. That may take several"
@@ -268,16 +268,11 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
         # remove dir structure would be:
         # <remote>/<PI_last+uid>/xpdUser/....
         os.makedirs(archive_full_name, exist_ok=True)
-        subprocess.run(['rsync', '-av', '--exclude=*.tif',
+        subprocess.run(['rsync', '-av',
+                        '--exclude=*.tif',
                         glbl_dict['home'], archive_full_name],
                         check=True)
-        #tar_return = shutil.make_archive(archive_full_name,
-        #                                 archive_format,
-        #                                 root_dir=root_dir,
-        #                                 base_dir='xpdUser', verbose=1,
-        #                                 dry_run=False)
     finally:
-        #os.chdir(cur_path)
         os.chdir(glbl_dict['home'])
     return archive_full_name
 
@@ -351,4 +346,24 @@ def _start_xpdacq():
     else:
         print("INFO: No PI_name has been found")
 
+
+def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
+    archive_full_name = os.path.join(glbl_dict['archive_dir'],
+                                     archive_name)
+    if root_dir is None:
+        root_dir = glbl_dict['base']
+    #cur_path = os.getcwd()
+    try:
+        os.chdir(root_dir)
+        print("INFO: Archiving your data now. That may take several"
+              " minutes. please be patient :)")
+        tar_return = shutil.make_archive(archive_full_name,
+                                         archive_format,
+                                         root_dir=root_dir,
+                                         base_dir='xpdUser', verbose=1,
+                                         dry_run=False)
+    finally:
+        #os.chdir(cur_path)
+        os.chdir(glbl_dict['home'])
+    return archive_full_name
 """
