@@ -193,11 +193,12 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
     """ funciton to end a beamtime.
 
     Detail steps are:
-        2) Arhcive ``xpdUser`` directory to remove backup
+        2) Archive ``xpdUser`` directory to remove backup
         3) Ask for user confirmation
         4.1) if user confirms, flush all sub-directories under
         ``xpdUser`` for a new beamtime.
-        4.2) if user doesn't confirm, leave ``xpdUser`` untouched.
+        4.2) if user disagree, leave ``xpdUser`` untouched and flush
+        remote backup to avoid duplicate archives.
     """
     # NOTE: to avoid network bottleneck, we actually only move all files
     # except for .tif.
@@ -309,13 +310,8 @@ def _confirm_archive(archive_f_name):
     else:
         # flush remote backup
         shutil.rmtree(archive_f_name)
-<<<<<<< HEAD
-        sys.exit(_graceful_exit("xpdUser directory delete operation cancelled "
-                                "at Users request."))
-=======
-        sys.exit(_graceful_exit("xpdUser directory delete operation cancelled."
-                                "at Users request"))
->>>>>>> c37c46b... ENH: refine detailed logic regarding remote backup when archiving
+        sys.exit(_graceful_exit("xpdUser directory delete operation "
+                                "cancelled at Users request."))
 
 def _delete_home_dir_tree():
     os.chdir(glbl_dict['base'])  # move out from xpdUser before deletion
