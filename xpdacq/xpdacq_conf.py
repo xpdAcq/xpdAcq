@@ -23,6 +23,10 @@ from time import strftime
 from .yamldict import YamlDict
 from .tools import xpdAcqException
 
+# shutter configuration, module dict
+XPD_SHUTTER_CONF = {'open': 60, 'close': 0}
+
+
 # special function and dict to store all necessary objects
 xpd_configuration = {}
 

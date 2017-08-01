@@ -19,6 +19,7 @@ import yaml
 import shutil
 from time import strftime
 from IPython import get_ipython
+from pkg_resources import resource_filename as rs_fn
 
 from .beamtime import *
 from .tools import _graceful_exit
@@ -27,6 +28,8 @@ from .xpdacq_conf import glbl_dict
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime
 EXPO_LIST = [5, 0.1, 1, 10, 30, 60]
+DATA_DIR = rs_fn('xpdacq', 'data/')
+
 
 
 def _start_beamtime(PI_last, saf_num, experimenters=[],
@@ -55,7 +58,8 @@ def _start_beamtime(PI_last, saf_num, experimenters=[],
               "please do\n"
               ">>> xrun.beamtime = bt")
         # copy default Ni24.D to xpdUser/user_analysis
-        src = os.path.join(os.path.dirname(__file__), 'Ni24.D')
+        #src = os.path.join(os.path.dirname(__file__), 'Ni24.D')
+        src = os.path.join(DATA_DIR, 'Ni24.D')
         dst = os.path.join(glbl_dict['usrAnalysis_dir'], 'Ni.D')
         shutil.copy(src, dst)
 
@@ -123,11 +127,9 @@ def load_beamtime(directory=None):
     known_uids = {}
     beamtime_fn = os.path.join(directory, 'bt_bt.yml')
     sample_fns =  [fn for fn in
-                   os.listdir(os.path.join(directory, 'samples'))
-                   if not fn.startswith('.DS_Store')]
+                   os.listdir(os.path.join(directory, 'samples'))]
     scanplan_fns = [fn for fn in
-                    os.listdir(os.path.join(directory, 'scanplans'))
-                    if not fn.startswith('.DS_Store')]
+                    os.listdir(os.path.join(directory, 'scanplans'))]
 
     with open(beamtime_fn, 'r') as f:
         bt = load_yaml(f, known_uids)

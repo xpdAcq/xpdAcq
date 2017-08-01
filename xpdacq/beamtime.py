@@ -24,7 +24,7 @@ import bluesky.plans as bp
 from bluesky.callbacks import LiveTable
 
 from .glbl import glbl
-from .xpdacq_conf import xpd_configuration
+from .xpdacq_conf import xpd_configuration, XPD_SHUTTER_CONF
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 from .tools import regularize_dict_key
@@ -112,28 +112,44 @@ def _check_mini_expo(exposure, acq_time):
                                  " to 0.5s"))
 
 
-def ct(dets, exposure, *, md=None):
+def _shutter_step(detectors, motor, step):
+    """ customized step to ensure shutter is open before
+    reading at each motor point and close shutter after reading
     """
-    Take one reading from area detectors with given exposure time
+    yield from bp.checkpoint()
+    yield from bp.abs_set(motor, step, wait=True)
+    yield from bp.abs_set(xpd_configuration['shutter'],
+                          XPD_SHUTTER_CONF['open'], wait=True)
+    yield from bp.trigger_and_read(list(detectors) + [motor])
+    yield from bp.abs_set(xpd_configuration['shutter'],
+                          XPD_SHUTTER_CONF['close'], wait=True)
+
+
+def ct(dets, exposure):
+    """
+    Take one reading from area detector with given exposure time
 
     Parameters
     ----------
     dets : list
-        list of 'readable' objects
+        list of 'readable' objects. default to area detector
+        linked to xpdAcq.
     exposure : float
         total time of exposrue in seconds
-    md : dict, optional
-        extra metadata
 
-    Note
-    ----
-    area detector that is triggered will always be the one configured in
-    global state. Please refer to http://xpdacq.github.io for more information
+    Notes
+    -----
+    area detector being triggered will  always be the one configured
+    in global state. To find out which these are, please using
+    following commands:
+
+        >>> xpd_configuration['area_det']
+
+    to see which device is being linked
     """
 
     pe1c, = dets
-    if md is None:
-        md = {}
+    md = {}
     # setting up area_detector
     (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
     area_det = xpd_configuration['area_det']
@@ -143,8 +159,6 @@ def ct(dets, exposure, *, md=None):
                         'sp_requested_exposure': exposure,
                         'sp_computed_exposure': computed_exposure,
                         'sp_type': 'ct',
-                        # need a name that shows all parameters values
-                        # 'sp_name': 'ct_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'ct'})
     plan = bp.count([area_det], md=_md)
@@ -152,37 +166,63 @@ def ct(dets, exposure, *, md=None):
     yield from plan
 
 
-def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
+def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
+          per_step=_shutter_step):
     """
-    Scan over temeprature controller in steps.
+    Collect data over a range of temperatures
 
-    temeprature steps are defined by starting point,
-    stoping point and step size
+    This plan sets the sample temperature using a temp_controller device
+    and exposes a detector for a set time at each temperature.
+    It also has logic for equilibrating the temperature before each
+    acquisition. By default it closes the fast shutter at XPD in between 
+    exposures. This behavior may be overridden, leaving the fast shutter
+    open for the entire scan. Please see below.
 
     Parameters
     ----------
     dets : list
-        list of 'readable' objects
+        list of 'readable' objects. default to the temperature
+        controller and area detector linked to xpdAcq.
     exposure : float
-        exposure time at each temeprature step in seconds
+        exposure time at each temperature step in seconds.
     Tstart : float
-        starting point of temperature sequence
+        starting point of temperature sequence.
     Tstop : float
-        stoping point of temperature sequence
+        stoping point of temperature sequence.
     Tstep : float
-        step size between Tstart and Tstop of this sequence
-    md : dict, optional
-        extra metadata
+        step size between Tstart and Tstop of this sequence.
+    per_step : callable, optional
+        hook for customizing action at each temperature point.
+        Tramp uses this for opening and closing the shutter at each
+        temperature acquisition.
 
-    Note
-    ----
-    temperature controller that is driven will always be the one configured in
-    global state. Please refer to http://xpdacq.github.io for more information
+        Default behavior:
+        `` open shutter - collect data - close shutter ``
+
+        To make shutter always open during the temperature ramp,
+        pass ``None`` to this argument. See ``Notes`` below for more
+        detailed information.
+
+    Notes
+    -----
+    1. To see which area detector and temperature controller 
+    will be used, type the following commands:
+
+        >>> xpd_configuration['area_det']
+        >>> xpd_configuration['temp_controller']
+
+    2. To change the default behavior to shutter-always-open, 
+    please pass the argument for ``per_step`` in the ``ScanPlan``
+    definition, as follows:
+
+        >>> ScanPlan(bt, Tramp, 5, 300, 250, 10, per_step=None)
+
+    This will create a ``Tramp`` ScanPlan, with shutter always
+    open during the ramping.
     """
 
     pe1c, = dets
-    if md is None:
-        md = {}
+    md = {}
     # setting up area_detector
     (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
     area_det = xpd_configuration['area_det']
@@ -200,43 +240,63 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, md=None):
                         'sp_requested_Tstep': Tstep,
                         'sp_computed_Tstep': computed_step_size,
                         'sp_Nsteps': Nsteps,
-                        # need a name that shows all parameters values
-                        # 'sp_name': 'Tramp_<exposure_time>',
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'Tramp'})
     plan = bp.scan([area_det], temp_controller, Tstart, Tstop,
-                   Nsteps, md=_md)
+                   Nsteps, per_step=per_step, md=_md)
     plan = bp.subs_wrapper(plan,
                            LiveTable([area_det, temp_controller]))
     yield from plan
 
 
-def Tlist(dets, exposure, T_list):
-    """defines a flexible scan with user-specified temperatures
+def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
+    """
+    Collect data over a list of user-specific temperatures
 
-    A frame is exposed for the given exposure time at each of the
-    user-specified temperatures
+    This plan sets the sample temperature using a temp_controller device
+    and exposes a detector for a set time at each temperature.
+    It also has logic for equilibrating the temperature before each
+    acquisition. By default it closes the fast shutter at XPD in between 
+    exposures. This behavior may be overridden, leaving the fast shutter
+    open for the entire scan. Please see below.
 
     Parameters
     ----------
     dets : list
-        list of objects that represent instrument devices. In xpdAcq, it is
-        defaulted to area detector.
+        list of 'readable' objects. default to the temperature
+        controller and area detector linked to xpdAcq.
     exposure : float
-        total time of exposure in seconds for area detector
+        total time of exposure in seconds
     T_list : list
         a list of temperatures where a scan will be run
+    per_step : callable, optional
+        hook for customizing action at each temperature point.
+        Tramp uses this for opening and closing the shutter at each
+        temperature acquisition.
 
-    Note
-    ----
-    area detector and temperature controller will always be the one
-    configured in global state. To find out which these are, please
-    using following commands:
+        Default behavior:
+        `` open shutter - collect data - close shutter ``
+
+        To make shutter always open during the temperature ramp,
+        pass ``None`` to this argument. See ``Notes`` below for more
+        detailed information.
+
+    Notes
+    -----
+    1. To see which area detector and temperature controller 
+    will be used, type the following commands:
 
         >>> xpd_configuration['area_det']
         >>> xpd_configuration['temp_controller']
 
-    To interrogate which devices are currently in use.
+    2. To change the default behavior to shutter-always-open, 
+    please pass the argument for ``per_step`` in the ``ScanPlan``
+    definition, as follows:
+
+        >>> ScanPlan(bt, Tlist, 5, [300, 250, 198], per_step=None)
+
+    This will create a ``Tlist`` ScanPlan, with shutter always
+    open during the ramping.
     """
 
     pe1c, = dets
@@ -254,37 +314,38 @@ def Tlist(dets, exposure, T_list):
                  'sp_plan_name': 'Tlist'
                  }
     # pass xpdacq_md to as additional md to bluesky plan
-    plan = bp.list_scan([area_det], T_controller, T_list, md=xpdacq_md)
+    plan = bp.list_scan([area_det], T_controller, T_list,
+                        per_step=_shutter_step, md=xpdacq_md)
     plan = bp.subs_wrapper(plan, LiveTable([area_det, T_controller]))
     yield from plan
 
 
-def tseries(dets, exposure, delay, num, *, md=None):
+def tseries(dets, exposure, delay, num):
     """
     time series scan with area detector.
 
     Parameters
     ----------
     dets : list
-        list of 'readable' objects
+        list of 'readable' objects. default to area detector
+        linked to xpdAcq.
     exposure : float
         exposure time at each reading from area detector in seconds
     delay : float
-        delay between two adjustant reading from area detector in seconds
+        delay between two consecutive readings from area detector in seconds
     num : int
         total number of readings
-    md : dict, optional
-        metadata
 
-    Note
-    ----
-    area detector that is triggered will always be the one configured in
-    global state. Please refer to http://xpdacq.github.io for more information
+    Notes
+    -----
+    To see which area detector and temperature controller 
+    will be used, type the following commands:
+
+        >>> xpd_configuration['area_det']
     """
 
     pe1c, = dets
-    if md is None:
-        md = {}
+    md = {}
     # setting up area_detector
     area_det = xpd_configuration['area_det']
     (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
@@ -324,7 +385,8 @@ def _nstep(start, stop, step_size):
           .format(step_size, computed_step_size))
     return computed_nsteps, computed_step_size
 
-
+#FIXME: this scanplan is hot-fix for multi-sample scanplan. It serves as
+#       a prototype of the future scanplans but it's incomplete.
 def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
               bt=None):
     """
@@ -717,7 +779,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         # grab the area detector used in current configuration
         pe1c = xpd_configuration['area_det']
         extra_kw = {}
-        # pass parameter to plan_func
+        # pass parameter to plan_func -> needed for statTramp-like plan
         if 'bt' in inspect.signature(self.plan_func).parameters:
             extra_kw['bt'] = self._bt
         plan = self.plan_func([pe1c], *self['sp_args'],
@@ -725,10 +787,8 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         return plan
 
     def short_summary(self):
-        arg_value_str = map(str, self.bound_arguments.values())
-        ss = list(arg_value_str)
-        #print("IN short summary {}".format(ss))
-        fn = '_'.join([self['sp_plan_name']] + ss)
+        arg_value_str = list(map(str, self.bound_arguments.values()))
+        fn = '_'.join([self['sp_plan_name']] + arg_value_str)
         return fn
 
     def __str__(self):

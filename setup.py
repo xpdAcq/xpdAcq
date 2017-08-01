@@ -6,6 +6,6 @@ setup(
     packages=find_packages(),
     description='acquisition module',
     zip_safe=False,
-    package_data={'xpdacq':['examples/']},
+    package_data={'xpdacq':['examples/', 'data/']},
     url='http:/github.com/chiahaoliu/xpdacq'
 )

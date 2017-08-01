@@ -6,6 +6,7 @@ import yaml
 import uuid
 import warnings
 from xpdacq.glbl import glbl
+from xpdacq.beamtime import _nstep
 from xpdacq.beamtime import *
 from xpdacq.utils import import_sample_info
 from xpdacq.xpdacq_conf import configure_device
@@ -17,8 +18,10 @@ from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
 from xpdacq.simulation import pe1c, cs700, shctl1, SimulatedPE1C
 
 import ophyd
-import bluesky.examples as be
 from bluesky import Msg
+import bluesky.examples as be
+from bluesky.callbacks import collector
+
 
 
 class xrunTest(unittest.TestCase):
@@ -78,11 +81,12 @@ class xrunTest(unittest.TestCase):
                                    'acq_time': acq_time})
         glbl['_dark_dict_list'] = dark_dict_list
         rv = _validate_dark(glbl['dk_window'])
-        correct_set = [el for el in dark_dict_list if
-                       abs(el['exposure'] - light_cnt_time) < 10 ** (-4)]
+        correct_set = sorted([el for el in dark_dict_list if
+                             abs(el['exposure']-light_cnt_time)<acq_time],
+                            key=lambda x: x['exposure'])[0]
         print(dark_dict_list)
         print("correct_set = {}".format(correct_set))
-        assert rv == correct_set[0].get('uid')
+        assert rv == correct_set.get('uid')
 
         # case2: adjust expire time
         dark_dict_list = []
@@ -232,8 +236,18 @@ class xrunTest(unittest.TestCase):
             msg_list.append(msg)
 
         self.xrun.msg_hook = msg_rv
-        self.xrun({}, ScanPlan(self.bt, Tramp, exp, Tstart,
-                               Tstop, Tstep))
+        traj_list = [] # courtesy of bluesky test
+        temp_controller = xpd_configuration['temp_controller']
+        callback = collector(temp_controller.read_attrs[0],
+                             traj_list)
+        self.xrun({},
+                  ScanPlan(self.bt, Tramp, exp, Tstart, Tstop, Tstep),
+                  subs={'event': callback})
+        # verify trajectory
+        Num, diff = _nstep(Tstart, Tstop, Tstep)
+        expected_traj = np.linspace(Tstart, Tstop, Num)
+        assert np.all(traj_list == expected_traj)
+        # verify md
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'].pop()
         self.assertEqual(open_run['sp_type'], 'Tramp')
@@ -262,14 +276,52 @@ class xrunTest(unittest.TestCase):
 
         def msg_rv(msg):
             msg_list.append(msg)
-
+        traj_list = [] # courtesy of bluesky test
+        temp_controller = xpd_configuration['temp_controller']
+        callback = collector(temp_controller.read_attrs[0],
+                             traj_list)
         self.xrun.msg_hook = msg_rv
-        self.xrun({}, ScanPlan(self.bt, Tlist, exp, T_list))
+        self.xrun({}, ScanPlan(self.bt, Tlist, exp, T_list),
+                  subs={'event': callback})
+        # verify trajectory
+        assert T_list == traj_list
+        # verify md
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'].pop()
         self.assertEqual(open_run['sp_type'], 'Tlist')
         self.assertEqual(open_run['sp_requested_exposure'], exp)
         self.assertEqual(open_run['sp_T_list'], T_list)
+
+    def test_shutter_step(self):
+        # test with Tramp
+        shutter = xpd_configuration['shutter']
+        temp_controller = xpd_configuration['temp_controller']
+        exp, Tstart, Tstop, Tstep = 5, 300, 200, 10
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.xrun.msg_hook = msg_rv
+        self.xrun({},
+                  ScanPlan(self.bt, Tramp, exp, Tstart, Tstop, Tstep))
+        set_msg_list = [msg for msg in msg_list if msg.command == 'set']
+        set_msgs = iter(set_msg_list)
+        while True:
+            try:
+                set_msg = next(set_msgs)
+                if set_msg.obj.name == temp_controller.name:
+                     # after set the temp_controller, must be:
+                     # open shutter -> read -> close
+                     open_msg = next(set_msgs)
+                     assert open_msg.obj.name == shutter.name
+                     assert len(open_msg.args) == 1
+                     assert open_msg.args[0] == 60 # open shutter first
+                     close_msg = next(set_msgs)
+                     assert close_msg.obj.name == shutter.name
+                     assert len(close_msg.args) == 1
+                     assert close_msg.args[0] == 0  # close then move
+            except StopIteration:
+                print('stop')
+                break
 
     def test_set_beamdump_suspender(self):
         loop = self.xrun._loop
