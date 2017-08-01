@@ -176,7 +176,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
     It also has logic for equilibrating the temperature before each
     acquisition. By default it closes the fast shutter at XPD in between 
     exposures. This behavior may be overridden, leaving the fast shutter
-    open for the entire scan.
+    open for the entire scan. Please see below.
 
     Parameters
     ----------
@@ -188,7 +188,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
     Tstart : float
         starting point of temperature sequence.
     Tstop : float
-        stooping point of temperature sequence.
+        stoping point of temperature sequence.
     Tstep : float
         step size between Tstart and Tstop of this sequence.
     per_step : callable, optional
@@ -217,7 +217,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
 
         >>> ScanPlan(bt, Tramp, 5, 300, 250, 10, per_step=None)
 
-    It will create a ``Tramp`` ScanPlan, with shutter always
+    This will create a ``Tramp`` ScanPlan, with shutter always
     open during the ramping.
     """
 
@@ -258,7 +258,7 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
     It also has logic for equilibrating the temperature before each
     acquisition. By default it closes the fast shutter at XPD in between 
     exposures. This behavior may be overridden, leaving the fast shutter
-    open for the entire scan.
+    open for the entire scan. Please see below.
 
     Parameters
     ----------
@@ -295,7 +295,7 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
 
         >>> ScanPlan(bt, Tlist, 5, [300, 250, 198], per_step=None)
 
-    It will create a ``Tlist`` ScanPlan, with shutter always
+    This will create a ``Tlist`` ScanPlan, with shutter always
     open during the ramping.
     """
 
