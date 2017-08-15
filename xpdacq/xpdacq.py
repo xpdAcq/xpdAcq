@@ -430,10 +430,10 @@ class CustomizedRunEngine(RunEngine):
         if glbl['auto_load_calib']:
             plan = bp.msg_mutator(plan, _inject_calibration_md)
 
-        # Insert glbl mask
-        #plan = bp.msg_mutator(plan, _inject_mask)
+        # Insert compressed mask
+        plan = bp.msg_mutator(plan, _inject_mask)
+        # Insert mask clinet uid
         plan = bp.msg_mutator(plan, _inject_mask_server_uid)
-
         # Insert xpdacq md version
         plan = bp.msg_mutator(plan, _inject_xpdacq_md_version)
 

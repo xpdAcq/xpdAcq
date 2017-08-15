@@ -277,7 +277,8 @@ def _calibration(img, calibration, **kwargs):
 def run_mask_builder(exposure=300, dark_sub_bool=True,
                      polarization_factor=0.99,
                      sample_name=None, calib_dict=None,
-                     mask_dict=None, save_name=None):
+                     mask_dict=None, save_name=None,
+                     mask_server_uid=None):
     """ function to generate mask
 
     this function will execute a count scan and generate a mask based on
@@ -309,10 +310,10 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
     mask_server_uid : str, optional
         uid used to reference all required information for bulding a
         mask. Subsequent datasets that will use this mask are
-        ``clients`` that hold a reference to the ``server`` with the correct
-        experimental geometry and images by having the same value for
-        client uid. For more details and motivation behind, please see:
-        https://github.com/xpdAcq/xpdSchema
+        ``clients`` that hold a reference to the ``server`` with the
+        correct experimental geometry and images by having the same
+        value for client uid. For more details and motivation behind,
+        please see: https://github.com/xpdAcq/xpdSchema
 
     Note
     ----
@@ -329,13 +330,6 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
     xrun = ips.ns_table['user_global']['xrun']
 
     # default behavior
-    if sample_name is None:
-        sample_name = 'mask_target'
-
-    if mask_dict is None:
-        mask_dict = glbl['mask_dict']
-    print("INFO: use mask options: {}".format(mask_dict))
-
     if calib_dict is None:
         calib_dict = glbl.get('calib_config_dict', None)
         if calib_dict is None:
@@ -343,6 +337,17 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
                   "Please do ``run_calibration()`` or provide your own"
                   "calibration parameter set")
             return
+
+    if mask_server_uid is None:
+        mask_server_uid = str(uuid.uuid4())
+
+    if sample_name is None:
+        sample_name = 'mask_target'
+
+    if mask_dict is None:
+        mask_dict = glbl['mask_dict']
+    print("INFO: use mask options: {}".format(mask_dict))
+
 
     # setting up geometry parameters
     ai = AzimuthalIntegrator()
@@ -353,7 +358,7 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
     mask_builder_dict = {'sample_name': sample_name,
                          'sample_composition': {sample_name: 1},
                          'is_mask': True,
-                         'mask_collection_uid': mask_collection_uid}
+                         'mask_server_uid': mask_server_uid}
     sample = Sample(bto, mask_builder_dict)
     xrun_uid = xrun(sample, ScanPlan(bto, ct, exposure))
     light_header = xpd_configuration['db'][-1]
