@@ -9,7 +9,7 @@ from xpdacq.glbl import glbl
 from xpdacq.beamtime import _nstep
 from xpdacq.beamtime import *
 from xpdacq.utils import import_sample_info
-from xpdacq.xpdacq_conf import configure_device
+from xpdacq.xpdacq_conf import configure_device, XPDACQ_MD_VERSION
 from xpdacq.simulation import pe1c, cs700, shctl1, db
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
 from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
@@ -361,3 +361,17 @@ class xrunTest(unittest.TestCase):
             # check warning
             assert len(w) == 1
             assert issubclass(w[-1].category, UserWarning)
+
+
+    def test_xpdmd_insert(self):
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.xrun.msg_hook = msg_rv
+        self.xrun({},
+                  ScanPlan(self.bt, ct, 1.0))
+        key = 'xpdacq_md_version'
+        open_run = [el.kwargs for el in msg_list
+                    if el.command == 'open_run'].pop()
+        assert key in open_run
+        assert open_run[key] == XPDACQ_MD_VERSION
