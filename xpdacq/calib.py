@@ -378,6 +378,6 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
     np.save(save_name, mask)
 
     # update global mask information
-    glbl._priviate_update(dict(mask_server_uid=mask_server_uid))
+    glbl.update(dict(mask_server_uid=mask_server_uid))
 
     return
