@@ -25,7 +25,7 @@ from .tools import xpdAcqException
 
 # shutter configuration, module dict
 XPD_SHUTTER_CONF = {'open': 60, 'close': 0}
-
+XPDACQ_MD_VERSION = '0.1'
 
 # special function and dict to store all necessary objects
 xpd_configuration = {}

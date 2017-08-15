@@ -26,12 +26,14 @@ from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input
 
 from xpdacq.glbl import glbl
-from xpdacq.xpdacq_conf import xpd_configuration, XPD_SHUTTER_CONF
+from xpdacq.xpdacq_conf import (xpd_configuration, XPD_SHUTTER_CONF,
+                                XPDACQ_MD_VERSION)
 from xpdacq.beamtime import ScanPlan, _summarize
 
 from xpdan.tools import compress_mask
 
 XPD_shutter = xpd_configuration.get('shutter')
+
 
 def _update_dark_dict_list(name, doc):
     """ generate dark frame reference
@@ -231,6 +233,13 @@ def _inject_calibration_md(msg):
     return msg
 
 
+def _inject_xpdacq_md_version(msg):
+    """simply insert xpdAcq md version"""
+    if msg.command == 'open_run':
+        msg.kwargs['xpdacq_md_version'] = XPDACQ_MD_VERSION
+    return msg
+
+
 def _inject_mask(msg):
     if msg.command == 'open_run':
         mask_path = glbl['mask_path']
@@ -414,6 +423,9 @@ class CustomizedRunEngine(RunEngine):
 
         # Insert glbl mask
         plan = bp.msg_mutator(plan, _inject_mask)
+
+        # Insert xpdacq md version
+        plan = bp.msg_mutator(plan, _inject_xpdacq_md_version)
 
         # Execute
         return super().__call__(plan, subs,
