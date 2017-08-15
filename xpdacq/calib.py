@@ -306,6 +306,13 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
         full path for this mask going to be saved. if it is None,
         default name 'xpdacq_mask.npy' will be saved inside
         xpdUser/config_base/
+    mask_server_uid : str, optional
+        uid used to reference all required information for bulding a
+        mask. Subsequent datasets that will use this mask are
+        ``clients`` that hold a reference to the ``server`` with the correct
+        experimental geometry and images by having the same value for
+        client uid. For more details and motivation behind, please see:
+        https://github.com/xpdAcq/xpdSchema
 
     Note
     ----
@@ -369,5 +376,8 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
         save_name = glbl['mask_path']
     # still save the most recent mask, as we are in file-based
     np.save(save_name, mask)
+
+    # update global mask information
+    glbl._priviate_update(dict(mask_server_uid=mask_server_uid))
 
     return

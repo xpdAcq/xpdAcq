@@ -82,7 +82,6 @@ def take_dark():
            'sp_num_frames': num_frame,
            'sp_computed_exposure': computed_exposure,
            'sp_type': 'ct',
-           # 'sp_uid': str(uuid.uuid4()), # dark plan doesn't need uid
            'sp_plan_name': 'dark_{}'.format(computed_exposure),
            'dark_frame': True}
     c = bp.count([area_det], md=_md)
@@ -255,6 +254,16 @@ def _inject_mask(msg):
     return msg
 
 
+def _inject_mask_server_uid(msg):
+    if msg.command == 'open_run':
+        mask_server_uid = glbl.get('mask_server_uid', None)
+        if mask_server_uid:
+            msg.kwargs['mask_client_uid'] = mask_server_uid
+        else:
+            print("WARNING: no mask has been built, scan will keep going...")
+    return msg
+
+
 def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
                            wait_time=None, clear=True):
     """helper function to set suspender based on ring_current
@@ -422,7 +431,8 @@ class CustomizedRunEngine(RunEngine):
             plan = bp.msg_mutator(plan, _inject_calibration_md)
 
         # Insert glbl mask
-        plan = bp.msg_mutator(plan, _inject_mask)
+        #plan = bp.msg_mutator(plan, _inject_mask)
+        plan = bp.msg_mutator(plan, _inject_mask_server_uid)
 
         # Insert xpdacq md version
         plan = bp.msg_mutator(plan, _inject_xpdacq_md_version)
