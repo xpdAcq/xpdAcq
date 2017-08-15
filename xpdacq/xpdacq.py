@@ -225,10 +225,11 @@ def _inject_calibration_md(msg):
         calibration_md = _auto_load_calibration_file()
         if calibration_md:
             injected_calib_dict = dict(calibration_md)
-            injected_calib_uid = injected_calib_dict.pop(
-                'calibration_collection_uid')
+            calibration_server_uid =\
+            glbl.get('detector_calibration_server_uid', None)
             msg.kwargs['calibration_md'] = injected_calib_dict
-            msg.kwargs['calibration_collection_uid'] = injected_calib_uid
+            msg.kwargs.update({'detector_calibration_client_uid':
+                               calibration_server_uid})
     return msg
 
 
@@ -250,7 +251,6 @@ def _inject_mask(msg):
                                   indptr)
         else:
             print("INFO: no mask has been built, scan will keep going...")
-
     return msg
 
 
@@ -429,7 +429,6 @@ class CustomizedRunEngine(RunEngine):
         # Load calibration file
         if glbl['auto_load_calib']:
             plan = bp.msg_mutator(plan, _inject_calibration_md)
-
         # Insert compressed mask
         plan = bp.msg_mutator(plan, _inject_mask)
         # Insert mask clinet uid

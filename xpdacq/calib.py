@@ -134,19 +134,17 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     # collect & pull subtracted image
     if detector_calibration_server_uid is None:
         detector_calibration_server_uid = str(uuid.uuid4())
+    # update calibration server uid in glbl
+    glbl['detector_calibration_server_uid'] = detector_calibration_server_uid
     if RE_instance is None:
         _check_obj(_REQUIRED_OBJ_LIST)
         ips = get_ipython()
         xrun = ips.ns_table['user_global']['xrun']
-    img = _collect_calib_img(exposure, dark_sub_bool,
-                             c, xrun, detector_calibration_server_uid)
-
+    img = _collect_calib_img(exposure, dark_sub_bool, c, xrun)
     # pyFAI calibration
     calib_c, timestr = _calibration(img, c, **kwargs)
-
     # save param for xpdAcq
-    _save_and_attach_calib_param(calib_c, timestr,
-                                 detector_calibration_server_uid)
+    _save_and_attach_calib_param(calib_c, timestr)
 
 
 def _configure_calib_instance(calibrant, detector, wavelength):
@@ -171,15 +169,13 @@ def _configure_calib_instance(calibrant, detector, wavelength):
 
 
 def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
-                       RE_instance, detector_calibration_server_uid):
+                       RE_instance):
     """helper function to collect calibration image and return it"""
     c = calibration_instance  # shorthand notation
     calibrant_name = c.calibrant.__repr__().split(' ')[0]
     calibration_dict = {'sample_name': calibrant_name,
                         'sample_composition': {calibrant_name: 1},
-                        'is_calibration': True,
-                        'detector_calibration_server_uid':
-                        detector_calibration_server_uid}
+                        'is_calibration': True}
     bto = RE_instance.beamtime  # grab beamtime object linked to run_engine
     sample = Sample(bto, calibration_dict)
     uid = RE_instance(sample, ScanPlan(bto, ct, exposure))
@@ -199,8 +195,7 @@ def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
     return img
 
 
-def _save_and_attach_calib_param(calib_c, timestr,
-                                 detector_calibration_server_uid):
+def _save_and_attach_calib_param(calib_c, timestr):
     """save calibration parameters and attach to glbl class instance
 
     Parameters
@@ -217,8 +212,6 @@ def _save_and_attach_calib_param(calib_c, timestr,
     glbl['calib_config_dict'].update(calib_c.geoRef.getFit2D())
     glbl['calib_config_dict'].update({'file_name':calib_c.basename})
     glbl['calib_config_dict'].update({'time':timestr})
-    glbl['calib_config_dict'].update({'detector_calibration_server_uid':
-                                      detector_calibration_server_uid})
 
     # save yaml dict used for xpdAcq
     yaml_name = glbl['calib_config_name']
@@ -347,6 +340,7 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
 
     if mask_server_uid is None:
         mask_server_uid = str(uuid.uuid4())
+    glbl['mask_server_uid'] = mask_server_uid
 
     if sample_name is None:
         sample_name = 'mask_target'
@@ -363,8 +357,7 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
     # scan
     mask_builder_dict = {'sample_name': sample_name,
                          'sample_composition': {sample_name: 1},
-                         'is_mask': True,
-                         'mask_server_uid': mask_server_uid}
+                         'is_mask': True}
     sample = Sample(bto, mask_builder_dict)
     xrun_uid = xrun(sample, ScanPlan(bto, ct, exposure))
     light_header = xpd_configuration['db'][-1]
@@ -387,8 +380,5 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
         save_name = glbl['mask_path']
     # still save the most recent mask, as we are in file-based
     np.save(save_name, mask)
-
-    # update global mask information
-    glbl.update(dict(mask_server_uid=mask_server_uid))
 
     return
