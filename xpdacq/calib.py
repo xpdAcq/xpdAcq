@@ -33,7 +33,6 @@ from pyFAI.calibration import Calibration, PeakPicker
 from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 
 from pkg_resources import resource_filename as rs_fn
-rs_dir = rs_fn('xpdacq', '/')
 
 _REQUIRED_OBJ_LIST = ['xrun']
 
@@ -160,7 +159,7 @@ def _configure_calib_instance(calibrant, detector, wavelength):
     if detector is None:
         detector = 'perkin_elmer'
     if calibrant is None:
-        calibrant = os.path.join(rs_dir, 'Ni24.D')
+        calibrant = os.path.join(glbl['usrAnalysis_dir'], 'Ni24.D')
     c = Calibration(calibrant=calibrant, detector=detector,
                     wavelength=wavelength * 10 ** (-10))
 

@@ -2,7 +2,6 @@ import os
 import yaml
 import shutil
 import unittest
-from mock import MagicMock
 
 from xpdacq.glbl import glbl
 from xpdacq.xpdacq_conf import configure_device
