@@ -71,8 +71,7 @@ def _timestampstr(timestamp):
 def run_calibration(exposure=5, dark_sub_bool=True,
                     calibrant=None, wavelength=None,
                     detector=None, *, RE_instance=None,
-                    calib_collection_uid=None, **kwargs):
-    # TODO: discuss default calibrant
+                    detector_calibration_server_uid=None, **kwargs):
     """function to run entire calibration process.
 
     Entire process includes:
@@ -110,11 +109,16 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     RE_instance : bluesky.run_engine.RunEngine instance, optional
         instance of run engine. Default is xrun. Do not change under
         normal circumstances.
-    calib_collection_uid : str, optional
-        uid for this calibration run. By default a new uid is generated.
-        Do not change under normal circumstances. override default when
+    detector_calibration_server_uid : str, optional
+        uid used to reference all required information for this
+        calibration run. Subsequent datasets which reference the same
+        experimental geometry as this calibration run are ``clients``.
+        ``server`` and ``clients`` are linked by having the same
+        value for client uid. For more details and motivation behind,
+        please see: https://github.com/xpdAcq/xpdSchema
+        By default a new uid is generated. Override default when
         you want to associate this new calibration with an existing
-        calibration-uid in previously collected run headers.
+        detector_calibration_server_uid in previously collected run headers.
     kwargs:
         Additional keyword argument for calibration. please refer to
         pyFAI documentation for all options.
@@ -128,21 +132,21 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     c = _configure_calib_instance(calibrant, detector, wavelength)
 
     # collect & pull subtracted image
-    if calib_collection_uid is None:
-        calib_collection_uid = str(uuid.uuid4())
+    if detector_calibration_server_uid is None:
+        detector_calibration_server_uid = str(uuid.uuid4())
     if RE_instance is None:
         _check_obj(_REQUIRED_OBJ_LIST)
         ips = get_ipython()
         xrun = ips.ns_table['user_global']['xrun']
     img = _collect_calib_img(exposure, dark_sub_bool,
-                             c, xrun, calib_collection_uid)
+                             c, xrun, detector_calibration_server_uid)
 
     # pyFAI calibration
     calib_c, timestr = _calibration(img, c, **kwargs)
 
     # save param for xpdAcq
     _save_and_attach_calib_param(calib_c, timestr,
-                                 calib_collection_uid)
+                                 detector_calibration_server_uid)
 
 
 def _configure_calib_instance(calibrant, detector, wavelength):
@@ -167,14 +171,15 @@ def _configure_calib_instance(calibrant, detector, wavelength):
 
 
 def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
-                       RE_instance, calib_collection_uid):
+                       RE_instance, detector_calibration_server_uid):
     """helper function to collect calibration image and return it"""
     c = calibration_instance  # shorthand notation
     calibrant_name = c.calibrant.__repr__().split(' ')[0]
     calibration_dict = {'sample_name': calibrant_name,
                         'sample_composition': {calibrant_name: 1},
                         'is_calibration': True,
-                        'calibration_collection_uid': calib_collection_uid}
+                        'detector_calibration_server_uid':
+                        detector_calibration_server_uid}
     bto = RE_instance.beamtime  # grab beamtime object linked to run_engine
     sample = Sample(bto, calibration_dict)
     uid = RE_instance(sample, ScanPlan(bto, ct, exposure))
@@ -195,7 +200,7 @@ def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
 
 
 def _save_and_attach_calib_param(calib_c, timestr,
-                                 calib_collection_uid):
+                                 detector_calibration_server_uid):
     """save calibration parameters and attach to glbl class instance
 
     Parameters
@@ -212,8 +217,8 @@ def _save_and_attach_calib_param(calib_c, timestr,
     glbl['calib_config_dict'].update(calib_c.geoRef.getFit2D())
     glbl['calib_config_dict'].update({'file_name':calib_c.basename})
     glbl['calib_config_dict'].update({'time':timestr})
-    glbl['calib_config_dict'].update({'calibration_collection_uid':
-                                      calib_collection_uid})
+    glbl['calib_config_dict'].update({'detector_calibration_server_uid':
+                                      detector_calibration_server_uid})
 
     # save yaml dict used for xpdAcq
     yaml_name = glbl['calib_config_name']
@@ -313,8 +318,10 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
         ``clients`` that hold a reference to the ``server`` with the
         correct experimental geometry and images by having the same
         value for client uid. For more details and motivation behind,
-        please see: https://github.com/xpdAcq/xpdSchema
-
+        please see: https://github.com/xpdAcq/xpdSchema.
+        By default a new uid is generated. Override default when
+        you want to associate this new mask with an existing
+        mask-server-uid in previously collected run headers.
     Note
     ----
     current software dealing with geometry correction is ``pyFAI``
@@ -354,7 +361,6 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
     ai.setPyFAI(**calib_dict)
 
     # scan
-    mask_collection_uid = str(uuid.uuid4())
     mask_builder_dict = {'sample_name': sample_name,
                          'sample_composition': {sample_name: 1},
                          'is_mask': True,
