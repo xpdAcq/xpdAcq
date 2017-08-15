@@ -364,14 +364,33 @@ class xrunTest(unittest.TestCase):
 
 
     def test_xpdmd_insert(self):
+        key = 'xpdacq_md_version'
+        val = XPDACQ_MD_VERSION
         msg_list = []
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
         self.xrun({},
                   ScanPlan(self.bt, ct, 1.0))
-        key = 'xpdacq_md_version'
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'].pop()
         assert key in open_run
-        assert open_run[key] == XPDACQ_MD_VERSION
+        assert open_run[key] == val
+
+
+    def test_mask_client_server_md_insert(self):
+        server_key = 'mask_server_uid'
+        server_val = '777'
+        client_key = 'mask_client_uid'
+        glbl[server_key] = server_val
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.xrun.msg_hook = msg_rv
+        self.xrun({},
+                  ScanPlan(self.bt, ct, 1.0))
+        open_run = [el.kwargs for el in msg_list
+                    if el.command == 'open_run'].pop()
+        assert client_key in open_run
+        assert open_run[client_key] == server_val
+
