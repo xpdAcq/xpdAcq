@@ -22,6 +22,8 @@ from bluesky import Msg
 import bluesky.examples as be
 from bluesky.callbacks import collector
 
+from pkg_resources import resource_filename as rs_fn
+pytest_dir = rs_fn('xpdacq', 'tests/') 
 
 
 class xrunTest(unittest.TestCase):
@@ -155,8 +157,7 @@ class xrunTest(unittest.TestCase):
         assert auto_calibration_md_dict is None
         # one config file in xpdUser/config_base:
         cfg_f_name = glbl['calib_config_name']
-        cfg_src = os.path.join(os.path.dirname(__file__), cfg_f_name)
-        # __file__ gives relative path
+        cfg_src = os.path.join(pytest_dir, cfg_f_name)
         cfg_dst = os.path.join(glbl['config_base'], cfg_f_name)
         shutil.copy(cfg_src, cfg_dst)
         with open(cfg_dst) as f:
@@ -195,24 +196,19 @@ class xrunTest(unittest.TestCase):
         self.assertFalse('calibration_md' in open_run)
         # test with xrun : auto_load_calib = True -> full calib_md
         msg_list = []
-
         def msg_rv(msg):
             msg_list.append(msg)
-
         self.xrun.msg_hook = msg_rv
         glbl['auto_load_calib'] = True
         xrun_uid = self.xrun(0, 0)
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'][0]
-        # modify in place
-        reload_auto_calibration_md_dict.pop('calibration_collection_uid')
         # test assertion
         self.assertTrue('calibration_md' in open_run)
         self.assertEqual(open_run['calibration_md'],
                          reload_auto_calibration_md_dict)
         # specific info encoded in test file
-        self.assertEqual(open_run['calibration_collection_uid'],
-                         'uuid1234')
+        self.assertEqual(open_run['calibration_md']['is_pytest'], True)
 
     def test_xrun_with_xpdAcqPlans(self):
         exp = 5
@@ -394,3 +390,38 @@ class xrunTest(unittest.TestCase):
         assert client_key in open_run
         assert open_run[client_key] == server_val
 
+
+    def test_calibration_client_server_md_insert(self):
+        server_key = 'detector_calibration_server_uid'
+        server_val = '777'
+        client_key = 'detector_calibration_client_uid'
+        glbl[server_key] = server_val
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.xrun.msg_hook = msg_rv
+        assert glbl['auto_load_calib'] == True
+        # calibration hasn't been run -> no injection
+        self.xrun({},
+                  ScanPlan(self.bt, ct, 1.0))
+        open_run = [el.kwargs for el in msg_list
+                    if el.command == 'open_run'].pop()
+        assert client_key not in open_run
+        # attach calib md to glbl and verify injection
+        cfg_f_name = glbl['calib_config_name']
+        cfg_src = os.path.join(pytest_dir, cfg_f_name)
+        cfg_dst = os.path.join(glbl['config_base'], cfg_f_name)
+        shutil.copy(cfg_src, cfg_dst)
+        with open(cfg_dst) as f:
+            config_from_file = yaml.load(f)
+        glbl['calib_config_dict'] = config_from_file
+        msg_list = []
+        def msg_rv(msg):
+            msg_list.append(msg)
+        self.xrun.msg_hook = msg_rv
+        self.xrun({},
+                  ScanPlan(self.bt, ct, 1.0))
+        open_run = [el.kwargs for el in msg_list
+                    if el.command == 'open_run'].pop()
+        assert client_key in open_run
+        assert open_run[client_key] == server_val

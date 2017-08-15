@@ -84,11 +84,12 @@ class calibTest(unittest.TestCase):
 
     def test_smoke_collect_calb_img(self):
         c = _configure_calib_instance(None, None, wavelength=None)
-        calib_uid = str(uuid.uuid4())
-        img = _collect_calib_img(5.0, True, c, self.xrun, calib_uid)
+        calib_uid = '1234'
+        glbl['detector_calibration_server_uid'] = calib_uid
+        img = _collect_calib_img(5.0, True, c, self.xrun)
         h = xpd_configuration['db'][-1]
+
         # is information passed down?
-        assert calib_uid == h.start['calibration_collection_uid']
         assert c.calibrant.__repr__().split(' ')[0] == h.start['sample_name']
         # is image shape as expected?
         assert img.shape == (5, 5)
@@ -101,19 +102,17 @@ class calibTest(unittest.TestCase):
         # reload yaml to produce pre-calib Calibration instance
         with open(self.calib_yml_fn) as f:
             calib_dict = yaml.load(f)
+        calib_dict.pop('is_pytest') # special tag for testing
         c = Calibration()
         geo = Geometry()
         geo.setPyFAI(**calib_dict)
         c.geoRef = geo
         #c.ai.setPyFAI(**calib_dict)
         timestr = _timestampstr(time.time())
-        calib_uid = 'uuid1234'  # mark as test
-        _save_and_attach_calib_param(c, timestr, calib_uid)
+        _save_and_attach_calib_param(c, timestr)
         # test information attached to glbl
-        assert glbl['calib_config_dict']['file_name'] == c.basename
-        assert glbl['calib_config_dict']['calibration_collection_uid'] == \
-                                                                    calib_uid
-        #for k, v in c.ai.getPyFAI().items():
+        calib_config_dict = glbl['calib_config_dict']
+        assert calib_config_dict['file_name'] == c.basename
         for k, v in c.geoRef.getPyFAI().items():
             assert glbl['calib_config_dict'][k] == v
         # verify calib params are saved as expected
