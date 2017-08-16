@@ -51,53 +51,58 @@ class SimulatedCam:
 
 
 # define simulated PE1C
-class SimulatedPE1C(be.ReaderWithFileStore):
+class SimulatedPE1C(be.ReaderWithRegistry):
     """Subclass the bluesky plain detector examples ('Reader');
 
     also add realistic attributes.
     """
 
-    def __init__(self, name, read_fields, fs):
+    def __init__(self, name, read_fields, reg):
         self.images_per_set = PutGet()
         self.number_of_sets = PutGet()
         self.cam = SimulatedCam()
         self._staged = False
-        super().__init__(name, read_fields, fs=fs)
+        super().__init__(name, read_fields, reg=reg)
         self.ready = True  # work around a hack in Reader
 
 
 def build_pymongo_backed_broker():
-    """Provide a function level scoped MDS instance talking to
+    '''Provide a function level scoped MDS instance talking to
     temporary database on localhost:27017 with v1 schema.
 
-    """
+    '''
     from databroker.broker import Broker
-    from metadatastore.mds import MDS
-    from filestore.utils import create_test_database
-    from filestore.fs import FileStore
-    from filestore.handlers import NpyHandler
+    from databroker.headersource.mongo import MDS
+    from databroker.assets.utils import create_test_database
+    from databroker.assets.mongo import Registry
+    from databroker.assets.handlers import NpyHandler
 
     db_name = "mds_testing_disposable_{}".format(str(uuid.uuid4()))
-    mds_test_conf = dict(database=db_name, host='localhost',
-                         port=27017, timezone='US/Eastern')
-    try:
+    md_test_conf = dict(database=db_name, host='localhost',
+                        port=27017, timezone='US/Eastern',
+                        version=1)
+    #try:
         # nasty details: to save MacOS user
-        mds = MDS(mds_test_conf, 1, auth=False)
-    except TypeError:
-        mds = MDS(mds_test_conf, 1)
+    #    mds = MDS(md_test_conf, 1, auth=False)
+    #except TypeError:
+    #    mds = MDS(md_test_conf, 1, auth=False)
+    mds = MDS(md_test_conf, auth=False)
 
-    db_name = "fs_testing_base_disposable_{}".format(str(uuid.uuid4()))
+    db_name = "fs_testing_base_disposable_{uid}"
     fs_test_conf = create_test_database(host='localhost',
-                                        port=27017,
-                                        version=1,
+                                        port=27017, version=1,
                                         db_template=db_name)
-    fs = FileStore(fs_test_conf, version=1)
+    fs = Registry(fs_test_conf)
     fs.register_handler('npy', NpyHandler)
 
-    db = Broker(mds, fs)
-    # insert_imgs(db.mds, db.fs, 1, (20, 20))
+    def delete_fs():
+        print("DROPPING DB")
+        fs._connection.drop_database(fs_test_conf['database'])
+        mds._connection.drop_database(md_test_conf['database'])
 
-    return db
+    #request.addfinalizer(delete_fs)
+
+    return Broker(mds, fs)
 
 
 def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
@@ -180,7 +185,8 @@ def insert_imgs(mds, fs, n, shape, save_dir=tempfile.mkdtemp()):
 
 # instantiate simulation objects
 db = build_pymongo_backed_broker()
-db.fs.register_handler('RWFS_NPY', be.ReaderWithFSHandler)
-pe1c = SimulatedPE1C('pe1c', {'pe1_image': lambda: np.ones((5, 5))}, fs=db.fs)
+db.fs.register_handler('RWFS_NPY', be.ReaderWithRegistryHandler)
+pe1c = SimulatedPE1C('pe1c', {'pe1_image': lambda: np.ones((5, 5))},
+                     reg=db.fs)
 shctl1 = be.Mover('shctl1', {'rad': lambda x: x}, {'x': 0})
 cs700 = be.Mover('cs700', {'temperature': lambda x: x}, {'x': 300})
