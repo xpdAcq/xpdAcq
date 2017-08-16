@@ -212,7 +212,7 @@ class ExceltoYaml:
 
     def __init__(self, src_dir):
         self.pd_dict = None
-        self.sa_md_list = None
+        #self.sa_md_list = None
         self.src_dir = src_dir
 
     def load(self, saf_num):
@@ -228,14 +228,15 @@ class ExceltoYaml:
         self.pd_dict = pd.read_excel(os.path.join(self.src_dir,
                                                   xl_f.pop()),
                                      skiprows=[1])
-
-        self.sa_md_list = self._pd_dict_to_dict_list(self.pd_dict.to_dict())
+        #self.sa_md_list = self._pd_dict_to_dict_list(self.pd_dict.to_dict())
 
     def parse_sample_md(self):
         """parse a list of sample metadata into desired format"""
         parsed_sa_md_list = []
-        for sa_md in self.sa_md_list:
+        for ind, row in self.pd_df.iterrows():
+        #for sa_md in self.sa_md_list:
             parsed_sa_md = {}
+            sa_md = row.dropna().to_dict()  # drop NAN and turn into dict
             for k, v in sa_md.items():
                 k = str(k).lower()
                 v = str(v)
@@ -300,6 +301,14 @@ class ExceltoYaml:
                 # other fields don't need to be parsed
                 else:
                     parsed_sa_md.update({k: v})
+            # before append, make sure key is pure alphabetic
+            non_alpha_key_list = [k for k in parsed_sa_md.keys()
+                                  if not k.isalpha()]
+            if non_alpha_key_list:
+                for k in non_alpha_key_list:
+                    clean_k = ''.join(takewhile(lambda x: x.isalpha(), k))
+                    parsed_sa_md.update({clean_k : parsed_sa_md.get(k)})
+                    parsed_sa_md.pop(k)
 
             parsed_sa_md_list.append(parsed_sa_md)
         self.parsed_sa_md_list = parsed_sa_md_list
