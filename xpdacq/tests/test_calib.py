@@ -53,7 +53,7 @@ class calibTest(unittest.TestCase):
         configure_device(db=db, shutter=shctl1,
                          area_det=pe1c, temp_controller=cs700)
         # link mds
-        self.xrun.subscribe('all', xpd_configuration['db'].mds.insert)
+        self.xrun.subscribe(xpd_configuration['db'].mds.insert, 'all')
         # calib yaml 
         calib_fn = [fn for fn in os.listdir(pytest_dir) if
                 fn.endswith('calib.yml')]
