@@ -240,6 +240,13 @@ def _inject_xpdacq_md_version(msg):
     return msg
 
 
+def _inject_analysis_stage(msg):
+    """tag which stage of documents being processed"""
+    if msg.command == 'open_run':
+        msg.kwargs['analysis_stage'] = 'raw'
+    return msg
+
+
 def _inject_mask(msg):
     if msg.command == 'open_run':
         mask_path = glbl['mask_path']
@@ -435,6 +442,8 @@ class CustomizedRunEngine(RunEngine):
         plan = bp.msg_mutator(plan, _inject_mask_server_uid)
         # Insert xpdacq md version
         plan = bp.msg_mutator(plan, _inject_xpdacq_md_version)
+        # Insert analysis stage tag
+        plan = bp.msg_mutator(plan, _inject_analysis_stage)
 
         # Execute
         return super().__call__(plan, subs,
