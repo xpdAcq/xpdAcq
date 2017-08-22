@@ -19,6 +19,7 @@ import shutil
 import tarfile as tar
 import uuid
 import warnings
+from itertools import takewhile
 from time import strftime
 from shutil import ReadError
 from IPython import get_ipython
@@ -212,7 +213,6 @@ class ExceltoYaml:
 
     def __init__(self, src_dir):
         self.pd_dict = None
-        self.sa_md_list = None
         self.src_dir = src_dir
 
     def load(self, saf_num):
@@ -225,17 +225,17 @@ class ExceltoYaml:
                                     "naming scheme: '<SAF_num>_sample.xlsx'"
                                     "yet?".format(self.src_dir))
 
-        self.pd_dict = pd.read_excel(os.path.join(self.src_dir,
+        self.pd_df = pd.read_excel(os.path.join(self.src_dir,
                                                   xl_f.pop()),
                                      skiprows=[1])
-
-        self.sa_md_list = self._pd_dict_to_dict_list(self.pd_dict.to_dict())
+        #self.sa_md_list = self._pd_dict_to_dict_list(self.pd_dict.to_dict())
 
     def parse_sample_md(self):
         """parse a list of sample metadata into desired format"""
         parsed_sa_md_list = []
-        for sa_md in self.sa_md_list:
+        for ind, row in self.pd_df.iterrows():
             parsed_sa_md = {}
+            sa_md = row.dropna().to_dict()  # drop NAN and turn into dict
             for k, v in sa_md.items():
                 k = str(k).lower()
                 v = str(v)
@@ -244,6 +244,7 @@ class ExceltoYaml:
 
                 # name fields
                 if k in self._NAME_FIELD:
+                    _k = ''.join(takewhile(lambda x: x.isalpha(), k))
                     try:
                         comma_sep_list = self._comma_separate_parser(v)
                         parsed_name = []
@@ -251,8 +252,8 @@ class ExceltoYaml:
                             parsed_name.extend(self._name_parser(el))
                     except ValueError:
                         parsed_name = v
-                    parsed_sa_md.setdefault(k, [])
-                    parsed_sa_md.get(k).extend(parsed_name)
+                    parsed_sa_md.setdefault(_k, [])
+                    parsed_sa_md.get(_k).extend(parsed_name)
 
                 # phase fields
                 elif k in self._PHASE_FIELD:
@@ -273,14 +274,15 @@ class ExceltoYaml:
 
                 # comma separated fields
                 elif k in self._COMMA_SEP_FIELD:
+                    _k = ''.join(takewhile(lambda x: x.isalpha(), k))
                     try:
                         comma_sep_list = self._comma_separate_parser(v)
                         # print("successfully parsed comma-sep-field {} -> {}"
                         #      .format(v, comma_sep_list))
                     except ValueError:
                         comma_sep_list = v
-                    parsed_sa_md.setdefault(k, [])
-                    parsed_sa_md.get(k).extend(comma_sep_list)
+                    parsed_sa_md.setdefault(_k, [])
+                    parsed_sa_md.get(_k).extend(comma_sep_list)
 
                 # sample name field
                 elif k in self._SAMPLE_NAME_FIELD:
@@ -290,16 +292,17 @@ class ExceltoYaml:
                 # bkgd name field
                 elif k in self._BKGD_SAMPLE_NAME_FIELD:
                     _k = 'bkgd_sample_name'
-                    parsed_sa_md.update({_k:
-                                             v.strip().replace(' ', '_')})
+                    parsed_sa_md.update({_k: v.strip().replace(' ', '_')})
 
                 # dict-like field
                 elif k in self._DICT_LIKE_FIELD:
-                    parsed_sa_md.update({k: self._dict_like_parser(v)})
+                    _k = ''.join(takewhile(lambda x: x.isalpha(), k))
+                    parsed_sa_md.update({_k: self._dict_like_parser(v)})
 
                 # other fields don't need to be parsed
                 else:
-                    parsed_sa_md.update({k: v})
+                    _k = ''.join(takewhile(lambda x: x.isalpha(), k))
+                    parsed_sa_md.update({_k: v})
 
             parsed_sa_md_list.append(parsed_sa_md)
         self.parsed_sa_md_list = parsed_sa_md_list
@@ -340,30 +343,6 @@ class ExceltoYaml:
                   .format(self._BKGD_SAMPLE_NAME_FIELD,
                           no_bkgd_sample_name_list))
         print("*** End of import Sample object ***")
-
-    def _pd_dict_to_dict_list(self, pd_dict):
-        """ parser of pd generated dict to a list of valid sample dicts
-
-        Parameters
-        ----------
-        pd_dict : dict
-            dict generated from pandas.to_dict method
-
-        Return:
-        -------
-        sa_md_list : list
-            a list of dictionaries. Each element is a sample dictionary
-        """
-
-        row_num = len(list(pd_dict.values())[0])
-        sa_md_list = []
-        for i in range(row_num):
-            sa_md = {}
-            for key in pd_dict.keys():
-                sa_md.update({key: pd_dict[key][i]})
-            sa_md_list.append(sa_md)
-
-        return sa_md_list
 
     def _dict_like_parser(self, input_str):
         """ parser for dictionary output"""

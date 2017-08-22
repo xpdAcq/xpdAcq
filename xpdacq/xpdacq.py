@@ -104,7 +104,6 @@ def periodic_dark(plan):
         qualified_dark_uid = _validate_dark(expire_time=glbl['dk_window'])
         area_det = xpd_configuration['area_det']
 
-        # FIXME: should we do "or" or "and"?
         if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
         if need_dark \
