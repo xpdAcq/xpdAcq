@@ -48,6 +48,8 @@ class xrunTest(unittest.TestCase):
         shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
         import_sample_info(self.saf_num, self.bt)
         self.xrun = CustomizedRunEngine(self.bt)
+        # link mds
+        self.xrun.subscribe(xpd_configuration['db'].mds.insert, 'all')
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -434,3 +436,12 @@ class xrunTest(unittest.TestCase):
                     if el.command == 'open_run'].pop()
         assert client_key in open_run
         assert open_run[client_key] == server_val
+
+    def test_facility_md(self):
+        key_list = ['owner', 'facility', 'group']
+        for k in key_list:
+            self.xrun.md[k] = glbl[k]
+        self.xrun({}, ScanPlan(self.bt, ct, 1.0))
+        h = xpd_configuration['db'][-1]
+        assert all(k in h.start for k in key_list)
+        assert all(glbl[k] == h.start[k] for k in key_list)
