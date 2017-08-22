@@ -8,14 +8,14 @@ import unittest
 import numpy as np
 from pathlib import Path
 
-from pyFAI.calibration import Calibration
+from pyFAI.calibration import Calibration, Calibrant
 from pyFAI.geometry import Geometry
 
 from xpdacq.glbl import glbl
 from xpdacq.xpdacq_conf import configure_device, xpd_configuration
 from xpdacq.simulation import pe1c, db, shctl1, cs700
 from xpdacq.calib import (_configure_calib_instance,
-                          _save_and_attach_calib_param,
+                          _save_calib_param,
                           _collect_calib_img,
                           _calibration,
                           _timestampstr)
@@ -55,10 +55,8 @@ class calibTest(unittest.TestCase):
         # link mds
         self.xrun.subscribe(xpd_configuration['db'].mds.insert, 'all')
         # calib yaml 
-        calib_fn = [fn for fn in os.listdir(pytest_dir) if
-                fn.endswith('calib.yml')]
-        assert len(calib_fn) == 1
-        self.calib_yml_fn = os.path.join(pytest_dir, calib_fn[0])
+        self.calib_yml_fn = os.path.join(pytest_dir,
+                                         glbl['calib_config_name'])
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -70,7 +68,8 @@ class calibTest(unittest.TestCase):
             shutil.rmtree(os.path.join(self.base_dir, 'pe2_data'))
 
     def test_configure_calib(self):
-        c = _configure_calib_instance(None, None, wavelength=None)
+        c, dSpacing = _configure_calib_instance(None, None,
+                                                wavelength=None)
         # calibrant is None, which default to Ni
         assert c.calibrant.__repr__().split(' ')[0] == 'Ni24'  # no magic
         # wavelength is None, so it should get the value from bt
@@ -78,12 +77,14 @@ class calibTest(unittest.TestCase):
         # detector is None, which default to Perkin detector 
         assert c.detector.get_name() == 'Perkin detector'
 
-        c2 = _configure_calib_instance(None, None, wavelength=999)
+        c2, dSpacing = _configure_calib_instance(None, None,
+                                                 wavelength=999)
         # wavelength is given, so it should get customized value
         assert c2.wavelength == 999 * 10 ** (-10)
 
     def test_smoke_collect_calb_img(self):
-        c = _configure_calib_instance(None, None, wavelength=None)
+        c, dSpacing = _configure_calib_instance(None, None,
+                                                wavelength=None)
         calib_uid = '1234'
         glbl['detector_calibration_server_uid'] = calib_uid
         img = _collect_calib_img(5.0, True, c, self.xrun)
@@ -98,30 +99,34 @@ class calibTest(unittest.TestCase):
         # subtracted image should be zeors
         assert img.all() == np.zeros((5, 5)).all()
 
-    def test_save_and_attach_calib_param(self):
+    def test_save_calib_param(self):
         # reload yaml to produce pre-calib Calibration instance
         with open(self.calib_yml_fn) as f:
             calib_dict = yaml.load(f)
-        calib_dict.pop('is_pytest') # special tag for testing
+        # special tag for testing
+        assert 'is_pytest' in calib_dict
+        calib_dict.pop('is_pytest')
+        # reconstruct info
         c = Calibration()
         geo = Geometry()
         geo.setPyFAI(**calib_dict)
         c.geoRef = geo
-        #c.ai.setPyFAI(**calib_dict)
+        calibrant = Calibrant()
+        calibrant.dSpacing = calib_dict['dSpacing']
+        c.calibrant = calibrant
         timestr = _timestampstr(time.time())
-        _save_and_attach_calib_param(c, timestr)
-        # test information attached to glbl
-        calib_config_dict = glbl['calib_config_dict']
-        assert calib_config_dict['file_name'] == c.basename
-        for k, v in c.geoRef.getPyFAI().items():
-            assert glbl['calib_config_dict'][k] == v
+        _save_calib_param(c, timestr)
         # verify calib params are saved as expected
         local_f = open(os.path.join(glbl['config_base'],
                                     glbl['calib_config_name']))
         reload_dict = yaml.load(local_f)
+        # exclude fields can't be test:
+        # Note:
         # time and file_name will definitely be different
-        # as they both involve current timestamp. exclude them
-        for k in ['time', 'file_name']:
+        # as they both involve current timestamp.
+        # calibrant_name will lose in pyFAI.Calibrant object, but not 
+        # in metadata.
+        for k in ['time', 'file_name', 'calibrant_name']:
             # use list to exhaust generator so pop are applied to both
             list(map(lambda x: x.pop(k), [reload_dict, calib_dict]))
         assert reload_dict == calib_dict
