@@ -20,9 +20,9 @@ from xpdacq.xpdacq_conf import (glbl_dict, configure_device,
 
 # configure experiment device being used in current version
 if glbl_dict['is_simulation']:
-    from xpdacq.simulation import pe1c, db, cs700, shctl1
+    from xpdacq.simulation import xpd_pe1c, db, cs700, shctl1
 
-    configure_device(area_det=pe1c, shutter=shctl1,
+    configure_device(area_det=xpd_pe1c, shutter=shctl1,
                      temp_controller=cs700, db=db)
 else:
     # FIXME: create synthetic ring current object in fullness of time
