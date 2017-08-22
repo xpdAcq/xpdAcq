@@ -57,9 +57,10 @@ xrun = CustomizedRunEngine(None)
 xrun.md['owner'] = glbl['owner']
 xrun.md['beamline_id'] = glbl['beamline_id']
 xrun.md['group'] = glbl['group']
+xrun.md['facility'] = glbl['facility']
 
 # insert header to db, either simulated or real
-xrun.subscribe('all', db.mds.insert)
+xrun.subscribe(db.mds.insert, 'all')
 
 if bt:
     xrun.beamtime = bt
