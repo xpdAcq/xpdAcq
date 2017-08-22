@@ -26,6 +26,7 @@ from .glbl import glbl
 from .xpdacq_conf import xpd_configuration
 from .beamtime import Beamtime, ScanPlan, Sample, ct
 from .xpdacq import CustomizedRunEngine
+from .tools import _timestampstr, _check_obj
 from xpdan.tools import mask_img, compress_mask
 
 from pyFAI.gui.utils import update_fig
@@ -36,42 +37,11 @@ from pkg_resources import resource_filename as rs_fn
 
 _REQUIRED_OBJ_LIST = ['xrun']
 
-
-def show_calib():
-    param = glbl.get('calib_config_dict', None)
-    if not param:
-        print("INFO: no calibration has been run yet")
-    else:
-        return param
-
-def _check_obj(required_obj_list):
-    """function to check if object(s) exist
-
-    Parameter
-    ---------
-    required_obj_list : list
-        a list of strings refering to object names
-
-    """
-    ips = get_ipython()
-    for obj_str in required_obj_list:
-        if not ips.ns_table['user_global'].get(obj_str, None):
-            raise NameError("Required object {} doesn't exist in"
-                            "namespace".format(obj_str))
-    return
-
-
-def _timestampstr(timestamp):
-    """convert timestamp to strftime formate"""
-    timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime(
-        '%Y%m%d-%H%M')
-    return timestring
-
-
 def run_calibration(exposure=5, dark_sub_bool=True,
                     calibrant=None, wavelength=None,
                     detector=None, *, RE_instance=None,
-                    detector_calibration_server_uid=None, **kwargs):
+                    detector_calibration_server_uid=None,
+                    parallel=True, **kwargs):
     """function to run entire calibration process.
 
     Entire process includes:
@@ -119,6 +89,11 @@ def run_calibration(exposure=5, dark_sub_bool=True,
         By default a new uid is generated. Override default when
         you want to associate this new calibration with an existing
         detector_calibration_server_uid in previously collected run headers.
+    parallel : bool, optional
+        Tag for whether run the calibration step in a separte
+        process. Running in parallel in principle yields better resource
+        allocation. Default is ``True``, only change to ``False`` if
+        error is raised.
     kwargs:
         Additional keyword argument for calibration. please refer to
         pyFAI documentation for all options.
@@ -129,22 +104,23 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     http://pyfai.readthedocs.io/en/latest/
     """
     # configure calibration instance
-    c = _configure_calib_instance(calibrant, detector, wavelength)
-
-    # collect & pull subtracted image
+    c, dSpacing_list = _configure_calib_instance(calibrant,
+                                                 detector, wavelength)
+    # update calibration server uid in glbl
     if detector_calibration_server_uid is None:
         detector_calibration_server_uid = str(uuid.uuid4())
-    # update calibration server uid in glbl
     glbl['detector_calibration_server_uid'] = detector_calibration_server_uid
+    # collect & pull subtracted image
     if RE_instance is None:
-        _check_obj(_REQUIRED_OBJ_LIST)
-        ips = get_ipython()
-        xrun = ips.ns_table['user_global']['xrun']
+        xrun_name = _REQUIRED_OBJ_LIST[0]
+        xrun = _check_obj(xrun_name)  # will raise error if not exists
     img = _collect_calib_img(exposure, dark_sub_bool, c, xrun)
-    # pyFAI calibration
-    calib_c, timestr = _calibration(img, c, **kwargs)
-    # save param for xpdAcq
-    _save_and_attach_calib_param(calib_c, timestr)
+
+    if not parallel:  # backup when pipeline fails
+        # pyFAI calibration
+        calib_c, timestr = _calibration(img, c, **kwargs)
+        # save param for xpdAcq
+        _save_calib_param(calib_c, timestr)
 
 
 def _configure_calib_instance(calibrant, detector, wavelength):
@@ -165,7 +141,7 @@ def _configure_calib_instance(calibrant, detector, wavelength):
     c = Calibration(calibrant=calibrant, detector=detector,
                     wavelength=wavelength * 10 ** (-10))
 
-    return c
+    return c, c.calibrant.dSpacing
 
 
 def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
@@ -182,12 +158,13 @@ def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
     light_header = xpd_configuration['db'][uid[-1]]  # last one must be light
     dark_uid = light_header.start.get('sc_dk_field_uid')
     dark_header = xpd_configuration['db'][dark_uid]
+    db = xpd_configuration['db']
 
-    dark_img = np.asarray(xpd_configuration['db'].get_images(
-        dark_header, glbl['det_image_field'])).squeeze()
+    dark_img = dark_header.data(glbl['det_image_field'])
+    dark_img = np.asarray(next(dark_img)).squeeze()
 
-    img = np.asarray(xpd_configuration['db'].get_images(
-        light_header, glbl['det_image_field'])).squeeze()
+    img = light_header.data(glbl['det_image_field'])
+    img = np.asarray(next(img)).squeeze()
 
     if dark_sub_bool:
         img -= dark_img
@@ -195,7 +172,7 @@ def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
     return img
 
 
-def _save_and_attach_calib_param(calib_c, timestr):
+def _save_calib_param(calib_c, timestr):
     """save calibration parameters and attach to glbl class instance
 
     Parameters
@@ -208,10 +185,15 @@ def _save_and_attach_calib_param(calib_c, timestr):
         uid associated with this calibration
     """
     # save glbl attribute for xpdAcq
+    calibrant_name = calib_c.calibrant.__repr__().split(' ')[0]
     glbl['calib_config_dict'] = calib_c.geoRef.getPyFAI()
     glbl['calib_config_dict'].update(calib_c.geoRef.getFit2D())
     glbl['calib_config_dict'].update({'file_name':calib_c.basename})
     glbl['calib_config_dict'].update({'time':timestr})
+    glbl['calib_config_dict'].update({'dSpacing':
+                                      calib_c.calibrant.dSpacing})
+    glbl['calib_config_dict'].update({'calibrant_name':
+                                      calibrant_name})
 
     # save yaml dict used for xpdAcq
     yaml_name = glbl['calib_config_name']
@@ -223,8 +205,8 @@ def _save_and_attach_calib_param(calib_c, timestr):
           "saved inside {}. this set of parameters will be injected "
           "as metadata to subsequent scans until you perform this "
           "process again".format(yaml_name))
-    print("INFO: To save your calibration image as a tiff file run\n"
-          "save_last_tiff()\nnow.")
+    #print("INFO: To save your calibration image as a tiff file run\n"
+    #      "save_last_tiff()\nnow.")
     return
 
 
