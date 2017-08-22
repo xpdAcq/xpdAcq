@@ -25,7 +25,7 @@ from .tools import xpdAcqException
 
 # shutter configuration, module dict
 XPD_SHUTTER_CONF = {'open': 60, 'close': 0}
-
+XPDACQ_MD_VERSION = 0.1
 
 # special function and dict to store all necessary objects
 xpd_configuration = {}
@@ -235,7 +235,8 @@ class GlblYamlDict(YamlDict):
                        '_dark_dict_list', 'shutter_control',
                        'auto_load_calib', 'calib_config_name',
                        'calib_config_dict', 'mask_dict',
-                       'det_image_field']
+                       'det_image_field', 'mask_server_uid',
+                       'detector_calibration_server_uid']
 
     def __init__(self, name, **kwargs):
         super().__init__(name=name, **kwargs)

@@ -26,12 +26,14 @@ from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input
 
 from xpdacq.glbl import glbl
-from xpdacq.xpdacq_conf import xpd_configuration, XPD_SHUTTER_CONF
+from xpdacq.xpdacq_conf import (xpd_configuration, XPD_SHUTTER_CONF,
+                                XPDACQ_MD_VERSION)
 from xpdacq.beamtime import ScanPlan, _summarize
 
 from xpdan.tools import compress_mask
 
 XPD_shutter = xpd_configuration.get('shutter')
+
 
 def _update_dark_dict_list(name, doc):
     """ generate dark frame reference
@@ -80,7 +82,6 @@ def take_dark():
            'sp_num_frames': num_frame,
            'sp_computed_exposure': computed_exposure,
            'sp_type': 'ct',
-           # 'sp_uid': str(uuid.uuid4()), # dark plan doesn't need uid
            'sp_plan_name': 'dark_{}'.format(computed_exposure),
            'dark_frame': True}
     c = bp.count([area_det], md=_md)
@@ -224,10 +225,25 @@ def _inject_calibration_md(msg):
         calibration_md = _auto_load_calibration_file()
         if calibration_md:
             injected_calib_dict = dict(calibration_md)
-            injected_calib_uid = injected_calib_dict.pop(
-                'calibration_collection_uid')
+            calibration_server_uid =\
+            glbl.get('detector_calibration_server_uid', None)
             msg.kwargs['calibration_md'] = injected_calib_dict
-            msg.kwargs['calibration_collection_uid'] = injected_calib_uid
+            msg.kwargs.update({'detector_calibration_client_uid':
+                               calibration_server_uid})
+    return msg
+
+
+def _inject_xpdacq_md_version(msg):
+    """simply insert xpdAcq md version"""
+    if msg.command == 'open_run':
+        msg.kwargs['xpdacq_md_version'] = XPDACQ_MD_VERSION
+    return msg
+
+
+def _inject_analysis_stage(msg):
+    """tag which stage of documents being processed"""
+    if msg.command == 'open_run':
+        msg.kwargs['analysis_stage'] = 'raw'
     return msg
 
 
@@ -242,7 +258,16 @@ def _inject_mask(msg):
                                   indptr)
         else:
             print("INFO: no mask has been built, scan will keep going...")
+    return msg
 
+
+def _inject_mask_server_uid(msg):
+    if msg.command == 'open_run':
+        mask_server_uid = glbl.get('mask_server_uid', None)
+        if mask_server_uid:
+            msg.kwargs['mask_client_uid'] = mask_server_uid
+        else:
+            print("WARNING: no mask has been built, scan will keep going...")
     return msg
 
 
@@ -411,9 +436,14 @@ class CustomizedRunEngine(RunEngine):
         # Load calibration file
         if glbl['auto_load_calib']:
             plan = bp.msg_mutator(plan, _inject_calibration_md)
-
-        # Insert glbl mask
+        # Insert compressed mask
         plan = bp.msg_mutator(plan, _inject_mask)
+        # Insert mask clinet uid
+        plan = bp.msg_mutator(plan, _inject_mask_server_uid)
+        # Insert xpdacq md version
+        plan = bp.msg_mutator(plan, _inject_xpdacq_md_version)
+        # Insert analysis stage tag
+        plan = bp.msg_mutator(plan, _inject_analysis_stage)
 
         # Execute
         return super().__call__(plan, subs,

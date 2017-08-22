@@ -58,9 +58,8 @@ def _start_beamtime(PI_last, saf_num, experimenters=[],
               "please do\n"
               ">>> xrun.beamtime = bt")
         # copy default Ni24.D to xpdUser/user_analysis
-        #src = os.path.join(os.path.dirname(__file__), 'Ni24.D')
         src = os.path.join(DATA_DIR, 'Ni24.D')
-        dst = os.path.join(glbl_dict['usrAnalysis_dir'], 'Ni.D')
+        dst = os.path.join(glbl_dict['usrAnalysis_dir'], 'Ni24.D')
         shutil.copy(src, dst)
 
         # pre-populated scan plan
