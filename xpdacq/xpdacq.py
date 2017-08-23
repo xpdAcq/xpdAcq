@@ -221,7 +221,7 @@ def _auto_load_calibration_file(in_scan=True):
             calib_dict = yaml.load(f)
         if in_scan:
             print("INFO: This scan will append calibration parameters "
-                  "recorded in {}".format(calib_dict['file_name']))
+                  "recorded in {}".format(calib_dict['poni_file_name']))
         return calib_dict
 
 
