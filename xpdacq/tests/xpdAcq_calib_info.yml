@@ -116,7 +116,7 @@ dist: !!python/object/apply:numpy.core.multiarray.scalar
 - *id001
 - !!binary |
   WBS6ty0CzD8=
-file_name: /home/timothy/xpdUser/config_base/20170822-190241_pyFAI_calib_Ni24
+poni_file_name: /home/timothy/xpdUser/config_base/20170822-190241_pyFAI_calib_Ni24.poni
 pixel1: 0.0002
 pixel2: 0.0002
 pixelX: 200.0

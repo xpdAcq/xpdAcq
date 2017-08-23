@@ -66,6 +66,7 @@ class calibTest(unittest.TestCase):
         if os.path.isdir(os.path.join(self.base_dir, 'pe2_data')):
             shutil.rmtree(os.path.join(self.base_dir, 'pe2_data'))
 
+    @unittest.skip("refactor as pipeline bakcend, no default logic now")
     def test_configure_calib(self):
         c, dSpacing = _configure_calib_instance(None, None,
                                                 wavelength=None)
@@ -82,15 +83,18 @@ class calibTest(unittest.TestCase):
         assert c2.wavelength == 999 * 10 ** (-10)
 
     def test_smoke_collect_calb_img(self):
-        c, dSpacing = _configure_calib_instance(None, None,
-                                                wavelength=None)
         calib_uid = '1234'
         glbl['detector_calibration_server_uid'] = calib_uid
-        img = _collect_calib_img(5.0, True, c, self.xrun)
+        calibrant = os.path.join(glbl['usrAnalysis_dir'], 'Ni24.D')
+        detector = 'perkin_elmer'
+        img = _collect_calib_img(5.0, True, calibrant, detector, self.xrun)
         h = xpd_configuration['db'][-1]
 
         # is information passed down?
-        assert c.calibrant.__repr__().split(' ')[0] == h.start['sample_name']
+        assert 'Ni24_calib' == h.start['sample_name']
+        assert detector == h.start['detector']
+        calibrant_obj = Calibrant(calibrant)
+        assert calibrant_obj.dSpacing == h.start['dSpacing'] 
         # is image shape as expected?
         assert img.shape == (5, 5)
         # is dark subtraction operated as expected?
@@ -112,7 +116,10 @@ class calibTest(unittest.TestCase):
         c.geoRef = geo
         calibrant = Calibrant()
         calibrant.dSpacing = calib_dict['dSpacing']
+        # assign calibrant
         c.calibrant = calibrant
+        # assign basename
+        c.basename = 'pytest'
         timestr = _timestampstr(time.time())
         local_calib_fp = os.path.join(glbl['config_base'],
                                       glbl['calib_config_name'])
@@ -125,7 +132,7 @@ class calibTest(unittest.TestCase):
         # as they both involve current timestamp.
         # calibrant_name will lose in pyFAI.Calibrant object, but not 
         # in metadata.
-        for k in ['time', 'file_name', 'calibrant_name']:
+        for k in ['time', 'poni_file_name', 'calibrant_name']:
             # use list to exhaust generator so pop are applied to both
             list(map(lambda x: x.pop(k), [reload_dict, calib_dict]))
         assert reload_dict == calib_dict
