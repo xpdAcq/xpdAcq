@@ -44,10 +44,9 @@ class calibTest(unittest.TestCase):
                                   self.experimenters,
                                   wavelength=self.wavelength)
         xlf = '300000_sample.xlsx'
-        src = os.path.join(os.path.dirname(__file__), xlf)
+        src = os.path.join(pytest_dir, xlf)
         shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
         import_sample_info(self.saf_num, self.bt)
-        glbl['shutter_control'] = True
         self.xrun = CustomizedRunEngine(self.bt)
         # set simulation objects
         configure_device(db=db, shutter=shctl1,
@@ -115,12 +114,12 @@ class calibTest(unittest.TestCase):
         calibrant.dSpacing = calib_dict['dSpacing']
         c.calibrant = calibrant
         timestr = _timestampstr(time.time())
-        _save_calib_param(c, timestr)
-        # verify calib params are saved as expected
-        local_f = open(os.path.join(glbl['config_base'],
-                                    glbl['calib_config_name']))
-        reload_dict = yaml.load(local_f)
-        # exclude fields can't be test:
+        local_calib_fp = os.path.join(glbl['config_base'],
+                                      glbl['calib_config_name'])
+        _save_calib_param(c, timestr, local_calib_fp)
+        # verify calib params are saved as expected)
+        reload_dict = yaml.load(open(local_calib_fp))
+        # exclude fields can't be tested:
         # Note:
         # time and file_name will definitely be different
         # as they both involve current timestamp.
