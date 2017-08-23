@@ -18,16 +18,16 @@ import uuid
 import time
 import yaml
 import logging
-import datetime
 import numpy as np
 from IPython import get_ipython
 
 from .glbl import glbl
 from .xpdacq_conf import xpd_configuration
 from .beamtime import Beamtime, ScanPlan, Sample, ct
-from .xpdacq import CustomizedRunEngine
 from .tools import _timestampstr, _check_obj
+
 from xpdan.tools import mask_img, compress_mask
+from xpdan.calib import _save_calib_param, _calibration
 
 from pyFAI.gui.utils import update_fig
 from pyFAI.calibration import Calibration, PeakPicker
@@ -118,9 +118,13 @@ def run_calibration(exposure=5, dark_sub_bool=True,
 
     if not parallel:  # backup when pipeline fails
         # pyFAI calibration
-        calib_c, timestr = _calibration(img, c, **kwargs)
+        calib_c, timestr = _calibration(img, c, glbl['config_base'],
+                                        **kwargs)
         # save param for xpdAcq
-        _save_calib_param(calib_c, timestr)
+        yaml_name = glbl['calib_config_name']
+        calib_yml_fp = os.path.join(glbl['config_base'],
+                                    glbl['calib_config_name'])
+        _save_calib_param(calib_c, timestr, calib_yml_fp)
 
 
 def _configure_calib_instance(calibrant, detector, wavelength):
@@ -172,8 +176,8 @@ def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
     return img
 
 
-def _save_calib_param(calib_c, timestr):
-    """save calibration parameters and attach to glbl class instance
+def _save_calib_param(calib_c, timestr, calib_yml_fp):
+    """save calibration parameters to designated location
 
     Parameters
     ----------
@@ -181,36 +185,37 @@ def _save_calib_param(calib_c, timestr):
         pyFAI Calibration instance with parameters after calibration
     time_str : str
         human readable time string
-    calibration_uid : str
-        uid associated with this calibration
+    calib_yml_fp : str
+        filepath to the yml file which stores calibration param
     """
     # save glbl attribute for xpdAcq
     calibrant_name = calib_c.calibrant.__repr__().split(' ')[0]
-    glbl['calib_config_dict'] = calib_c.geoRef.getPyFAI()
-    glbl['calib_config_dict'].update(calib_c.geoRef.getFit2D())
-    glbl['calib_config_dict'].update({'file_name':calib_c.basename})
-    glbl['calib_config_dict'].update({'time':timestr})
-    glbl['calib_config_dict'].update({'dSpacing':
-                                      calib_c.calibrant.dSpacing})
-    glbl['calib_config_dict'].update({'calibrant_name':
-                                      calibrant_name})
+    calib_config_dict = {}
+    calib_config_dict = calib_c.geoRef.getPyFAI()
+    calib_config_dict.update(calib_c.geoRef.getFit2D())
+    calib_config_dict.update({'file_name':calib_c.basename})
+    calib_config_dict.update({'time':timestr})
+    calib_config_dict.update({'dSpacing':
+                              calib_c.calibrant.dSpacing})
+    calib_config_dict.update({'calibrant_name':
+                              calibrant_name})
 
     # save yaml dict used for xpdAcq
-    yaml_name = glbl['calib_config_name']
-    with open(os.path.join(glbl['config_base'], yaml_name), 'w') as f:
-        yaml.dump(glbl['calib_config_dict'], f)
-
-    print(calib_c.geoRef)
+    with open(calib_yml_fp, 'w') as f:
+        yaml.dump(calib_config_dict, f)
+    stem, fn = os.path.split(calib_yml_fp)
     print("INFO: End of calibration process. Your parameter set will be "
           "saved inside {}. this set of parameters will be injected "
           "as metadata to subsequent scans until you perform this "
-          "process again".format(yaml_name))
+          "process again\n".format(fn))
+    print("INFO: you can also use:\n>>> show_calib()\ncommand to check"
+          " current calibration parameters")
     #print("INFO: To save your calibration image as a tiff file run\n"
     #      "save_last_tiff()\nnow.")
-    return
+    return calib_config_dict
 
 
-def _calibration(img, calibration, **kwargs):
+def _calibration(img, calibration, save_dir, **kwargs):
     """engine for performing calibration on a image with geometry
     correction software. current backend is ``pyFAI``.
 
@@ -221,6 +226,8 @@ def _calibration(img, calibration, **kwargs):
     calibration : pyFAI.calibration.Calibration instance
         pyFAI Calibration instance with wavelength, calibrant and
         detector configured.
+    save_dir : str
+        directory where the poni file will be saved.
     kwargs:
         additional keyword argument for calibration. please refer to
         pyFAI documentation for all options.
@@ -237,7 +244,7 @@ def _calibration(img, calibration, **kwargs):
     timestr = _timestampstr(time.time())
     f_name = '_'.join([timestr, 'pyFAI_calib',
                        c.calibrant.__repr__().split(' ')[0]])
-    w_name = os.path.join(glbl['config_base'], f_name)  # poni name
+    w_name = os.path.join(save_dir, f_name)  # poni name
     poni_name = w_name + ".npt"
     c.gui = interactive
     c.basename = w_name
