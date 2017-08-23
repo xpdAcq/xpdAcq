@@ -25,7 +25,7 @@ addons:
 
 matrix:
   include:
-    - python: 3.5
+    - python: 3.6
       env: BUILD_DOCS=true
 
 before_install:
@@ -47,9 +47,11 @@ install:
   - 'pip install https://github.com/NSLS-II/bluesky/zipball/master#egg=bluesky'
   - 'pip install https://github.com/xpdAcq/xpdAn/zipball/master#egg=xpdan'
   - 'pip install https://github.com/xpdAcq/xpdSim/zipball/master#egg=xpdsim'
-  - python setup.py install
+  - pip install .
   # make sure the sqlite file exists to avoid race conditions
   - python -c "from bluesky.utils import get_history; get_history()"
+  # make sure package data is correctly set
+  - python -c "from xpdsim import xpd_pe1c; xpd_pe1c.trigger_read()"
   - git clean -xfd
 
 script:
