@@ -54,7 +54,6 @@ from xpdacq.utils import import_sample_info
 
 # instantiate xrun without beamtime, like bluesky setup
 xrun = CustomizedRunEngine(None)
-xrun.md['owner'] = glbl['owner']
 xrun.md['beamline_id'] = glbl['beamline_id']
 xrun.md['group'] = glbl['group']
 xrun.md['facility'] = glbl['facility']
