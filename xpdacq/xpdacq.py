@@ -234,15 +234,21 @@ def _inject_qualified_dark_frame_uid(msg):
 
 def _inject_calibration_md(msg):
     if msg.command == 'open_run':
-        # it user has run a calibration set before
-        calibration_md = _auto_load_calibration_file()
-        if calibration_md:
-            injected_calib_dict = dict(calibration_md)
-            calibration_server_uid =\
-            glbl.get('detector_calibration_server_uid', None)
-            msg.kwargs['calibration_md'] = injected_calib_dict
-            msg.kwargs.update({'detector_calibration_client_uid':
-                               calibration_server_uid})
+        if 'is_calibration' in msg.kwargs:
+            # skip if it's calibration run
+            pass
+        else:
+            # load calibration param from previous run
+            calibration_md = _auto_load_calibration_file()
+            if calibration_md:
+                injected_calib_dict = dict(calibration_md)
+                calibration_server_uid =\
+                glbl.get('detector_calibration_server_uid', None)
+                # inject calibration md
+                msg.kwargs['calibration_md'] = injected_calib_dict
+                # linking calibration server/client
+                msg.kwargs.update({'detector_calibration_client_uid':
+                                   calibration_server_uid})
     return msg
 
 
@@ -259,7 +265,7 @@ def _inject_analysis_stage(msg):
         msg.kwargs['analysis_stage'] = 'raw'
     return msg
 
-
+#TODO: clean the md linking
 def _inject_mask(msg):
     if msg.command == 'open_run':
         mask_path = glbl['mask_path']
@@ -274,6 +280,7 @@ def _inject_mask(msg):
     return msg
 
 
+#TODO: clean the md linking
 def _inject_mask_server_uid(msg):
     if msg.command == 'open_run':
         mask_server_uid = glbl.get('mask_server_uid', None)

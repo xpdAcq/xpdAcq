@@ -21,14 +21,15 @@ import logging
 import numpy as np
 from IPython import get_ipython
 
+import bluesky.plans as bp
+
 from .glbl import glbl
 from .xpdacq_conf import xpd_configuration
 from .beamtime import Beamtime, ScanPlan, Sample, ct
 from .tools import _timestampstr, _check_obj
 
 from xpdan.tools import mask_img, compress_mask
-from xpdan.calib import (_save_calib_param, _calibration,
-                         _configure_calib_instance)
+from xpdan.calib import (_save_calib_param, _calibration)
 
 from pyFAI.gui.utils import update_fig
 from pyFAI.calibration import Calibration, PeakPicker, Calibrant
@@ -134,9 +135,9 @@ def run_calibration(exposure=5, dark_sub_bool=True,
             bto = Beamtime.from_yaml(open(bt_fp))
             wavelength = bto.wavelength
         # configure calibration instance
-        c, dSpacing_list = _configure_calib_instance(calibrant,
-                                                     detector,
-                                                     wavelength)
+        c = Calibration(calibrant=calibrant,
+                        detector=detector,
+                        wavelength=wavelength*10**(-10))
         # pyFAI calibration
         calib_c, timestr = _calibration(img, c, glbl['config_base'],
                                         **kwargs)
@@ -158,12 +159,18 @@ def _collect_calib_img(exposure, dark_sub_bool, calibrant,
     # add _calib to avoid overwrite
     calibration_dict = {'sample_name': calibrant_name+'_calib',
                         'sample_composition': {calibrant_name: 1},
-                        'is_calibration': True,
                         'dSpacing': calibrant_obj.dSpacing,
                         'detector': detector}
     bto = RE_instance.beamtime  # grab beamtime object linked to run_engine
     sample = Sample(bto, calibration_dict)
-    uid = RE_instance(sample, ScanPlan(bto, ct, exposure))
+    # annoying md details
+    def _inject_calibration_tag(msg):
+        if msg.command == 'open_run':
+            msg.kwargs['is_calibration'] = True
+        return msg
+    plan = ScanPlan(bto, ct, exposure).factory()
+    plan = bp.msg_mutator(plan, _inject_calibration_tag)
+    uid = RE_instance(sample, plan)
     light_header = xpd_configuration['db'][uid[-1]]  # last one must be light
     dark_uid = light_header.start.get('sc_dk_field_uid')
     dark_header = xpd_configuration['db'][dark_uid]
