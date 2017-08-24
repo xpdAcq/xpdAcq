@@ -30,7 +30,6 @@ from .glbl import glbl
 from .tools import validate_dict_key, _check_obj, _graceful_exit
 from .beamtime import Beamtime, Sample
 
-
 def composition_analysis(compstring):
     """Pulls out elements and their ratios from the config file.
 

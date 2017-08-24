@@ -51,13 +51,15 @@ ARCHIVE_BASE_DIR_NAME = '.userBeamtimeArchive'
 USER_BACKUP_DIR_NAME = strftime('%Y')
 DARK_WINDOW = 3000  # default value, in terms of minute
 FRAME_ACQUIRE_TIME = 0.1  # pe1 frame acq time
-OWNER = 'xf28id1'
-BEAMLINE_ID = 'xpd'
+OWNER = 'XPD'
+BEAMLINE_ID = '28-ID-2'
 GROUP = 'XPD'
+FACILITY = 'NSLS-II'
 IMAGE_FIELD = 'pe1_image'
 CALIB_CONFIG_NAME = 'pyFAI_calib.yml'
 MASK_NAME = 'xpdacq_mask.npy'
 GLBL_YAML_NAME = 'glbl.yml'
+
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()
@@ -125,6 +127,7 @@ glbl_dict = dict(is_simulation=simulation,
                  owner=OWNER,
                  beamline_id=BEAMLINE_ID,
                  group=GROUP,
+                 facility=FACILITY,
                  beamline_host_name=BEAMLINE_HOST_NAME,
                  # directory names
                  base=BASE_DIR,

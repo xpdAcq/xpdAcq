@@ -1,13 +1,5 @@
 language: python
 sudo: false
-env:
-  global:
-    BUILD_DOCS_BRANCH: master
-    DOCS_SUBDIR: doc/
-    TARGET_DEV_SUBDIR: bluesky/
-    HTML_SUBDIR: build/html
-    DOCS_CONDA_DEPS: "bluesky"
-    DOCS_PIP_DEPS: "tqdm"
 
 cache:
   directories:
@@ -16,6 +8,7 @@ cache:
 
 services:
   - mongodb
+
 addons:
   apt:
     sources:
@@ -25,8 +18,8 @@ addons:
 
 matrix:
   include:
+    - python: 3.6
     - python: 3.5
-      env: BUILD_DOCS=true
 
 before_install:
   - git clone https://github.com/NSLS-II/nsls2-ci --branch master --single-branch ~/ci_scripts
@@ -47,9 +40,11 @@ install:
   - 'pip install https://github.com/NSLS-II/bluesky/zipball/master#egg=bluesky'
   - 'pip install https://github.com/xpdAcq/xpdAn/zipball/master#egg=xpdan'
   - 'pip install https://github.com/xpdAcq/xpdSim/zipball/master#egg=xpdsim'
-  - python setup.py install
+  - pip install .
   # make sure the sqlite file exists to avoid race conditions
   - python -c "from bluesky.utils import get_history; get_history()"
+  # make sure package data is correctly set
+  - python -c "from xpdsim import xpd_pe1c; xpd_pe1c.trigger_read()"
   - git clean -xfd
 
 script:
