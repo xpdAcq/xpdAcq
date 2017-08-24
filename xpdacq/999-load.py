@@ -59,7 +59,7 @@ xrun.md['group'] = glbl['group']
 xrun.md['facility'] = glbl['facility']
 
 # insert header to db, either simulated or real
-xrun.subscribe(db.mds.insert, 'all')
+xrun.subscribe(db.insert, 'all')
 
 if bt:
     xrun.beamtime = bt

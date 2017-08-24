@@ -49,7 +49,7 @@ class xrunTest(unittest.TestCase):
         import_sample_info(self.saf_num, self.bt)
         self.xrun = CustomizedRunEngine(self.bt)
         # link mds
-        self.xrun.subscribe(xpd_configuration['db'].mds.insert, 'all')
+        self.xrun.subscribe(xpd_configuration['db'].insert, 'all')
 
     def tearDown(self):
         os.chdir(self.base_dir)
