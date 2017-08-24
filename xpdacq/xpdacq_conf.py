@@ -183,7 +183,7 @@ def configure_frame_acq_time(new_frame_acq_time):
 
 def _load_beamline_config(beamline_config_fp):
     if not os.path.isfile(beamline_config_fp):
-        raise xpdAcqException("WARNING: can not find long time beamline "
+        raise xpdAcqException("WARNING: can not find long term beamline "
                               "configuration file. Please contact the "
                               "beamline scientist ASAP")
     with open(beamline_config_fp, 'r') as f:
