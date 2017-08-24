@@ -14,8 +14,7 @@ from pyFAI.geometry import Geometry
 from xpdacq.glbl import glbl
 from xpdacq.xpdacq_conf import configure_device, xpd_configuration
 from xpdacq.simulation import pe1c, db, shctl1, cs700
-from xpdacq.calib import (_configure_calib_instance,
-                          _save_calib_param,
+from xpdacq.calib import (_save_calib_param,
                           _collect_calib_img,
                           _calibration,
                           _timestampstr)
@@ -88,13 +87,14 @@ class calibTest(unittest.TestCase):
         calibrant = os.path.join(glbl['usrAnalysis_dir'], 'Ni24.D')
         detector = 'perkin_elmer'
         img = _collect_calib_img(5.0, True, calibrant, detector, self.xrun)
-        h = xpd_configuration['db'][-1]
+        hdr = xpd_configuration['db'][-1]
 
         # is information passed down?
-        assert 'Ni24_calib' == h.start['sample_name']
-        assert detector == h.start['detector']
+        assert 'Ni24_calib' == hdr.start['sample_name']
+        assert detector == hdr.start['detector']
         calibrant_obj = Calibrant(calibrant)
-        assert calibrant_obj.dSpacing == h.start['dSpacing'] 
+        assert calibrant_obj.dSpacing == hdr.start['dSpacing']
+        assert hdr.start['is_calibration'] == True
         # is image shape as expected?
         assert img.shape == (5, 5)
         # is dark subtraction operated as expected?
