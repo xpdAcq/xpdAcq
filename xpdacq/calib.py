@@ -133,15 +133,16 @@ def run_calibration(exposure=5, dark_sub_bool=True,
                                         "Please contact beamline staff "
                                         "ASAP")
             bto = Beamtime.from_yaml(open(bt_fp))
-            wavelength = bto.wavelength
+            wavelength = float(bto.wavelength)*10**(-10)
         # configure calibration instance
+        assert os.path.isfile(calibrant)
         c = Calibration(calibrant=calibrant,
                         detector=detector,
-                        wavelength=wavelength*10**(-10))
+                        wavelength=wavelength)
         # pyFAI calibration
-        ## FIXME: this is just to test!
         calib_c, timestr = _calibration(img, c, fn_template,
                                         **kwargs)
+        assert calib_c.calibrant.wavelength == wavelength
         # save param for xpdAcq
         yaml_name = glbl['calib_config_name']
         calib_yml_fp = os.path.join(glbl['config_base'],
