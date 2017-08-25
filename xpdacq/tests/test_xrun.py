@@ -8,8 +8,10 @@ import warnings
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import _nstep
 from xpdacq.beamtime import *
+from xpdacq.tools import xpdAcqException
 from xpdacq.utils import import_sample_info
-from xpdacq.xpdacq_conf import configure_device, XPDACQ_MD_VERSION
+from xpdacq.xpdacq_conf import (configure_device, XPDACQ_MD_VERSION,
+                                _load_beamline_config)
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
 from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
                            _auto_load_calibration_file,
@@ -445,3 +447,21 @@ class xrunTest(unittest.TestCase):
         h = xpd_configuration['db'][-1]
         assert all(k in h.start for k in key_list)
         assert all(glbl[k] == h.start[k] for k in key_list)
+
+
+    def test_load_beamline_config(self):
+        # no beamline config -> raise
+        with self.assertRaises(xpdAcqException):
+            _load_beamline_config(glbl['blconfig_path'])
+        # move files
+        stem, fn = os.path.split(glbl['blconfig_path'])
+        src = os.path.join(pytest_dir, fn)
+        shutil.copyfile(src, glbl['blconfig_path'])
+        beamline_config_dict = _load_beamline_config(glbl['blconfig_path'])
+        assert 'is_pytest' in beamline_config_dict
+        # check md -> only is_pytest in template now
+        self.xrun.md['beamline_config'] = beamline_config_dict
+        self.xrun({}, ScanPlan(self.bt, ct, 1.0))
+        hdr = xpd_configuration['db'][-1]
+        print(beamline_config_dict)
+        assert hdr.start['beamline_config'] == beamline_config_dict

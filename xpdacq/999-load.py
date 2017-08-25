@@ -15,7 +15,8 @@
 ##############################################################################
 import os
 from xpdacq.xpdacq_conf import (glbl_dict, configure_device,
-                                _reload_glbl, _set_glbl)
+                                _reload_glbl, _set_glbl,
+                                _load_beamline_config)
 
 # configure experiment device being used in current version
 if glbl_dict['is_simulation']:
@@ -57,6 +58,8 @@ xrun = CustomizedRunEngine(None)
 xrun.md['beamline_id'] = glbl['beamline_id']
 xrun.md['group'] = glbl['group']
 xrun.md['facility'] = glbl['facility']
+beamline_config = _load_beamline_config(glbl['blconfig_path'])
+xrun.md['beamline_config'] = beamline_config
 
 # insert header to db, either simulated or real
 xrun.subscribe(db.insert, 'all')

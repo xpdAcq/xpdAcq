@@ -59,7 +59,7 @@ IMAGE_FIELD = 'pe1_image'
 CALIB_CONFIG_NAME = 'pyFAI_calib.yml'
 MASK_NAME = 'xpdacq_mask.npy'
 GLBL_YAML_NAME = 'glbl.yml'
-
+BLCONFIG_NAME = 'XPD_beamline_config.yml'
 
 # change this to be handled by an environment variable later
 hostname = socket.gethostname()
@@ -104,6 +104,7 @@ TIFF_BASE = os.path.join(HOME_DIR, 'tiff_base')
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 GLBL_YAML_PATH = os.path.join(YAML_DIR, GLBL_YAML_NAME)
 MASK_PATH = os.path.join(CONFIG_BASE, MASK_NAME)
+BLCONFIG_PATH = os.path.join(BLCONFIG_DIR, BLCONFIG_NAME)
 
 ALL_FOLDERS = [
     HOME_DIR,
@@ -147,6 +148,7 @@ glbl_dict = dict(is_simulation=simulation,
                  archive_dir=USER_BACKUP_DIR,
                  glbl_yaml_path=GLBL_YAML_PATH,
                  mask_path=MASK_PATH,
+                 blconfig_path=BLCONFIG_PATH,
                  # options for functionalities
                  frame_acq_time=FRAME_ACQUIRE_TIME,
                  auto_dark=True,
@@ -178,6 +180,16 @@ def configure_frame_acq_time(new_frame_acq_time):
     area_det.cam.acquire.put(1)
     print("INFO: area detector has been configured to new "
           "exposure_time = {}s".format(new_frame_acq_time))
+
+def _load_beamline_config(beamline_config_fp):
+    if not os.path.isfile(beamline_config_fp):
+        raise xpdAcqException("WARNING: can not find long term beamline "
+                              "configuration file. Please contact the "
+                              "beamline scientist ASAP")
+    with open(beamline_config_fp, 'r') as f:
+        beamline_config = yaml.load(f)
+
+    return beamline_config
 
 
 def _reload_glbl(glbl_yaml_path=None):
