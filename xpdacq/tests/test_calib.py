@@ -86,7 +86,9 @@ class calibTest(unittest.TestCase):
         glbl['detector_calibration_server_uid'] = calib_uid
         calibrant = os.path.join(glbl['usrAnalysis_dir'], 'Ni24.D')
         detector = 'perkin_elmer'
-        img = _collect_calib_img(5.0, True, calibrant, detector, self.xrun)
+        img, fn_template = _collect_calib_img(5.0, True,
+                                              calibrant, detector,
+                                              self.xrun)
         hdr = xpd_configuration['db'][-1]
 
         # is information passed down?
