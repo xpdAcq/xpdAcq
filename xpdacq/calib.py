@@ -120,8 +120,8 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     if RE_instance is None:
         xrun_name = _REQUIRED_OBJ_LIST[0]
         xrun = _check_obj(xrun_name)  # will raise error if not exists
-    img = _collect_calib_img(exposure, dark_sub_bool, calibrant,
-                             detector, xrun)
+    img, fn_template = _collect_calib_img(exposure, dark_sub_bool,
+                                          calibrant, detector, xrun)
 
     if not parallel:  # backup when pipeline fails
         # get wavelength from bt
@@ -139,7 +139,8 @@ def run_calibration(exposure=5, dark_sub_bool=True,
                         detector=detector,
                         wavelength=wavelength*10**(-10))
         # pyFAI calibration
-        calib_c, timestr = _calibration(img, c, glbl['config_base'],
+        ## FIXME: this is just to test!
+        calib_c, timestr = _calibration(img, c, fn_template,
                                         **kwargs)
         # save param for xpdAcq
         yaml_name = glbl['calib_config_name']
@@ -184,8 +185,10 @@ def _collect_calib_img(exposure, dark_sub_bool, calibrant,
 
     if dark_sub_bool:
         img -= dark_img
+    # FIXME: filename template from xpdAn
+    fn_template = None
 
-    return img
+    return img, fn_template
 
 
 def run_mask_builder(exposure=300, dark_sub_bool=True,
