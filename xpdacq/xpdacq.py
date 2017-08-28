@@ -18,6 +18,7 @@ import uuid
 import time
 import yaml
 import warnings
+from pprint import pprint
 import numpy as np
 
 import bluesky.plans as bp
@@ -29,9 +30,9 @@ from xpdacq.glbl import glbl
 from xpdacq.xpdacq_conf import (xpd_configuration, XPD_SHUTTER_CONF,
                                 XPDACQ_MD_VERSION)
 from xpdacq.beamtime import ScanPlan, _summarize
+from xpdacq.tools import xpdAcqException
 
 from xpdan.tools import compress_mask
-
 XPD_shutter = xpd_configuration.get('shutter')
 
 
@@ -177,12 +178,26 @@ def _validate_dark(expire_time=None):
         return None
 
 
-def _auto_load_calibration_file():
+def show_calib():
+    """helper function to print currnt calibration params
+
+    Returns
+    -------
+    None
+    """
+    calib_md = _auto_load_calibration_file(in_scan=False)
+    if calib_md:
+        pprint(calib_md)
+    else:
+        print("INFO: no calibration has been perfomed yet")
+
+
+def _auto_load_calibration_file(in_scan=True):
     """function to load the most recent calibration file in config_base
 
     Returns
     -------
-    config_md_dict : dict
+    calib_dict : dict
     dictionary contains calibration parameters computed by pyFAI
     and file name of the most recent calibration. If no calibration
     file exits in xpdUser/config_base, returns None.
@@ -190,25 +205,24 @@ def _auto_load_calibration_file():
 
     config_dir = glbl['config_base']
     if not os.path.isdir(config_dir):
-        raise RuntimeError("WARNING: Required directory {} doesn't"
-                           " exist, did you accidentally delete it?"
-                           .format(config_dir))
+        raise xpdAcqException("WARNING: Required directory {} doesn't"
+                              " exist, did you accidentally delete it?"
+                              .format(config_dir))
     calib_yaml_name = os.path.join(config_dir,
                                    glbl['calib_config_name'])
+    # no calib, skip
     if not os.path.isfile(calib_yaml_name):
-        print("INFO: No calibration file found in config_base.\n"
-              "Scan will still keep going on....")
+        if in_scan:
+            print("INFO: No calibration file found in config_base.\n"
+                  "Scan will still keep going on....")
         return
-    config_dict = glbl.get('calib_config_dict', None)
-    # prviate test: equality
-    with open(calib_yaml_name) as f:
-        yaml_reload_dict = yaml.load(f)
-    if config_dict != yaml_reload_dict:
-        config_dict = yaml_reload_dict
-    # trust file-based dict, in case user change attribute
-    print("INFO: This scan will append calibration parameters "
-          "recorded in {}".format(config_dict['file_name']))
-    return config_dict
+    else:
+        with open(calib_yaml_name) as f:
+            calib_dict = yaml.load(f)
+        if in_scan:
+            print("INFO: This scan will append calibration parameters "
+                  "recorded in {}".format(calib_dict['poni_file_name']))
+        return calib_dict
 
 
 def _inject_qualified_dark_frame_uid(msg):
@@ -220,15 +234,21 @@ def _inject_qualified_dark_frame_uid(msg):
 
 def _inject_calibration_md(msg):
     if msg.command == 'open_run':
-        # it user has run a calibration set before
-        calibration_md = _auto_load_calibration_file()
-        if calibration_md:
-            injected_calib_dict = dict(calibration_md)
-            calibration_server_uid =\
-            glbl.get('detector_calibration_server_uid', None)
-            msg.kwargs['calibration_md'] = injected_calib_dict
-            msg.kwargs.update({'detector_calibration_client_uid':
-                               calibration_server_uid})
+        if 'is_calibration' in msg.kwargs:
+            # skip if it's calibration run
+            pass
+        else:
+            # load calibration param from previous run
+            calibration_md = _auto_load_calibration_file()
+            if calibration_md:
+                injected_calib_dict = dict(calibration_md)
+                calibration_server_uid =\
+                glbl.get('detector_calibration_server_uid', None)
+                # inject calibration md
+                msg.kwargs['calibration_md'] = injected_calib_dict
+                # linking calibration server/client
+                msg.kwargs.update({'detector_calibration_client_uid':
+                                   calibration_server_uid})
     return msg
 
 
@@ -245,7 +265,7 @@ def _inject_analysis_stage(msg):
         msg.kwargs['analysis_stage'] = 'raw'
     return msg
 
-
+#TODO: clean the md linking
 def _inject_mask(msg):
     if msg.command == 'open_run':
         mask_path = glbl['mask_path']
@@ -260,6 +280,7 @@ def _inject_mask(msg):
     return msg
 
 
+#TODO: clean the md linking
 def _inject_mask_server_uid(msg):
     if msg.command == 'open_run':
         mask_server_uid = glbl.get('mask_server_uid', None)

@@ -117,9 +117,11 @@ def _check_obj(obj_name, error_msg=None):
         error_msg = "Required object {} doesn't exist in" \
                     "current namespace".format(obj_name)
     ips = get_ipython()
-    if not ips.ns_table['user_global'].get(obj_name, None):
+    obj = ips.ns_table['user_global'].get(obj_name, None)
+    if not obj:
         raise NameError(error_msg)
-    return
+    else:
+        return obj
 
 
 def _timestampstr(timestamp):

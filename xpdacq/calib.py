@@ -18,60 +18,32 @@ import uuid
 import time
 import yaml
 import logging
-import datetime
 import numpy as np
 from IPython import get_ipython
+
+import bluesky.plans as bp
 
 from .glbl import glbl
 from .xpdacq_conf import xpd_configuration
 from .beamtime import Beamtime, ScanPlan, Sample, ct
-from .xpdacq import CustomizedRunEngine
+from .tools import _timestampstr, _check_obj
+
 from xpdan.tools import mask_img, compress_mask
+from xpdan.calib import (_save_calib_param, _calibration)
 
 from pyFAI.gui.utils import update_fig
-from pyFAI.calibration import Calibration, PeakPicker
+from pyFAI.calibration import Calibration, PeakPicker, Calibrant
 from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 
 from pkg_resources import resource_filename as rs_fn
 
 _REQUIRED_OBJ_LIST = ['xrun']
 
-
-def show_calib():
-    param = glbl.get('calib_config_dict', None)
-    if not param:
-        print("INFO: no calibration has been run yet")
-    else:
-        return param
-
-def _check_obj(required_obj_list):
-    """function to check if object(s) exist
-
-    Parameter
-    ---------
-    required_obj_list : list
-        a list of strings refering to object names
-
-    """
-    ips = get_ipython()
-    for obj_str in required_obj_list:
-        if not ips.ns_table['user_global'].get(obj_str, None):
-            raise NameError("Required object {} doesn't exist in"
-                            "namespace".format(obj_str))
-    return
-
-
-def _timestampstr(timestamp):
-    """convert timestamp to strftime formate"""
-    timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime(
-        '%Y%m%d-%H%M')
-    return timestring
-
-
 def run_calibration(exposure=5, dark_sub_bool=True,
                     calibrant=None, wavelength=None,
                     detector=None, *, RE_instance=None,
-                    detector_calibration_server_uid=None, **kwargs):
+                    detector_calibration_server_uid=None,
+                    parallel=True, **kwargs):
     """function to run entire calibration process.
 
     Entire process includes:
@@ -119,6 +91,11 @@ def run_calibration(exposure=5, dark_sub_bool=True,
         By default a new uid is generated. Override default when
         you want to associate this new calibration with an existing
         detector_calibration_server_uid in previously collected run headers.
+    parallel : bool, optional
+        Tag for whether run the calibration step in a separte
+        process. Running in parallel in principle yields better resource
+        allocation. Default is ``True``, only change to ``False`` if
+        error is raised.
     kwargs:
         Additional keyword argument for calibration. please refer to
         pyFAI documentation for all options.
@@ -128,148 +105,91 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     pyFAI documentation:
     http://pyfai.readthedocs.io/en/latest/
     """
-    # configure calibration instance
-    c = _configure_calib_instance(calibrant, detector, wavelength)
-
-    # collect & pull subtracted image
+    # update calibration server uid in glbl
     if detector_calibration_server_uid is None:
         detector_calibration_server_uid = str(uuid.uuid4())
-    # update calibration server uid in glbl
     glbl['detector_calibration_server_uid'] = detector_calibration_server_uid
-    if RE_instance is None:
-        _check_obj(_REQUIRED_OBJ_LIST)
-        ips = get_ipython()
-        xrun = ips.ns_table['user_global']['xrun']
-    img = _collect_calib_img(exposure, dark_sub_bool, c, xrun)
-    # pyFAI calibration
-    calib_c, timestr = _calibration(img, c, **kwargs)
-    # save param for xpdAcq
-    _save_and_attach_calib_param(calib_c, timestr)
 
-
-def _configure_calib_instance(calibrant, detector, wavelength):
-    """function to configure calibration instance"""
-    if wavelength is None:
-        bt_fp = os.path.join(glbl['yaml_dir'], 'bt_bt.yml')
-        if not os.path.isfile(bt_fp):
-            raise FileNotFoundError("Can't find your Beamtime yaml file.\n"
-                                    "Did you accidentally delete it? "
-                                    "Please contact beamline staff "
-                                    "ASAP")
-        bto = Beamtime.from_yaml(open(bt_fp))
-        wavelength = bto.wavelength
+    # get necessary info
     if detector is None:
         detector = 'perkin_elmer'
     if calibrant is None:
         calibrant = os.path.join(glbl['usrAnalysis_dir'], 'Ni24.D')
-    c = Calibration(calibrant=calibrant, detector=detector,
-                    wavelength=wavelength * 10 ** (-10))
 
-    return c
+    # collect & pull subtracted image
+    if RE_instance is None:
+        xrun_name = _REQUIRED_OBJ_LIST[0]
+        xrun = _check_obj(xrun_name)  # will raise error if not exists
+    img, fn_template = _collect_calib_img(exposure, dark_sub_bool,
+                                          calibrant, detector, xrun)
+
+    if not parallel:  # backup when pipeline fails
+        # get wavelength from bt
+        if wavelength is None:
+            bt_fp = os.path.join(glbl['yaml_dir'], 'bt_bt.yml')
+            if not os.path.isfile(bt_fp):
+                raise FileNotFoundError("Can't find your Beamtime yaml file.\n"
+                                        "Did you accidentally delete it? "
+                                        "Please contact beamline staff "
+                                        "ASAP")
+            bto = Beamtime.from_yaml(open(bt_fp))
+            wavelength = float(bto.wavelength)*10**(-10)
+        # configure calibration instance
+        assert os.path.isfile(calibrant)
+        c = Calibration(calibrant=calibrant,
+                        detector=detector,
+                        wavelength=wavelength)
+        # pyFAI calibration
+        calib_c, timestr = _calibration(img, c, fn_template,
+                                        **kwargs)
+        assert calib_c.calibrant.wavelength == wavelength
+        # save param for xpdAcq
+        yaml_name = glbl['calib_config_name']
+        calib_yml_fp = os.path.join(glbl['config_base'],
+                                    glbl['calib_config_name'])
+        _save_calib_param(calib_c, timestr, calib_yml_fp)
 
 
-def _collect_calib_img(exposure, dark_sub_bool, calibration_instance,
-                       RE_instance):
+def _collect_calib_img(exposure, dark_sub_bool, calibrant,
+                       detector, RE_instance):
     """helper function to collect calibration image and return it"""
-    c = calibration_instance  # shorthand notation
-    calibrant_name = c.calibrant.__repr__().split(' ')[0]
-    calibration_dict = {'sample_name': calibrant_name,
+    # get calibrant name by split path and ext -> works for str too
+    stem, fn = os.path.split(calibrant)
+    calibrant_name, ext = os.path.splitext(fn)
+    # instantiate Calibrant class
+    calibrant_obj = Calibrant(calibrant)
+    # add _calib to avoid overwrite
+    calibration_dict = {'sample_name': calibrant_name+'_calib',
                         'sample_composition': {calibrant_name: 1},
-                        'is_calibration': True}
+                        'dSpacing': calibrant_obj.dSpacing,
+                        'detector': detector}
     bto = RE_instance.beamtime  # grab beamtime object linked to run_engine
     sample = Sample(bto, calibration_dict)
-    uid = RE_instance(sample, ScanPlan(bto, ct, exposure))
+    # annoying md details
+    def _inject_calibration_tag(msg):
+        if msg.command == 'open_run':
+            msg.kwargs['is_calibration'] = True
+        return msg
+    plan = ScanPlan(bto, ct, exposure).factory()
+    plan = bp.msg_mutator(plan, _inject_calibration_tag)
+    uid = RE_instance(sample, plan)
     light_header = xpd_configuration['db'][uid[-1]]  # last one must be light
     dark_uid = light_header.start.get('sc_dk_field_uid')
     dark_header = xpd_configuration['db'][dark_uid]
+    db = xpd_configuration['db']
 
-    dark_img = np.asarray(xpd_configuration['db'].get_images(
-        dark_header, glbl['det_image_field'])).squeeze()
+    dark_img = dark_header.data(glbl['det_image_field'])
+    dark_img = np.asarray(next(dark_img)).squeeze()
 
-    img = np.asarray(xpd_configuration['db'].get_images(
-        light_header, glbl['det_image_field'])).squeeze()
+    img = light_header.data(glbl['det_image_field'])
+    img = np.asarray(next(img)).squeeze()
 
     if dark_sub_bool:
         img -= dark_img
+    # FIXME: filename template from xpdAn
+    fn_template = None
 
-    return img
-
-
-def _save_and_attach_calib_param(calib_c, timestr):
-    """save calibration parameters and attach to glbl class instance
-
-    Parameters
-    ----------
-    calib_c : pyFAI.calibration.Calibration instance
-        pyFAI Calibration instance with parameters after calibration
-    time_str : str
-        human readable time string
-    calibration_uid : str
-        uid associated with this calibration
-    """
-    # save glbl attribute for xpdAcq
-    glbl['calib_config_dict'] = calib_c.geoRef.getPyFAI()
-    glbl['calib_config_dict'].update(calib_c.geoRef.getFit2D())
-    glbl['calib_config_dict'].update({'file_name':calib_c.basename})
-    glbl['calib_config_dict'].update({'time':timestr})
-
-    # save yaml dict used for xpdAcq
-    yaml_name = glbl['calib_config_name']
-    with open(os.path.join(glbl['config_base'], yaml_name), 'w') as f:
-        yaml.dump(glbl['calib_config_dict'], f)
-
-    print(calib_c.geoRef)
-    print("INFO: End of calibration process. Your parameter set will be "
-          "saved inside {}. this set of parameters will be injected "
-          "as metadata to subsequent scans until you perform this "
-          "process again".format(yaml_name))
-    print("INFO: To save your calibration image as a tiff file run\n"
-          "save_last_tiff()\nnow.")
-    return
-
-
-def _calibration(img, calibration, **kwargs):
-    """engine for performing calibration on a image with geometry
-    correction software. current backend is ``pyFAI``.
-
-    Parameters
-    ----------
-    img : ndarray
-        image to perfrom calibration process.
-    calibration : pyFAI.calibration.Calibration instance
-        pyFAI Calibration instance with wavelength, calibrant and
-        detector configured.
-    kwargs:
-        additional keyword argument for calibration. please refer to
-        pyFAI documentation for all options.
-    """
-    print('{:=^20}'.format("INFO: you are able to perform calibration, "
-                           "please refer to pictorial guide here:\n"))
-    print('{:^20}'
-          .format("http://xpdacq.github.io/usb_Running.html#calib-manual\n"))
-    # default params
-    interactive = True
-    dist = 0.1
-    # calibration
-    c = calibration  # shorthand notation
-    timestr = _timestampstr(time.time())
-    f_name = '_'.join([timestr, 'pyFAI_calib',
-                       c.calibrant.__repr__().split(' ')[0]])
-    w_name = os.path.join(glbl['config_base'], f_name)  # poni name
-    poni_name = w_name + ".npt"
-    c.gui = interactive
-    c.basename = w_name
-    c.pointfile = poni_name
-    c.peakPicker = PeakPicker(img, reconst=True,
-                              pointfile=poni_name,
-                              calibrant=c.calibrant,
-                              wavelength=c.wavelength,
-                              **kwargs)
-    c.peakPicker.gui(log=True, maximize=True, pick=True)
-    update_fig(c.peakPicker.fig)
-    c.gui_peakPicker()
-
-    return c, timestr
+    return img, fn_template
 
 
 def run_mask_builder(exposure=300, dark_sub_bool=True,
