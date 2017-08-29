@@ -63,5 +63,5 @@ script:
   - doctr deploy . --built-docs ./docs/_build/html;
 
 after_script:
-  - flake8 .
   - codecov
+  - flake8 .
