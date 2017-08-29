@@ -64,4 +64,5 @@ script:
 
 after_script:
   - codecov
+  - set +e
   - flake8 .
