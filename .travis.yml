@@ -55,6 +55,7 @@ script:
   - coverage run run_tests.py
   - coverage report -m
   - conda install --yes sphinx sphinx_rtd_theme
+  - pip install recommonmark
   - pip install git+git://github.com/drdoctr/doctr.git
   - cd doc
   - make html
