@@ -5,6 +5,9 @@ cache:
   directories:
     - $HOME/.cache/pip
     - $HOME/.cache/matplotlib
+env:
+  global:
+    - secure: "ePWjP2xNjB2Wa+XlJKiNe+D8VEcY4woC72ySFWYXh6nfW2+OZwOb9TLYojNU67gacc/JKizMSBOKnH5EWeVZRwzR3x5kFFJ5ccv3EPGO1qw15rYExWAWPY45IXBZbmz4u58R4t3viTddZnUtVmMfgS9PzYSe1uNtVYqYfLnfRGX+6uG28xkNRb2TH62coXT0GThvLi/4uP19K5Wvo4Sxoep+WJ7F1AaP6NIoM8Cquxmm2qCE580UOEBEM7myxNzA6tW9aNQwsnJdZt53XyWdXotkOqxLV9/G/hshslsE8xJYHm+HUq2AuhGIVdtq5VUZTnqGPnSaayW8fO+wVsXAqXAO4eV08pMW61VFmmPQ9hGvKteuehVUaeRxVgGEYidyR4SpnVBZFIAylHqpzVIq5VJr2hAzXyJt4SlEZLrDLL7PLJ7b+gDDXM9BECKOdiFN9rl9W1s7+d6Hqlb/F2OPIiv7EpEgK97B6EqHauPK8neEp3VpE9JaLr7AWwbygNlCpJxfOFHq64OGtwmElk0FbxVkM/XSXMjfW8592js6rkybEAjhYvPA1Uunlpb59HyN26Tsd5asV1GTrjAaraKBCyV3mAfqI23tHQP9BFqDGbsfwSfMFQf3nNPprfROLi16mKXxdxibJmOP/tXuoQRe9zMqX0tH8QQO5SLi0e4amBQ="
 
 services:
   - mongodb
@@ -34,7 +37,7 @@ before_install:
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
-  - conda create -n testenv nose python=$TRAVIS_PYTHON_VERSION scipy jsonschema pytest coverage pip ophyd pyepics mock xlrd pyfai flake8 codecov -c lightsource2-tag -c conda-forge -c soft-matter
+  - conda create -n testenv nose python=$TRAVIS_PYTHON_VERSION scipy scikit-beam jsonschema pytest coverage pip ophyd pyepics mock xlrd pyfai flake8 codecov -c lightsource2-tag -c conda-forge -c soft-matter
   - source activate testenv
   - 'pip install https://github.com/NSLS-II/databroker/zipball/master#egg=databroker'
   - 'pip install https://github.com/NSLS-II/bluesky/zipball/master#egg=bluesky'
@@ -48,9 +51,18 @@ install:
   - git clean -xfd
 
 script:
+  - set -e
   - coverage run run_tests.py
   - coverage report -m
+  - conda install --yes sphinx sphinx_rtd_theme
+  - pip install recommonmark
+  - pip install git+git://github.com/drdoctr/doctr.git
+  - cd docs
+  - make html
+  - cd ..
+  - doctr deploy . --built-docs ./docs/_build/html;
 
 after_script:
-  - flake8 .
   - codecov
+  - set +e
+  - flake8 .
