@@ -184,6 +184,54 @@ def _copy_and_delete(f_name, src_full_path, dst_dir):
               .format(f_name))
         return
 
+def phase_info_parser(phase_str):
+    """ helper function to parse phase information string
+
+    Parameters
+    ----------
+    phase_str : str
+        a string contains a series of <chem formula> : <phase_amount>.
+        Each phase is separated by a comma.
+
+    Returns
+    -------
+    composition_dict : dict
+        a dictionary contains {element: stoichiometry}.
+    phase_dict : dict
+        a dictionary contains relative ratio of phases.
+    composition_str : str
+        a string with the format PDF transfomation software
+        takes. default is pdfgetx
+
+    Examples
+    --------
+    rv = cls._phase_parser('NaCl:1, Si:2')
+    rv[0] # {'Na':0.33, 'Cl':0.33, 'Si':0.67}
+    rv[1] # {'Nacl':0.33, 'Si':0.67}
+    rv[2] # 'Na0.33Cl0.5Si0.5'
+
+    Raises:
+    -------
+    ValueError
+        if ',' is not specified between phases
+    """
+    parsed_sa_md = {}
+    try:
+        (composition_dict,
+         phase_dict,
+         composition_str) = ExceltoYaml.phase_parser(phase_str)
+    except ValueError:
+        composition_dict = phase_str
+        phase_dict = phase_str
+        composition_str = phase_str
+    finally:
+        parsed_sa_md.update({'sample_composition':
+                             composition_dict})
+        parsed_sa_md.update({'sample_phase':
+                             phase_dict})
+        parsed_sa_md.update({'composition_string':
+                             composition_str})
+    return parsed_sa_md
 
 class ExceltoYaml:
     # maintain regularly, aligned with spreadsheet header
@@ -259,10 +307,11 @@ class ExceltoYaml:
                     try:
                         (composition_dict,
                          phase_dict,
-                         composition_str) = self._phase_parser(v)
+                         composition_str) = self.phase_parser(v)
                     except ValueError:
                         composition_dict = v
                         phase_dict = v
+                        composition_str = v
                     finally:
                         parsed_sa_md.update({'sample_composition':
                                              composition_dict})
@@ -388,7 +437,8 @@ class ExceltoYaml:
             name_list = [name_str]
         return name_list  # [first, last]
 
-    def _phase_parser(self, phase_str):
+    @classmethod
+    def phase_parser(self, phase_str):
         """parser for field with <chem formula>: <phase_amount>
 
         Parameters
