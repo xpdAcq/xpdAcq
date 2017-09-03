@@ -26,7 +26,8 @@ import bluesky.plans as bp
 from .glbl import glbl
 from .xpdacq_conf import xpd_configuration
 from .beamtime import Beamtime, ScanPlan, Sample, ct
-from .tools import _timestampstr, _check_obj
+from .tools import _timestampstr, _check_obj, xpdAcqException
+from .utils import phase_info_parser
 
 from xpdan.tools import mask_img, compress_mask
 from xpdan.calib import (_save_calib_param, _calibration)
@@ -40,8 +41,9 @@ from pkg_resources import resource_filename as rs_fn
 _REQUIRED_OBJ_LIST = ['xrun']
 
 def run_calibration(exposure=5, dark_sub_bool=True,
-                    calibrant=None, wavelength=None,
-                    detector=None, *, RE_instance=None,
+                    calibrant=None, phase_info=None,
+                    wavelength=None, detector=None,
+                    *, RE_instance=None,
                     detector_calibration_server_uid=None,
                     parallel=True, **kwargs):
     """function to run entire calibration process.
@@ -72,6 +74,14 @@ def run_calibration(exposure=5, dark_sub_bool=True,
          'LaB6_SRM660c', 'CeO2', 'Si_SRM640c', 'CuO', 'Si_SRM640e',
          'PBBA', 'ZnO', 'Si', 'C14H30O', 'cristobaltite', 'LaB6_SRM660a',
          'Au', 'Cr2O3', 'Si_SRM640b', 'LaB6', 'Al', 'mock']
+    phase_info : str, optional
+        phase infomation of calibrant, which is required to data
+        reduction process. This field will be parsed with the same logic
+        as the one used in parsing spreadsheet information. For detailed
+        information, please visit:
+        http://xpdacq.github.io/usb_Running.html#phase-string
+        If both ``calibrant`` and ``phase_info`` arguments are not provided,
+        this field will be defaulted to ``Ni``.
     wavelength : float, optional
         x-ray wavelength in angstrom. default to value stored in
         existing Beamtime object
@@ -115,13 +125,29 @@ def run_calibration(exposure=5, dark_sub_bool=True,
         detector = 'perkin_elmer'
     if calibrant is None:
         calibrant = os.path.join(glbl['usrAnalysis_dir'], 'Ni24.D')
+        if phase_info is None:
+            phase_info = 'Ni'
+        else:
+            raise xpdAcqException("Ambiguous sample information. "
+                                  "``phase_info`` is specified "
+                                  "but ``calibrant`` is not supplied. "
+                                  "Please provide both fields if you wish "
+                                  "to specify information")
+    else:
+        # user specify calibrant but not phase_info
+        raise xpdAcqException("Ambiguous sample information. "
+                              "``calibrant`` is specified "
+                              "but ``phase_info`` is not supplied. "
+                              "Please provide both fields if you wish "
+                              "to specify information")
 
     # collect & pull subtracted image
     if RE_instance is None:
         xrun_name = _REQUIRED_OBJ_LIST[0]
         xrun = _check_obj(xrun_name)  # will raise error if not exists
     img, fn_template = _collect_calib_img(exposure, dark_sub_bool,
-                                          calibrant, detector, xrun)
+                                          calibrant, phase_info,
+                                          detector, xrun)
 
     if not parallel:  # backup when pipeline fails
         # get wavelength from bt
@@ -151,20 +177,21 @@ def run_calibration(exposure=5, dark_sub_bool=True,
 
 
 def _collect_calib_img(exposure, dark_sub_bool, calibrant,
-                       detector, RE_instance):
+                       phase_info, detector, RE_instance):
     """helper function to collect calibration image and return it"""
     # get calibrant name by split path and ext -> works for str too
     stem, fn = os.path.split(calibrant)
     calibrant_name, ext = os.path.splitext(fn)
     # instantiate Calibrant class
     calibrant_obj = Calibrant(calibrant)
-    # add _calib to avoid overwrite
-    calibration_dict = {'sample_name': calibrant_name+'_calib',
-                        'sample_composition': {calibrant_name: 1},
-                        'dSpacing': calibrant_obj.dSpacing,
-                        'detector': detector}
+    # add _calib to avoid overwrite current sample objects
+    # Note: in the future, this info should be draw from sample_db
+    sample_md = phase_info_parser(phase_info)
+    sample_md.update({'sample_name': calibrant_name+'_calib',
+                      'dSpacing': calibrant_obj.dSpacing,
+                      'detector': detector})
     bto = RE_instance.beamtime  # grab beamtime object linked to run_engine
-    sample = Sample(bto, calibration_dict)
+    sample = Sample(bto, sample_md)
     # annoying md details
     def _inject_calibration_tag(msg):
         if msg.command == 'open_run':
