@@ -25,14 +25,14 @@ from xpdacq.utils import excel_to_yaml
                                 )
                           ])
 def test_phase_str_parser(input_dict, expect_rv):
-    assert excel_to_yaml._phase_parser(input_dict) == expect_rv
+    assert excel_to_yaml.phase_parser(input_dict) == expect_rv
 
 
 def test_phase_str_parser_error():
     # edge case: not comma separated -> ValueError
     test_str = 'TiO2; H2O: Ni^1'
     with pytest.raises(ValueError):
-        excel_to_yaml._phase_parser(test_str)
+        excel_to_yaml.phase_parser(test_str)
 
 
 @pytest.mark.parametrize("input_str, expect_rv",
