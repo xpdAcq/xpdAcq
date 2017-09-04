@@ -184,54 +184,6 @@ def _copy_and_delete(f_name, src_full_path, dst_dir):
               .format(f_name))
         return
 
-def phase_info_parser(phase_str):
-    """ helper function to parse phase information string
-
-    Parameters
-    ----------
-    phase_str : str
-        a string contains a series of <chem formula> : <phase_amount>.
-        Each phase is separated by a comma.
-
-    Returns
-    -------
-    composition_dict : dict
-        a dictionary contains {element: stoichiometry}.
-    phase_dict : dict
-        a dictionary contains relative ratio of phases.
-    composition_str : str
-        a string with the format PDF transfomation software
-        takes. default is pdfgetx
-
-    Examples
-    --------
-    rv = cls._phase_parser('NaCl:1, Si:2')
-    rv[0] # {'Na':0.33, 'Cl':0.33, 'Si':0.67}
-    rv[1] # {'Nacl':0.33, 'Si':0.67}
-    rv[2] # 'Na0.33Cl0.5Si0.5'
-
-    Raises:
-    -------
-    ValueError
-        if ',' is not specified between phases
-    """
-    parsed_sa_md = {}
-    try:
-        (composition_dict,
-         phase_dict,
-         composition_str) = ExceltoYaml.phase_parser(phase_str)
-    except ValueError:
-        composition_dict = phase_str
-        phase_dict = phase_str
-        composition_str = phase_str
-    finally:
-        parsed_sa_md.update({'sample_composition':
-                             composition_dict})
-        parsed_sa_md.update({'sample_phase':
-                             phase_dict})
-        parsed_sa_md.update({'composition_string':
-                             composition_str})
-    return parsed_sa_md
 
 class ExceltoYaml:
     # maintain regularly, aligned with spreadsheet header
@@ -275,7 +227,6 @@ class ExceltoYaml:
         self.pd_df = pd.read_excel(os.path.join(self.src_dir,
                                                   xl_f.pop()),
                                      skiprows=[1])
-        #self.sa_md_list = self._pd_dict_to_dict_list(self.pd_dict.to_dict())
 
     def parse_sample_md(self):
         """parse a list of sample metadata into desired format"""
@@ -304,21 +255,7 @@ class ExceltoYaml:
 
                 # phase fields
                 elif k in self._PHASE_FIELD:
-                    try:
-                        (composition_dict,
-                         phase_dict,
-                         composition_str) = self.phase_parser(v)
-                    except ValueError:
-                        composition_dict = v
-                        phase_dict = v
-                        composition_str = v
-                    finally:
-                        parsed_sa_md.update({'sample_composition':
-                                             composition_dict})
-                        parsed_sa_md.update({'sample_phase':
-                                             phase_dict})
-                        parsed_sa_md.update({'composition_string':
-                                             composition_str})
+                    parsed_sa_md.update(self.parse_phase_info(v))
 
                 # comma separated fields
                 elif k in self._COMMA_SEP_FIELD:
@@ -392,7 +329,8 @@ class ExceltoYaml:
                           no_bkgd_sample_name_list))
         print("*** End of import Sample object ***")
 
-    def _dict_like_parser(self, input_str):
+    @staticmethod
+    def _dict_like_parser(input_str):
         """ parser for dictionary output"""
         output_dict = {}
         dict_meta = input_str.split(',')
@@ -406,7 +344,8 @@ class ExceltoYaml:
 
         return output_dict
 
-    def _comma_separate_parser(self, input_str):
+    @staticmethod
+    def _comma_separate_parser(input_str):
         """ parser for comma separated fields
 
         Parameters
@@ -424,7 +363,8 @@ class ExceltoYaml:
         output_list = list(map(lambda x: x.strip(), element_list))
         return output_list
 
-    def _name_parser(self, name_str):
+    @staticmethod
+    def _name_parser(name_str):
         """assume a name string
 
         Returns
@@ -438,7 +378,49 @@ class ExceltoYaml:
         return name_list  # [first, last]
 
     @classmethod
-    def phase_parser(self, phase_str):
+    def parse_phase_info(cls, phase_str):
+        """function to parse phase information based on input phase_str
+
+        Parameters
+        ----------
+        phase_str : str
+            a string contains a series of <chem formula> : <phase_amount>.
+            Each phase is separated by a comma.
+
+        Returns
+        -------
+        parsed_phase_md : dict
+            a dictionary with phase information being parsed into three
+            keys:
+            1. ``sample_composition`` with the values in the form as
+              {element: stoichiometry}
+            2. `sample_phase`` with the values in the form as
+              {compound : relative_ratio}
+            3. ``composition_string`` with the value equal to a string
+              compatible with PDF transformation software. Default is
+              diffpy.pdfgetx3
+        """
+        parsed_phase_md = {}
+        try:
+            (composition_dict,
+             phase_dict,
+             composition_str) = cls.phase_parser(phase_str)
+        except ValueError:
+            composition_dict = phase_str
+            phase_dict = phase_str
+            composition_str = phase_str
+        finally:
+            parsed_phase_md.update({'sample_composition':
+                                    composition_dict})
+            parsed_phase_md.update({'sample_phase':
+                                    phase_dict})
+            parsed_phase_md.update({'composition_string':
+                                    composition_str})
+
+        return parsed_phase_md
+
+    @staticmethod
+    def phase_parser(phase_str):
         """parser for field with <chem formula>: <phase_amount>
 
         Parameters
@@ -459,7 +441,7 @@ class ExceltoYaml:
 
         Examples
         --------
-        rv = cls._phase_parser('NaCl:1, Si:2')
+        rv = cls.phase_parser('NaCl:1, Si:2')
         rv[0] # {'Na':0.33, 'Cl':0.33, 'Si':0.67}
         rv[1] # {'Nacl':0.33, 'Si':0.67}
         rv[2] # 'Na0.33Cl0.5Si0.5'
@@ -500,13 +482,14 @@ class ExceltoYaml:
                 else:
                     com, amount = meta
             # construct phase dict
-            # special case: mapping 
-            if com in self.HIGH_D_MD_MAP_KEYWORD:
-                phase_dict.update({com.strip(): amount.strip()})
-                composition_str = 'N/A'
-                composition_dict = {}
+            # DEPRECATED: xpdAcq will move to multiple run_start model
+            # special case: mapping
+            #if com in self.HIGH_D_MD_MAP_KEYWORD:
+            #    phase_dict.update({com.strip(): amount.strip()})
+            #    composition_str = 'N/A'
+            #    composition_dict = {}
             # normal case, e.g. {'Ni':0.5, 'NaCl':0.5}
-            elif isinstance(amount, str):
+            if isinstance(amount, str):
                 amount = amount.strip()
                 amount = amount.replace('%', '')
 
