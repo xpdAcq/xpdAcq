@@ -18,7 +18,7 @@ from xpdacq.calib import (_save_calib_param,
                           _collect_calib_img,
                           _calibration,
                           _timestampstr)
-from xpdacq.utils import import_sample_info, phase_info_parser
+from xpdacq.utils import import_sample_info, ExceltoYaml
 from xpdacq.xpdacq import CustomizedRunEngine
 from xpdacq.beamtimeSetup import _start_beamtime
 
@@ -98,8 +98,8 @@ class calibTest(unittest.TestCase):
         calibrant_obj = Calibrant(calibrant)
         assert calibrant_obj.dSpacing == hdr.start['dSpacing']
         assert hdr.start['is_calibration'] == True
-        parsed_md = phase_info_parser('Ni')
-        assert all(v ==  hdr.start[k] for k, v in parsed_md.items())
+        parsed_md = ExceltoYaml.parse_phase_info('Ni')
+        assert all(v == hdr.start[k] for k, v in parsed_md.items())
         # is image shape as expected?
         assert img.shape == (5, 5)
         # is dark subtraction operated as expected?

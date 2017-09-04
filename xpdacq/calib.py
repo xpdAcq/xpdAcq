@@ -27,7 +27,7 @@ from .glbl import glbl
 from .xpdacq_conf import xpd_configuration
 from .beamtime import Beamtime, ScanPlan, Sample, ct
 from .tools import _timestampstr, _check_obj, xpdAcqException
-from .utils import phase_info_parser
+from .utils import ExceltoYaml
 
 from xpdan.tools import mask_img, compress_mask
 from xpdan.calib import (_save_calib_param, _calibration)
@@ -186,7 +186,7 @@ def _collect_calib_img(exposure, dark_sub_bool, calibrant,
     calibrant_obj = Calibrant(calibrant)
     # add _calib to avoid overwrite current sample objects
     # Note: in the future, this info should be draw from sample_db
-    sample_md = phase_info_parser(phase_info)
+    sample_md = ExceltoYaml.parse_phase_info(phase_info)
     sample_md.update({'sample_name': calibrant_name+'_calib',
                       'dSpacing': calibrant_obj.dSpacing,
                       'detector': detector})
