@@ -28,6 +28,7 @@ from .xpdacq_conf import xpd_configuration
 from .beamtime import Beamtime, ScanPlan, Sample, ct
 from .tools import _timestampstr, _check_obj, xpdAcqException
 from .utils import ExceltoYaml
+from .xpdacq import _auto_load_calibration_file
 
 from xpdan.tools import mask_img, compress_mask
 from xpdan.calib import (_save_calib_param, _calibration)
@@ -39,6 +40,30 @@ from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 from pkg_resources import resource_filename as rs_fn
 
 _REQUIRED_OBJ_LIST = ['xrun']
+
+def _sample_name_phase_info_configuration(sample_name,
+                                          phase_info, tag):
+    """function to configure sample_name and phase_info"""
+    if sample_name and phase_info:
+        pass # user defined, pass
+    elif sample_name is None and phase_info is None:
+        if tag == 'calib':
+            sample_name = 'Ni24_calib'
+            phase_info = 'Ni'
+        elif tag == 'mask':
+            sample_name = 'kapton'
+            phase_info = 'C12H12N2O'
+    else:
+        raise xpdAcqException("Ambiguous sample information. "
+                              "Only ``phase_info`` or ``sample_name``"
+                              "is supplied. Please provide both "
+                              "fields if you wish to specify full "
+                              "information, or leave both as None as"
+                              "default.")
+    sample_md = ExceltoYaml.parse_phase_info(phase_info)
+    sample_md.update({'sample_name': sample_name})
+
+    return sample_md
 
 def run_calibration(exposure=5, dark_sub_bool=True,
                     calibrant=None, phase_info=None,
@@ -103,34 +128,23 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     pyFAI documentation:
     http://pyfai.readthedocs.io/en/latest/
     """
-    # get necessary info
+    # default information
     if detector is None:
         detector = 'perkin_elmer'
+    sample_md = _sample_name_phase_info_configuration(calibrant,
+                                                      phase_info, 'calib')
     if calibrant is None:
         calibrant = os.path.join(glbl['usrAnalysis_dir'], 'Ni24.D')
-        if phase_info is None:
-            phase_info = 'Ni'
-        else:
-            raise xpdAcqException("Ambiguous sample information. "
-                                  "``phase_info`` is specified "
-                                  "but ``calibrant`` is not supplied. "
-                                  "Please provide both fields if you wish "
-                                  "to specify information")
-    else:
-        # user specify calibrant but not phase_info
-        raise xpdAcqException("Ambiguous sample information. "
-                              "``calibrant`` is specified "
-                              "but ``phase_info`` is not supplied. "
-                              "Please provide both fields if you wish "
-                              "to specify information")
 
     # collect & pull subtracted image
     if RE_instance is None:
         xrun_name = _REQUIRED_OBJ_LIST[0]
         xrun = _check_obj(xrun_name)  # will raise error if not exists
-    img, fn_template = _collect_calib_img(exposure, dark_sub_bool,
-                                          calibrant, phase_info,
-                                          detector, xrun)
+    img, fn_template = _collect_img(exposure, dark_sub_bool,
+                                    sample_md, 'caib', xrun,
+                                    detector=detector,
+                                    calibrant=calibrant
+                                    )
 
     if not parallel:  # backup when pipeline fails
         # get wavelength from bt
@@ -159,32 +173,40 @@ def run_calibration(exposure=5, dark_sub_bool=True,
         _save_calib_param(calib_c, timestr, calib_yml_fp)
 
 
-def _collect_calib_img(exposure, dark_sub_bool, calibrant,
-                       phase_info, detector, RE_instance):
-    """helper function to collect calibration image and return it"""
-    # get calibrant name by split path and ext -> works for str too
-    stem, fn = os.path.split(calibrant)
-    calibrant_name, ext = os.path.splitext(fn)
-    # instantiate Calibrant class
-    calibrant_obj = Calibrant(calibrant)
-    # add _calib to avoid overwrite current sample objects
-    # Note: in the future, this info should be draw from sample_db
-    sample_md = ExceltoYaml.parse_phase_info(phase_info)
-    sample_md.update({'sample_name': calibrant_name+'_calib',
-                      'dSpacing': calibrant_obj.dSpacing,
-                      'detector': detector})
-    bto = RE_instance.beamtime  # grab beamtime object linked to run_engine
-    sample = Sample(bto, sample_md)
-    # annoying md detais -> since calib_md inject is looking for
-    # open_run kwargs
-    def _inject_calibration_tag(msg):
-        if msg.command == 'open_run':
-            msg.kwargs['is_calibration'] = True
-        return msg
+def _inject_calibration_tag(msg):
+    if msg.command == 'open_run':
+        msg.kwargs['is_calibration'] = True
+    return msg
+
+def _inject_mask_tag(msg):
+    if msg.command == 'open_run':
+        msg.kwargs['is_mask'] = True
+    return msg
+
+
+def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
+                 *, calibrant=None, detector=None):
+    """helper function to collect image and return it"""
+    # grab beamtime object linked to run_engine
+    bto = RE_instance.beamtime
     plan = ScanPlan(bto, ct, exposure).factory()
-    plan = bp.msg_mutator(plan, _inject_calibration_tag)
-    uid = RE_instance(sample, plan)
-    light_header = xpd_configuration['db'][uid[-1]]  # last one must be light
+    sample_md.update(bto)
+
+    if tag == 'calib':
+        if not os.path.isfile(calibrant):
+            raise FileNotFoundError("calibrant file doesn't exist")
+        # instantiate Calibrant class
+        calibrant_obj = Calibrant(calibrant)
+        sample_md.update({'dSpacing': calibrant_obj.dSpacing,
+                          'detector': detector})
+        plan = bp.msg_mutator(plan, _inject_calibration_tag)
+    elif tag == 'mask':
+        plan = bp.msg_mutator(plan, _inject_mask_tag)
+
+    # collect image
+    uid = RE_instance(sample_md, plan)
+    # last one must be light
+    light_header = xpd_configuration['db'][uid[-1]]
     dark_uid = light_header.start.get('sc_dk_field_uid')
     dark_header = xpd_configuration['db'][dark_uid]
     db = xpd_configuration['db']
@@ -251,66 +273,33 @@ def run_mask_builder(exposure=300, mask_sample_name=None,
     --------
     xpdan.tools.mask_img
     """
-
-    _check_obj(_REQUIRED_OBJ_LIST)
-    ips = get_ipython()
-    bto = ips.ns_table['user_global']['bt']
-    xrun = ips.ns_table['user_global']['xrun']
-
+    xrun_name = _REQUIRED_OBJ_LIST[0]
+    xrun = _check_obj(xrun_name)  # will raise error if not exists
     # default behavior
-    if calib_dict is None:
-        calib_dict = glbl.get('calib_config_dict', None)
-        if calib_dict is None:
-            print("INFO: there is no glbl calibration dictionary linked\n"
-                  "Please do ``run_calibration()`` or provide your own"
-                  "calibration parameter set")
-            return
+    calib_dict = _auto_load_calibration_file(False)
+    if not calib_dict:
+        print("INFO: there is no glbl calibration dictionary linked\n"
+              "Please do ``run_calibration()`` or provide your own"
+              "calibration parameter set")
+        return
     # sample infomation
-    if mask_sample_name is None and phase_info is None:
-        mask_sample_name = 'kapton'
-        phase_info = 'C12H12N2O'
-    elif mask_sample_name and phase_info:
-        pass
-    else:
-        raise xpdAcqException("Ambiguous sample information. "
-                              "Either one of fields in the "
-                              "Please provide both fields if you wish "
-                              "to specify information")
+    sample_md = _sample_name_phase_info_configuration(mask_sample_name,
+                                                      phase_info,
+                                                      'mask')
     # grab RE instance
     if RE_instance is None:
         xrun_name = _REQUIRED_OBJ_LIST[0]
         xrun = _check_obj(xrun_name)  # will raise error if not exists
 
-    img, fn_template = _collect_calib_img(exposure, dark_sub_bool,
-                                          calibrant, phase_info,
-                                          detector, xrun)
+    img, fn_template = _collect_img(exposure, dark_sub_bool,
+                                    sample_md, 'mask', xrun)
     if mask_dict is None:
         mask_dict = glbl['mask_dict']
     print("INFO: use mask options: {}".format(mask_dict))
 
-
     # setting up geometry parameters
     ai = AzimuthalIntegrator()
     ai.setPyFAI(**calib_dict)
-
-    # scan
-    mask_builder_dict = {'sample_name': sample_name,
-                         'sample_composition': {sample_name: 1},
-                         'is_build_mask': True}
-    sample = Sample(bto, mask_builder_dict)
-    xrun_uid = xrun(sample, ScanPlan(bto, ct, exposure))
-    light_header = xpd_configuration['db'][-1]
-    if dark_sub_bool:
-        dark_uid = light_header.start['sc_dk_field_uid']
-        dark_header = xpd_configuration['db'][dark_uid]
-
-        dark_img = np.asarray(xpd_configuration['db'].get_images(
-            dark_header, glbl['det_image_field'])).squeeze()
-
-    for ev in xpd_configuration['db'].get_events(light_header, fill=True):
-        img = ev['data'][glbl['det_image_field']]
-        if dark_sub_bool:
-            img -= dark_img
 
     img /= ai.polarization(img.shape, polarization_factor)
     mask = mask_img(img, ai, **mask_dict)

@@ -277,14 +277,13 @@ def _auto_load_mask():
         print("INFO: no mask has been built, scan will keep going...")
 
 
-#TODO: clean the md linking
 def _inject_mask_server_uid(msg):
     if msg.command == 'open_run':
         exp_hash_uid = glbl.get('exp_hash_uid')
         # inject client uid to all runs
         msg.kwargs.update({'mask_client_uid':
                            exp_hash_uid})
-        if 'is_build_mask' in msg.kwargs:
+        if 'is_mask' in msg.kwargs:
             # inject server uid if it's calibration run
             msg.kwargs.update({'mask_server_uid':
                                exp_hash_uid})
@@ -294,7 +293,7 @@ def _inject_mask_server_uid(msg):
             if compressed_mask:
                 data, indicies, indptr = compressed_mask
                 # inject compressed 
-                msg.kwargs['mask'] = (data, indices, indptr)
+                msg.kwargs['mask'] = (data, indicies, indptr)
 
     return msg
 
@@ -305,7 +304,7 @@ def update_experiment_hash_uid():
     glbl['exp_hash_uid'] = new_uid 
     print("INFO: experiment hash uid as been updated to "
           "{}".format(new_uid))
-    
+
     return new_uid
 
 def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
@@ -476,8 +475,6 @@ class CustomizedRunEngine(RunEngine):
         # Load calibration file
         if glbl['auto_load_calib']:
             plan = bp.msg_mutator(plan, _inject_calibration_md)
-        # Insert compressed mask
-        plan = bp.msg_mutator(plan, _inject_mask)
         # Insert mask clinet uid
         plan = bp.msg_mutator(plan, _inject_mask_server_uid)
         # Insert xpdacq md version
