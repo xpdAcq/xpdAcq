@@ -43,9 +43,7 @@ _REQUIRED_OBJ_LIST = ['xrun']
 def run_calibration(exposure=5, dark_sub_bool=True,
                     calibrant=None, phase_info=None,
                     wavelength=None, detector=None,
-                    *, RE_instance=None,
-                    detector_calibration_server_uid=None,
-                    parallel=True, **kwargs):
+                    *, RE_instance=None, parallel=True, **kwargs):
     """function to run entire calibration process.
 
     Entire process includes:
@@ -91,16 +89,6 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     RE_instance : bluesky.run_engine.RunEngine instance, optional
         instance of run engine. Default is xrun. Do not change under
         normal circumstances.
-    detector_calibration_server_uid : str, optional
-        uid used to reference all required information for this
-        calibration run. Subsequent datasets which reference the same
-        experimental geometry as this calibration run are ``clients``.
-        ``server`` and ``clients`` are linked by having the same
-        value for client uid. For more details and motivation behind,
-        please see: https://github.com/xpdAcq/xpdSchema
-        By default a new uid is generated. Override default when
-        you want to associate this new calibration with an existing
-        detector_calibration_server_uid in previously collected run headers.
     parallel : bool, optional
         Tag for whether run the calibration step in a separte
         process. Running in parallel in principle yields better resource
@@ -115,11 +103,6 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     pyFAI documentation:
     http://pyfai.readthedocs.io/en/latest/
     """
-    # update calibration server uid in glbl
-    if detector_calibration_server_uid is None:
-        detector_calibration_server_uid = str(uuid.uuid4())
-    glbl['detector_calibration_server_uid'] = detector_calibration_server_uid
-
     # get necessary info
     if detector is None:
         detector = 'perkin_elmer'
@@ -192,7 +175,8 @@ def _collect_calib_img(exposure, dark_sub_bool, calibrant,
                       'detector': detector})
     bto = RE_instance.beamtime  # grab beamtime object linked to run_engine
     sample = Sample(bto, sample_md)
-    # annoying md details
+    # annoying md detais -> since calib_md inject is looking for
+    # open_run kwargs
     def _inject_calibration_tag(msg):
         if msg.command == 'open_run':
             msg.kwargs['is_calibration'] = True
@@ -219,12 +203,12 @@ def _collect_calib_img(exposure, dark_sub_bool, calibrant,
     return img, fn_template
 
 
-def run_mask_builder(exposure=300, dark_sub_bool=True,
+def run_mask_builder(exposure=300, mask_sample_name=None,
+                     phase_info=None, dark_sub_bool=True,
                      polarization_factor=0.99,
-                     sample_name=None, calib_dict=None,
-                     mask_dict=None, save_name=None,
-                     mask_server_uid=None):
-    """ function to generate mask
+                     calib_dict=None, mask_dict=None,
+                     save_name=None, *, RE_instance=None):
+    """function to build a mask based on image collected.
 
     this function will execute a count scan and generate a mask based on
     image collected from this scan.
@@ -233,14 +217,17 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
     ----------
     exposure : float, optional
         exposure time of this scan. default is 300s.
+    mask_sample_name : str, optional
+        name of sample that new mask is going to be generated from.
+        default is 'kapton'
+    phase_info : str, optional
+        phase information for the sample that new mask is going to be
+        generated from. default is 'C12H12N2O'
     dark_sub_bool : bool, optional
         turn on/off of dark subtraction. default is True.
     polarization_factor: float, optional.
         polarization correction factor, ranged from -1(vertical) to +1
         (horizontal). default is 0.99. set to None for no correction.
-    sample_name : str, optional
-        name of sample that new mask is going to be generated from.
-        default is 'mask_target'
     calib_dict : dict, optional
         dictionary with parameters for geometry correction
         software. default is read out from glbl attribute (parameters
@@ -252,16 +239,10 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
         full path for this mask going to be saved. if it is None,
         default name 'xpdacq_mask.npy' will be saved inside
         xpdUser/config_base/
-    mask_server_uid : str, optional
-        uid used to reference all required information for bulding a
-        mask. Subsequent datasets that will use this mask are
-        ``clients`` that hold a reference to the ``server`` with the
-        correct experimental geometry and images by having the same
-        value for client uid. For more details and motivation behind,
-        please see: https://github.com/xpdAcq/xpdSchema.
-        By default a new uid is generated. Override default when
-        you want to associate this new mask with an existing
-        mask-server-uid in previously collected run headers.
+    RE_instance : bluesky.run_engine.RunEngine instance, optional
+        instance of run engine. Default is xrun. Do not change under
+        normal circumstances.
+
     Note
     ----
     current software dealing with geometry correction is ``pyFAI``
@@ -284,14 +265,25 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
                   "Please do ``run_calibration()`` or provide your own"
                   "calibration parameter set")
             return
+    # sample infomation
+    if mask_sample_name is None and phase_info is None:
+        mask_sample_name = 'kapton'
+        phase_info = 'C12H12N2O'
+    elif mask_sample_name and phase_info:
+        pass
+    else:
+        raise xpdAcqException("Ambiguous sample information. "
+                              "Either one of fields in the "
+                              "Please provide both fields if you wish "
+                              "to specify information")
+    # grab RE instance
+    if RE_instance is None:
+        xrun_name = _REQUIRED_OBJ_LIST[0]
+        xrun = _check_obj(xrun_name)  # will raise error if not exists
 
-    if mask_server_uid is None:
-        mask_server_uid = str(uuid.uuid4())
-    glbl['mask_server_uid'] = mask_server_uid
-
-    if sample_name is None:
-        sample_name = 'mask_target'
-
+    img, fn_template = _collect_calib_img(exposure, dark_sub_bool,
+                                          calibrant, phase_info,
+                                          detector, xrun)
     if mask_dict is None:
         mask_dict = glbl['mask_dict']
     print("INFO: use mask options: {}".format(mask_dict))
@@ -304,7 +296,7 @@ def run_mask_builder(exposure=300, dark_sub_bool=True,
     # scan
     mask_builder_dict = {'sample_name': sample_name,
                          'sample_composition': {sample_name: 1},
-                         'is_mask': True}
+                         'is_build_mask': True}
     sample = Sample(bto, mask_builder_dict)
     xrun_uid = xrun(sample, ScanPlan(bto, ct, exposure))
     light_header = xpd_configuration['db'][-1]

@@ -49,9 +49,12 @@ class xrunTest(unittest.TestCase):
         src = os.path.join(os.path.dirname(__file__), xlf)
         shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
         import_sample_info(self.saf_num, self.bt)
-        self.xrun = CustomizedRunEngine(self.bt)
+        self.xrun = CustomizedRunEngine({})
+        self.xrun.beamtime = self.bt
         # link mds
         self.xrun.subscribe(xpd_configuration['db'].insert, 'all')
+        # grad init_exp_hash_uid
+        self.init_exp_hash_uid = glbl['exp_hash_uid']
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -370,6 +373,7 @@ class xrunTest(unittest.TestCase):
         assert key in open_run
         assert open_run[key] == val
 
+    @unittest.skip('temp_test')
     def test_mask_client_server_md_insert(self):
         server_key = 'mask_server_uid'
         server_val = '777'
@@ -387,22 +391,21 @@ class xrunTest(unittest.TestCase):
         assert open_run[client_key] == server_val
 
     def test_calibration_client_server_md_insert(self):
-        server_key = 'detector_calibration_server_uid'
-        server_val = '777'
+        server_val = self.init_exp_hash_uid
         client_key = 'detector_calibration_client_uid'
-        glbl[server_key] = server_val
         msg_list = []
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
         glbl['auto_load_calib'] = True
         assert glbl['auto_load_calib'] == True
-        # calibration hasn't been run -> no injection
+        # calibration hasn't been run -> still receive client uid
         self.xrun({},
                   ScanPlan(self.bt, ct, 1.0))
         open_run = [el.kwargs for el in msg_list
                     if el.command == 'open_run'].pop()
-        assert client_key not in open_run
+        assert client_key in open_run
+        assert open_run[client_key] == server_val
         # attach calib md to glbl and verify injection
         cfg_f_name = glbl['calib_config_name']
         cfg_src = os.path.join(pytest_dir, cfg_f_name)

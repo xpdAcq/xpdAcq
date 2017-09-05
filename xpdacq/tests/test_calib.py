@@ -19,7 +19,8 @@ from xpdacq.calib import (_save_calib_param,
                           _calibration,
                           _timestampstr)
 from xpdacq.utils import import_sample_info, ExceltoYaml
-from xpdacq.xpdacq import CustomizedRunEngine
+from xpdacq.xpdacq import (CustomizedRunEngine,
+                           update_experiment_hash_uid)
 from xpdacq.beamtimeSetup import _start_beamtime
 
 from pkg_resources import resource_filename as rs_fn
@@ -46,7 +47,8 @@ class calibTest(unittest.TestCase):
         src = os.path.join(pytest_dir, xlf)
         shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
         import_sample_info(self.saf_num, self.bt)
-        self.xrun = CustomizedRunEngine(self.bt)
+        self.xrun = CustomizedRunEngine({})
+        self.xrun.beamtime = self.bt
         # set simulation objects
         configure_device(db=db, shutter=shctl1,
                          area_det=pe1c, temp_controller=cs700)
@@ -55,6 +57,8 @@ class calibTest(unittest.TestCase):
         # calib yaml 
         self.calib_yml_fn = os.path.join(pytest_dir,
                                          glbl['calib_config_name'])
+        # grab exp_hash_uid
+        self.init_hash_uid = glbl['exp_hash_uid']
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -83,8 +87,7 @@ class calibTest(unittest.TestCase):
 
 
     def test_collect_calb_img(self):
-        calib_uid = '1234'
-        glbl['detector_calibration_server_uid'] = calib_uid
+        # run with current uid
         calibrant = os.path.join(glbl['usrAnalysis_dir'], 'Ni24.D')
         detector = 'perkin_elmer'
         img, fn_template = _collect_calib_img(5.0, True,
@@ -100,12 +103,28 @@ class calibTest(unittest.TestCase):
         assert hdr.start['is_calibration'] == True
         parsed_md = ExceltoYaml.parse_phase_info('Ni')
         assert all(v == hdr.start[k] for k, v in parsed_md.items())
+        # is exp_hash_uid passed down
+        server_uid = hdr.start['detector_calibration_server_uid']
+        client_uid = hdr.start['detector_calibration_client_uid']
+        assert server_uid == self.init_hash_uid
+        assert server_uid == client_uid
         # is image shape as expected?
         assert img.shape == (5, 5)
         # is dark subtraction operated as expected?
         # since simulated pe1c always generate the same array, so
         # subtracted image should be zeors
         assert np.all(img == 0)
+
+        # update hash uid and rerun
+        new_uid = update_experiment_hash_uid()
+        img, fn_template = _collect_calib_img(5.0, True,
+                                              calibrant, 'Ni',
+                                              detector, self.xrun)
+        hdr = xpd_configuration['db'][-1]
+        server_uid = hdr.start['detector_calibration_server_uid']
+        client_uid = hdr.start['detector_calibration_client_uid']
+        assert server_uid == new_uid
+        assert server_uid == client_uid
 
     def test_save_calib_param(self):
         # reload yaml to produce pre-calib Calibration instance

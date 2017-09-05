@@ -250,8 +250,7 @@ class GlblYamlDict(YamlDict):
                        '_dark_dict_list', 'shutter_control',
                        'auto_load_calib', 'calib_config_name',
                        'calib_config_dict', 'mask_dict',
-                       'det_image_field', 'mask_server_uid',
-                       'detector_calibration_server_uid']
+                       'det_image_field', 'exp_hash_uid']
 
     def __init__(self, name, **kwargs):
         super().__init__(name=name, **kwargs)
