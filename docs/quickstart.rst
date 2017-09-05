@@ -32,7 +32,7 @@ Carry out the steps in this order to ensure a successful experiment.
 
   6. Run your experiment by running ``xrun(<sample>, <scanplan>)``
 
-  7. Save your data using ``integrate_and_save_last()``. Navigate to ``.../xpdUser/tiff_base/<Sample_name_from_spreadsheet>`` directory to preview the data using plotting tools such as ``SrXgui``, ``XPDSuite``, ``Fit2D`` etc.
+  7. Your data will be automatically saved and visualized via the analysis pipleine. The data will be saved in ``.../xpdUser/tiff_base/<Sample_name_from_spreadsheet>``.
 
 These and many more things are explained below and elsewhere in the documentation.
 
@@ -82,7 +82,8 @@ work-station 2 (the central computer, look for ``ws2`` in the title at the top o
 
 If you can't find the right environments, please ask the instrument scientist.  This is important to make sure
 that there is a clean start for your experiment.  However, if later in your experiment you ever have to restart
-your environments, then you type at the command line ``bsui`` for the collection and ``ianalysis`` for the analysis environments, respectively.
+your environments, then you type at the command line ``bsui`` for the collection environment.
+``bsui`` will create an analysis terminal in addition to starting the collection environment.
 
 
 2. Make sure that the software has been properly configured for your beamtime. In
@@ -108,31 +109,16 @@ Check that your analysis environment is correctly set up
 -------------------------------------------------------------
 
 1. Analysis is done in a separate (but very similar) environment to acquisition.
-This will be in a separate terminal window.  You can run an analysis
-environment on ``ws2`` and on work-station 3 (it is the computer on the right-hand side.
-Look for ``ws3`` in the terminal title field)
-so make sure that you also look there for the analysis environment.
+This will be in a separate terminal window.
 Use the instructions given above for ``collection`` to check you have found the right terminal window.
-For data analysis ``show_env()`` should return something like ``analysis-17Q1.0``.
+For data analysis ``show_env()`` should return something like ``analysis-17Q3.0``.
 
-If you need to restart the analysis environment later you can do it by typing
+2. The analysis pipeline will start up automatically.
 
-.. code-block:: python
+3. Once the analysis pipeline starts up a few blank visualization windows will pop up, these
+will be filled with data once acquisition begins.
 
-  ianalysis
-
-2. Make sure that the software has been properly configured for your beamtime. In
-your ``analysis-yyQn.x`` environment, type:
-
-.. code-block:: python
-
-  an.md
-
-This will return the same list of metadata about your experiment as bt.md does.  It means
-that your analysis environment is linked to the right experiment.  If not
-please get your analysis environment set up by the instrument scientist before proceeding.
-
-3. Make sure the visualization software is running. We will use ``SrXgui`` to visualize 2D plots
+4. Make sure the visualization software is running. We will use ``SrXgui`` to visualize 2D plots
 and ``XPDsuite`` for visualizing 1D plots and getting PDFs.
 Check that they are running by finding windows that look like:
 
