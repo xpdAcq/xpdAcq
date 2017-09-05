@@ -7,7 +7,7 @@ This quick-start contains an overview of how the ``xpdAcq`` software works.
 To understand more details about it, please refer to the detailed documentation in :ref:`xpdu`
 
 Please use this page as a reminder of the workflow and to copy & paste code snippets into the
-ipython environments that are controlling your experiment and analysis.  After
+ipython terminals that are controlling your experiment and analysis.  After
 pasting, hit enter.
 
 Remember, to post questions about anything XPD, including software, and to see archived answers, at the `XPD-Users Google group
@@ -69,25 +69,24 @@ more importantly, to do things in the right order set up your experiment for suc
 
 OK, let's get started.
 
-Check your data collection environment is correctly set up
+Check your data collection terminal is correctly set up
 ----------------------------------------------------------
 
-1. You will do all your work in special IPython working environments. These should already be open, you just need
-to find them.  IPython environments start the line with something like ``In[49]:`` and ``Out[50]``, so you should
+1. You will do all your work in special IPython terminals. These should already be open, you just need
+to find them.  IPython terminals start the line with something like ``In[49]:`` and ``Out[50]``, so you should
 see that in a terminal.  Try typing ``show_env()``.  If you see something like ``collection-17Q1.0`` or ``analysis-17Q1.1``
-(the numbers will change with time) then you are good, you will use these environments to run your
+(the numbers will change with time) then you are good, you will use these terminals to run your
 experiment and to visualize and analyze your data, respectively.  We recommend that you run ``collection`` on
 work-station 2 (the central computer, look for ``ws2`` in the title at the top of the terminal windows) and
 ``analysis`` on the ``ws3`` computer on the right.
 
-If you can't find the right environments, please ask the instrument scientist.  This is important to make sure
+If you can't find the right terminal, please ask the instrument scientist.  This is important to make sure
 that there is a clean start for your experiment.  However, if later in your experiment you ever have to restart
-your environments, then you type at the command line ``bsui`` for the collection environment.
-``bsui`` will create an analysis terminal in addition to starting the collection environment.
+your terminals, then you type at the command line ``bsui`` for both the collection and analysis terminals.
 
 
 2. Make sure that the software has been properly configured for your beamtime. In
-your ``collection-yyQn.x`` environment, type:
+your ``collection-yyQn.x`` terminal, type:
 
 .. code-block:: python
 
