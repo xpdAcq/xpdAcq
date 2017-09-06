@@ -48,7 +48,7 @@ def _sample_name_phase_info_configuration(sample_name,
         pass # user defined, pass
     elif sample_name is None and phase_info is None:
         if tag == 'calib':
-            sample_name = 'Ni24_calib'
+            sample_name = 'Ni_calib'
             phase_info = 'Ni'
         elif tag == 'mask':
             sample_name = 'kapton'
@@ -139,9 +139,9 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     # collect & pull subtracted image
     if RE_instance is None:
         xrun_name = _REQUIRED_OBJ_LIST[0]
-        xrun = _check_obj(xrun_name)  # will raise error if not exists
+        RE_instance = _check_obj(xrun_name)  # will raise error if not exists
     img, fn_template = _collect_img(exposure, dark_sub_bool,
-                                    sample_md, 'caib', xrun,
+                                    sample_md, 'caib', RE_instance,
                                     detector=detector,
                                     calibrant=calibrant
                                     )
@@ -273,8 +273,6 @@ def run_mask_builder(exposure=300, mask_sample_name=None,
     --------
     xpdan.tools.mask_img
     """
-    xrun_name = _REQUIRED_OBJ_LIST[0]
-    xrun = _check_obj(xrun_name)  # will raise error if not exists
     # default behavior
     calib_dict = _auto_load_calibration_file(False)
     if not calib_dict:
@@ -289,10 +287,9 @@ def run_mask_builder(exposure=300, mask_sample_name=None,
     # grab RE instance
     if RE_instance is None:
         xrun_name = _REQUIRED_OBJ_LIST[0]
-        xrun = _check_obj(xrun_name)  # will raise error if not exists
-
+        RE_instance = _check_obj(xrun_name)  # will raise error if not exists
     img, fn_template = _collect_img(exposure, dark_sub_bool,
-                                    sample_md, 'mask', xrun)
+                                    sample_md, 'mask', RE_instance)
     if mask_dict is None:
         mask_dict = glbl['mask_dict']
     print("INFO: use mask options: {}".format(mask_dict))
