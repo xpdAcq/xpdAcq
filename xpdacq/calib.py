@@ -141,7 +141,7 @@ def run_calibration(exposure=5, dark_sub_bool=True,
         xrun_name = _REQUIRED_OBJ_LIST[0]
         RE_instance = _check_obj(xrun_name)  # will raise error if not exists
     img, fn_template = _collect_img(exposure, dark_sub_bool,
-                                    sample_md, 'caib', RE_instance,
+                                    sample_md, 'calib', RE_instance,
                                     detector=detector,
                                     calibrant=calibrant
                                     )
@@ -199,6 +199,7 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
         calibrant_obj = Calibrant(calibrant)
         sample_md.update({'dSpacing': calibrant_obj.dSpacing,
                           'detector': detector})
+        print("INSERT CALIB TAG")
         plan = bp.msg_mutator(plan, _inject_calibration_tag)
     elif tag == 'mask':
         plan = bp.msg_mutator(plan, _inject_mask_tag)
