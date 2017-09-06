@@ -373,12 +373,11 @@ class xrunTest(unittest.TestCase):
         assert key in open_run
         assert open_run[key] == val
 
-    @unittest.skip('temp_test')
     def test_mask_client_server_md_insert(self):
         server_key = 'mask_server_uid'
         server_val = '777'
         client_key = 'mask_client_uid'
-        glbl[server_key] = server_val
+        glbl['exp_hash_uid'] = server_val
         msg_list = []
         def msg_rv(msg):
             msg_list.append(msg)
