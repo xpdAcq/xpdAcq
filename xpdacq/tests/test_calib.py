@@ -18,7 +18,7 @@ from xpdacq.calib import (_save_calib_param,
                           _collect_calib_img,
                           _calibration,
                           _timestampstr)
-from xpdacq.utils import import_sample_info
+from xpdacq.utils import import_sample_info, ExceltoYaml
 from xpdacq.xpdacq import CustomizedRunEngine
 from xpdacq.beamtimeSetup import _start_beamtime
 
@@ -81,14 +81,15 @@ class calibTest(unittest.TestCase):
         # wavelength is given, so it should get customized value
         assert c2.wavelength == 999 * 10 ** (-10)
 
-    def test_smoke_collect_calb_img(self):
+
+    def test_collect_calb_img(self):
         calib_uid = '1234'
         glbl['detector_calibration_server_uid'] = calib_uid
         calibrant = os.path.join(glbl['usrAnalysis_dir'], 'Ni24.D')
         detector = 'perkin_elmer'
         img, fn_template = _collect_calib_img(5.0, True,
-                                              calibrant, detector,
-                                              self.xrun)
+                                              calibrant, 'Ni',
+                                              detector, self.xrun)
         hdr = xpd_configuration['db'][-1]
 
         # is information passed down?
@@ -97,12 +98,14 @@ class calibTest(unittest.TestCase):
         calibrant_obj = Calibrant(calibrant)
         assert calibrant_obj.dSpacing == hdr.start['dSpacing']
         assert hdr.start['is_calibration'] == True
+        parsed_md = ExceltoYaml.parse_phase_info('Ni')
+        assert all(v == hdr.start[k] for k, v in parsed_md.items())
         # is image shape as expected?
         assert img.shape == (5, 5)
         # is dark subtraction operated as expected?
         # since simulated pe1c always generate the same array, so
         # subtracted image should be zeors
-        assert img.all() == np.zeros((5, 5)).all()
+        assert np.all(img == 0)
 
     def test_save_calib_param(self):
         # reload yaml to produce pre-calib Calibration instance
