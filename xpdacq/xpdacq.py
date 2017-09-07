@@ -234,21 +234,21 @@ def _inject_qualified_dark_frame_uid(msg):
 
 def _inject_calibration_md(msg):
     if msg.command == 'open_run':
+        exp_hash_uid = glbl.get('exp_hash_uid')
+        # inject client uid to all runs
+        msg.kwargs.update({'detector_calibration_client_uid':
+                           exp_hash_uid})
         if 'is_calibration' in msg.kwargs:
-            # skip if it's calibration run
-            pass
+            # inject server uid if it's calibration run
+            msg.kwargs.update({'detector_calibration_server_uid':
+                               exp_hash_uid})
         else:
-            # load calibration param from previous run
+            # load calibration param if exists
             calibration_md = _auto_load_calibration_file()
             if calibration_md:
                 injected_calib_dict = dict(calibration_md)
-                calibration_server_uid =\
-                glbl.get('detector_calibration_server_uid', None)
                 # inject calibration md
                 msg.kwargs['calibration_md'] = injected_calib_dict
-                # linking calibration server/client
-                msg.kwargs.update({'detector_calibration_client_uid':
-                                   calibration_server_uid})
     return msg
 
 
@@ -260,36 +260,52 @@ def _inject_xpdacq_md_version(msg):
 
 
 def _inject_analysis_stage(msg):
-    """tag which stage of documents being processed"""
+    """specify at which stage the documents is processed"""
     if msg.command == 'open_run':
         msg.kwargs['analysis_stage'] = 'raw'
     return msg
 
-#TODO: clean the md linking
-def _inject_mask(msg):
-    if msg.command == 'open_run':
-        mask_path = glbl['mask_path']
-        if os.path.isfile(mask_path):
-            mask = np.load(mask_path)
-            print("INFO: insert mask into your header")
-            data, indicies, indptr = compress_mask(mask)  # rv are lists
-            msg.kwargs['mask'] = (data, indicies,
-                                  indptr)
-        else:
-            print("INFO: no mask has been built, scan will keep going...")
-    return msg
+
+def _auto_load_mask():
+    mask_path = glbl['mask_path']
+    if os.path.isfile(mask_path):
+        mask = np.load(mask_path)
+        print("INFO: insert mask into your header")
+        data, indicies, indptr = compress_mask(mask)  # rv are lists
+        return data, indicies, indptr
+    else:
+        print("INFO: no mask has been built, scan will keep going...")
 
 
-#TODO: clean the md linking
 def _inject_mask_server_uid(msg):
     if msg.command == 'open_run':
-        mask_server_uid = glbl.get('mask_server_uid', None)
-        if mask_server_uid:
-            msg.kwargs['mask_client_uid'] = mask_server_uid
+        exp_hash_uid = glbl.get('exp_hash_uid')
+        # inject client uid to all runs
+        msg.kwargs.update({'mask_client_uid':
+                           exp_hash_uid})
+        if 'is_mask' in msg.kwargs:
+            # inject server uid if it's calibration run
+            msg.kwargs.update({'mask_server_uid':
+                               exp_hash_uid})
         else:
-            print("WARNING: no mask has been built, scan will keep going...")
+            # load mask if exists
+            compressed_mask = _auto_load_mask()
+            if compressed_mask:
+                data, indicies, indptr = compressed_mask
+                # inject compressed 
+                msg.kwargs['mask'] = (data, indicies, indptr)
+
     return msg
 
+
+def update_experiment_hash_uid():
+    """helper function to assign new uid to glbl state"""
+    new_uid = str(uuid.uuid4())
+    glbl['exp_hash_uid'] = new_uid 
+    print("INFO: experiment hash uid as been updated to "
+          "{}".format(new_uid))
+
+    return new_uid
 
 def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
                            wait_time=None, clear=True):
@@ -399,6 +415,9 @@ class CustomizedRunEngine(RunEngine):
         print("INFO: beamtime object has been linked\n")
         if not glbl['is_simulation']:
             set_beamdump_suspender(self)
+        # assign hash of experiment condition
+        exp_hash_uid = str(uuid.uuid4())
+        glbl['exp_hash_uid'] = exp_hash_uid
 
     def __call__(self, sample, plan, subs=None, *,
                  verify_write=False, dark_strategy=periodic_dark,
@@ -456,8 +475,6 @@ class CustomizedRunEngine(RunEngine):
         # Load calibration file
         if glbl['auto_load_calib']:
             plan = bp.msg_mutator(plan, _inject_calibration_md)
-        # Insert compressed mask
-        plan = bp.msg_mutator(plan, _inject_mask)
         # Insert mask clinet uid
         plan = bp.msg_mutator(plan, _inject_mask_server_uid)
         # Insert xpdacq md version
