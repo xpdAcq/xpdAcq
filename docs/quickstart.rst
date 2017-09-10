@@ -31,21 +31,21 @@ Carry out the steps in this order to ensure a successful experiment.
   5. Run your experiment by running ``xrun(<sample>, <scanplan>)``
 
   6. Your data will be automatically saved and visualized via the analysis pipleine.
-  The data will be saved in ``.../xpdUser/tiff_base/<Sample_name_from_spreadsheet>``.
-  The pipeline will visualize the:
-    1. Dark corrected image
-    2. Mask
-    3. I(Q)
-    4. I(tth)
-    5. F(Q)
-    6. G(r)
-  The pipeline will save:
-    1. Dark corrected image (as ``.tiff``)
-    2. Mask (as ``.msk``)
-    3. I(Q) (as ``.chi``)
-    4. I(tth) (as ``.chi``)
-    5. G(r) (as ``.gr``)
-    6. calibration (as ``.poni``, if applicable)
+    The data will be saved in ``.../xpdUser/tiff_base/<Sample_name_from_spreadsheet>``.
+    The pipeline will visualize the:
+      1. Dark corrected image
+      2. Mask
+      3. I(Q)
+      4. I(tth)
+      5. F(Q)
+      6. G(r)
+    The pipeline will save:
+      1. Dark corrected image (as ``.tiff``)
+      2. Mask (as ``.msk``)
+      3. I(Q) (as ``.chi``)
+      4. I(tth) (as ``.chi``)
+      5. G(r) (as ``.gr``)
+      6. calibration (as ``.poni``, if applicable)
 
 These and many more things are explained below and elsewhere in the documentation.
 
@@ -66,7 +66,9 @@ There are many books and websites on these topics, and we gives some usage tips 
 The heart of ``xpdAcq`` is the ``xrun()`` function which  you will type to collect data, giving it as "arguments" (i.e., within the
 parentheses) information
 about the sample being run and the scan parameters, so it knows what to do.  This will execute the scan and save the results
-(both data and metadata) to NSLS-II databases.  To get your data you will then type ``save_last_tiff()``, or if you have already
+(both data and metadata) to NSLS-II databases.  In general, your
+experiment data will be saved via the analysis pipleine but if you wish
+to manually save the data, you can still type ``save_last_tiff()``, or if you have already
 calibrated the instrument (and we strongly encourage you to do this first!) ``integrate_and_save_last()`` which will save the
 images, but also 1D integrated patterns that you could do Rietveld refinement or PDF analysis on right away.  The data are saved in your
 own special directories, ``.../xpdUser/tiff_base/<sample-name>`` where you can go to visualize them using ``SrXgui`` for the tiff images
@@ -266,8 +268,15 @@ and follow the instructions in :ref:`calib_manual`.
 The resulting calibration parameters will be saved in the header of every scan you run until you
 run ``run_calibration()`` again.
 
+
 3. set up a mask
 """"""""""""""""
+
+.. Note::
+  
+  After version ``0.6.0``, a mask will be built by the automated analysis
+  pipeline. Following workflow will be useful if you wish to build the mask 
+  manually from a specific target and experimental setup.
 
 The standard mask removes problematic pixels at the edge of the detector, shadows
 the beamstop, and uses an auto-masking scheme to get rid of outlier pixels.
@@ -285,7 +294,7 @@ again.  You will always be able to extract your data unmasked, or apply a differ
 at analysis time, but if this mask works well, it will save you a lot of time later if
 you do this step now.
 
-You can look at the 2D image with and without the mask in SrXgui.
+You can look at the 2D image with and without the mask in ``SrXgui``.
 You can load the mask file by clicking the 'folder' icon by the "Mask file" field
 in SrXgui, navigating
 to the ``.../xpdUser/config_base`` folder and click `choose`.  If you do not see any files
@@ -419,7 +428,7 @@ You may have to make some new scans with different count times during this proce
 .. _def_scanplan:
 
 4.b Define your own xpdAcq ScanPlans
-"""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""
 
 xpdAcq can consume any bluesky Plan, but these can be challenging for the beginner to make, and beyond the scope of this
 quickstart.  Please see the Bluesky documentation for more details on defining bluesky Plans.
@@ -448,7 +457,7 @@ command
 
 
 4.c measure your background file
-"""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""
 
 This step is not required at this point, but it is recommended.
 The background-to-sample association is made in the Excel sample spreadsheet.
@@ -599,31 +608,13 @@ possibly change them, please see :ref:`usb_DeviceOptions`
 write your own scan plan
 ------------------------
 
-``xpdAcq`` also consumes any scan plan from ``bluesky``. Here we will show a brief example
-for illustration. This is a more advanced topic that is beyond the scope of this quick-start,
-but this gives you the idea of what is possible.
-
-The specific illustration is a scan that drives a motor called ``motor`` through a specific list of points while collecting
-an image at each point from the detector ``area_detector``.  It uses a predefined bluesky
-plan for this purpose, ``list_scan``.  To use this in ``xpdAcq`` you would first define your ``bluesky`` plan
-and assign it to the object we have called ``mybsplan`` in this example:
-
-.. code-block:: python
-
-  from bluesky.plans import list_scan
-
-  # it is entirely optional to add metadata to the scan, but here is what you would do:
-  mymd = {'memoy_aid': 'This metadata should be about the scan, not the sample which would be added when the scanplan is run',
-          'author': 'Simon',
-          'etc': 'make up any key-value pairs'}
-
-  mybsplan = list_scan([xpd_configuration['area_det'], motor, [1,3,5,7,9], md=mymd) # drives motor to postions 1,3,5,7,9 and fires area_detector at each position
-  mybsplan = subs_wrapper(mybsplan, LiveTable([xpd_configuration['area_det']])) # set up the scan so LiveTable will give updates on how the scan is progressing
-
-Then to use it successfully in xpdAcq you have to do a bit of configuration of global parameters.  This work is done
-automatically for you in the ``xpdAcq`` built-in plans.  There are many things you could set up, but the simplest example
-is that we want the detector to collect 50 frames each time we fire it, which would give a 50s exposure at a framerate of 0.1s (framerate
-is another glbl option that you could reset).
+``xpdAcq`` also consumes any scan plan from ``bluesky``. Presumabley
+you successfully followed the documentation and compose your own scanplan, 
+``myplan``. Before execute this plan in ``xpdAcq`` you would  need to do 
+a bit of work on detector configuration, which is done automatically 
+for you in the ``xpdAcq`` built-in plans. Let's say you want the detector to 
+collect 50 frames each time we fire it, which would give a 50s exposure at a 
+framerate of 0.1s (framerate is another glbl option that you could reset).
 
 .. code-block:: python
 
@@ -663,13 +654,14 @@ Double and triple check your script, then when you are ready to execute it, in `
 
     %run -i ~/xpdUser/userScripts/myNightShiftScript.py
 
-  Stay there for a while to make sure everything is running as expected and then go to bed!
+Stay there for a while to make sure everything is running as expected and then go to bed!
 
 .. Note::
-These scripts should execute as desired under normal circumstances.  Runs will automatically pause if
-there is a beam-dump and then resume, for example.  However, there are some situations where the scans
-can be tricked into hanging, or continuing to run without scans completing, so please check your data
-carefully.  We are working on solutions for these edge cases.
+
+  These scripts should execute as desired under normal circumstances.  Runs will automatically pause if
+  there is a beam-dump and then resume, for example.  However, there are some situations where the scans
+  can be tricked into hanging, or continuing to run without scans completing, so please check your data
+  carefully.  We are working on solutions for these edge cases.
 
 .. _cancel_scan:
 
