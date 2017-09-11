@@ -38,8 +38,8 @@ from pyFAI.calibration import Calibration, PeakPicker, Calibrant
 from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 
 from pkg_resources import resource_filename as rs_fn
-
 _REQUIRED_OBJ_LIST = ['xrun']
+
 
 def _sample_name_phase_info_configuration(sample_name,
                                           phase_info, tag):
@@ -64,6 +64,7 @@ def _sample_name_phase_info_configuration(sample_name,
     sample_md.update({'sample_name': sample_name})
 
     return sample_md
+
 
 def run_calibration(exposure=5, dark_sub_bool=True,
                     calibrant=None, phase_info=None,
@@ -199,7 +200,6 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
         calibrant_obj = Calibrant(calibrant)
         sample_md.update({'dSpacing': calibrant_obj.dSpacing,
                           'detector': detector})
-        print("INSERT CALIB TAG")
         plan = bp.msg_mutator(plan, _inject_calibration_tag)
     elif tag == 'mask':
         plan = bp.msg_mutator(plan, _inject_mask_tag)
@@ -221,7 +221,7 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
     if dark_sub_bool:
         img -= dark_img
     # FIXME: filename template from xpdAn
-    fn_template = None
+    fn_template = 'from_calib_func_{}.poni'.format(_timestampstr(time.time()))
 
     return img, fn_template
 
