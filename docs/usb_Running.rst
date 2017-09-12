@@ -154,6 +154,13 @@ to get the first data-set.
 
 
 
+You can also add metadata to the run by adding key word arguments to the run eg
+``xrun(0, 8, my_scan_tag='hello world')``. Some pieces of metadata are special,
+like ``folder_tag``. When ``folder_tag`` is added
+(eg ``xrun(0, 8, folder_tag='after_saxs')`` then the ``after_saxs`` will be
+added to the file path where the data is saved
+(eg ``<.../tiff_base/sample_name/after_saxs/mask/file_name>``).
+
 .. _auto_dark:
 
 
