@@ -37,7 +37,7 @@ before_install:
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
-  - conda create -n testenv nose python=$TRAVIS_PYTHON_VERSION scipy scikit-beam jsonschema pytest coverage pip ophyd pyepics mock xlrd pyfai flake8 codecov -c lightsource2-tag -c conda-forge -c soft-matter
+  - conda create -n testenv nose python=$TRAVIS_PYTHON_VERSION scipy scikit-beam jsonschema pytest coverage pip ophyd pyepics mock xlrd pyfai flake8 codecov ipython -c lightsource2-tag -c conda-forge -c soft-matter
   - source activate testenv
   - 'pip install https://github.com/NSLS-II/databroker/zipball/master#egg=databroker'
   - 'pip install https://github.com/NSLS-II/bluesky/zipball/master#egg=bluesky'
