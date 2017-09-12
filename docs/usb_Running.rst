@@ -287,9 +287,12 @@ something like this:
    scientist and not a scientist, **the first ring has number 0**, the second has
    number 1, the third has number 2 and the 6th has number 5.
 
-   If everything has gone well, after supplying all the indices, PyFai will pop
+   If everything has gone well, after supplying all the indices, PyFAI will pop
    up a number of plots that can give an expert eye some indication of the quality
-   of the calibration.  If the dashed lines look as if they are lining up well with
+   of the calibration.  We recommend that you type ``recalib`` and
+   then ``<enter>`` when prompted to
+   "modify parameters". This will cause pyFAI to refine the ring selection.
+   If the dashed lines look as if they are lining up well with
    the peaks you have a good calibration.  If not, `CTL-C` and start again.  If yes,
    activate the terminal window by clicking on it, hit ``<enter>`` at the command prompt
    then type ``done``.
