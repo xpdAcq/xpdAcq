@@ -218,8 +218,8 @@ just written and doesn't show.
 """"""""""""""""""""""""""""""
 
 Your sample information should be loaded in an excel spreadsheet, with a well
-defined format (a template file may be found at `XPD-Users Google group
-<https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_)
+defined format (a template file may be found at`xpdUser Google Group
+<https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_).
 
 If the IS didn't already do it, save your sample xls file to the ``.../xpdUser/import`` directory using the name
 ``<saf_number>_sample.xlsx``, where you replace ``<saf_number>`` with the number
@@ -273,10 +273,10 @@ run ``run_calibration()`` again.
 """"""""""""""""
 
 .. Note::
-
+  
   After version ``0.6.0``, a mask will be built by the automated analysis
-  pipeline. Following workflow will be useful if you wish to build the mask
-  manually from a specific experimental setup.
+  pipeline. Following workflow will be useful if you wish to build the mask 
+  manually from a specific target and experimental setup.
 
 The standard mask removes problematic pixels at the edge of the detector, shadows
 the beamstop, and uses an auto-masking scheme to get rid of outlier pixels.
@@ -463,39 +463,39 @@ This step is not required at this point, but it is recommended.
 The background-to-sample association is made in the Excel sample spreadsheet.
 Check the sheet to make sure that all your background samples are listed as samples,
 and that they are correctly linked to the samples for which they are the background.
+More documentation is avaliable :ref:`here <background_obj>`.
 
-  1. Load the background sample (e.g., empty kapton tube) on the instrument
-  2. In your ``collection-yyQn.x`` terminal type
+ 1. Load the background sample (e.g., empty kapton tube) on the instrument
+ 2. In your ``collection-yyQn.x`` terminal type
 
-    .. code-block:: python
+  .. code-block:: python
 
-      bt.list_bkg()
+    bt.list()
 
-    to locate the relevant background sample object, for example it might be ``kapton-1mmID``
-    at position 3 in the list.
+  to locate the relevant background sample object, for example it might be ``kapton-1mmID``
+  at position 3 in the list.
 
-  3. Then in the ``collection-yyQn.x`` terminal, you will type ``xrun`` giving as arguments
-   the background sample-object with a ``ct`` ScanPlan object of the desired exposure:
+ 3. Then in the ``collection-yyQn.x`` terminal, you will type ``xrun`` giving as arguments the background sample-object with a ``ct``
+ ScanPlan object of the desired exposure
 
-   .. code-block:: python
+.. code-block:: python
 
-     # if you are running this as a tutorial don't type this.  It will take >30 mins to complete because
-     # scanplan[3] is a 15 minute exposure and there is no stored 15 minute dark exposure for subtraction
-     # so the code will automatically collect that too!
-     # but to test it you could replace bt.scanplan[3] with bt.scanplan[0]....
+  # if you are running this as a tutorial don't type this.  It will take >30 mins to complete because
+  # scanplan[3] is a 15 minute exposure and there is no stored 15 minute dark exposure for subtraction
+  # so the code will automatically collect that too!
+  # but to test it you could replace bt.scanplan[3] with bt.scanplan[0]....
+  xrun(bt.samples['kepton_1mmOD'], bt.scanplan['ct_900']) # referencing objects explicitly...or...
+  xrun(2,3)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
+                                     # index from the ``bt`` list
 
-     # referencing objects explicitly...or...
-     xrun(bt.samples['kepton_1mmOD'], bt.scanplan['ct_900'])
+Please see :ref:`background_obj` for more information.
 
-     # inexplicit: give reference to ``Sample`` and ``ScanPlan`` index from the ``bt`` list.
-     xrun(2,3)
+How long should you run your background scan for? See discussion
+`here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
+but for kapton we often do it for 15-30 minutes, though it can be highly dependent
+on the scattering properties of your sample.  For example, strongly scattering samples
+like Ni often need no background subtraction at all.
 
-  More details are avaliable :ref:`here <background_obj>`.
-
-  How long should you run your background scan for? See discussion `here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
-  but for kapton we often do it for 15-30 minutes, though it can be highly dependent
-  on the scattering properties of your sample.  For example, strongly scattering samples
-  like Ni often need no background subtraction at all.
 
 4.d interrogate metadata in objects
 """""""""""""""""""""""""""""""""""
@@ -608,13 +608,13 @@ possibly change them, please see :ref:`usb_DeviceOptions`
 write your own scan plan
 ------------------------
 
-``xpdAcq`` also consumes any scan plan from ``bluesky``. Let's say you
-have successfully followed the `bluesky documentation <http://nsls-ii.github.io/bluesky/plans.html>`_
-and compose your own scanplan, ``myplan``. Before execute this plan, you would need to do
-a bit of work on detector configuration, which is done automatically
-for you in the ``xpdAcq`` built-in plans. If you want the detector to
-collect 50 frames each time we fire it, which would give a 50s exposure at a
-framerate of 0.1s (framerate is another ``glbl`` option that you could reset).
+``xpdAcq`` also consumes any scan plan from ``bluesky``. Presumabley
+you successfully followed the documentation and compose your own scanplan, 
+``myplan``. Before execute this plan in ``xpdAcq`` you would  need to do 
+a bit of work on detector configuration, which is done automatically 
+for you in the ``xpdAcq`` built-in plans. Let's say you want the detector to 
+collect 50 frames each time we fire it, which would give a 50s exposure at a 
+framerate of 0.1s (framerate is another glbl option that you could reset).
 
 .. code-block:: python
 
@@ -627,7 +627,7 @@ Finally, later on in the experiment when you are ready to run it, you would run 
   xrun(56, myplan) # on sample 56 in the sample list, run the myplan scan plan.
   xrun(57, myplan)
 
-The ability to write your own ``bluesky`` plans gives enormous flexibility
+The ability to write your own bluesky plans gives enormous flexibility
 but has a steep learning curve, but you should be able to get help
 setting these up from your local contact.
 For more details about how to write a ``bluesky`` scan plan,
@@ -674,8 +674,8 @@ and want to end it?  Need to pause to refill liquid nitrogen, but then want to c
 You can safely interrupt scans using ``CTL-C`` using the following
 crib
 
-Interactively Interrupt Execution
-"""""""""""""""""""""""""""""""""
+a) Interactively Interrupt Execution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ======================= ===========
 Command                 Outcome
@@ -690,8 +690,8 @@ resume the scan sometime later (the liquid nitrogen case) or abort (you made a m
 with the scan and want to start over), or stop but save the data (the "you are
 fed up waiting for it to finish" case).  See below for handling this.
 
-Recovering from the paused state caused by an interrupt
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+b) Recovering from the paused state caused by an interrupt
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 After a pause, when you are ready to continue working, type one of these commands
 into the ``collection-yyQn.x`` environment:
