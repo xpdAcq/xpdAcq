@@ -39,24 +39,6 @@ from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 
 from pkg_resources import resource_filename as rs_fn
 
-from xpdan.io import poni_saver
-from xpdan.formatters import render_and_clean
-from xpdan.pipelines.pipeline_utils import base_template
-
-def write_poni(start, descriptor, event, calibration, save_dir):
-    human_timestamp = _timestampstr(event['time'])
-
-    light_template = os.path.join(save_dir, base_template)
-
-    file_name = render_and_clean(light_template, 
-                                 human_timestamp=human_timestamp,
-                                 raw_event=event,
-                                 raw_start=start,
-                                 raw_descriptor=descriptor,
-                                 analyzed_start={'analysis_stage': 'calib'})
-    poni_saver(filename=file_name, calibration=calibration)
-
-
 _REQUIRED_OBJ_LIST = ['xrun']
 
 def _sample_name_phase_info_configuration(sample_name,
@@ -188,11 +170,7 @@ def run_calibration(exposure=5, dark_sub_bool=True,
         yaml_name = glbl['calib_config_name']
         calib_yml_fp = os.path.join(glbl['config_base'],
                                     glbl['calib_config_name'])
-        #_save_calib_param(calib_c, timestr, calib_yml_fp)
-        db = xpd_configuration['db']
-        h = db[-1]
-        write_poni(h['start'], h['descriptors'], next(h['events']),
-                   calib_c, glbl['config_base'])
+        _save_calib_param(calib_c, timestr, calib_yml_fp)
 
 
 def _inject_calibration_tag(msg):
