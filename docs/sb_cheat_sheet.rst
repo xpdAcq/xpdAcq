@@ -11,7 +11,7 @@ To understand in more detail what the code does, please go to :ref:`xpdu`
 Start a beamtime
 ----------------
 
-1. run ``bsui`` to start a collection ipython environment
+1. run ``xpdui`` to start a collection ipython environment
 2. run the end-beamtime sequence if it has not been run
 
 .. code-block:: python

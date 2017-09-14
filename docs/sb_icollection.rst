@@ -6,7 +6,7 @@ Overview of the bsui+xpdAcq environment
 
 All data collection at NSLS-II is carried out through a powerful
 Python-software-language based interface which runs in an ipython interactive
-session. By typing ``bsui`` at the unix prompt (command line) in a terminal
+session. By typing ``xpdui`` at the unix prompt (command line) in a terminal
 window at the XPD computer you begin an ipython session and preload an ipython
 profile (called ``collection``) that contains all the software to run the NSLS-II
 data collection software.

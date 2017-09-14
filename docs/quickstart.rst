@@ -97,7 +97,7 @@ work-station 2 (the central computer, look for ``ws2`` in the title at the top o
 
 If you can't find the right terminal, please ask the instrument scientist.  This is important to make sure
 that there is a clean start for your experiment.  However, if later in your experiment you ever have to restart
-your terminals, then you type at the command line ``bsui`` for both the collection and analysis terminals.
+your terminals, then you type at the command line ``xpdui`` for both the collection and analysis terminals.
 
 
 2. Make sure that the software has been properly configured for your beamtime. In
