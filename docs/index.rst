@@ -47,17 +47,26 @@ New features introduced to this version:
 
 * Integration with automated data reduction pipeline. Now live visualization and
   automated data-saving is supported. For the details about the pipeline, please
-  refere to `xpdAn documentation <http://xpdacq.github.io/xpdAn/>`_.
+  refer to `xpdAn documentation <http://xpdacq.github.io/xpdAn/>`_.
 
-* Advanced shutter control logic for temepratrue-rampling scan plan,
-  ``Tlis`` and ``Tramp``. Shutter will remain closed in between
-  exposures, which prevent detector from burnning. This behavior can
+
+* Advanced shutter control logic for temperature-ramping scan plan,
+  ``Tlist`` and ``Tramp``. By default, shutter will remain closed in 
+  between exposures, which prevent detector from burning. This behavior can
   be overridden, leaving the fast shutter open for the entire scan.
-  Please refer to our docstring for details.
+  Please refer to the function docstring by typing ``Tlist?`` or
+  ``Tramp?`` in the ``collection`` terminal for more details.
+
 
 * Refined metadata logic. We implement ``client-server`` logic which
   would largely enhance the linking between associated scans. For
   more details, please refer to :ref:`client_server_md`.
+
+
+* Now programs takes in user defined folder tag so that it's easier to
+  separate data into subfolders with memorable names. Please refer to 
+  :ref:`folder_tag`.
+
 
 * Current version supports following built-in scans:
 

@@ -152,19 +152,6 @@ to get the first data-set.
   generator count ['0beaaf'] (scan num: 8)
 
 
-.. _folder_tag:
-
-
-User defined folder tag
-"""""""""""""""""""""""
-
-You can also add metadata to the run by adding key word arguments to the run eg
-``xrun(0, 8, my_scan_tag='hello world')``. Some pieces of metadata are special,
-like ``folder_tag``. When ``folder_tag`` is added
-(eg ``xrun(0, 8, folder_tag='after_saxs')`` then the ``after_saxs`` will be
-added to the file path where the data is saved
-(eg ``<.../tiff_base/sample_name/after_saxs/mask/file_name>``).
-
 
 .. _auto_dark:
 
@@ -740,6 +727,21 @@ as ``server_uid``.
   and outside the hutch, synchrotron beam current to ambient temperature, as a
   unique identifier, ``uid``. Therefore, this identifier could be use for mapping
   data that shares common experiment related factors.
+
+
+.. _folder_tag:
+
+
+User defined folder tag
+"""""""""""""""""""""""
+
+You can also add metadata to the run by adding key word arguments to the run eg
+``xrun(0, 8, my_scan_tag='hello world')``. Some pieces of metadata are special,
+like ``folder_tag``. When ``folder_tag`` is added
+(eg ``xrun(0, 8, folder_tag='after_saxs')`` then the ``after_saxs`` will be
+added to the file path where the data is saved
+(eg ``<.../tiff_base/sample_name/after_saxs/mask/file_name>``).
+
 
 
 Let's :ref:`take a quick look at our data <usb_quickassess>`
