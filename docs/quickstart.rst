@@ -22,30 +22,34 @@ Carry out the steps in this order to ensure a successful experiment.
 
   1. If you haven't already, join `XPD-Users Google group <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ . Look here for answers if you get stuck and if the answer to your question is not already there, please ask it!
 
-  2. ``run_calibration()`` (rerun if the experiment geometry changes)
+  2. ``run_calibration()`` (rerun if the experiment geometry changes).
 
-  3. Run ``bt.list()`` to see what ``ScanPlans`` and ``Samples`` you have pre-defined. Define new ``ScanPlans`` as needed. 
-    To add additional samples add them to the sample excel spreadsheet and run ``import_sample_info()``
+  3. Run ``bt.list()`` to see what ``ScanPlans`` and ``Samples`` you have pre-defined. Define new ``ScanPlans`` as needed. To add additional samples add them to the sample excel spreadsheet and run ``import_sample_info()``.
 
   4. Run setup scans on your sample to assess data quality and required exposure time by running ``xrun(0, <a_count_ScanPlan>)``.
   
   5. Your data will be automatically saved and visualized via the analysis pipleine.
-    The data will be saved in ``.../xpdUser/tiff_base/<Sample_name_from_spreadsheet>``.
-    The pipeline will visualize the:
-      1. Dark corrected image
-      2. Mask
-      3. I(Q)
-      4. I(tth)
-      5. F(Q)
-      6. G(r)
-    The pipeline will save:
-      1. Dark corrected image (as ``.tiff``)
-      2. Mask (as ``.msk``)
-      3. I(Q) (as ``.chi``)
-      4. I(tth) (as ``.chi``)
-      5. G(r) (as ``.gr``)
-      6. calibration (as ``.poni``, if applicable)
+    * The data will be saved in ``.../xpdUser/tiff_base/<Sample_name_from_spreadsheet>``.
+    
+    * The pipeline will save:
+        
+        1. Dark corrected image (as ``.tiff``)
+        2. Mask (as ``.msk``)
+        3. I(Q) (as ``.chi``)
+        4. I(tth) (as ``.chi``)
+        5. G(r) (as ``.gr``)
+        6. calibration (as ``.poni``, if applicable)
  
+
+    * The pipeline will visualize the:
+        
+        1. Dark corrected image
+        2. Mask
+        3. I(Q)
+        4. I(tth)
+        5. F(Q)
+        6. G(r)
+
   6. Navigate to ``.../xpdUser/tiff_base/Setup`` directory to preview the data using plotting tools such as ``SrXgui``, ``XPDSuite``, ``Fit2D`` etc.
 
   5. Run your experiment by running ``xrun(<sample>, <scanplan>)`` and your data will be saved automatically.
