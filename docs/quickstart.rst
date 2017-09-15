@@ -24,13 +24,12 @@ Carry out the steps in this order to ensure a successful experiment.
 
   2. ``run_calibration()`` (rerun if the experiment geometry changes)
 
-  3. Run ``bt.list()`` to see what ``ScanPlans`` and ``Samples`` you have pre-defined. Define new ``ScanPlans`` as needed.  To add additional samples add them to the sample excel spreadsheet and run ``import_sample_info()``
+  3. Run ``bt.list()`` to see what ``ScanPlans`` and ``Samples`` you have pre-defined. Define new ``ScanPlans`` as needed. 
+    To add additional samples add them to the sample excel spreadsheet and run ``import_sample_info()``
 
-  4. Run setup scans on your sample to assess data quality and required exposure time by running ``xrun(0, <a_count_ScanPlan>)`` followed by ``integrate_and_save_last()``. Navigate to ``.../xpdUser/tiff_base/Setup`` directory to preview the data using plotting tools such as ``SrXgui``, ``XPDSuite``, ``Fit2D`` etc.
-
-  5. Run your experiment by running ``xrun(<sample>, <scanplan>)``
-
-  6. Your data will be automatically saved and visualized via the analysis pipleine.
+  4. Run setup scans on your sample to assess data quality and required exposure time by running ``xrun(0, <a_count_ScanPlan>)``.
+  
+  5. Your data will be automatically saved and visualized via the analysis pipleine.
     The data will be saved in ``.../xpdUser/tiff_base/<Sample_name_from_spreadsheet>``.
     The pipeline will visualize the:
       1. Dark corrected image
@@ -46,6 +45,11 @@ Carry out the steps in this order to ensure a successful experiment.
       4. I(tth) (as ``.chi``)
       5. G(r) (as ``.gr``)
       6. calibration (as ``.poni``, if applicable)
+ 
+  6. Navigate to ``.../xpdUser/tiff_base/Setup`` directory to preview the data using plotting tools such as ``SrXgui``, ``XPDSuite``, ``Fit2D`` etc.
+
+  5. Run your experiment by running ``xrun(<sample>, <scanplan>)`` and your data will be saved automatically.
+
 
 These and many more things are explained below and elsewhere in the documentation.
 
@@ -97,7 +101,8 @@ work-station 2 (the central computer, look for ``ws2`` in the title at the top o
 
 If you can't find the right terminal, please ask the instrument scientist.  This is important to make sure
 that there is a clean start for your experiment.  However, if later in your experiment you ever have to restart
-your terminals, then you type at the command line ``xpdui`` for both the collection and analysis terminals.
+your terminals, then you type at the command line ``xpdui`` in the collection terminal for the collection environment 
+and type ``setup_analysis`` for in the analysis terminal for analysis environment.
 
 
 2. Make sure that the software has been properly configured for your beamtime. In
