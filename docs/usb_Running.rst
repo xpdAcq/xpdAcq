@@ -26,8 +26,8 @@ The allowed scan types are:
   >>> xrun(sample, scanplan)
 
 
-.. autofunction:: xpdacq.xpdacq.xrun
-
+.. autoclass:: xpdacq.xpdacq.CustomizedRunEngine
+    :members:
 
 ``xrun`` stands for "XPD run" which is a our main run engine.
 
@@ -153,7 +153,6 @@ to get the first data-set.
 
 
 
-
 .. _auto_dark:
 
 
@@ -256,16 +255,16 @@ something like this:
   That is the image we want to perform our  calibration with. Use the **magnify
   tool** at the tool bar to zoom in to something that looks like the figure below.
   The magnifying tool is enabled by clicking on the button on the toolbar that
-  looks like a magnifying glass. 
-  
+  looks like a magnifying glass.
+
   Now we will select five rings that PyFai will use to do the calibration.  To do this
-  click on the magnifying glass button again to deselect the magnifying tool so the cursor 
+  click on the magnifying glass button again to deselect the magnifying tool so the cursor
   looks like an arrow.  You will place the tip
   of the arrow on the first ring and then **RIGHT click**.  you will see dots going around the
   ring you have selected.  Then repeat this for the other four rings you will select.
-  `For the highest accuracy, We recommend that you select the first, second, third and 
+  `For the highest accuracy, We recommend that you select the first, second, third and
   6th ring, as shown in the figure.`  The 6th ring is weaker but well separated from its neighbor.
-  
+
   .. image:: ./img/calib_07.png
     :width: 400px
     :align: center
@@ -274,15 +273,18 @@ something like this:
 2. If you don't like what you have selected, you can exit out using ``CTL-C`` and start again
    by running `run_calibration()`.  However, if you are happy with your selections accept them by first
    making the collection terminal window active by clicking on it, then hitting ``<enter>``.
-   
-   You will now follow the instructions coming from PyFai.  It asks you to supply the
-   indices of the rings you have selected.  Because PyFai was written by a computer 
+
+   You will now follow the instructions coming from PyFAI.  It asks you to supply the
+   indices of the rings you have selected.  Because PyFAI was written by a computer
    scientist and not a scientist, **the first ring has number 0**, the second has
    number 1, the third has number 2 and the 6th has number 5.
 
-   If everything has gone well, after supplying all the indices, PyFai will pop
+   If everything has gone well, after supplying all the indices, PyFAI will pop
    up a number of plots that can give an expert eye some indication of the quality
-   of the calibration.  If the dashed lines look as if they are lining up well with
+   of the calibration.  We recommend that you type ``recalib`` and
+   then ``<enter>`` when prompted to
+   "modify parameters". This will cause pyFAI to refine the ring selection.
+   If the dashed lines look as if they are lining up well with
    the peaks you have a good calibration.  If not, `CTL-C` and start again.  If yes,
    activate the terminal window by clicking on it, hit ``<enter>`` at the command prompt
    then type ``done``.
@@ -293,17 +295,17 @@ something like this:
     :align: center
     :height: 300px
 
-  PyFai can be a bit finicky.  If it hangs, type CTL-C and start over and make
+  PyFAI can be a bit finicky.  If it hangs, type CTL-C and start over and make
   sure you follow the instruction exactly.
-  
+
   You may find more information about calibration process from `pyFAI documentation <http://pyfai.readthedocs.io/en/latest/calibration.html>`_
 
-3. You are done! ``xpdAcq`` has saved the calibration parameters and will store them will all subsequent scans until you 
-   run another calibration.  
-   
+3. You are done! ``xpdAcq`` has saved the calibration parameters and will store them will all subsequent scans until you
+   run another calibration.
+
    To see the current calibration parameters, type ``show_calib()``.
-   
-   You can also find the calibration parameters in a file called 
+
+   You can also find the calibration parameters in a file called
    ``pyFAI_calib.yml`` in ``.../xpdUser/config_base``
 
 3. To clean up you can close all the PyFai windows, including
@@ -345,7 +347,7 @@ directory. Then the import process is simply:
   import_sample_info()
 
 ``xpdAcq`` will grab the ``saf_number`` and ``bt`` for current beamtime, so make sure you have your spreadsheet named with proper format. For example, if your SAF number is ``300179``, then you should have your pre-populated spreadsheet with the name as ``300179_sample.xls``, sit inside ``xpdUser/import`` directory.
-  
+
 
 To parse the information filled inside your spreadsheet, we have designed
 several rules and here are the explantion to each of the rules.
@@ -479,7 +481,7 @@ dictonary-like fields
   Fields following this parsing rule are:
 
   =====================================  ===================================
-  ``structrual database ID for phases``  database name and the ID for 
+  ``structrual database ID for phases``  database name and the ID for
                                          sample phases
   =====================================  ===================================
 
@@ -550,17 +552,17 @@ Sample Objects
 * **Background**:
 
   It is recommended to run a background scan before your sample so it is available for
-  the automated data reduction steps.  It also allows you to see problems with the 
+  the automated data reduction steps.  It also allows you to see problems with the
   experimental setup, for example, crystalline peaks due to the beam hitting a shutter.
 
   You can associate a Sample as the background for the desired
   Sample freely. Linking the background with the sample together also makes the
   data-reduction workflow easier.
-  
-  We specify this grouping by entering background sample name into the 
-  ``Sample-name of sample background``  column in the spreadsheet. You can 
+
+  We specify this grouping by entering background sample name into the
+  ``Sample-name of sample background``  column in the spreadsheet. You can
   fill in the *Sample Name of your background* to whichever sample you want to relate.
-  
+
   For example, in our `spreadsheet template <https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_ we created pure background
   objects kapton_1mmOD, kapton_0.9mmOD and kapton_0.5mmOD
   and we link Ni with background kapton_1mmOD by specifying it
@@ -586,9 +588,9 @@ Sample Objects
 
 .. _auto_mask:
 
-
 Auto-masking
 """"""""""""
+
 Masking can be a tedious process, requiring long hours judging which pixels
 are good and which need to be removed. The our automated masking software aims
 to alleviate this by applying a set of masks in sequence to return better
@@ -606,7 +608,6 @@ the low scattering mask.
 
 Applied masks
 ^^^^^^^^^^^^^
-
 
 0. Any mask passed in to the software:
     If you have any preexisting masks, we will use those as a starting position
@@ -661,6 +662,85 @@ This will take a shot and mask it. This mask will then be saved and loaded
 into subsequent experiment `run_headers` allowing them to be used for the next
 images.
 
+
+.. _client_server_md:
+
+client/server metadata schema
+""""""""""""""""""""""""""""""
+
+Overview with an example
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``client/server`` schema associate different data with a centralized
+mapping, which would allow a more flexible way to link data. Let's take
+calibration as an example. Ideally one will perform a calibration run
+before collecting any data so that subsequent runs will be referenced to
+the experimental geometry deduced from this calibration run. However,
+there might be some time calibration run is executed after data is
+collected due to practical situation. Under traditional metadata schema,
+the data collected prior to the calibration will not be able to associated
+with given geometry in a systematic way; it relies on experimenter to
+identify which data should be grouped and this add complexities of
+analyzing data after the beamtime.
+
+The ``client/server`` schema is designed to solve the problem described above.
+At the beginning of the beamtime, an unique ``exp_hash_uid`` is generated.
+Every subsequent run will inserted with the metadata ``client_uid=exp_hash_uid``
+while the calibration run will have ``server_uid=exp_hash_uid`` in the metadata.
+Therefore, by querying scans with the matched client/server uid, production runs
+and calibration runs are linked by regardless the order in time. Furthermore,
+this ``client/server`` schema would allow the recalibration if any factor related
+to defining experimental geometry, such as wavelength, was known to be in accurate.
+
+The ``client/server`` logic can be extended to other kinds of mapping as well.
+Currently, ``xpdAcq`` utilizes this logic in associating calibration runs with
+production runs.
+
+when and how to change ``exp_hash_uid``?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It's strongly suggested to update the ``exp_hash_uid`` whenever there is
+a sensible change to your experimental setup, for example, different detectors,
+changes in sample stages, fluctuation of ring current and so on. In this way,
+the data that is referenced to the same experiment condition will be more
+tightly associated and will make future data analysis easier as direct comparison
+is possible.
+
+To update the ``exp_hash_uid``, please type following command in the ``collection``
+terminal of your ipython.
+
+.. code:: python
+
+  update_exp_hash_uid()
+
+  # example output
+  #INFO: experiment hash uid has been updated to 3020835e-9cb3-4c63-9bf4-4834bf5e865f
+
+Once ``exp_hash_uid`` is updated, all subsequent runs will have the
+updated ``client_uid`` metadata and calibration runs will has this new uid
+as ``server_uid``.
+
+.. note::
+
+  The idea of ``hash`` is borrowed from computer science. It means we conceptually
+  represent all experiment related factors, ranging from the instruments inside
+  and outside the hutch, synchrotron beam current to ambient temperature, as a
+  unique identifier, ``uid``. Therefore, this identifier could be use for mapping
+  data that shares common experiment related factors.
+
+
+.. _folder_tag:
+
+
+User defined folder tag
+"""""""""""""""""""""""
+
+You can also add metadata to the run by adding key word arguments to the run eg
+``xrun(0, 8, my_scan_tag='hello world')``. Some pieces of metadata are special,
+like ``folder_tag``. When ``folder_tag`` is added
+(eg ``xrun(0, 8, folder_tag='after_saxs')`` then the ``after_saxs`` will be
+added to the file path where the data is saved
+(eg ``<.../tiff_base/sample_name/after_saxs/mask/file_name>``).
 
 
 

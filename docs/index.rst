@@ -9,7 +9,7 @@ xpdAcq documentation
 Introduction
 ++++++++++++
 
-To post questions about anything XPD, including software, and to see archived answers, please join the `XPD-Users Google group 
+To post questions about anything XPD, including software, and to see archived answers, please join the `XPD-Users Google group
 <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_
 
 ``xpdAcq`` is a Python package that aids data collection at the XPD beamlime. It is built on top of and augments the NSLS-II data acquisition Python
@@ -18,7 +18,7 @@ package `bluesky <http://nsls-ii.github.io/bluesky/>`_ .
 XPD may be operated directly by bluesky, or using xpdAcq.
 
 The goal of the ``xpdAcq`` package is to simplify your collection and analysis workflow during beamtime,
-so that you can focus more on scientific aspects of your experiment. Additionally, ``xpdAcq`` provides an interface 
+so that you can focus more on scientific aspects of your experiment. Additionally, ``xpdAcq`` provides an interface
 that needs less Python experience than the current native bluesky interface.
 
 We hope that you find it intuitive, like the most important function to run a scan, ``xrun``:
@@ -36,41 +36,49 @@ the software, please post it as a new thread at `XPD-Users
 What's new?
 +++++++++++
 
-current version : ``v0.5.2``
+current version : ``v0.6.0``
 """"""""""""""""""""""""""""
 
 This is a stable release of ``xpdAcq`` software.
 
-Addition to all the features of ``v0.5.0``, new features introduced to this version are:
-
-  * functionality to reload beamtime configuration when reenter into ``ipython`` session
-
-  * improved logic of importing metadata from a spreadsheet, information is parsed in a 
-    way that facilitates data driven studies.
-
-  * new ScanPlan: temperature list scan ``Tlist``. User can collect data at desired
-    temperature points.
-
-``v0.5.2`` supports following built-in scans:
-
-.. code-block:: none
-
-  single-frame (ct)
-  time-series (tseries)
-  temperature-series scans (Tramp)
-  temperature-list scans (Tlist)
-
-Additional built-in scan types will be added in future releases.
-
-``v0.5.2`` also supports following automated logics :
-
-  * :ref:`automated dark subtraction <auto_dark>`
-
-  * :ref:`automated calibration capture <auto_calib>`
-
-  * :ref:`automated mask per image <auto_mask>`
-
 This version is fully documented and extensively tested.
+
+New features introduced to this version:
+
+* Integration with automated data reduction pipeline. Now live visualization and
+  automated data-saving is supported. For the details about the pipeline, please
+  refer to `xpdAn documentation <http://xpdacq.github.io/xpdAn/>`_.
+
+
+* Advanced shutter control logic for temperature-ramping scan plan,
+  ``Tlist`` and ``Tramp``. By default, shutter will remain closed in 
+  between exposures, which prevent detector from burning. This behavior can
+  be overridden, leaving the fast shutter open for the entire scan.
+  Please refer to the function docstring by typing ``Tlist?`` or
+  ``Tramp?`` in the ``collection`` terminal for more details.
+
+
+* Refined metadata logic. We implement ``client-server`` logic which
+  would largely enhance the linking between associated scans. For
+  more details, please refer to :ref:`client_server_md`.
+
+
+* Now programs takes in user defined folder tag so that it's easier to
+  separate data into subfolders with memorable names. Please refer to 
+  :ref:`folder_tag`.
+
+
+* Current version supports following built-in scans:
+
+  .. code-block:: none
+
+    single-frame (ct)
+    time-series (tseries)
+    temperature-series scans (Tramp)
+    temperature-list scans (Tlist)
+
+
+  Additional built-in scan types will be added in future releases.
 
 
 .. toctree::

@@ -22,17 +22,38 @@ Carry out the steps in this order to ensure a successful experiment.
 
   1. If you haven't already, join `XPD-Users Google group <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ . Look here for answers if you get stuck and if the answer to your question is not already there, please ask it!
 
-  2. ``run_calibration()`` (rerun if the experiment geometry changes)
+  2. ``run_calibration()`` (rerun if the experiment geometry changes).
 
-  3. Run ``run_mask_builder()`` (rerun if there are any changes in detector shadowing)
+  3. Run ``bt.list()`` to see what ``ScanPlans`` and ``Samples`` you have pre-defined. Define new ``ScanPlans`` as needed. To add additional samples add them to the sample excel spreadsheet and run ``import_sample_info()``.
 
-  4. Run ``bt.list()`` to see what ``ScanPlans`` and ``Samples`` you have pre-defined. Define new ``ScanPlans`` as needed.  To add additional samples add them to the sample excel spreadsheet and run ``import_sample_info()``
+  4. Run setup scans on your sample to assess data quality and required exposure time by running ``xrun(0, <a_count_ScanPlan>)``.
+  
+  5. Your data will be automatically saved and visualized via the analysis pipleine.
+    * The data will be saved in ``.../xpdUser/tiff_base/<Sample_name_from_spreadsheet>``.
+    
+    * The pipeline will save:
+        
+        1. Dark corrected image (as ``.tiff``)
+        2. Mask (as ``.msk``)
+        3. I(Q) (as ``.chi``)
+        4. I(tth) (as ``.chi``)
+        5. G(r) (as ``.gr``)
+        6. calibration (as ``.poni``, if applicable)
+ 
 
-  5. Run setup scans on your sample to assess data quality and required exposure time by running ``xrun(0, <a_count_ScanPlan>)`` followed by ``integrate_and_save_last()``. Navigate to ``.../xpdUser/tiff_base/Setup`` directory to preview the data using plotting tools such as ``SrXgui``, ``XPDSuite``, ``Fit2D`` etc.
+    * The pipeline will visualize the:
+        
+        1. Dark corrected image
+        2. Mask
+        3. I(Q)
+        4. I(tth)
+        5. F(Q)
+        6. G(r)
 
-  6. Run your experiment by running ``xrun(<sample>, <scanplan>)``
+  6. Navigate to ``.../xpdUser/tiff_base/Setup`` directory to preview the data using plotting tools such as ``SrXgui``, ``XPDSuite``, ``Fit2D`` etc.
 
-  7. Your data will be automatically saved and visualized via the analysis pipleine. The data will be saved in ``.../xpdUser/tiff_base/<Sample_name_from_spreadsheet>``.
+  5. Run your experiment by running ``xrun(<sample>, <scanplan>)`` and your data will be saved automatically.
+
 
 These and many more things are explained below and elsewhere in the documentation.
 
@@ -53,7 +74,9 @@ There are many books and websites on these topics, and we gives some usage tips 
 The heart of ``xpdAcq`` is the ``xrun()`` function which  you will type to collect data, giving it as "arguments" (i.e., within the
 parentheses) information
 about the sample being run and the scan parameters, so it knows what to do.  This will execute the scan and save the results
-(both data and metadata) to NSLS-II databases.  To get your data you will then type ``save_last_tiff()``, or if you have already
+(both data and metadata) to NSLS-II databases.  In general, your
+experiment data will be saved via the analysis pipleine but if you wish
+to manually save the data, you can still type ``save_last_tiff()``, or if you have already
 calibrated the instrument (and we strongly encourage you to do this first!) ``integrate_and_save_last()`` which will save the
 images, but also 1D integrated patterns that you could do Rietveld refinement or PDF analysis on right away.  The data are saved in your
 own special directories, ``.../xpdUser/tiff_base/<sample-name>`` where you can go to visualize them using ``SrXgui`` for the tiff images
@@ -82,7 +105,8 @@ work-station 2 (the central computer, look for ``ws2`` in the title at the top o
 
 If you can't find the right terminal, please ask the instrument scientist.  This is important to make sure
 that there is a clean start for your experiment.  However, if later in your experiment you ever have to restart
-your terminals, then you type at the command line ``bsui`` for both the collection and analysis terminals.
+your terminals, then you type at the command line ``xpdui`` in the collection terminal for the collection environment 
+and type ``setup_analysis`` for in the analysis terminal for analysis environment.
 
 
 2. Make sure that the software has been properly configured for your beamtime. In
@@ -203,8 +227,8 @@ just written and doesn't show.
 """"""""""""""""""""""""""""""
 
 Your sample information should be loaded in an excel spreadsheet, with a well
-defined format (a template file may be found at`xpdUser Google Group
-<https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_).
+defined format (a template file may be found at `XPD-Users Google group
+<https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_)
 
 If the IS didn't already do it, save your sample xls file to the ``.../xpdUser/import`` directory using the name
 ``<saf_number>_sample.xlsx``, where you replace ``<saf_number>`` with the number
@@ -253,8 +277,15 @@ and follow the instructions in :ref:`calib_manual`.
 The resulting calibration parameters will be saved in the header of every scan you run until you
 run ``run_calibration()`` again.
 
+
 3. set up a mask
 """"""""""""""""
+
+.. Note::
+
+  After version ``0.6.0``, a mask will be built by the automated analysis
+  pipeline. Following workflow will be useful if you wish to build the mask
+  manually from a specific experimental setup.
 
 The standard mask removes problematic pixels at the edge of the detector, shadows
 the beamstop, and uses an auto-masking scheme to get rid of outlier pixels.
@@ -272,7 +303,7 @@ again.  You will always be able to extract your data unmasked, or apply a differ
 at analysis time, but if this mask works well, it will save you a lot of time later if
 you do this step now.
 
-You can look at the 2D image with and without the mask in SrXgui.
+You can look at the 2D image with and without the mask in ``SrXgui``.
 You can load the mask file by clicking the 'folder' icon by the "Mask file" field
 in SrXgui, navigating
 to the ``.../xpdUser/config_base`` folder and click `choose`.  If you do not see any files
@@ -406,7 +437,7 @@ You may have to make some new scans with different count times during this proce
 .. _def_scanplan:
 
 4.b Define your own xpdAcq ScanPlans
-"""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""
 
 xpdAcq can consume any bluesky Plan, but these can be challenging for the beginner to make, and beyond the scope of this
 quickstart.  Please see the Bluesky documentation for more details on defining bluesky Plans.
@@ -435,45 +466,45 @@ command
 
 
 4.c measure your background file
-"""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""
 
 This step is not required at this point, but it is recommended.
 The background-to-sample association is made in the Excel sample spreadsheet.
 Check the sheet to make sure that all your background samples are listed as samples,
 and that they are correctly linked to the samples for which they are the background.
-More documentation is avaliable :ref:`here <background_obj>`.
 
- 1. Load the background sample (e.g., empty kapton tube) on the instrument
- 2. In your ``collection-yyQn.x`` terminal type
+  1. Load the background sample (e.g., empty kapton tube) on the instrument
+  2. In your ``collection-yyQn.x`` terminal type
 
-  .. code-block:: python
+    .. code-block:: python
 
-    bt.list()
+      bt.list_bkg()
 
-  to locate the relevant background sample object, for example it might be ``kapton-1mmID``
-  at position 3 in the list.
+    to locate the relevant background sample object, for example it might be ``kapton-1mmID``
+    at position 3 in the list.
 
- 3. Then in the ``collection-yyQn.x`` terminal, you will type ``xrun`` giving as arguments the background sample-object with a ``ct``
- ScanPlan object of the desired exposure
+  3. Then in the ``collection-yyQn.x`` terminal, you will type ``xrun`` giving as arguments
+   the background sample-object with a ``ct`` ScanPlan object of the desired exposure:
 
-.. code-block:: python
+   .. code-block:: python
 
-  # if you are running this as a tutorial don't type this.  It will take >30 mins to complete because
-  # scanplan[3] is a 15 minute exposure and there is no stored 15 minute dark exposure for subtraction
-  # so the code will automatically collect that too!
-  # but to test it you could replace bt.scanplan[3] with bt.scanplan[0]....
-  xrun(bt.samples['kepton_1mmOD'], bt.scanplan['ct_900']) # referencing objects explicitly...or...
-  xrun(2,3)                          # inexplicit: give reference to ``Sample`` and ``ScanPlan``
-                                     # index from the ``bt`` list
+     # if you are running this as a tutorial don't type this.  It will take >30 mins to complete because
+     # scanplan[3] is a 15 minute exposure and there is no stored 15 minute dark exposure for subtraction
+     # so the code will automatically collect that too!
+     # but to test it you could replace bt.scanplan[3] with bt.scanplan[0]....
 
-Please see :ref:`background_obj` for more information.
+     # referencing objects explicitly...or...
+     xrun(bt.samples['kepton_1mmOD'], bt.scanplan['ct_900'])
 
-How long should you run your background scan for? See discussion
-`here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
-but for kapton we often do it for 15-30 minutes, though it can be highly dependent
-on the scattering properties of your sample.  For example, strongly scattering samples
-like Ni often need no background subtraction at all.
+     # inexplicit: give reference to ``Sample`` and ``ScanPlan`` index from the ``bt`` list.
+     xrun(2,3)
 
+  More details are avaliable :ref:`here <background_obj>`.
+
+  How long should you run your background scan for? See discussion `here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
+  but for kapton we often do it for 15-30 minutes, though it can be highly dependent
+  on the scattering properties of your sample.  For example, strongly scattering samples
+  like Ni often need no background subtraction at all.
 
 4.d interrogate metadata in objects
 """""""""""""""""""""""""""""""""""
@@ -586,31 +617,13 @@ possibly change them, please see :ref:`usb_DeviceOptions`
 write your own scan plan
 ------------------------
 
-``xpdAcq`` also consumes any scan plan from ``bluesky``. Here we will show a brief example
-for illustration. This is a more advanced topic that is beyond the scope of this quick-start,
-but this gives you the idea of what is possible.
-
-The specific illustration is a scan that drives a motor called ``motor`` through a specific list of points while collecting
-an image at each point from the detector ``area_detector``.  It uses a predefined bluesky
-plan for this purpose, ``list_scan``.  To use this in ``xpdAcq`` you would first define your ``bluesky`` plan
-and assign it to the object we have called ``mybsplan`` in this example:
-
-.. code-block:: python
-
-  from bluesky.plans import list_scan
-
-  # it is entirely optional to add metadata to the scan, but here is what you would do:
-  mymd = {'memoy_aid': 'This metadata should be about the scan, not the sample which would be added when the scanplan is run',
-          'author': 'Simon',
-          'etc': 'make up any key-value pairs'}
-
-  mybsplan = list_scan([xpd_configuration['area_det'], motor, [1,3,5,7,9], md=mymd) # drives motor to postions 1,3,5,7,9 and fires area_detector at each position
-  mybsplan = subs_wrapper(mybsplan, LiveTable([xpd_configuration['area_det']])) # set up the scan so LiveTable will give updates on how the scan is progressing
-
-Then to use it successfully in xpdAcq you have to do a bit of configuration of global parameters.  This work is done
-automatically for you in the ``xpdAcq`` built-in plans.  There are many things you could set up, but the simplest example
-is that we want the detector to collect 50 frames each time we fire it, which would give a 50s exposure at a framerate of 0.1s (framerate
-is another glbl option that you could reset).
+``xpdAcq`` also consumes any scan plan from ``bluesky``. Let's say you
+have successfully followed the `bluesky documentation <http://nsls-ii.github.io/bluesky/plans.html>`_
+and compose your own scanplan, ``myplan``. Before execute this plan, you would need to do
+a bit of work on detector configuration, which is done automatically
+for you in the ``xpdAcq`` built-in plans. If you want the detector to
+collect 50 frames each time we fire it, which would give a 50s exposure at a
+framerate of 0.1s (framerate is another ``glbl`` option that you could reset).
 
 .. code-block:: python
 
@@ -623,7 +636,7 @@ Finally, later on in the experiment when you are ready to run it, you would run 
   xrun(56, myplan) # on sample 56 in the sample list, run the myplan scan plan.
   xrun(57, myplan)
 
-The ability to write your own bluesky plans gives enormous flexibility
+The ability to write your own ``bluesky`` plans gives enormous flexibility
 but has a steep learning curve, but you should be able to get help
 setting these up from your local contact.
 For more details about how to write a ``bluesky`` scan plan,
@@ -650,13 +663,14 @@ Double and triple check your script, then when you are ready to execute it, in `
 
     %run -i ~/xpdUser/userScripts/myNightShiftScript.py
 
-  Stay there for a while to make sure everything is running as expected and then go to bed!
+Stay there for a while to make sure everything is running as expected and then go to bed!
 
 .. Note::
-These scripts should execute as desired under normal circumstances.  Runs will automatically pause if
-there is a beam-dump and then resume, for example.  However, there are some situations where the scans
-can be tricked into hanging, or continuing to run without scans completing, so please check your data
-carefully.  We are working on solutions for these edge cases.
+
+  These scripts should execute as desired under normal circumstances.  Runs will automatically pause if
+  there is a beam-dump and then resume, for example.  However, there are some situations where the scans
+  can be tricked into hanging, or continuing to run without scans completing, so please check your data
+  carefully.  We are working on solutions for these edge cases.
 
 .. _cancel_scan:
 
@@ -669,8 +683,8 @@ and want to end it?  Need to pause to refill liquid nitrogen, but then want to c
 You can safely interrupt scans using ``CTL-C`` using the following
 crib
 
-a) Interactively Interrupt Execution
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Interactively Interrupt Execution
+"""""""""""""""""""""""""""""""""
 
 ======================= ===========
 Command                 Outcome
@@ -685,8 +699,8 @@ resume the scan sometime later (the liquid nitrogen case) or abort (you made a m
 with the scan and want to start over), or stop but save the data (the "you are
 fed up waiting for it to finish" case).  See below for handling this.
 
-b) Recovering from the paused state caused by an interrupt
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Recovering from the paused state caused by an interrupt
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 After a pause, when you are ready to continue working, type one of these commands
 into the ``collection-yyQn.x`` environment:

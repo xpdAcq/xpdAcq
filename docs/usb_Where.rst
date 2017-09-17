@@ -17,7 +17,7 @@ collection ``ipython`` environment is not so stable
 restarts of it.  How bad if we had to retype our metadata every
 time?  So every time you create an xpdAcq acquisition object,
 the details are saved to a file on the local hard-drive.  When
-``bsui`` is run, the main ``bt`` object (if it exists) is
+``xpdui`` is run, the main ``bt`` object (if it exists) is
 automatically reloaded, but not the other acquisition objects.
 But don't worry, they are all safe and sound.
 
