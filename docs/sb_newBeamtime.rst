@@ -11,7 +11,13 @@ Goals of the Setup
  3. Prepopulate the directories with configuration files as needed
  4. Initialize the metadata stack (the list of metadata) with beamtime level information
  5. Make certain that the proxy is running see the
+
 `proxy documentation in bluesky <http://nsls-ii.github.io/bluesky/callbacks.html#minimal-example>`_ (make certain ``bluesky-0MQ-proxy 5577 5578`` is running)
+
+If the proxy is not running run ``source activate 17Q3-dev`` then ``bluesky-0MQ-proxy 5577 5578``
+
+Make sure that the Proxy is running before starting ``xpdui`` or ``setup_analysis``
+
 
 Setup
 """""
@@ -19,7 +25,7 @@ Setup
 #. **New user will show up tomorrow or today:**
 
   On XPD computer,
-    #. type ``icollection`` to start the ``(collection)`` environment and get the ``In[1]:`` prompt.
+    #. type ``xpdui`` to start the ``(collection)`` environment and get the ``In[1]:`` prompt.
     #. type ``bt = _start_collection(<PI_last>, <saf_number>, <experimenter_list>, <wavelength>)`` for example,
 
       .. code-block:: python
