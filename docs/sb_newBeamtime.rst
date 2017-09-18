@@ -13,10 +13,8 @@ Goals of the Setup
  5. Make certain that the proxy is running see the
 
 `proxy documentation in bluesky <http://nsls-ii.github.io/bluesky/callbacks.html#minimal-example>`_ (make certain ``bluesky-0MQ-proxy 5577 5578`` is running)
-if the proxy is not running run
-  .. code-block:: bash
-    source activate 17Q3-dev
-    bluesky-0MQ-proxy 5577 5578
+if the proxy is not running run ``source activate 17Q3-dev`` then ``bluesky-0MQ-proxy 5577 5578``
+
 
 Setup
 """""
