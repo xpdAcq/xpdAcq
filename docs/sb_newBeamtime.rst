@@ -11,7 +11,12 @@ Goals of the Setup
  3. Prepopulate the directories with configuration files as needed
  4. Initialize the metadata stack (the list of metadata) with beamtime level information
  5. Make certain that the proxy is running see the
+
 `proxy documentation in bluesky <http://nsls-ii.github.io/bluesky/callbacks.html#minimal-example>`_ (make certain ``bluesky-0MQ-proxy 5577 5578`` is running)
+if the proxy is not running run
+  .. code-block:: bash
+    source activate 17Q3-dev
+    bluesky-0MQ-proxy 5577 5578
 
 Setup
 """""
