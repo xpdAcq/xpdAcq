@@ -16,6 +16,8 @@ Goals of the Setup
 
 If the proxy is not running run ``source activate 17Q3-dev`` then ``bluesky-0MQ-proxy 5577 5578``
 
+Make sure that the Proxy is running before starting ``xpdui`` or ``setup_analysis``
+
 
 Setup
 """""
