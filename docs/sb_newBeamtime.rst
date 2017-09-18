@@ -25,7 +25,7 @@ Setup
 #. **New user will show up tomorrow or today:**
 
   On XPD computer,
-    #. type ``icollection`` to start the ``(collection)`` environment and get the ``In[1]:`` prompt.
+    #. type ``xpdui`` to start the ``(collection)`` environment and get the ``In[1]:`` prompt.
     #. type ``bt = _start_collection(<PI_last>, <saf_number>, <experimenter_list>, <wavelength>)`` for example,
 
       .. code-block:: python
