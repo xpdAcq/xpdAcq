@@ -8,4 +8,4 @@ $VERSION_BUMP_PATTERNS = [
     ]
 # $CHANGELOG_FILENAME = 'CHANGELOG.rst'
 # $CHANGELOG_IGNORE = ['TEMPLATE.rst']
-$TAG_REMOTE = 'git@github.com:xpdAcq/xpdAcq.git'
+$TAG_REMOTE = 'git@github.com:CJ-Wright/xpdAcq.git'
