@@ -242,7 +242,7 @@ class ExceltoYaml:
 
                 # name fields
                 if k in self._NAME_FIELD:
-                    _k = ''.join(takewhile(lambda x: x.isalpha(), k))
+                    _k = k
                     try:
                         comma_sep_list = self._comma_separate_parser(v)
                         parsed_name = []
