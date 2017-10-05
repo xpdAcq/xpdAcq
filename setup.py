@@ -20,6 +20,6 @@ setup(
     packages=find_packages(),
     description='acquisition module',
     zip_safe=False,
-    package_data={'xpdacq': ['examples/', 'data/']},
-    url='http:/github.com/chiahaoliu/xpdacq'
+    package_data={'xpdacq': ['examples/', 'data/', 'tests']},
+    url='http:/github.com/xpdAcq/xpdacq'
 )
