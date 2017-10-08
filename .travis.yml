@@ -48,6 +48,7 @@ install:
   - python -c "from bluesky.utils import get_history; get_history()"
   # make sure package data is correctly set
   - python -c "from xpdsim import xpd_pe1c; xpd_pe1c.trigger_read()"
+  - python -c "from xpdacq.tests.conftest import *"
   - git clean -xfd
 
 script:
