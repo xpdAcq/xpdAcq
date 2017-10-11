@@ -194,8 +194,6 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
     sample_md.update(bto)
 
     if tag == 'calib':
-        if not os.path.isfile(calibrant):
-            raise FileNotFoundError("calibrant file doesn't exist")
         # instantiate Calibrant class
         calibrant_obj = Calibrant(calibrant)
         sample_md.update({'dSpacing': calibrant_obj.dSpacing,
