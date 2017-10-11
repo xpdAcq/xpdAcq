@@ -194,7 +194,7 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
 
     if tag == 'calib':
         # instantiate Calibrant class
-        calibrant_obj = Calibrant(calibrant)
+        calibrant_obj = Calibration(calibrant=calibrant).calibrant
         sample_md.update({'dSpacing': calibrant_obj.dSpacing,
                           'detector': detector})
         plan = bp.msg_mutator(plan, _inject_calibration_tag)
