@@ -159,7 +159,6 @@ def run_calibration(exposure=5, dark_sub_bool=True,
             bto = Beamtime.from_yaml(open(bt_fp))
             wavelength = float(bto.wavelength)*10**(-10)
         # configure calibration instance
-        assert os.path.isfile(calibrant)
         c = Calibration(calibrant=calibrant,
                         detector=detector,
                         wavelength=wavelength)
