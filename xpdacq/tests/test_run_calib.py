@@ -5,9 +5,9 @@ import numpy as np
 from xpdacq.xpdacq import update_experiment_hash_uid
 from xpdacq.calib import (_collect_img, xpdAcqException,
                           _sample_name_phase_info_configuration,
-                          run_mask_builder)
+                          run_mask_builder, run_calibration)
 from xpdan.tools import compress_mask
-from pyFAI.calibrant import Calibrant
+from pyFAI.calibrant import Calibrant, CALIBRANT_FACTORY
 from pkg_resources import resource_filename as rs_fn
 
 
@@ -101,6 +101,25 @@ def test_calib_md(fresh_xrun, exp_hash_uid, glbl, db):
     hdr_client_uid = hdr.start['detector_calibration_client_uid']
     assert calib_server_uid == hdr_client_uid
 
+
+def test_load_calibrant(fresh_xrun, bt):
+    xrun = fresh_xrun
+    xrun.beamtime = bt
+    # pyfai factory
+    for k, calibrant_obj in CALIBRANT_FACTORY.items():
+        # light weight callback
+        def check_eq(name, doc):
+            assert calibrant_obj.dSpacing == doc['dSpacing']
+            assert k == doc['sample_name']
+        t = xrun.subscribe(check_eq, 'start')
+        # execute
+        run_calibration(calibrant=k, phase_info=k, RE_instance=xrun)
+        # clean
+        xrun.unsubscribe(t)
+    # invalid calibrant
+    with pytest.raises(xpdAcqException):
+        run_calibration(calibrant='pyFAI',
+                        phase_info='buggy', RE_instance=xrun)
 
 def test_mask_md(fresh_xrun, exp_hash_uid, glbl, db):
     xrun = fresh_xrun
