@@ -194,8 +194,13 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
 
     if tag == 'calib':
         # instantiate Calibrant class
-        calibrant_obj = Calibrant(calibrant)
-        sample_md.update({'dSpacing': calibrant_obj.dSpacing,
+        calibrant_obj = Calibration(calibrant=calibrant).calibrant
+        if calibrant_obj is None:
+            raise xpdAcqException('Invalid calibrant')
+        dSpacing = calibrant_obj.dSpacing
+        if not dSpacing:
+            raise xpdAcqException('empty dSpacing from calibrant')
+        sample_md.update({'dSpacing': dSpacing,
                           'detector': detector})
         plan = bp.msg_mutator(plan, _inject_calibration_tag)
     elif tag == 'mask':
