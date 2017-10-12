@@ -195,7 +195,7 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
     if tag == 'calib':
         # instantiate Calibrant class
         calibrant_obj = Calibration(calibrant=calibrant).calibrant
-        if not calibrant_obj:
+        if calibrant_obj is None:
             raise xpdAcqException('Invalid calibrant')
         dSpacing = calibrant_obj.dSpacing
         if not dSpacing:
