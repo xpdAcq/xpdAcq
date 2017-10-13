@@ -22,14 +22,9 @@ The allowed scan types are:
 
 .. code-block:: python
 
+  xrun(sample, scanplan)
 
-  >>> xrun(sample, scanplan)
-
-
-.. autoclass:: xpdacq.xpdacq.CustomizedRunEngine
-    :members:
-
-``xrun`` stands for "XPD run" which is a our main run engine.
+``xrun`` stands for "XPD run" which is a our main run engine. Full API documentation can be found :ref:`xrun_api`
 
 
 Here are some examples of a workflow.  Assume a Ni_calibrant sample is loaded on the diffractometer
@@ -298,7 +293,9 @@ something like this:
   PyFAI can be a bit finicky.  If it hangs, type CTL-C and start over and make
   sure you follow the instruction exactly.
 
-  You may find more information about calibration process from `pyFAI documentation <http://pyfai.readthedocs.io/en/latest/calibration.html>`_
+  .. Note::
+
+    You may find more information about calibration process from `pyFAI documentation <http://pyfai.readthedocs.io/en/latest/usage/cookbook/calibrate.html#start-pyfai-calib>`_
 
 3. You are done! ``xpdAcq`` has saved the calibration parameters and will store them will all subsequent scans until you
    run another calibration.

@@ -51,7 +51,7 @@ New features introduced to this version:
 
 
 * Advanced shutter control logic for temperature-ramping scan plan,
-  ``Tlist`` and ``Tramp``. By default, shutter will remain closed in 
+  ``Tlist`` and ``Tramp``. By default, shutter will remain closed in
   between exposures, which prevent detector from burning. This behavior can
   be overridden, leaving the fast shutter open for the entire scan.
   Please refer to the function docstring by typing ``Tlist?`` or
@@ -64,7 +64,7 @@ New features introduced to this version:
 
 
 * Now programs takes in user defined folder tag so that it's easier to
-  separate data into subfolders with memorable names. Please refer to 
+  separate data into subfolders with memorable names. Please refer to
   :ref:`folder_tag`.
 
 
@@ -92,6 +92,13 @@ New features introduced to this version:
    :hidden:
 
    xpdusers
+
+.. toctree::
+   :maxdepth: 3
+   :hidden:
+
+   api_doc
+
 
 .. toctree::
    :maxdepth: 3
