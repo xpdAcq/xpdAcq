@@ -459,10 +459,17 @@ class ExceltoYaml:
         compound_meta = phase_str.split(',')
         for el in compound_meta:
             _el = el.strip()
-            if ':' not in el:
-                # there is no ":" in the string            
+            # if no ":" in the string
+            if ':' not in _el:
+                # separater instead of ':'
+                if not _el.isalnum():
+                    symbl = [char for char in _el if not char.isalnum()]
+                    symbl_ind = _el.find(symbl[0])
+                    com = _el[:symbl_ind]
+                else:
+                    com = _el
                 amount = 1.0
-                com = _el
+            # ":" in the string
             else:
                 meta = _el.split(':')
                 # there is a ":" but nothing follows
@@ -482,7 +489,7 @@ class ExceltoYaml:
         # normalize phase ratio for composition dict
         total = sum(phase_dict.values())
         for k, v in phase_dict.items():
-            ratio = round(v / total, 3)
+            ratio = round(v / total, 2)
             phase_dict[k] = ratio
 
         # construct composition_dict
