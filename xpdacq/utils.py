@@ -286,7 +286,8 @@ class ExceltoYaml:
 
                 # other fields don't need to be parsed
                 else:
-                    _k = ''.join(takewhile(lambda x: x.isalpha(), k))
+                    #_k = ''.join(takewhile(lambda x: x.isalpha(), k))
+                    _k = k.replace(' ', '_')
                     parsed_sa_md.update({_k: v})
 
             parsed_sa_md_list.append(parsed_sa_md)
@@ -454,45 +455,28 @@ class ExceltoYaml:
         phase_dict = {}
         composition_dict = {}
         composition_str = ''
-
-        compound_meta = phase_str.split(',')
         # figure out ratio between phases
+        compound_meta = phase_str.split(',')
         for el in compound_meta:
-            el = el.strip()
-            # there is no ":" in the string            
-            if ':' not in el:
-                # take whatever alpha numeric string before symbol
-                # to be the chemical element
-                symbl = [char for char in el if not char.isalnum()]
-                if symbl:
-                    # take the first symbol
-                    symbl_ind = el.find(symbl[0])
-                    com = el[:symbl_ind]
-                else:
-                    # simply take whole string
-                    com = el
+            _el = el.strip()
+            # if no ":" in the string
+            if ':' not in _el:
+                com = _el
                 amount = 1.0
+            # ":" in the string
             else:
-                meta = el.split(':')
+                meta = _el.split(':')
                 # there is a ":" but nothing follows
-                if len(meta[1]) == 0:
+                if not meta[1]:
                     com = meta[0]
                     amount = 1.0
                 # presumably valid input
                 else:
                     com, amount = meta
-            # construct phase dict
-            # DEPRECATED: xpdAcq will move to multiple run_start model
-            # special case: mapping
-            #if com in self.HIGH_D_MD_MAP_KEYWORD:
-            #    phase_dict.update({com.strip(): amount.strip()})
-            #    composition_str = 'N/A'
-            #    composition_dict = {}
-            # normal case, e.g. {'Ni':0.5, 'NaCl':0.5}
+            # further verify if it's giving as 'X: 10%' format
             if isinstance(amount, str):
                 amount = amount.strip()
                 amount = amount.replace('%', '')
-
             # construct the not normalized phase dict
             phase_dict.update({com.strip(): float(amount)})
 
@@ -504,16 +488,21 @@ class ExceltoYaml:
 
         # construct composition_dict
         for k, v in phase_dict.items():
-            el_list, sto_list = composition_analysis(k.strip())
+            # k is compostring, v is phase ratio
+            try:
+                el_list, sto_list = composition_analysis(k.strip())
+            except ValueError:
+                # getx3 parser can't parse it, set default
+                el_list, sto_list = ([k], [v])
             for el, sto in zip(el_list, sto_list):
-                # element appears in different phases, adds up
+                # sum element
                 if el in composition_dict:
                     val = composition_dict.get(el)
-                    val += sto * ratio
+                    val += sto * v
                     composition_dict.update({el: val})
                 else:
                     # otherwise, just update it
-                    composition_dict.update({el: sto * ratio})
+                    composition_dict.update({el: sto * v})
 
         # finally, construct composition_str
         for k, v in sorted(composition_dict.items()):

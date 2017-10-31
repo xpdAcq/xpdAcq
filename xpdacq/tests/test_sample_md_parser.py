@@ -8,22 +8,24 @@ from xpdacq.utils import excel_to_yaml
                                                    {'TiO2': 0.33,
                                                     'H2O': 0.33,
                                                     'Ni': 0.33},
-                                                   'H0.66Ni0.33O0.99Ti0.33'))
-                             , ('TiO2:, H2O:, Ni:1', ({'H': 0.66, 'O': 0.99,
-                                                       'Ti': 0.33, 'Ni': 0.33},
-                                                      {'TiO2': 0.33,
-                                                       'H2O': 0.33,
-                                                       'Ni': 0.33},
-                                                      'H0.66Ni0.33O0.99Ti0.33')
-                                )
-                             , ('TiO2;, H2O:, Ni^1', ({'H': 0.66, 'O': 0.99,
-                                                       'Ti': 0.33, 'Ni': 0.33},
-                                                      {'TiO2': 0.33,
-                                                       'H2O': 0.33,
-                                                       'Ni': 0.33},
-                                                      'H0.66Ni0.33O0.99Ti0.33')
-                                )
-                          ])
+                                                   'H0.66Ni0.33O0.99Ti0.33')),
+                          ('TiO2:, H2O:, Ni:1', ({'H': 0.66, 'O': 0.99,
+                                                  'Ti': 0.33, 'Ni': 0.33},
+                                                 {'TiO2': 0.33,
+                                                  'H2O': 0.33,
+                                                  'Ni': 0.33},
+                                                  'H0.66Ni0.33O0.99Ti0.33')),
+                          ('Sr0.52Na0.48X2Q2', ({'Sr': 0.52, 'Na': 0.48,
+                                                'X': 2.0, 'Q': 2.0},
+                                                {'Sr0.52Na0.48X2Q2': 1.0},
+                                                'Na0.48Q2.0Sr0.52X2.0')),
+                          ('X1.1Zn0.9Y0.1E', ({'X': 1.1, 'Zn': 0.9,
+                                               'Y':0.1, 'E': 1.0},
+                                               {'X1.1Zn0.9Y0.1E': 1.0},
+                                               'E1.0X1.1Y0.1Zn0.9'))
+
+                          ]
+                          )
 def test_phase_str_parser(input_dict, expect_rv):
     assert excel_to_yaml.phase_parser(input_dict) == expect_rv
 
