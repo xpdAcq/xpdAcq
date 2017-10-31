@@ -461,13 +461,7 @@ class ExceltoYaml:
             _el = el.strip()
             # if no ":" in the string
             if ':' not in _el:
-                # separater instead of ':'
-                if not _el.isalnum():
-                    symbl = [char for char in _el if not char.isalnum()]
-                    symbl_ind = _el.find(symbl[0])
-                    com = _el[:symbl_ind]
-                else:
-                    com = _el
+                com = _el
                 amount = 1.0
             # ":" in the string
             else:
