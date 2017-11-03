@@ -158,13 +158,14 @@ def test_mask_md(fresh_xrun, exp_hash_uid, glbl, db):
     assert all(v == hdr.start[k] for k, v in sample_md.items())
     assert hdr.start['mask_server_uid'] == exp_hash_uid
     assert hdr.start['mask_client_uid'] == hdr.start['mask_server_uid']
+    # Note: sparse mask injection has been deprecated
     # production run
-    mask = np.load(glbl['mask_path'])
-    reload_sparse_mask = compress_mask(mask)
-    xrun(0, 0)
-    hdr = db[-1]
-    assert hdr.start['mask_client_uid'] == exp_hash_uid
-    assert reload_sparse_mask == hdr.start['mask']
+    #mask = np.load(glbl['mask_path'])
+    #reload_sparse_mask = compress_mask(mask)
+    #xrun(0, 0)
+    #hdr = db[-1]
+    #assert hdr.start['mask_client_uid'] == exp_hash_uid
+    #assert reload_sparse_mask == hdr.start['mask']
     # update hash uid
     new_hash = update_experiment_hash_uid()
     # production run first
