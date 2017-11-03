@@ -289,13 +289,13 @@ def _inject_mask_server_uid(msg):
             # inject server uid if it's calibration run
             msg.kwargs.update({'mask_server_uid':
                                exp_hash_uid})
-        else:
-            # load mask if exists
-            compressed_mask = _auto_load_mask()
-            if compressed_mask:
-                data, indicies, indptr = compressed_mask
-                # inject compressed 
-                msg.kwargs['mask'] = (data, indicies, indptr)
+        #else:
+        #    # load mask if exists
+        #    compressed_mask = _auto_load_mask()
+        #    if compressed_mask:
+        #        data, indicies, indptr = compressed_mask
+        #        # inject compressed 
+        #        msg.kwargs['mask'] = (data, indicies, indptr)
 
     return msg
 
