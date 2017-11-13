@@ -221,7 +221,7 @@ class xrunTest(unittest.TestCase):
         self.xrun.msg_hook = msg_rv
         traj_list = [] # courtesy of bluesky test
         temp_controller = xpd_configuration['temp_controller']
-        callback = collector(temp_controller.read_attrs[0],
+        callback = collector(temp_controller.readback.name,
                              traj_list)
         self.xrun({},
                   ScanPlan(self.bt, Tramp, exp, Tstart, Tstop, Tstep),
@@ -261,7 +261,7 @@ class xrunTest(unittest.TestCase):
             msg_list.append(msg)
         traj_list = [] # courtesy of bluesky test
         temp_controller = xpd_configuration['temp_controller']
-        callback = collector(temp_controller.read_attrs[0],
+        callback = collector(temp_controller.readback.name,
                              traj_list)
         self.xrun.msg_hook = msg_rv
         self.xrun({}, ScanPlan(self.bt, Tlist, exp, T_list),
@@ -312,7 +312,7 @@ class xrunTest(unittest.TestCase):
         self.xrun({}, ScanPlan(self.bt, ct, 1))
 
         # operate at full current
-        sig = ophyd.Signal()
+        sig = ophyd.Signal(name='ring_current')
 
         def putter(val):
             sig.put(val)

@@ -22,6 +22,7 @@ import numpy as np
 from IPython import get_ipython
 
 import bluesky.plans as bp
+import bluesky.preprocessors as bpp
 
 from .glbl import glbl
 from .xpdacq_conf import xpd_configuration
@@ -202,9 +203,9 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
             raise xpdAcqException('empty dSpacing from calibrant')
         sample_md.update({'dSpacing': dSpacing,
                           'detector': detector})
-        plan = bp.msg_mutator(plan, _inject_calibration_tag)
+        plan = bpp.msg_mutator(plan, _inject_calibration_tag)
     elif tag == 'mask':
-        plan = bp.msg_mutator(plan, _inject_mask_tag)
+        plan = bpp.msg_mutator(plan, _inject_mask_tag)
 
     # collect image
     uid = RE_instance(sample_md, plan)

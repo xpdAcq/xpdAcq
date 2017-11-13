@@ -22,6 +22,8 @@ from pprint import pprint
 import numpy as np
 
 import bluesky.plans as bp
+import bluesky.plan_stubs as bps
+import bluesky.preprocessors as bpp
 from bluesky import RunEngine
 from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input
@@ -68,7 +70,7 @@ def _update_dark_dict_list(name, doc):
 def take_dark():
     """a plan for taking a single dark frame"""
     print('INFO: closing shutter...')
-    yield from bp.abs_set(xpd_configuration.get('shutter'),
+    yield from bps.abs_set(xpd_configuration.get('shutter'),
                           XPD_SHUTTER_CONF['close'],
                           wait=True)
     print('INFO: taking dark frame....')
@@ -86,7 +88,7 @@ def take_dark():
            'sp_plan_name': 'dark_{}'.format(computed_exposure),
            'dark_frame': True}
     c = bp.count([area_det], md=_md)
-    yield from bp.subs_wrapper(c, {'stop': [_update_dark_dict_list]})
+    yield from bpp.subs_wrapper(c, {'stop': [_update_dark_dict_list]})
     print('opening shutter...')
 
 
@@ -117,25 +119,25 @@ def periodic_dark(plan):
             # Annoying detail: the detector was probably already staged.
             # Unstage it (if it wasn't staged, nothing will happen) and
             # then take_dark() and then re-stage it.
-            return bp.pchain(bp.unstage(area_det),
-                             take_dark(),
-                             bp.stage(area_det),
-                             bp.single_gen(msg),
-                             bp.abs_set(xpd_configuration.get('shutter'),
+            return bpp.pchain(bps.unstage(area_det),
+                              take_dark(),
+                              bps.stage(area_det),
+                              bpp.single_gen(msg),
+                              bps.abs_set(xpd_configuration.get('shutter'),
                                         XPD_SHUTTER_CONF['open'],
                                         wait=True)
                              ), None
         elif msg.command == 'open_run' and 'dark_frame' not in msg.kwargs:
-            return bp.pchain(bp.single_gen(msg),
-                             bp.abs_set(xpd_configuration.get('shutter'),
-                                        XPD_SHUTTER_CONF['open'],
-                                        wait=True)
+            return bpp.pchain(bpp.single_gen(msg),
+                              bps.abs_set(xpd_configuration.get('shutter'),
+                                          XPD_SHUTTER_CONF['open'],
+                                          wait=True)
                              ), None
         else:
             # do nothing if (not need_dark)
             return None, None
 
-    return (yield from bp.plan_mutator(plan, insert_take_dark))
+    return (yield from bpp.plan_mutator(plan, insert_take_dark))
 
 
 def _validate_dark(expire_time=None):
@@ -464,25 +466,23 @@ class CustomizedRunEngine(RunEngine):
             # only works if user allows shutter control
             if glbl['auto_dark']:
                 plan = dark_strategy(plan)
-                plan = bp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
+                plan = bpp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
             # force to close shutter after scan
-            plan = bp.finalize_wrapper(plan,
-                                       bp.abs_set(xpd_configuration['shutter'],
-                                       XPD_SHUTTER_CONF['close'],
-                                       wait=True)
-                                       )
+            plan = bpp.finalize_wrapper(plan,
+                    bps.abs_set(xpd_configuration['shutter'],
+                                XPD_SHUTTER_CONF['close'],
+                                wait=True))
 
         # Load calibration file
         if glbl['auto_load_calib']:
-            plan = bp.msg_mutator(plan, _inject_calibration_md)
+            plan = bpp.msg_mutator(plan, _inject_calibration_md)
         # Insert mask clinet uid
-        plan = bp.msg_mutator(plan, _inject_mask_server_uid)
+        plan = bpp.msg_mutator(plan, _inject_mask_server_uid)
         # Insert xpdacq md version
-        plan = bp.msg_mutator(plan, _inject_xpdacq_md_version)
+        plan = bpp.msg_mutator(plan, _inject_xpdacq_md_version)
         # Insert analysis stage tag
-        plan = bp.msg_mutator(plan, _inject_analysis_stage)
+        plan = bpp.msg_mutator(plan, _inject_analysis_stage)
 
         # Execute
         return super().__call__(plan, subs,
-                                raise_if_interrupted=raise_if_interrupted,
                                 **metadata_kw)
