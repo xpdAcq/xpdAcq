@@ -27,15 +27,18 @@ from xpdacq.xpdacq_conf import (glbl_dict,
 from xpdacq.xpdacq import CustomizedRunEngine
 from xpdacq.beamtimeSetup import _start_beamtime
 from xpdacq.utils import import_sample_info, ExceltoYaml
-from xpdsim import cs700, xpd_pe1c, simple_pe1c, shctl1
+from xpdsim import cs700, xpd_pe1c, simple_pe1c, shctl1, ring_current
 
 from pkg_resources import resource_filename as rs_fn
 
 
 @pytest.fixture(scope='module')
 def db():
-    from xpdsim import db
+    from xpdsim import db, db_path
     yield db
+    if os.path.exists(db_path):
+        print('Flush db dir')
+        shutil.rmtree(db_path)
 
 
 @pytest.fixture(scope='module')
@@ -61,7 +64,8 @@ def bt(home_dir, db):
     #pe1c = xpd_pe1c 
     pe1c = simple_pe1c
     configure_device(db=db, shutter=shctl1,
-                     area_det=pe1c, temp_controller=cs700)
+                     area_det=pe1c, temp_controller=cs700,
+                     ring_current=ring_current)
     yield bt
 
 
