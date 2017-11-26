@@ -75,7 +75,7 @@ def glbl(bt):
     yield glbl
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def fresh_xrun(bt):
     # create xrun
     xrun = CustomizedRunEngine(None)

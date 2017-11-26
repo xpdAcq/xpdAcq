@@ -55,6 +55,7 @@ def test_configure_sample_info_md(sample_name, phase_info, tag, sample_md):
 
 def test_calib_md(fresh_xrun, exp_hash_uid, glbl, db):
     xrun = fresh_xrun
+    glbl['dk_window'] = 0.1
     # calib run
     sample_md = _sample_name_phase_info_configuration(None, None, 'calib')
     calibrant = os.path.join(glbl['usrAnalysis_dir'], 'Ni24.D')
