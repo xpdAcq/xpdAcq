@@ -141,6 +141,7 @@ def test_load_calibrant(fresh_xrun, bt):
     # clean
     xrun.unsubscribe(t)
 
+@pytest.mark.skip('pipeline build mask live')
 def test_mask_md(fresh_xrun, exp_hash_uid, glbl, db):
     xrun = fresh_xrun
     # grab calib information

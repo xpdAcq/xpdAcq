@@ -19,7 +19,6 @@ import asyncio
 import numpy as np
 
 import pytest
-
 from xpdacq.xpdacq_conf import (glbl_dict,
                                 configure_device,
                                 xpd_configuration)
@@ -34,11 +33,12 @@ from pkg_resources import resource_filename as rs_fn
 
 @pytest.fixture(scope='module')
 def db():
-    from xpdsim import db, db_path
+    from xpdsim.build_sim_db import build_sim_db
+    sim_db_dir, db = build_sim_db()
     yield db
-    if os.path.exists(db_path):
+    if os.path.exists(sim_db_dir):
         print('Flush db dir')
-        shutil.rmtree(db_path)
+        shutil.rmtree(sim_db_dir)
 
 
 @pytest.fixture(scope='module')
@@ -69,7 +69,7 @@ def bt(home_dir, db):
     yield bt
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def glbl(bt):
     from xpdacq.glbl import glbl
     yield glbl
