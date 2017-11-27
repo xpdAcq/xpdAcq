@@ -55,7 +55,6 @@ def test_configure_sample_info_md(sample_name, phase_info, tag, sample_md):
 
 def test_calib_md(fresh_xrun, exp_hash_uid, glbl, db):
     xrun = fresh_xrun
-    glbl['dk_window'] = 0.1
     # calib run
     sample_md = _sample_name_phase_info_configuration(None, None, 'calib')
     calibrant = os.path.join(glbl['usrAnalysis_dir'], 'Ni24.D')
@@ -142,7 +141,7 @@ def test_load_calibrant(fresh_xrun, bt):
     # clean
     xrun.unsubscribe(t)
 
-@pytest.mark.skip('pipeline build mask live')
+@pytest.mark.skip('pipeline builds mask live')
 def test_mask_md(fresh_xrun, exp_hash_uid, glbl, db):
     xrun = fresh_xrun
     # grab calib information
