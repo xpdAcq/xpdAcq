@@ -26,7 +26,9 @@ from xpdacq.xpdacq_conf import (glbl_dict,
 from xpdacq.xpdacq import CustomizedRunEngine
 from xpdacq.beamtimeSetup import _start_beamtime
 from xpdacq.utils import import_sample_info, ExceltoYaml
-from xpdsim import cs700, xpd_pe1c, simple_pe1c, shctl1, ring_current
+from xpdsim import (cs700, xpd_pe1c, simple_pe1c, shctl1, ring_current,
+                    xpd_wavelength)
+
 
 from pkg_resources import resource_filename as rs_fn
 
@@ -40,13 +42,12 @@ def db():
     #    print('Flush db dir')
     #    shutil.rmtree(sim_db_dir)
 
-
 @pytest.fixture(scope='module')
 def bt(home_dir):
     # start a beamtime
     PI_name = 'Billinge '
     saf_num = 300000
-    wavelength = 0.1812
+    wavelength = xpd_wavelength
     experimenters = [('van der Banerjee', 'S0ham', 1),
                      ('Terban ', ' Max', 2)]
     bt = _start_beamtime(PI_name, saf_num,
