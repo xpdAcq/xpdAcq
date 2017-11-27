@@ -3,6 +3,7 @@ import pytest
 import shutil
 import uuid
 import numpy as np
+from .conftest import xpd_pe1c, xpd_configuration
 from xpdacq.xpdacq import update_experiment_hash_uid
 from xpdacq.calib import (_collect_img, xpdAcqException,
                           _sample_name_phase_info_configuration,
@@ -141,7 +142,6 @@ def test_load_calibrant(fresh_xrun, bt):
     # clean
     xrun.unsubscribe(t)
 
-@pytest.mark.skip('pipeline builds mask live')
 def test_mask_md(fresh_xrun, exp_hash_uid, glbl, db):
     xrun = fresh_xrun
     # grab calib information
@@ -151,6 +151,8 @@ def test_mask_md(fresh_xrun, exp_hash_uid, glbl, db):
     shutil.copyfile(src, dst)
     # build mask
     xrun = fresh_xrun
+    # assign detector yields real image for maksing
+    xpd_configuration['area_det'] = xpd_pe1c
     run_mask_builder(RE_instance=xrun)
     sample_md = _sample_name_phase_info_configuration(None, None, 'mask')
     assert os.path.isfile(glbl['mask_path'])
