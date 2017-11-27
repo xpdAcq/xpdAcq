@@ -17,7 +17,7 @@ import sys
 import shutil
 import asyncio
 import numpy as np
-
+import time
 import pytest
 from xpdacq.xpdacq_conf import (glbl_dict,
                                 configure_device,
@@ -30,19 +30,19 @@ from xpdsim import cs700, xpd_pe1c, simple_pe1c, shctl1, ring_current
 
 from pkg_resources import resource_filename as rs_fn
 
-
 @pytest.fixture(scope='module')
 def db():
-    from xpdsim.build_sim_db import build_sim_db
-    sim_db_dir, db = build_sim_db()
+    from xpdsim import db, sim_db_dir
     yield db
-    if os.path.exists(sim_db_dir):
-        print('Flush db dir')
-        shutil.rmtree(sim_db_dir)
+    # NOTE: do not flush for now since test might be caught in the
+    # middle of flushing/creating database
+    #if os.path.exists(sim_db_dir):
+    #    print('Flush db dir')
+    #    shutil.rmtree(sim_db_dir)
 
 
 @pytest.fixture(scope='module')
-def bt(home_dir, db):
+def bt(home_dir):
     # start a beamtime
     PI_name = 'Billinge '
     saf_num = 300000
@@ -58,14 +58,6 @@ def bt(home_dir, db):
     src = os.path.join(pytest_dir, xlf)
     shutil.copyfile(src, os.path.join(glbl_dict['import_dir'], xlf))
     import_sample_info(saf_num, bt)
-
-    # set simulation objects
-    # alias
-    #pe1c = xpd_pe1c 
-    pe1c = simple_pe1c
-    configure_device(db=db, shutter=shctl1,
-                     area_det=pe1c, temp_controller=cs700,
-                     ring_current=ring_current)
     yield bt
 
 
@@ -75,17 +67,33 @@ def glbl(bt):
     yield glbl
 
 
-@pytest.fixture(scope='function')
-def fresh_xrun(bt):
+@pytest.fixture(scope='module')
+def fresh_xrun(bt, db):
+    # loop
+    loop = asyncio.new_event_loop()
+    loop.set_debug(True)
     # create xrun
-    xrun = CustomizedRunEngine(None)
+    xrun = CustomizedRunEngine(None, loop=loop)
     xrun.md['beamline_id'] = glbl_dict['beamline_id']
     xrun.md['group'] = glbl_dict['group']
     xrun.md['facility'] = glbl_dict['facility']
     xrun.ignore_callback_exceptions = False
     # link mds
-    xrun.subscribe(xpd_configuration['db'].insert, 'all')
+    xrun.subscribe(db.insert, 'all')
+    # set simulation objects
+    # alias
+    pe1c = simple_pe1c
+    configure_device(db=db, shutter=shctl1,
+                     area_det=pe1c, temp_controller=cs700,
+                     ring_current=ring_current)
     yield xrun
+    # clean
+    print("Clean xrun loop")
+    if xrun.state != 'idle':
+        xrun.halt()
+    ev = asyncio.Event(loop=loop)
+    ev.set()
+    loop.run_until_complete(ev.wait())
 
 
 @pytest.fixture(scope='function')
