@@ -22,6 +22,7 @@ import numpy as np
 from IPython import get_ipython
 
 import bluesky.plans as bp
+import bluesky.preprocessors as bpp
 
 from .glbl import glbl
 from .xpdacq_conf import xpd_configuration
@@ -202,21 +203,21 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
             raise xpdAcqException('empty dSpacing from calibrant')
         sample_md.update({'dSpacing': dSpacing,
                           'detector': detector})
-        plan = bp.msg_mutator(plan, _inject_calibration_tag)
+        plan = bpp.msg_mutator(plan, _inject_calibration_tag)
     elif tag == 'mask':
-        plan = bp.msg_mutator(plan, _inject_mask_tag)
+        plan = bpp.msg_mutator(plan, _inject_mask_tag)
 
     # collect image
     uid = RE_instance(sample_md, plan)
     # last one must be light
-    light_header = xpd_configuration['db'][uid[-1]]
-    dark_uid = light_header.start.get('sc_dk_field_uid')
-    dark_header = xpd_configuration['db'][dark_uid]
     db = xpd_configuration['db']
-
+    light_header = db[uid[-1]]
+    dark_uid = light_header['start'].get('sc_dk_field_uid')
+    dark_header = db[dark_uid]
     dark_img = dark_header.data(glbl['det_image_field'])
     dark_img = np.asarray(next(dark_img)).squeeze()
-
+    #dark_img = next(db.get_images(dark_header,
+    #                              glbl['det_image_field']))
     img = light_header.data(glbl['det_image_field'])
     img = np.asarray(next(img)).squeeze()
 

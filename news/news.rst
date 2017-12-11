@@ -4,7 +4,10 @@
 
 **Changed:** None
 
-**Deprecated:** None
+**Deprecated:** 
+
+* Remove static mask injection. Mask is now handled by the analysis
+  pipeline live.
 
 **Removed:** None
 

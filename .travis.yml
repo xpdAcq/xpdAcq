@@ -47,7 +47,7 @@ install:
   # make sure the sqlite file exists to avoid race conditions
   - python -c "from bluesky.utils import get_history; get_history()"
   # make sure package data is correctly set
-  - python -c "from xpdsim import xpd_pe1c; xpd_pe1c.trigger_read()"
+  - python -c "from xpdsim import xpd_pe1c; xpd_pe1c.get()"
   - python -c "from xpdacq.tests.conftest import *"
   - git clean -xfd
 

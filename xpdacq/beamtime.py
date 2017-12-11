@@ -21,6 +21,8 @@ from collections import ChainMap, OrderedDict
 
 import numpy as np
 import bluesky.plans as bp
+import bluesky.plan_stubs as bps
+import bluesky.preprocessors as bpp
 from bluesky.callbacks import LiveTable
 
 from .glbl import glbl
@@ -116,12 +118,12 @@ def _shutter_step(detectors, motor, step):
     """ customized step to ensure shutter is open before
     reading at each motor point and close shutter after reading
     """
-    yield from bp.checkpoint()
-    yield from bp.abs_set(motor, step, wait=True)
-    yield from bp.abs_set(xpd_configuration['shutter'],
+    yield from bps.checkpoint()
+    yield from bps.abs_set(motor, step, wait=True)
+    yield from bps.abs_set(xpd_configuration['shutter'],
                           XPD_SHUTTER_CONF['open'], wait=True)
-    yield from bp.trigger_and_read(list(detectors) + [motor])
-    yield from bp.abs_set(xpd_configuration['shutter'],
+    yield from bps.trigger_and_read(list(detectors) + [motor])
+    yield from bps.abs_set(xpd_configuration['shutter'],
                           XPD_SHUTTER_CONF['close'], wait=True)
 
 
@@ -162,7 +164,7 @@ def ct(dets, exposure):
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'ct'})
     plan = bp.count([area_det], md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([area_det]))
+    plan = bpp.subs_wrapper(plan, LiveTable([]))
     yield from plan
 
 
@@ -244,8 +246,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
                         'sp_plan_name': 'Tramp'})
     plan = bp.scan([area_det], temp_controller, Tstart, Tstop,
                    Nsteps, per_step=per_step, md=_md)
-    plan = bp.subs_wrapper(plan,
-                           LiveTable([area_det, temp_controller]))
+    plan = bpp.subs_wrapper(plan, LiveTable([temp_controller]))
     yield from plan
 
 
@@ -316,7 +317,7 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
     # pass xpdacq_md to as additional md to bluesky plan
     plan = bp.list_scan([area_det], T_controller, T_list,
                         per_step=_shutter_step, md=xpdacq_md)
-    plan = bp.subs_wrapper(plan, LiveTable([area_det, T_controller]))
+    plan = bpp.subs_wrapper(plan, LiveTable([T_controller]))
     yield from plan
 
 
@@ -368,7 +369,7 @@ def tseries(dets, exposure, delay, num):
                         'sp_uid': str(uuid.uuid4()),
                         'sp_plan_name': 'tseries'})
     plan = bp.count([area_det], num, delay, md=_md)
-    plan = bp.subs_wrapper(plan, LiveTable([area_det]))
+    plan = bpp.subs_wrapper(plan, LiveTable([]))
     yield from plan
 
 
@@ -461,7 +462,7 @@ register_plan('ct', ct)
 register_plan('Tramp', Tramp)
 register_plan('tseries', tseries)
 register_plan('Tlist', Tlist)
-register_plan('statTramp', statTramp)
+#register_plan('statTramp', statTramp)
 
 def new_short_uid():
     return str(uuid.uuid4())[:8]

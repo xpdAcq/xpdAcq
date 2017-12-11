@@ -3,6 +3,7 @@ import pytest
 import shutil
 import uuid
 import numpy as np
+from .conftest import xpd_pe1c, xpd_configuration
 from xpdacq.xpdacq import update_experiment_hash_uid
 from xpdacq.calib import (_collect_img, xpdAcqException,
                           _sample_name_phase_info_configuration,
@@ -150,6 +151,8 @@ def test_mask_md(fresh_xrun, exp_hash_uid, glbl, db):
     shutil.copyfile(src, dst)
     # build mask
     xrun = fresh_xrun
+    # assign detector yields real image for maksing
+    xpd_configuration['area_det'] = xpd_pe1c
     run_mask_builder(RE_instance=xrun)
     sample_md = _sample_name_phase_info_configuration(None, None, 'mask')
     assert os.path.isfile(glbl['mask_path'])
@@ -158,13 +161,14 @@ def test_mask_md(fresh_xrun, exp_hash_uid, glbl, db):
     assert all(v == hdr.start[k] for k, v in sample_md.items())
     assert hdr.start['mask_server_uid'] == exp_hash_uid
     assert hdr.start['mask_client_uid'] == hdr.start['mask_server_uid']
+    # Note: sparse mask injection has been deprecated
     # production run
-    mask = np.load(glbl['mask_path'])
-    reload_sparse_mask = compress_mask(mask)
-    xrun(0, 0)
-    hdr = db[-1]
-    assert hdr.start['mask_client_uid'] == exp_hash_uid
-    assert reload_sparse_mask == hdr.start['mask']
+    #mask = np.load(glbl['mask_path'])
+    #reload_sparse_mask = compress_mask(mask)
+    #xrun(0, 0)
+    #hdr = db[-1]
+    #assert hdr.start['mask_client_uid'] == exp_hash_uid
+    #assert reload_sparse_mask == hdr.start['mask']
     # update hash uid
     new_hash = update_experiment_hash_uid()
     # production run first
