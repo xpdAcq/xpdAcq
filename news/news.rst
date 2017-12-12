@@ -2,7 +2,9 @@
 
 * Added news to the repo so we can changelog better
 
-**Changed:** None
+**Changed:**
+
+* To align with the direction of NSLS-II software development, pulling build dependencies from pypi instead of conda.
 
 **Deprecated:** 
 
