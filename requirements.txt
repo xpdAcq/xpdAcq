@@ -1,0 +1,13 @@
+attrs
+databroker
+doct
+doctr
+jinja2
+lmfit
+mongoquery
+networkx
+nose
+ophyd
+pims
+pyepics
+zmq
