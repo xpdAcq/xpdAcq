@@ -37,13 +37,13 @@ before_install:
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
-  - conda create -n testenv nose python=$TRAVIS_PYTHON_VERSION scipy scikit-beam jsonschema pytest coverage pip ophyd pyepics mock xlrd pyfai flake8 codecov ipython -c conda-forge -c lightsource2-tag -c soft-matter
+  - conda create -n testenv nose python=$TRAVIS_PYTHON_VERSION scipy matplotlib scikit-beam jsonschema pyyaml tifffile pandas pytest coverage pip pyfai flake8 codecov ipython xlrd -c conda-forge 
   - source activate testenv
-  - 'pip install https://github.com/NSLS-II/databroker/zipball/master#egg=databroker'
   - 'pip install https://github.com/NSLS-II/bluesky/zipball/master#egg=bluesky'
   - 'pip install https://github.com/xpdAcq/xpdAn/zipball/master#egg=xpdan'
   - 'pip install https://github.com/xpdAcq/xpdSim/zipball/master#egg=xpdsim'
   - pip install .
+  - pip install ophyd pims databroker
   # make sure the sqlite file exists to avoid race conditions
   - python -c "from bluesky.utils import get_history; get_history()"
   # make sure package data is correctly set
