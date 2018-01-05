@@ -17,8 +17,10 @@
 import os
 import socket
 import time
+import datetime
 import yaml
 from time import strftime
+import pprint
 
 from .yamldict import YamlDict
 from .tools import xpdAcqException
@@ -187,7 +189,17 @@ def _load_beamline_config(beamline_config_fp):
                               "beamline scientist ASAP")
     with open(beamline_config_fp, 'r') as f:
         beamline_config = yaml.load(f)
-
+    pp = pprint.PrettyPrinter()
+    pp.pprint(beamline_config)
+    verif = ""
+    while verif != ("y" or "n"):
+        verif = input("Is this configuration correct? y/n: ")
+    if verif == "y":
+        beamline_config["Verified by"] = input("Please input your initials: ")
+        timestamp = datetime.datetime.now()
+        beamline_config["Verification time"] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        with open(beamline_config_fp, 'w') as f:
+            yaml.dump(beamline_config,f)
     return beamline_config
 
 
