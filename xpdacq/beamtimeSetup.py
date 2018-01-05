@@ -23,7 +23,7 @@ from pkg_resources import resource_filename as rs_fn
 
 from .beamtime import *
 from .tools import _graceful_exit
-from .xpdacq_conf import glbl_dict
+from .xpdacq_conf import glbl_dict, _load_beamline_config
 
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime
