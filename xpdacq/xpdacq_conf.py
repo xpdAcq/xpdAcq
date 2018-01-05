@@ -187,19 +187,21 @@ def _load_beamline_config(beamline_config_fp):
         raise xpdAcqException("WARNING: can not find long term beamline "
                               "configuration file. Please contact the "
                               "beamline scientist ASAP")
-    with open(beamline_config_fp, 'r') as f:
-        beamline_config = yaml.load(f)
     pp = pprint.PrettyPrinter()
-    pp.pprint(beamline_config)
     verif = ""
-    while verif != ("y" or "n"):
-        verif = input("Is this configuration correct? y/n: ")
-    if verif == "y":
-        beamline_config["Verified by"] = input("Please input your initials: ")
-        timestamp = datetime.datetime.now()
-        beamline_config["Verification time"] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
-        with open(beamline_config_fp, 'w') as f:
-            yaml.dump(beamline_config,f)
+    while verif != "y":
+        with open(beamline_config_fp, 'r') as f:
+            beamline_config = yaml.load(f)
+        pp.pprint(beamline_config)
+        verif = input("\nIs this configuration correct? y/n: ")
+        if verif == "n":
+            print('Edit, save, and close the configuration file.\n')
+            os.system('notepad '+beamline_config_fp)
+    beamline_config["Verified by"] = input("Please input your initials: ")
+    timestamp = datetime.datetime.now()
+    beamline_config["Verification time"] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    with open(beamline_config_fp, 'w') as f:
+        yaml.dump(beamline_config,f)
     return beamline_config
 
 

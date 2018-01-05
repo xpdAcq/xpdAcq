@@ -61,6 +61,7 @@ def _start_beamtime(PI_last, saf_num, experimenters=[],
         src = os.path.join(DATA_DIR, 'Ni24.D')
         dst = os.path.join(glbl_dict['usrAnalysis_dir'], 'Ni24.D')
         shutil.copy(src, dst)
+        beamline_config = _load_beamline_config(glbl['blconfig_path'])
 
         # pre-populated scan plan
         for expo in EXPO_LIST:
