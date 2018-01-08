@@ -315,9 +315,25 @@ def _confirm_archive(archive_f_name):
 
 def _delete_home_dir_tree():
     os.chdir(glbl_dict['base'])  # move out from xpdUser before deletion
-    shutil.rmtree(glbl_dict['home'])
-    os.makedirs(glbl_dict['home'])
-    os.chdir(glbl_dict['home'])  # now move back into xpdUser
+    dir_to_flush = glbl_dict['home']
+    while os.path.isdir(dir_to_flush):
+        try:
+            shutil.rmtree(dir_to_flush)
+        except:
+            # TODO: error is platform-dependent. might want to
+            #discuss if we need to specify error type.
+            print("INFO: Some files are still used by the current "
+                  "process.\nIt could be the sample spreadsheet "
+                  "located in ``xpdUser/Import`` directory or "
+                  "could be python script opened in editors.\n"
+                  "Please find all possible files and close them.")
+            msg = input("INFO: If files are properly closed, "
+                        "please hit any key to continue the end_beamtime "
+                        "process.")
+            if msg:
+                pass
+    os.makedirs(dir_to_flush)
+    os.chdir(dir_to_flush)  # now move back into xpdUser
     return
 
 
