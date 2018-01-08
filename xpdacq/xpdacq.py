@@ -370,6 +370,17 @@ def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
           .format(signal.name, suspend_thres, resume_thres, wait_time))
 
 
+PAUSE_MSG = """
+Your RunEngine (xrun) is entering a paused state.
+These are your options for changing the state of the RunEngine:
+
+xrun.resume()    Resume the plan.
+xrun.abort()     Perform cleanup, then kill plan. Mark exit_stats='aborted'.
+xrun.stop()      Perform cleanup, then kill plan. Mark exit_status='success'.
+xrun.halt()      Emergency Stop: Do not perform cleanup --- just stop.
+"""
+
+
 class CustomizedRunEngine(RunEngine):
     def __init__(self, beamtime, *args, **kwargs):
         """ A RunEngine customized for XPD workflows.
@@ -400,6 +411,7 @@ class CustomizedRunEngine(RunEngine):
         """
         super().__init__(*args, **kwargs)
         self._beamtime = beamtime
+        self.pause_msg = PAUSE_MSG
 
     @property
     def beamtime(self):
