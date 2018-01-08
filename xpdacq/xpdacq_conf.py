@@ -22,6 +22,7 @@ import yaml
 from time import strftime
 import pprint
 import platform
+import warnings
 
 from .yamldict import YamlDict
 from .tools import xpdAcqException
@@ -183,7 +184,21 @@ def configure_frame_acq_time(new_frame_acq_time):
     print("INFO: area detector has been configured to new "
           "exposure_time = {}s".format(new_frame_acq_time))
 
-def _load_beamline_config(beamline_config_fp):
+def _verify_within_test(beamline_config_fp,verif):
+    while verif != "y":
+        with open(beamline_config_fp, 'r') as f:
+            beamline_config = yaml.load(f)
+        warnings.warn("Not verified")
+        verif = "y"
+    beamline_config["Verified by"] = "AUTO VERIFIED IN TEST"
+    timestamp = datetime.datetime.now()
+    beamline_config["Verification time"] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    with open(beamline_config_fp, 'w') as f:
+        yaml.dump(beamline_config,f)
+    return beamline_config
+    
+
+def _load_beamline_config(beamline_config_fp, verif = "", test=False):
     if not os.path.isfile(beamline_config_fp):
         raise xpdAcqException("WARNING: can not find long term beamline "
                               "configuration file. Please contact the "
@@ -194,20 +209,22 @@ def _load_beamline_config(beamline_config_fp):
         editor = 'notepad'
     else:
         editor = os.getenv('EDITOR')
-    verif = ""
-    while verif != "y":
-        with open(beamline_config_fp, 'r') as f:
-            beamline_config = yaml.load(f)
-        pp.pprint(beamline_config)
-        verif = input("\nIs this configuration correct? y/n: ")
-        if verif == "n":
-            print('Edit, save, and close the configuration file.\n')
-            os.system(editor + ' ' + beamline_config_fp)
-    beamline_config["Verified by"] = input("Please input your initials: ")
-    timestamp = datetime.datetime.now()
-    beamline_config["Verification time"] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
-    with open(beamline_config_fp, 'w') as f:
-        yaml.dump(beamline_config,f)
+    if not test:
+        while verif != "y":
+            with open(beamline_config_fp, 'r') as f:
+                beamline_config = yaml.load(f)
+            pp.pprint(beamline_config)
+            verif = input("\nIs this configuration correct? y/n: ")
+            if verif == "n":
+                print('Edit, save, and close the configuration file.\n')
+                os.system(editor + ' ' + beamline_config_fp)
+        beamline_config["Verified by"] = input("Please input your initials: ")
+        timestamp = datetime.datetime.now()
+        beamline_config["Verification time"] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        with open(beamline_config_fp, 'w') as f:
+            yaml.dump(beamline_config,f)
+    else:
+        beamline_config = _verify_within_test(beamline_config_fp,verif)
     return beamline_config
 
 

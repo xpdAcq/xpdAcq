@@ -29,6 +29,7 @@ class ImportSamplTest(unittest.TestCase):
         self.pkg_rs = rs_fn('xpdacq', 'examples/')
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
+        os.makedirs(self.config_dir, exist_ok=True)
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -43,9 +44,13 @@ class ImportSamplTest(unittest.TestCase):
         # no bt, default argument will fail
         self.assertRaises(TypeError, lambda: _import_sample_info(bt=None))
         # make bt but no spreadsheet
+        pytest_dir = rs_fn('xpdacq', 'tests/')
+        config = 'XPD_beamline_config.yml'
+        configsrc = os.path.join(pytest_dir, config)
+        shutil.copyfile(configsrc, os.path.join(self.config_dir, config))
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
-                                  wavelength=self.wavelength)
+                                  wavelength=self.wavelength,test=True)
         # expect FileNotFoundError as no spreadsheet
         xlf = '300000_sample.xlsx'
         self.assertFalse(os.path.isfile(os.path.join(glbl['import_dir'],

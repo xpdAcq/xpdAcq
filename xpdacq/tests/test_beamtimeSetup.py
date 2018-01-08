@@ -2,6 +2,7 @@ import unittest
 import os
 import shutil
 import yaml
+from pkg_resources import resource_filename as rs_fn
 from time import strftime
 
 from xpdacq.xpdacq_conf import glbl_dict
@@ -25,6 +26,7 @@ class NewBeamtimeTest(unittest.TestCase):
         self.wavelength = 0.1812
         self.experimenters = [('van der Banerjee', 'S0ham', 1),
                               ('Terban ', ' Max', 2)]
+        os.makedirs(self.config_dir, exist_ok=True)
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -82,9 +84,14 @@ class NewBeamtimeTest(unittest.TestCase):
         # real doing: 
         os.mkdir(self.home_dir)
         self.assertTrue(os.path.isdir(self.home_dir))
+        # copying example longterm config file
+        pytest_dir = rs_fn('xpdacq', 'tests/')
+        config = 'XPD_beamline_config.yml'
+        configsrc = os.path.join(pytest_dir, config)
+        shutil.copyfile(configsrc, os.path.join(self.config_dir, config))
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
-                                  wavelength=self.wavelength)
+                                  wavelength=self.wavelength,test=True)
         self.assertIsInstance(self.bt, Beamtime)
         # test normalized md
         self.assertEqual('Billinge', self.bt.get('bt_piLast'))
@@ -113,9 +120,14 @@ class NewBeamtimeTest(unittest.TestCase):
         # end_beamtime has been run
         self.assertRaises(FileNotFoundError, lambda: _end_beamtime())
         # entire trip. _start_beamtime to _end_beamtime
+        # copying example longterm config file
+        pytest_dir = rs_fn('xpdacq', 'tests/')
+        config = 'XPD_beamline_config.yml'
+        configsrc = os.path.join(pytest_dir, config)
+        shutil.copyfile(configsrc, os.path.join(self.config_dir, config))
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
-                                  wavelength=self.wavelength)
+                                  wavelength=self.wavelength,test=True)
         bt_path_src = os.path.join(glbl_dict['yaml_dir'], 'bt_bt.yml')
         bt_path_dst = os.path.join(glbl_dict['import_dir'], 'bt_bt.yml')
         # move out for now, no bt

@@ -4,6 +4,7 @@ import shutil
 import unittest
 
 from xpdacq.glbl import glbl
+from pkg_resources import resource_filename as rs_fn
 from xpdacq.xpdacq_conf import configure_device
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
                                   load_beamtime)
@@ -30,14 +31,19 @@ class BeamtimeObjTest(unittest.TestCase):
                               ('Terban ', ' Max', 2)]
         # make xpdUser dir. That is required for simulation
         os.makedirs(self.home_dir, exist_ok=True)
+        os.makedirs(self.config_dir, exist_ok=True)
         # set simulation objects
         configure_device(db=db, shutter=shctl1,
                          area_det=pe1c, temp_controller=cs700)
+        pytest_dir = rs_fn('xpdacq', 'tests/')
+        config = 'XPD_beamline_config.yml'
+        configsrc = os.path.join(pytest_dir, config)
+        shutil.copyfile(configsrc, os.path.join(glbl['xpdconfig'], config))
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
-                                  wavelength=self.wavelength)
+                                  wavelength=self.wavelength,test=True)
         xlf = '300000_sample.xlsx'
-        src = os.path.join(os.path.dirname(__file__), xlf)
+        src = os.path.join(pytest_dir, xlf)
         shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
 
     def tearDown(self):
