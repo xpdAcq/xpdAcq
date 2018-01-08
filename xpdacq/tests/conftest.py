@@ -49,7 +49,7 @@ def bt(home_dir):
     saf_num = 300000
     wavelength = xpd_wavelength
     experimenters = [('van der Banerjee', 'S0ham', 1),
-                     ('Terban ', ' Max', 2)]
+                     ('Terban ', ' Max', 2)]                    
     bt = _start_beamtime(PI_name, saf_num,
                          experimenters,
                          wavelength=wavelength)
@@ -58,6 +58,10 @@ def bt(home_dir):
     xlf = '300000_sample.xlsx'
     src = os.path.join(pytest_dir, xlf)
     shutil.copyfile(src, os.path.join(glbl_dict['import_dir'], xlf))
+    # copying example longterm config file
+    config = 'XPD_beamline_config.yml'
+    configsrc = os.path.join(pytest_dir, config)
+    shutil.copyfile(configsrc, os.path.join(glbl_dict['xpdconfig'], config))
     import_sample_info(saf_num, bt)
     yield bt
 
