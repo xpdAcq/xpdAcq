@@ -37,13 +37,15 @@ xpd_configuration = {}
 
 
 def configure_device(*, area_det, shutter,
-                     temp_controller, db, **kwargs):
+                     temp_controller, db,
+                     filter_positions, **kwargs):
     """function to set up required device/objects for xpdacq"""
     # specifically assign minimum requirements
     xpd_configuration['area_det'] = area_det
     xpd_configuration['shutter'] = shutter
     xpd_configuration['temp_controller'] = temp_controller
     xpd_configuration['db'] = db
+    xpd_configuration['filter_positions'] = filter_positions
     # extra kwargs
     xpd_configuration.update(**kwargs)
 
