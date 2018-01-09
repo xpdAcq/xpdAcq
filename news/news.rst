@@ -11,6 +11,10 @@
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
+
+* Instruction in ``run_calibration``. There is a specific print statement
+  to tell the user to finish the interactive calibration process in the
+  analysis terminal.
 
 **Security:** None
