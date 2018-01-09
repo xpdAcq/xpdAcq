@@ -23,6 +23,7 @@ from time import strftime
 import pprint
 import platform
 import warnings
+import subprocess
 
 from .yamldict import YamlDict
 from .tools import xpdAcqException
@@ -217,7 +218,7 @@ def _load_beamline_config(beamline_config_fp, verif = "", test=False):
             verif = input("\nIs this configuration correct? y/n: ")
             if verif == "n":
                 print('Edit, save, and close the configuration file.\n')
-                os.system(editor + ' ' + beamline_config_fp)
+                subprocess.run(editor + ' ' + beamline_config_fp)
         beamline_config["Verified by"] = input("Please input your initials: ")
         timestamp = datetime.datetime.now()
         beamline_config["Verification time"] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
