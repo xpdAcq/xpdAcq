@@ -1,10 +1,13 @@
-**Added:** 
+**Added:**
 
-* Verification step: beamline scientist must verify long-term beamline config when a new beamtime is started.
+* Added news to the repo so we can changelog better
 
 **Changed:** None
 
-**Deprecated:** None
+**Deprecated:** 
+
+* Remove static mask injection. Mask is now handled by the analysis
+  pipeline live.
 
 **Removed:** None
 
