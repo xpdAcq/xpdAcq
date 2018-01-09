@@ -231,7 +231,7 @@ def _inject_filter_positions(msg):
     if msg.command == 'open_run':
         filter_bank = xpd_configuration['filter_positions']
         filters = ['flt1', 'flt2', 'flt3', 'flt4']
-        msg.kwargs['filter_positions'] = {k: getattr(filter_bank, fltr).value, for fltr in filters}
+        msg.kwargs['filter_positions'] = {fltr: getattr(filter_bank, fltr).value for fltr in filters}
     return msg
 
 
