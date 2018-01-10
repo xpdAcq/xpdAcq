@@ -21,7 +21,7 @@ from xpdacq.xpdacq_conf import (glbl_dict, configure_device,
 # configure experiment device being used in current version
 if glbl_dict['is_simulation']:
     from xpdacq.simulation import (xpd_pe1c, db, cs700, shctl1,
-                                   ring_current)
+                                   ring_current, fb)
     pe1c = xpd_pe1c # alias
 else:
     # FIXME: create synthetic ring current object in fullness of time
