@@ -111,6 +111,7 @@ class NewBeamtimeTest(unittest.TestCase):
     def test_end_beamtime(self):
         _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']
         # end_beamtime has been run
+        os.makedirs(self.home_dir)
         self.assertRaises(FileNotFoundError, lambda: _end_beamtime())
         # entire trip. _start_beamtime to _end_beamtime
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
@@ -131,6 +132,8 @@ class NewBeamtimeTest(unittest.TestCase):
         saf_num = self.bt.get('bt_safN')
         bt_uid = self.bt.get('bt_uid')
         archive_name = _load_bt_info(self.bt, _required_info)
+        os.makedirs(glbl_dict['archive_dir'])
+        assert os.path.isdir(glbl_dict['archive_dir'])
         archive_full_name = _tar_user_data(archive_name)
         test_tar_name = '_'.join([pi_name, saf_num, bt_uid,
                                   strftime('%Y-%m-%d-%H%M')])
@@ -140,23 +143,24 @@ class NewBeamtimeTest(unittest.TestCase):
                                       test_tar_name))
         # are contents tared correctly?
         archive_test_dir = os.path.join(glbl_dict['home'], 'tar_test')
-        os.makedirs(archive_test_dir, exist_ok=True)
-        shutil.unpack_archive(archive_full_name + '.tar', archive_test_dir)
-        content_list = os.listdir(archive_test_dir)
-        # is tarball starting from xpdUser?
-        self.assertTrue('xpdUser' in content_list)
+        #os.makedirs(archive_test_dir, exist_ok=True)
+        #shutil.unpack_archive(archive_full_name + '.tar', archive_test_dir)
+        content_list = os.listdir(archive_full_name)
+        # is remote copy starting from xpdUser?
+        assert 'xpdUser' in content_list
+        assert len(content_list) == 1
         # is every directory included
-        basename_list = list(map(os.path.basename,
+        full_fp_list = list(map(os.path.basename,
                                  glbl_dict['allfolders']))
-        _exclude_list = ['xpdUser', 'xpdConfig', 'yml', 'samples',
-                         'scanplans']
-        # _exclude_list means sub directories and top directories 
-        # that will not be in tar structure
-        for el in _exclude_list:
-            basename_list.remove(el)
-        for el in basename_list:
-            self.assertTrue(el in os.listdir(os.path.join(archive_test_dir,
-                                                          'xpdUser')))
+        exclude_fp_list = ['xpdUser', 'xpdConfig', 'yml',
+                           'samples', 'scanplans']
+        bkg_fp_list = [el for el in full_fp_list if el not in
+                exclude_fp_list] # exclude top dirs
+        remote_fp_list = os.listdir(os.path.join(archive_full_name,
+                                                 'xpdUser'))
+        # difference should be empty set
+        assert not set(bkg_fp_list).difference(remote_fp_list)
+
         # now test deleting directories
         _delete_home_dir_tree()
         self.assertTrue(len(os.listdir(glbl_dict['home'])) == 0)
