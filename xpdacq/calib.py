@@ -147,6 +147,14 @@ def run_calibration(exposure=5, dark_sub_bool=True,
                                     detector=detector,
                                     calibrant=calibrant
                                     )
+    print("INFO: Please navigate to the analysis terminal to complete "
+          "the interactive calibration process.\nYou may find the "
+          "the analysis terminal similar to data acquisition terminal"
+          "(current terminal) except there is information about the "
+          "analysis pipeline printed")
+    print("INFO: For a quick guide on the interactive calibration "
+          "process, please visit our web-doc at:\n"
+          "https://xpdacq.github.io/xpdAcq/usb_Running.html#calib-manual\n")
 
     if not parallel:  # backup when pipeline fails
         # get wavelength from bt
