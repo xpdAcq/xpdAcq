@@ -2,12 +2,16 @@
 
 * Added news to the repo so we can changelog better
 
-**Changed:** None
+**Changed:**
+
+* Change the filepath structure in ``glbl`` to align with the update
+  at XPD. All ``xf28id1`` -> ``xf28id2``, including hostname and
+  nfs-mount drives.
 
 **Deprecated:** 
 
 * Remove static mask injection. Mask is now handled by the analysis
-  pipeline live.
+  pipeline dynamically.
 
 **Removed:** None
 
