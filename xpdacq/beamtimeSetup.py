@@ -194,11 +194,11 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
 
     Detail steps are:
         2) Archive ``xpdUser`` directory to remove backup
-        3) Ask for user confirmation
+        3) Ask for user's confirmation
         4.1) if user confirms, flush all sub-directories under
         ``xpdUser`` for a new beamtime.
-        4.2) if user disagree, leave ``xpdUser`` untouched and flush
-        remote backup to avoid duplicate archives.
+        4.2) if user doesn't confirm, leave ``xpdUser`` untouched 
+        and flush remote backup to avoid duplicate archives.
     """
     # NOTE: to avoid network bottleneck, we actually only move all files
     # except for .tif.
@@ -329,7 +329,7 @@ def _delete_home_dir_tree():
                   "Please find all possible files and close them.")
             msg = input("INFO: If files are properly closed, "
                         "please hit any key to continue the end_beamtime "
-                        "process.")
+                        "process. ")
             if msg:
                 pass
     os.makedirs(dir_to_flush)
