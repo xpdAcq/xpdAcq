@@ -17,7 +17,9 @@ import os
 import sys
 import yaml
 import shutil
+import subprocess
 from time import strftime
+
 from IPython import get_ipython
 from pkg_resources import resource_filename as rs_fn
 
@@ -190,23 +192,32 @@ def load_yaml(f, known_uids=None):
 def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
     """ funciton to end a beamtime.
 
-    It check if directory structure is correct and flush directories
+    Detail steps are:
+        2) Archive ``xpdUser`` directory to remove backup
+        3) Ask for user's confirmation
+        4.1) if user confirms, flush all sub-directories under
+        ``xpdUser`` for a new beamtime.
+        4.2) if user doesn't confirm, leave ``xpdUser`` untouched 
+        and flush remote backup to avoid duplicate archives.
     """
+    # NOTE: to avoid network bottleneck, we actually only move all files
+    # except for .tif.
+
     _required_info = ['bt_piLast', 'bt_safN', 'bt_uid']
     if archive_dir is None:
         archive_dir = glbl_dict['archive_dir']
     if base_dir is None:
         base_dir = glbl_dict['base']
-    os.makedirs(glbl_dict['home'], exist_ok=True)
     # check env
-    files = os.listdir(glbl_dict['home'])
-    if len(files) == 0:
-        raise FileNotFoundError("It appears that end_beamtime may have been "
-                                "run. If so, do not run again but proceed to\n"
-                                ">>> bt = _start_beamtime(pi_last, saf_num,"
-                                "experimenters, wavelength=<value>)\n")
-    ips = get_ipython()
+    if os.path.isdir(glbl_dict['home']):
+        files = os.listdir(glbl_dict['home'])
+        if len(files) == 0:
+            raise FileNotFoundError("It appears that end_beamtime may have been "
+                                    "run. If so, do not run again but proceed to\n"
+                                    ">>> bt = _start_beamtime(pi_last, saf_num,"
+                                    "experimenters, wavelength=<value>)\n")
     # laod bt yaml
+    ips = get_ipython()
     if not bto:
         # bto = _load_bt(glbl.yaml_dir)
         bto = ips.ns_table['user_global']['bt']
@@ -247,21 +258,23 @@ def _load_bt_info(bt_obj, required_fields):
 def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
     """ Create a remote tarball of all user folders under xpdUser directory
     """
-    archive_full_name = os.path.join(glbl_dict['archive_dir'], archive_name)
+    archive_full_name = os.path.join(glbl_dict['archive_dir'],
+                                     archive_name)
     if root_dir is None:
         root_dir = glbl_dict['base']
-    cur_path = os.getcwd()
     try:
         os.chdir(root_dir)
         print("INFO: Archiving your data now. That may take several"
-              " minutes. please be patient :)")
-        tar_return = shutil.make_archive(archive_full_name,
-                                         archive_format,
-                                         root_dir=root_dir,
-                                         base_dir='xpdUser', verbose=1,
-                                         dry_run=False)
+              " minutes. Please be patient :)")
+        # remove dir structure would be:
+        # <remote>/<PI_last+uid>/xpdUser/....
+        os.makedirs(archive_full_name, exist_ok=True)
+        subprocess.run(['rsync', '-av',
+                        #'--exclude=*.tif',  # not used yet
+                        glbl_dict['home'], archive_full_name],
+                        check=True)
     finally:
-        os.chdir(cur_path)
+        os.chdir(glbl_dict['home'])
     return archive_full_name
 
 
@@ -270,7 +283,7 @@ def _load_bt(bt_yaml_path):
     if not os.path.isfile(btoname):
         sys.exit(_graceful_exit("{} does not exist in {}. User might have"
                                 "deleted it accidentally.Please create it"
-                                "based on user information or contect user"
+                                "based on user information or contact user"
                                 .format(os.path.basename(btoname),
                                         glbl_dict['yaml_dir'])))
     with open(btoname, 'r') as f:
@@ -279,8 +292,9 @@ def _load_bt(bt_yaml_path):
 
 
 def _get_user_confirmation():
-    conf = input("Please confirm data are backed up. Are you ready to continue"
-                 "with xpdUser directory contents deletion (y,[n])?: ")
+    conf = input("Please confirm data are backed up.\n"
+                 "Are you ready to continue with xpdUser "
+                 "directory contents deletion (y,[n])?: ")
     return conf
 
 
@@ -294,15 +308,32 @@ def _confirm_archive(archive_f_name):
     if conf in ('y', 'Y'):
         return
     else:
-        sys.exit(_graceful_exit("xpdUser directory delete operation cancelled."
-                                "at Users request"))
-
+        # flush remote backup
+        shutil.rmtree(archive_f_name)
+        sys.exit(_graceful_exit("xpdUser directory delete operation "
+                                "cancelled at Users request."))
 
 def _delete_home_dir_tree():
     os.chdir(glbl_dict['base'])  # move out from xpdUser before deletion
-    shutil.rmtree(glbl_dict['home'])
-    os.makedirs(glbl_dict['home'], exist_ok=True)
-    os.chdir(glbl_dict['home'])  # now move back into xpdUser
+    dir_to_flush = glbl_dict['home']
+    while os.path.isdir(dir_to_flush):
+        try:
+            shutil.rmtree(dir_to_flush)
+        except:
+            # TODO: error is platform-dependent. might want to
+            #discuss if we need to specify error type.
+            print("INFO: Some files are still used by the current "
+                  "process.\nIt could be the sample spreadsheet "
+                  "located in ``xpdUser/Import`` directory or "
+                  "could be python script opened in editors.\n"
+                  "Please find all possible files and close them.")
+            msg = input("INFO: If files are properly closed, "
+                        "please hit any key to continue the end_beamtime "
+                        "process. ")
+            if msg:
+                pass
+    os.makedirs(dir_to_flush)
+    os.chdir(dir_to_flush)  # now move back into xpdUser
     return
 
 
@@ -332,4 +363,24 @@ def _start_xpdacq():
     else:
         print("INFO: No PI_name has been found")
 
+
+def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
+    archive_full_name = os.path.join(glbl_dict['archive_dir'],
+                                     archive_name)
+    if root_dir is None:
+        root_dir = glbl_dict['base']
+    #cur_path = os.getcwd()
+    try:
+        os.chdir(root_dir)
+        print("INFO: Archiving your data now. That may take several"
+              " minutes. please be patient :)")
+        tar_return = shutil.make_archive(archive_full_name,
+                                         archive_format,
+                                         root_dir=root_dir,
+                                         base_dir='xpdUser', verbose=1,
+                                         dry_run=False)
+    finally:
+        #os.chdir(cur_path)
+        os.chdir(glbl_dict['home'])
+    return archive_full_name
 """
