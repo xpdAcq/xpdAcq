@@ -25,7 +25,7 @@ from pkg_resources import resource_filename as rs_fn
 
 from .beamtime import *
 from .tools import _graceful_exit
-from .xpdacq_conf import glbl_dict
+from .xpdacq_conf import glbl_dict, _load_beamline_config
 
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime
@@ -35,7 +35,7 @@ DATA_DIR = rs_fn('xpdacq', 'data/')
 
 
 def _start_beamtime(PI_last, saf_num, experimenters=[],
-                    wavelength=None):
+                    wavelength=None, test=False):
     """function for start a beamtime"""
     home_dir = glbl_dict['home']
     if not os.path.exists(home_dir):
@@ -63,6 +63,7 @@ def _start_beamtime(PI_last, saf_num, experimenters=[],
         src = os.path.join(DATA_DIR, 'Ni24.D')
         dst = os.path.join(glbl_dict['usrAnalysis_dir'], 'Ni24.D')
         shutil.copy(src, dst)
+        beamline_config = _load_beamline_config(glbl['blconfig_path'], test=test)
 
         # pre-populated scan plan
         for expo in EXPO_LIST:

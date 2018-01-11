@@ -42,9 +42,14 @@ class xrunTest(unittest.TestCase):
         # set simulation objects
         configure_device(area_det=pe1c, temp_controller=cs700,
                          shutter=shctl1, db=db)
+        os.makedirs(glbl['xpdconfig'], exist_ok=True)
+        pytest_dir = rs_fn('xpdacq', 'tests/')
+        config = 'XPD_beamline_config.yml'
+        configsrc = os.path.join(pytest_dir, config)
+        shutil.copyfile(configsrc, os.path.join(glbl['xpdconfig'], config))
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
-                                  wavelength=self.wavelength)
+                                  wavelength=self.wavelength,test=True)
         xlf = '300000_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf)
         shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
@@ -436,13 +441,15 @@ class xrunTest(unittest.TestCase):
 
     def test_load_beamline_config(self):
         # no beamline config -> raise
+        if os.path.exists(glbl['blconfig_path']):
+            os.remove(glbl['blconfig_path'])
         with self.assertRaises(xpdAcqException):
-            _load_beamline_config(glbl['blconfig_path'])
+            _load_beamline_config(glbl['blconfig_path'],test=True)
         # move files
         stem, fn = os.path.split(glbl['blconfig_path'])
         src = os.path.join(pytest_dir, fn)
         shutil.copyfile(src, glbl['blconfig_path'])
-        beamline_config_dict = _load_beamline_config(glbl['blconfig_path'])
+        beamline_config_dict = _load_beamline_config(glbl['blconfig_path'],test=True)
         assert 'is_pytest' in beamline_config_dict
         # check md -> only is_pytest in template now
         self.xrun.md['beamline_config'] = beamline_config_dict
