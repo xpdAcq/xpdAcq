@@ -211,12 +211,12 @@ def _load_beamline_config(beamline_config_fp, verif = "", test=False):
     else:
         editor = os.getenv('EDITOR')
     if not test:
-        while verif != "y":
+        while verif.upper() != ("Y" or "YES"):
             with open(beamline_config_fp, 'r') as f:
                 beamline_config = yaml.load(f)
             pp.pprint(beamline_config)
             verif = input("\nIs this configuration correct? y/n: ")
-            if verif == "n":
+            if verif.upper() == ("N" or "NO"):
                 print('Edit, save, and close the configuration file.\n')
                 subprocess.run(editor + ' ' + beamline_config_fp)
         beamline_config["Verified by"] = input("Please input your initials: ")
