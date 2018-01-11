@@ -37,7 +37,7 @@ before_install:
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
-  - conda create -n testenv nose python=$TRAVIS_PYTHON_VERSION scipy matplotlib scikit-beam jsonschema pyyaml tifffile pandas pytest coverage pip pyfai flake8 codecov ipython xlrd -c conda-forge 
+  - conda create -n testenv nose python=$TRAVIS_PYTHON_VERSION scipy matplotlib scikit-beam jsonschema pyyaml tifffile pandas pytest coverage pip pyfai flake8 codecov ipython xlrd -c conda-forge -q
   - source activate testenv
   - 'pip install https://github.com/NSLS-II/bluesky/zipball/master#egg=bluesky'
   - 'pip install https://github.com/xpdAcq/xpdAn/zipball/master#egg=xpdan'
