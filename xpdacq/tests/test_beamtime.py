@@ -10,7 +10,7 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
                                   load_beamtime)
 from xpdacq.beamtime import (_summarize, ScanPlan, ct, Tramp, tseries,
                              Beamtime, Sample)
-from xpdacq.simulation import pe1c, db, shctl1, cs700
+from xpdacq.simulation import pe1c, db, shctl1, cs700, fb
 import bluesky.examples as be
 from xpdacq.xpdacq import CustomizedRunEngine
 
@@ -34,7 +34,8 @@ class BeamtimeObjTest(unittest.TestCase):
         os.makedirs(self.config_dir, exist_ok=True)
         # set simulation objects
         configure_device(db=db, shutter=shctl1,
-                         area_det=pe1c, temp_controller=cs700)
+                         area_det=pe1c, temp_controller=cs700,
+                         filter_positions=fb)
         pytest_dir = rs_fn('xpdacq', 'tests/')
         config = 'XPD_beamline_config.yml'
         configsrc = os.path.join(pytest_dir, config)

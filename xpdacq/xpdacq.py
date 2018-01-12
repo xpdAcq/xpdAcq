@@ -227,6 +227,14 @@ def _auto_load_calibration_file(in_scan=True):
         return calib_dict
 
 
+def _inject_filter_positions(msg):
+    if msg.command == 'open_run':
+        filter_bank = xpd_configuration['filter_positions']
+        filters = ['flt1', 'flt2', 'flt3', 'flt4']
+        msg.kwargs['filter_positions'] = {fltr: getattr(filter_bank, fltr).value for fltr in filters}
+    return msg
+
+
 def _inject_qualified_dark_frame_uid(msg):
     if msg.command == 'open_run' and msg.kwargs.get('dark_frame') is not True:
         dark_uid = _validate_dark(glbl['dk_window'])
@@ -494,6 +502,8 @@ class CustomizedRunEngine(RunEngine):
         plan = bpp.msg_mutator(plan, _inject_xpdacq_md_version)
         # Insert analysis stage tag
         plan = bpp.msg_mutator(plan, _inject_analysis_stage)
+        # Insert filter metadata
+        plan = bpp.msg_mutator(plan, _inject_filter_positions)
 
         # Execute
         return super().__call__(plan, subs,

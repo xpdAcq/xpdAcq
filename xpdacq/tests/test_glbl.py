@@ -9,7 +9,7 @@ from xpdacq.xpdacq_conf import (GlblYamlDict, glbl_dict,
                                 _reload_glbl, _set_glbl,
                                 configure_device)
 
-from xpdacq.simulation import pe1c, cs700, shctl1, db
+from xpdacq.simulation import pe1c, cs700, shctl1, db, fb
 
 
 class glblTest(unittest.TestCase):
@@ -20,7 +20,7 @@ class glblTest(unittest.TestCase):
             os.makedirs(el, exist_ok=True)
         # set simulation objects
         configure_device(area_det=pe1c, temp_controller=cs700,
-                         shutter=shctl1, db=db)
+                         shutter=shctl1, db=db, filter_positions=fb)
 
     def tearDown(self):
         shutil.rmtree(self._glbl['home'])

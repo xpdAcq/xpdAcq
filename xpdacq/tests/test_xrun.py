@@ -16,7 +16,7 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
 from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
                            _auto_load_calibration_file,
                            set_beamdump_suspender)
-from xpdacq.simulation import pe1c, cs700, shctl1, db 
+from xpdacq.simulation import pe1c, cs700, shctl1, db, fb 
 import ophyd
 from bluesky import Msg
 import bluesky.examples as be
@@ -41,7 +41,7 @@ class xrunTest(unittest.TestCase):
         os.makedirs(self.home_dir, exist_ok=True)
         # set simulation objects
         configure_device(area_det=pe1c, temp_controller=cs700,
-                         shutter=shctl1, db=db)
+                         shutter=shctl1, db=db, filter_positions=fb)
         os.makedirs(glbl['xpdconfig'], exist_ok=True)
         pytest_dir = rs_fn('xpdacq', 'tests/')
         config = 'XPD_beamline_config.yml'

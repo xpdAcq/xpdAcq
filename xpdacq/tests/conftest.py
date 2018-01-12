@@ -27,7 +27,7 @@ from xpdacq.xpdacq import CustomizedRunEngine
 from xpdacq.beamtimeSetup import _start_beamtime
 from xpdacq.utils import import_sample_info, ExceltoYaml
 from xpdsim import (cs700, xpd_pe1c, simple_pe1c, shctl1, ring_current,
-                    xpd_wavelength)
+                    xpd_wavelength, fb)
 
 
 from pkg_resources import resource_filename as rs_fn
@@ -92,7 +92,7 @@ def fresh_xrun(bt, db):
     pe1c = simple_pe1c
     configure_device(db=db, shutter=shctl1,
                      area_det=pe1c, temp_controller=cs700,
-                     ring_current=ring_current)
+                     ring_current=ring_current, filter_positions=fb)
     yield xrun
     # clean
     print("Clean xrun loop")
