@@ -229,7 +229,7 @@ def _auto_load_calibration_file(in_scan=True):
 
 def _inject_filter_positions(msg):
     if msg.command == 'open_run':
-        filter_bank = xpd_configuration['filter_positions']
+        filter_bank = xpd_configuration['filter_bank']
         filters = ['flt1', 'flt2', 'flt3', 'flt4']
         msg.kwargs['filter_positions'] = {fltr: getattr(filter_bank, fltr).value for fltr in filters}
     return msg

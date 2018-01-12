@@ -20,7 +20,7 @@ class glblTest(unittest.TestCase):
             os.makedirs(el, exist_ok=True)
         # set simulation objects
         configure_device(area_det=pe1c, temp_controller=cs700,
-                         shutter=shctl1, db=db, filter_positions=fb)
+                         shutter=shctl1, db=db, filter_bank=fb)
 
     def tearDown(self):
         shutil.rmtree(self._glbl['home'])
