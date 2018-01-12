@@ -35,7 +35,7 @@ class BeamtimeObjTest(unittest.TestCase):
         # set simulation objects
         configure_device(db=db, shutter=shctl1,
                          area_det=pe1c, temp_controller=cs700,
-                         filter_positions=fb)
+                         filter_bank=fb)
         pytest_dir = rs_fn('xpdacq', 'tests/')
         config = 'XPD_beamline_config.yml'
         configsrc = os.path.join(pytest_dir, config)

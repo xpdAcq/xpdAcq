@@ -30,7 +30,7 @@ else:
                                  name='ring_current')
 configure_device(area_det=pe1c, shutter=shctl1,
                  temp_controller=cs700, db=db,
-                 filter_positions=fb,
+                 filter_bank=fb,
                  ring_current=ring_current)
 
 # cache previous glbl state

@@ -92,7 +92,7 @@ def fresh_xrun(bt, db):
     pe1c = simple_pe1c
     configure_device(db=db, shutter=shctl1,
                      area_det=pe1c, temp_controller=cs700,
-                     ring_current=ring_current, filter_positions=fb)
+                     ring_current=ring_current, filter_bank=fb)
     yield xrun
     # clean
     print("Clean xrun loop")
