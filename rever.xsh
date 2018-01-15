@@ -2,6 +2,7 @@ $PROJECT = 'xpdAcq'
 $ACTIVITIES = ['version_bump',
                'changelog',
                'tag',
+               'push_tag',
                'ghrelease']
 
 $VERSION_BUMP_PATTERNS = [
