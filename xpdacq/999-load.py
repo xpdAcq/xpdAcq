@@ -23,11 +23,7 @@ if glbl_dict['is_simulation']:
     from xpdacq.simulation import (xpd_pe1c, db, cs700, shctl1,
                                    ring_current, fb)
     pe1c = xpd_pe1c # alias
-else:
-    # FIXME: create synthetic ring current object in fullness of time
-    from ophyd import EpicsSignalRO
-    ring_current = EpicsSignalRO('SR:OPS-BI{DCCT:1}I:Real-I',
-                                 name='ring_current')
+
 configure_device(area_det=pe1c, shutter=shctl1,
                  temp_controller=cs700, db=db,
                  filter_bank=fb,
