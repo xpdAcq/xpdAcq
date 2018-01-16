@@ -74,9 +74,12 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     """function to run entire calibration process.
 
     Entire process includes:
-    1) collect calibration image,
-    2) trigger pyFAI interactive calibration process,
-    3) store calibration parameters as a yaml file
+
+    1. collect calibration image,
+
+    2. trigger pyFAI interactive calibration process,
+
+    3. store calibration parameters as a yaml file
 
     calibration parameters will be saved under xpdUser/config_base/
     and this set of parameters will be injected as metadata to
@@ -95,10 +98,10 @@ def run_calibration(exposure=5, dark_sub_bool=True,
         ".D" extension or one of pre-defined calibrant names.
         List of pre-defined calibrant names is:
         ['NaCl', 'AgBh', 'quartz', 'Si_SRM640', 'Ni', 'Si_SRM640d',
-         'Si_SRM640a', 'alpha_Al2O3', 'LaB6_SRM660b', 'TiO2', 'CrOx',
-         'LaB6_SRM660c', 'CeO2', 'Si_SRM640c', 'CuO', 'Si_SRM640e',
-         'PBBA', 'ZnO', 'Si', 'C14H30O', 'cristobaltite', 'LaB6_SRM660a',
-         'Au', 'Cr2O3', 'Si_SRM640b', 'LaB6', 'Al', 'mock']
+        'Si_SRM640a', 'alpha_Al2O3', 'LaB6_SRM660b', 'TiO2', 'CrOx',
+        'LaB6_SRM660c', 'CeO2', 'Si_SRM640c', 'CuO', 'Si_SRM640e',
+        'PBBA', 'ZnO', 'Si', 'C14H30O', 'cristobaltite', 'LaB6_SRM660a',
+        'Au', 'Cr2O3', 'Si_SRM640b', 'LaB6', 'Al', 'mock']
     phase_info : str, optional
         phase infomation of calibrant, which is required to data
         reduction process. This field will be parsed with the same logic
@@ -125,10 +128,11 @@ def run_calibration(exposure=5, dark_sub_bool=True,
         Additional keyword argument for calibration. please refer to
         pyFAI documentation for all options.
 
-    Reference
-    ---------
-    pyFAI documentation:
-    http://pyfai.readthedocs.io/en/latest/
+    Note
+    ----
+    Details about peak-picking gui from pyFAI documentaion
+
+      http://pyfai.readthedocs.io/en/latest/usage/cookbook/calibrate.html#start-pyfai-calibration_md
     """
     # default information
     if detector is None:

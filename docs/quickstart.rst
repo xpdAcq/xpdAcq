@@ -27,22 +27,23 @@ Carry out the steps in this order to ensure a successful experiment.
   3. Run ``bt.list()`` to see what ``ScanPlans`` and ``Samples`` you have pre-defined. Define new ``ScanPlans`` as needed. To add additional samples add them to the sample excel spreadsheet and run ``import_sample_info()``.
 
   4. Run setup scans on your sample to assess data quality and required exposure time by running ``xrun(0, <a_count_ScanPlan>)``.
-  
+
   5. Your data will be automatically saved and visualized via the analysis pipleine.
+  
     * The data will be saved in ``.../xpdUser/tiff_base/<Sample_name_from_spreadsheet>``.
-    
+
     * The pipeline will save:
-        
+
         1. Dark corrected image (as ``.tiff``)
         2. Mask (as ``.msk``)
         3. I(Q) (as ``.chi``)
         4. I(tth) (as ``.chi``)
         5. G(r) (as ``.gr``)
-        6. calibration (as ``.poni``, if applicable)
- 
+        6. Calibration parameters (as ``.poni``, if applicable)
+
 
     * The pipeline will visualize the:
-        
+
         1. Dark corrected image
         2. Mask
         3. I(Q)
@@ -55,7 +56,9 @@ Carry out the steps in this order to ensure a successful experiment.
   5. Run your experiment by running ``xrun(<sample>, <scanplan>)`` and your data will be saved automatically.
 
 
-These and many more things are explained below and elsewhere in the documentation.
+These and many more things are explained below and elsewhere in the
+documentation. `XPD-Users Google group
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ .
 
 Overview
 --------
@@ -88,15 +91,8 @@ and keeping your data secure.
 Below we give a step-by-step guide to setting up and running a successful experiment.  We can't cover all possibilities, and there is
 much more power within the ``xpdAcq`` and ``Bluesky`` software that you can explore as you get more advanced, but we recommend that
 you follow through the following guide step-by-step, typing the commands and seeing what happens, to get used to the software and,
-more importantly, to do things in the right order set up your experiment for success.
-
-OK, let's get started.
-
-Check your data collection terminal is correctly set up
-----------------------------------------------------------
-
-1. You will do all your work in special IPython terminals. These should already be open, you just need
-to find them.  IPython terminals start the line with something like ``In[49]:`` and ``Out[50]``, so you should
+more importantly, to do things in the right order set up your experiment for success. `XPD-Users Google group
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ to find them. IPython terminals start the line with something like ``In[49]:`` and ``Out[50]``, so you should
 see that in a terminal.  Try typing ``show_env()``.  If you see something like ``collection-17Q1.0`` or ``analysis-17Q1.1``
 (the numbers will change with time) then you are good, you will use these terminals to run your
 experiment and to visualize and analyze your data, respectively.  We recommend that you run ``collection`` on
@@ -105,7 +101,7 @@ work-station 2 (the central computer, look for ``ws2`` in the title at the top o
 
 If you can't find the right terminal, please ask the instrument scientist.  This is important to make sure
 that there is a clean start for your experiment.  However, if later in your experiment you ever have to restart
-your terminals, then you type at the command line ``xpdui`` in the collection terminal for the collection environment 
+your terminals, then you type at the command line ``xpdui`` in the collection terminal for the collection environment
 and type ``setup_analysis`` for in the analysis terminal for analysis environment.
 
 
@@ -168,6 +164,7 @@ type ``fit2d`` at a terminal prompt on the analysis computer.
 
 Set up your experiment
 ----------------------
+
 0. general
 """"""""""
 
@@ -178,10 +175,10 @@ e.g., ``xrun(5,7)`` (more on this later).
 This is standard Python syntax.
 
 If you don't know what functions are available to you (and you don't)
-you can discover them by typing a few letters and then hitting the 'Tab' key.  All
+you can discover them by typing a few letters and then hitting the 'Tab' key.  All 
 functions that the xpd software knows about that start with that sequence of letters
 will be revealed. Try typing ``s`` then Tab.  Too many in the list?  Then add another
-letter (e.g., type ``h``so you have ``sh``) then 'Tab'.  Can you find ``show_env()``?
+letter (e.g., type ``h`` so you have ``sh``) then ``Tab``.  Can you find ``show_env()``?
 You can navigate to the one you want using the arrow keys and hit enter.
 
 Now, if you don't know what that function does and what arguments it needs or has as optional (and you don't)
@@ -210,8 +207,7 @@ Double-click on the most recent one (in name order it will be the bottom one)
 to view the one you just collected. By default, ``save_last_tiff()`` saves a dark-subtracted
 image so you will see a dark corrected image of your sample.
 
-To zoom in to part of the image, click on the plot with the mouse to make it active,
-then type ``z`` on the keyboard.  The cursor should change to a '+'.  Move the cross
+To zoom in to part of the image, click on the plot with the mouse to make it active, then type ``z`` on the keyboard.  The cursor should change to a  ``+``.  Move the cross
 to the top left of the selection you want to make, then hold down the left mouse
 button and move the mouse to the bottom-right corner and let go the left mouse
 button.   To reset the figure type ``Esc`` on the keyboard.  `Remember, for the
@@ -272,7 +268,15 @@ Place the Ni calibrant at the sample position, close the hutch and open the shut
 
   run_calibration() # default values (calibrant_file='Ni.D' and exposure=5) don't need to be typed
 
-and follow the instructions in :ref:`calib_manual`.
+.. Note::
+
+  * Instruction of the calibration steps: :ref:`calib_manual`
+
+  * Full API documentation: :ref:`calib_api`
+
+  * Documentation of ``pyFAI`` calibration gui `link
+    <http://pyfai.readthedocs.io/en/latest/usage/cookbook/calibrate.html#start-pyfai-calib>`_
+
 
 The resulting calibration parameters will be saved in the header of every scan you run until you
 run ``run_calibration()`` again.
@@ -474,6 +478,7 @@ Check the sheet to make sure that all your background samples are listed as samp
 and that they are correctly linked to the samples for which they are the background.
 
   1. Load the background sample (e.g., empty kapton tube) on the instrument
+
   2. In your ``collection-yyQn.x`` terminal type
 
     .. code-block:: python
@@ -483,21 +488,20 @@ and that they are correctly linked to the samples for which they are the backgro
     to locate the relevant background sample object, for example it might be ``kapton-1mmID``
     at position 3 in the list.
 
-  3. Then in the ``collection-yyQn.x`` terminal, you will type ``xrun`` giving as arguments
-   the background sample-object with a ``ct`` ScanPlan object of the desired exposure:
+  3. Then in the ``collection-yyQn.x`` terminal, you will type ``xrun`` giving as arguments the background sample-object with a ``ct`` ScanPlan object of the desired exposure.
 
-   .. code-block:: python
+    .. code-block:: python
 
-     # if you are running this as a tutorial don't type this.  It will take >30 mins to complete because
-     # scanplan[3] is a 15 minute exposure and there is no stored 15 minute dark exposure for subtraction
-     # so the code will automatically collect that too!
-     # but to test it you could replace bt.scanplan[3] with bt.scanplan[0]....
+      # if you are running this as a tutorial don't type this.  It will take >30 mins to complete because
+      # scanplan[3] is a 15 minute exposure and there is no stored 15 minute dark exposure for subtraction
+      # so the code will automatically collect that too!
+      # but to test it you could replace bt.scanplan[3] with bt.scanplan[0]....
 
-     # referencing objects explicitly...or...
-     xrun(bt.samples['kepton_1mmOD'], bt.scanplan['ct_900'])
+      # referencing objects explicitly...or...
+      xrun(bt.samples['kepton_1mmOD'], bt.scanplan['ct_900'])
 
-     # inexplicit: give reference to ``Sample`` and ``ScanPlan`` index from the ``bt`` list.
-     xrun(2,3)
+      # inexplicit: give reference to ``Sample`` and ``ScanPlan`` index from the ``bt`` list.
+      xrun(2,3)
 
   More details are avaliable :ref:`here <background_obj>`.
 
@@ -644,8 +648,7 @@ please see `here <http://nsls-ii.github.io/bluesky/plans.html>`_.
 
 We recommend that you use ``xpdAcq`` built-in plans wherever possible.  If there
 is a new scan plan that you think could be useful to other users, please post it to
-the `XPD-Users Google group
-<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ ,
+the `XPD-Users Google group <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_,
 and suggest that perhaps it would be great to have that
 as an ``xpdAcq`` built-in ScanPlan in the future!
 

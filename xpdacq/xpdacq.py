@@ -27,12 +27,13 @@ import bluesky.preprocessors as bpp
 from bluesky import RunEngine
 from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input
+from bluesky.callbacks.broker import verify_files_saved
 
 from xpdacq.glbl import glbl
+from xpdacq.tools import xpdAcqException
+from xpdacq.beamtime import ScanPlan, _summarize
 from xpdacq.xpdacq_conf import (xpd_configuration, XPD_SHUTTER_CONF,
                                 XPDACQ_MD_VERSION)
-from xpdacq.beamtime import ScanPlan, _summarize
-from xpdacq.tools import xpdAcqException
 
 from xpdan.tools import compress_mask
 XPD_shutter = xpd_configuration.get('shutter')
@@ -311,7 +312,7 @@ def _inject_mask_server_uid(msg):
 def update_experiment_hash_uid():
     """helper function to assign new uid to glbl state"""
     new_uid = str(uuid.uuid4())
-    glbl['exp_hash_uid'] = new_uid 
+    glbl['exp_hash_uid'] = new_uid
     print("INFO: experiment hash uid as been updated to "
           "{}".format(new_uid))
 
@@ -390,33 +391,41 @@ xrun.halt()      Emergency Stop: Do not perform cleanup --- just stop.
 
 
 class CustomizedRunEngine(RunEngine):
+    """A RunEngine customized for XPD workflows.
+
+    Parameters
+    ----------
+    beamtime : xpdacq.beamtime.Beamtime or None
+        beamtime object that will be linked to. This beamtime object
+        provide reference of sample and scanplan indicies. If no
+        beamtime object is linked, index-based syntax will not be allowed.
+
+    Attributes
+    ----------
+    beamtime
+        beamtime object currently associated with this RunEngine instance.
+
+    Examples
+    --------
+    Basic usage: run samples and plans by number
+
+    >>> xrun(0, 0)
+
+    Advanced usage: use custom plan which is compatible with bluesky
+
+    >>> xrun(3, custom_plan)  # sample 3, an arbitrary bluesky plan
+
+    Or custom sample info. sample just has to be dict-like
+    and contain the required keys.
+
+    >>> xrun(custom_sample_dict, custom_plan)
+
+    Or use completely custom dark frame logic
+
+    >>> xrun(3, custom_plan, dark_strategy=some_custom_func)
+    """
+
     def __init__(self, beamtime, *args, **kwargs):
-        """ A RunEngine customized for XPD workflows.
-
-        Parameters
-        ----------
-        beamtime : xpdacq.beamtime.Beamtime or None
-            current beamtime object
-
-        Examples
-        --------
-        Basic usage...
-
-        Run samples and plans by number...
-        >>> xrun(0, 0)
-
-        Advanced usage...
-
-        Use custom plans
-        >>> xrun(3, custom_plan)  # sample 3, an arbitrary bluesky plan
-
-        Or custom sample info --- sample just has to be dict-like
-        and contain the required keys.
-        >>> xrun(custom_sample_dict, custom_plan)
-
-        Or use completely custom dark frame logic
-        >>> xrun(3, 'ct', dark_strategy=some_custom_func)
-        """
         super().__init__(*args, **kwargs)
         self._beamtime = beamtime
         self.pause_msg = PAUSE_MSG
@@ -443,7 +452,57 @@ class CustomizedRunEngine(RunEngine):
 
     def __call__(self, sample, plan, subs=None, *,
                  verify_write=False, dark_strategy=periodic_dark,
-                 raise_if_interrupted=False, **metadata_kw):
+                 **metadata_kw):
+        """
+        Execute a plan
+
+        Any keyword arguments other than those listed below will
+        be interpreted as metadata and recorded with the run.
+
+        Parameters
+        ----------
+        sample : int or dict-like
+            Sample metadata. If a beamtime object is linked,
+            an integer will be interpreted as the index appears in the
+            ``bt.list()`` method, corresponding metadata will be passed.
+            A customized dict can also be passed as the sample
+            metadata.
+        plan : int or generator
+            Scan plan. If a beamtime object is linked, an integer
+            will be interpreted as the index appears in the
+            ``bt.list()`` method, corresponding scan plan will be
+            A generator or that yields ``Msg`` objects (or an iterable
+            that returns such a generator) can also be passed.
+        subs: callable, list, or dict, optional
+            Temporary subscriptions (a.k.a. callbacks) to be used on
+            this run. Default to None. For convenience, any of the
+            following are accepted:
+
+            * a callable, which will be subscribed to 'all'
+            * a list of callables, which again will be subscribed to 'all'
+            * a dictionary, mapping specific subscriptions to callables or
+              lists of callables; valid keys are {'all', 'start', 'stop',
+              'event', 'descriptor'}
+
+        verify_write: bool, optional
+            Double check if the data have been written into database.
+            In general data is written in a lossless fashion at the
+            NSLS-II. Therefore, False by default.
+        dark_strategy: callable, optional.
+            Protocol of taking dark frame during experiment. Default
+            to the logic of matching dark frame and light frame with
+            the sample exposure time and frame rate. Details can be
+            found at ``http://xpdacq.github.io/xpdAcq/usb_Running.html#automated-dark-collection``
+        metadata_kw:
+            Extra keyword arguments for specifying metadata in the
+            run time. If the extra metdata has the same key as the
+            ``sample``, ``ValueError`` will be raised.
+
+        Returns
+        -------
+        uids : list
+            list of uids (i.e. RunStart Document uids) of run(s)
+        """
         # The CustomizedRunEngine knows about a Beamtime object, and it
         # interprets integers for 'sample' as indexes into the Beamtime's
         # lists of Samples from all its Experiments.
