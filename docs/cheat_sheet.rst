@@ -1,7 +1,7 @@
 .. _cheat_sheet:
 
 Code for Example Experiment
---------------------------
+---------------------------
 
 Here is a sample code covering the entire process from defining ``Sample`` and
 ``ScanPlan`` objects to running different kinds of runs.

@@ -74,9 +74,12 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     """function to run entire calibration process.
 
     Entire process includes:
-    1) collect calibration image,
-    2) trigger pyFAI interactive calibration process,
-    3) store calibration parameters as a yaml file
+
+    1. collect calibration image,
+
+    2. trigger pyFAI interactive calibration process,
+
+    3. store calibration parameters as a yaml file
 
     calibration parameters will be saved under xpdUser/config_base/
     and this set of parameters will be injected as metadata to
