@@ -208,7 +208,7 @@ def _load_beamline_config(beamline_config_fp, verif = "", test=False):
     if os_type == 'Windows':
         editor = 'notepad'
     else:
-        editor = os.getenv('EDITOR')
+        editor = os.environ.get('EDITOR','vim')
     if not test:
         while verif.upper() != ("Y" or "YES"):
             with open(beamline_config_fp, 'r') as f:
@@ -217,7 +217,7 @@ def _load_beamline_config(beamline_config_fp, verif = "", test=False):
             verif = input("\nIs this configuration correct? y/n: ")
             if verif.upper() == ("N" or "NO"):
                 print('Edit, save, and close the configuration file.\n')
-                subprocess.run(editor + ' ' + beamline_config_fp)
+                subprocess.call([editor, beamline_config_fp])
         beamline_config["Verified by"] = input("Please input your initials: ")
         timestamp = datetime.datetime.now()
         beamline_config["Verification time"] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
