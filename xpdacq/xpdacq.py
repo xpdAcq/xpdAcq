@@ -27,12 +27,13 @@ import bluesky.preprocessors as bpp
 from bluesky import RunEngine
 from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input
+from bluesky.callbacks.broker import verify_files_saved
 
 from xpdacq.glbl import glbl
+from xpdacq.tools import xpdAcqException
+from xpdacq.beamtime import ScanPlan, _summarize
 from xpdacq.xpdacq_conf import (xpd_configuration, XPD_SHUTTER_CONF,
                                 XPDACQ_MD_VERSION)
-from xpdacq.beamtime import ScanPlan, _summarize
-from xpdacq.tools import xpdAcqException
 
 from xpdan.tools import compress_mask
 XPD_shutter = xpd_configuration.get('shutter')
@@ -431,7 +432,7 @@ class CustomizedRunEngine(RunEngine):
 
     def __call__(self, sample, plan, subs=None, *,
                  verify_write=False, dark_strategy=periodic_dark,
-                 raise_if_interrupted=False, **metadata_kw):
+                 **metadata_kw):
         """
         Execute a plan
 
@@ -465,20 +466,13 @@ class CustomizedRunEngine(RunEngine):
 
         verify_write: bool, optional
             Double check if the data have been written into database.
-            In general data is written in a lossless fashion at NSLS-II
-            Therefore, False by default.
+            In general data is written in a lossless fashion at the
+            NSLS-II. Therefore, False by default.
         dark_strategy: callable, optional.
             Protocol of taking dark frame during experiment. Default
             to the logic of matching dark frame and light frame with
             the sample exposure time and frame rate. Details can be
             found at ``http://xpdacq.github.io/xpdAcq/usb_Running.html#automated-dark-collection``
-        raise_if_interrupted : bool, optional
-            If the RunEngine is called from inside a script or a
-            function, it can be useful to make it raise an exception
-            to halt further execution of the script after a pause or
-            a stop. If True, these interruptions (that would normally
-            not raise any exception) will raise RunEngineInterrupted.
-            False by default.
         metadata_kw:
             Extra keyword arguments for specifying metadata in the
             run time. If the extra metdata has the same key as the
