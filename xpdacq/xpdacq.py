@@ -232,6 +232,9 @@ def _inject_filter_positions(msg):
     if msg.command == 'open_run':
         filter_bank = xpd_configuration['filter_bank']
         filters = ['flt1', 'flt2', 'flt3', 'flt4']
+        print("INFO: Current filter status")       
+        for el in filters:
+            print("INFO: {} : {}".format(el, getattr(filter_bank, el).value))
         msg.kwargs['filter_positions'] = {fltr: getattr(filter_bank, fltr).value for fltr in filters}
     return msg
 
