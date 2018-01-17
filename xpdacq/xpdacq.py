@@ -231,7 +231,7 @@ def _auto_load_calibration_file(in_scan=True):
 def _inject_filter_positions(msg):
     if msg.command == 'open_run':
         filter_bank = xpd_configuration['filter_bank']
-        filters = fb.read_attrs
+        filters = filter_bank.read_attrs
         print("INFO: Current filter status")
         for el in filters:
             print("INFO: {} : {}".format(el, getattr(filter_bank, el).value))
