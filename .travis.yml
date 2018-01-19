@@ -42,7 +42,6 @@ install:
   - source activate testenv
   - conda install --file requirements/build.txt
   - conda install pip
-  - cp xpdan/config/xpdan.yml /home/travis/.config/xpdan.yml
   - pip install .
   # make sure the sqlite file exists to avoid race conditions
   - python -c "from bluesky.utils import get_history; get_history()"
