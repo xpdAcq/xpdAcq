@@ -30,40 +30,39 @@ before_install:
   - "export DISPLAY=:99.0"
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
-  - ./miniconda.sh -b -p /home/travis/mc
-  - export PATH=/home/travis/mc/bin:$PATH
-  - conda config --set show_channel_urls True
-  - conda config --set always_yes True
+  - ./miniconda.sh -b -p ~/mc
+  - export PATH=~/mc/bin:$PATH
+  - conda config --set always_yes yes --set changeps1 no --set quiet true
+  - conda update conda --yes
+  - conda config --add channels conda-forge
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
-  - conda create -n testenv nose python=$TRAVIS_PYTHON_VERSION scipy matplotlib scikit-beam jsonschema pyyaml tifffile pandas pytest coverage pip pyfai flake8 codecov ipython xlrd -c conda-forge -q
+  - conda create -n testenv python=$TRAVIS_PYTHON_VERSION
   - source activate testenv
-  - 'pip install https://github.com/NSLS-II/bluesky/zipball/master#egg=bluesky'
-  - 'pip install https://github.com/xpdAcq/xpdAn/zipball/master#egg=xpdan'
-  - 'pip install https://github.com/xpdAcq/xpdSim/zipball/master#egg=xpdsim'
+  - conda install --file requirements/build.txt
+  - conda install pip
   - pip install .
-  - pip install ophyd pims databroker
+  - git clean -xfd
+
+script:
+  - set -e
+  - conda install --file requirements/run.txt
+  - conda install --file requirements/test.txt
   # make sure the sqlite file exists to avoid race conditions
   - python -c "from bluesky.utils import get_history; get_history()"
   # make sure package data is correctly set
   - python -c "from xpdsim import xpd_pe1c; xpd_pe1c.get()"
   - python -c "from xpdacq.tests.conftest import *"
-  - git clean -xfd
-
-script:
-  - set -e
   - coverage run run_tests.py
   - coverage report -m
-  - conda install --yes sphinx sphinx_rtd_theme
-  - pip install recommonmark
-  - pip install git+git://github.com/drdoctr/doctr.git
+  - codecov
+  - conda install --yes --file requirements/docs.txt
   - cd docs
   - make html
   - cd ..
   - doctr deploy . --built-docs ./docs/_build/html;
 
 after_script:
-  - codecov
   - set +e
   - flake8 .

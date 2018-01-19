@@ -1,0 +1,11 @@
+numpy
+pyyaml
+pandas
+xlrd
+pyfai
+ipython
+bluesky
+xpdan
+xpdsim
+databroker
+ophyd
