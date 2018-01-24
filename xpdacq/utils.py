@@ -30,6 +30,7 @@ from .glbl import glbl
 from .tools import validate_dict_key, _check_obj, _graceful_exit
 from .beamtime import Beamtime, Sample
 
+
 def composition_analysis(compstring):
     """Pulls out elements and their ratios from the config file.
 
@@ -55,7 +56,9 @@ def composition_analysis(compstring):
     namefracs = re.split('([A-Z][a-z]?(?:[1-8]?[+-])?)', compbare)[1:]
     names = namefracs[0::2]
     # use unit count when empty, convert to float otherwise
-    getfraction = lambda s: (s == '' and 1.0 or float(s))
+
+    def getfraction(s):
+        (s == '' and 1.0 or float(s))
     fractions = [getfraction(w) for w in namefracs[1::2]]
     return names, fractions
 
@@ -224,8 +227,8 @@ class ExceltoYaml:
                                     "naming scheme: '<SAF_num>_sample.xlsx'"
                                     "yet?".format(self.src_dir))
 
-        self.pd_df = pd.read_excel(os.path.join(self.src_dir,
-                                                  xl_f.pop()),
+        self.pd_df = pd.read_excel(
+                                     os.path.join(self.src_dir, xl_f.pop()),
                                      skiprows=[1])
 
     def parse_sample_md(self):
@@ -286,7 +289,7 @@ class ExceltoYaml:
 
                 # other fields don't need to be parsed
                 else:
-                    #_k = ''.join(takewhile(lambda x: x.isalpha(), k))
+                    # _k = ''.join(takewhile(lambda x: x.isalpha(), k))
                     _k = k.replace(' ', '_')
                     parsed_sa_md.update({_k: v})
 

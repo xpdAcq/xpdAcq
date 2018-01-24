@@ -120,10 +120,12 @@ def _shutter_step(detectors, motor, step):
     """
     yield from bps.checkpoint()
     yield from bps.abs_set(motor, step, wait=True)
-    yield from bps.abs_set(xpd_configuration['shutter'],
+    yield from bps.abs_set(
+                          xpd_configuration['shutter'],
                           XPD_SHUTTER_CONF['open'], wait=True)
     yield from bps.trigger_and_read(list(detectors) + [motor])
-    yield from bps.abs_set(xpd_configuration['shutter'],
+    yield from bps.abs_set(
+                          xpd_configuration['shutter'],
                           XPD_SHUTTER_CONF['close'], wait=True)
 
 
@@ -176,7 +178,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
     This plan sets the sample temperature using a temp_controller device
     and exposes a detector for a set time at each temperature.
     It also has logic for equilibrating the temperature before each
-    acquisition. By default it closes the fast shutter at XPD in between 
+    acquisition. By default it closes the fast shutter at XPD in between
     exposures. This behavior may be overridden, leaving the fast shutter
     open for the entire scan. Please see below.
 
@@ -207,13 +209,13 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *,
 
     Notes
     -----
-    1. To see which area detector and temperature controller 
+    1. To see which area detector and temperature controller
     will be used, type the following commands:
 
         >>> xpd_configuration['area_det']
         >>> xpd_configuration['temp_controller']
 
-    2. To change the default behavior to shutter-always-open, 
+    2. To change the default behavior to shutter-always-open,
     please pass the argument for ``per_step`` in the ``ScanPlan``
     definition, as follows:
 
@@ -257,7 +259,7 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
     This plan sets the sample temperature using a temp_controller device
     and exposes a detector for a set time at each temperature.
     It also has logic for equilibrating the temperature before each
-    acquisition. By default it closes the fast shutter at XPD in between 
+    acquisition. By default it closes the fast shutter at XPD in between
     exposures. This behavior may be overridden, leaving the fast shutter
     open for the entire scan. Please see below.
 
@@ -284,13 +286,13 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
 
     Notes
     -----
-    1. To see which area detector and temperature controller 
+    1. To see which area detector and temperature controller
     will be used, type the following commands:
 
         >>> xpd_configuration['area_det']
         >>> xpd_configuration['temp_controller']
 
-    2. To change the default behavior to shutter-always-open, 
+    2. To change the default behavior to shutter-always-open,
     please pass the argument for ``per_step`` in the ``ScanPlan``
     definition, as follows:
 
@@ -339,7 +341,7 @@ def tseries(dets, exposure, delay, num):
 
     Notes
     -----
-    To see which area detector and temperature controller 
+    To see which area detector and temperature controller
     will be used, type the following commands:
 
         >>> xpd_configuration['area_det']
@@ -386,8 +388,10 @@ def _nstep(start, stop, step_size):
           .format(step_size, computed_step_size))
     return computed_nsteps, computed_step_size
 
-#FIXME: this scanplan is hot-fix for multi-sample scanplan. It serves as
+# FIXME: this scanplan is hot-fix for multi-sample scanplan. It serves as
 #       a prototype of the future scanplans but it's incomplete.
+
+
 def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
               bt=None):
     """
@@ -408,7 +412,8 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
     # stat_list
     _sorted_mapping = sorted(sample_mapping.items(), key=lambda x: x[1])
     sp_uid = str(uuid.uuid4())
-    xpdacq_md = {'sp_time_per_frame': acq_time,
+    xpdacq_md = {
+                'sp_time_per_frame': acq_time,
                 'sp_num_frames': num_frame,
                 'sp_requested_exposure': exposure,
                 'sp_computed_exposure': computed_exposure,
@@ -425,7 +430,7 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
     yield from bp.mv(temp_controller, Tstart)
     for t in np.linspace(Tstart, Tstop, Nsteps):
         yield from bp.mv(temp_controller, t)
-        for s, pos in _sorted_mapping: # sample ind
+        for s, pos in _sorted_mapping:  # sample ind
             yield from bp.mv(stat_motor, pos)
             # update md
             md = list(bt.samples.values())[int(s)]
@@ -436,7 +441,7 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
                                                     temp_controller,
                                                     stat_motor,
                                                     ring_current]))
-            #plan = bp.baseline_wrapper(plan, [temp_controller,
+            # plan = bp.baseline_wrapper(plan, [temp_controller,
             #                                  stat_motor,
             #                                  ring_current])
             uid = yield from plan
@@ -456,13 +461,15 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
         df.to_csv(fn)
     return uids
 
-#stream_name='primary'
+# stream_name='primary'
+
 
 register_plan('ct', ct)
 register_plan('Tramp', Tramp)
 register_plan('tseries', tseries)
 register_plan('Tlist', Tlist)
-#register_plan('statTramp', statTramp)
+# register_plan('statTramp', statTramp)
+
 
 def new_short_uid():
     return str(uuid.uuid4())[:8]
@@ -563,7 +570,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     def register_scanplan(self, scanplan):
         # Notify this Beamtime about an ScanPlan that should be re-synced
-        # whenever the contents of the Beamtime are edited. 
+        #  whenever the contents of the Beamtime are edited.
         scanplan_name = scanplan.short_summary()
         self.scanplans.update({scanplan_name: scanplan})
         # yaml sync list
@@ -770,7 +777,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         # empty list is for [pe1c]
         bound_arguments = signature.bind([], *self['sp_args'],
                                          **self['sp_kwargs'])
-        #bound_arguments.apply_defaults() # only valid in py 3.5
+        # bound_arguments.apply_defaults() # only valid in py 3.5
         complete_kwargs = bound_arguments.arguments
         # remove place holder for [pe1c]
         complete_kwargs.popitem(False)

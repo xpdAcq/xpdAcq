@@ -50,7 +50,7 @@ class ImportSamplTest(unittest.TestCase):
         shutil.copyfile(configsrc, os.path.join(self.config_dir, config))
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
-                                  wavelength=self.wavelength,test=True)
+                                  wavelength=self.wavelength, test=True)
         # expect FileNotFoundError as no spreadsheet
         xlf = '300000_sample.xlsx'
         self.assertFalse(os.path.isfile(os.path.join(glbl['import_dir'],
@@ -65,7 +65,7 @@ class ImportSamplTest(unittest.TestCase):
         xlf2 = '999999_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf2)
         shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf2))
-        ## test with ordinary import ##
+        # test with ordinary import
         # expect to pass with explicit argument
         _import_sample_info(300000, self.bt)
         # check imported sample metadata

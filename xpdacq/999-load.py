@@ -17,25 +17,29 @@ import os
 from xpdacq.xpdacq_conf import (glbl_dict, configure_device,
                                 _reload_glbl, _set_glbl,
                                 _load_beamline_config)
+from xpdacq.glbl import glbl
+from xpdacq.beamtimeSetup import (start_xpdacq)
+# import necessary modules
+from xpdacq.xpdacq import *
+from xpdacq.beamtime import *
+
+
 
 # configure experiment device being used in current version
 if glbl_dict['is_simulation']:
     from xpdacq.simulation import (xpd_pe1c, db, cs700, shctl1,
                                    ring_current, fb)
-    pe1c = xpd_pe1c # alias
+    pe1c = xpd_pe1c  # alias
 
-configure_device(area_det=pe1c, shutter=shctl1,
+configure_device(area_det=xpd_pe1c, shutter=shctl1,
                  temp_controller=cs700, db=db,
                  filter_bank=fb,
                  ring_current=ring_current)
 
 # cache previous glbl state
 reload_glbl_dict = _reload_glbl()
-from xpdacq.glbl import glbl
 
 # reload beamtime
-from xpdacq.beamtimeSetup import (start_xpdacq, _start_beamtime,
-                                  _end_beamtime)
 
 bt = start_xpdacq()
 if bt is not None:
@@ -43,10 +47,6 @@ if bt is not None:
 if reload_glbl_dict is not None:
     _set_glbl(glbl, reload_glbl_dict)
 
-# import necessary modules
-from xpdacq.xpdacq import *
-from xpdacq.beamtime import *
-from xpdacq.utils import import_sample_info
 
 # instantiate xrun without beamtime, like bluesky setup
 xrun = CustomizedRunEngine(None)
