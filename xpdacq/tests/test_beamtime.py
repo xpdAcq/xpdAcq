@@ -42,7 +42,7 @@ class BeamtimeObjTest(unittest.TestCase):
         shutil.copyfile(configsrc, os.path.join(glbl['xpdconfig'], config))
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
-                                  wavelength=self.wavelength,test=True)
+                                  wavelength=self.wavelength, test=True)
         xlf = '300000_sample.xlsx'
         src = os.path.join(pytest_dir, xlf)
         shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
@@ -92,7 +92,7 @@ class BeamtimeObjTest(unittest.TestCase):
         # reload
         reload_dict = yaml.load(sp.to_yaml())
         self.assertEqual(len(reload_dict), 2)  # bt and sp
-        ## contents of chainmap
+        # contents of chainmap
         self.assertEqual(reload_dict[0], sp.maps[0])
         self.assertEqual(reload_dict[1], sp.maps[1])
 

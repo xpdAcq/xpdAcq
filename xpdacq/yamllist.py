@@ -56,7 +56,7 @@ class YamlList(list):
     def insert(self, index, val):
         super().insert(index, val)
         self.flush()
-        
+
     def pop(self, val=None):
         super().pop(val)
         self.flush()

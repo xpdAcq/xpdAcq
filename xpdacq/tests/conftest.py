@@ -32,15 +32,17 @@ from xpdsim import (cs700, xpd_pe1c, simple_pe1c, shctl1, ring_current,
 
 from pkg_resources import resource_filename as rs_fn
 
+
 @pytest.fixture(scope='module')
 def db():
     from xpdsim import db, sim_db_dir
     yield db
     # NOTE: do not flush for now since test might be caught in the
     # middle of flushing/creating database
-    #if os.path.exists(sim_db_dir):
+    # if os.path.exists(sim_db_dir):
     #    print('Flush db dir')
     #    shutil.rmtree(sim_db_dir)
+
 
 @pytest.fixture(scope='module')
 def bt(home_dir):
@@ -56,10 +58,10 @@ def bt(home_dir):
     config = 'XPD_beamline_config.yml'
     configsrc = os.path.join(pytest_dir, config)
     shutil.copyfile(configsrc, os.path.join(glbl_dict['xpdconfig'], config))
-    assert(os.path.isfile(os.path.join(glbl_dict['xpdconfig'], config)))            
+    assert(os.path.isfile(os.path.join(glbl_dict['xpdconfig'], config)))
     bt = _start_beamtime(PI_name, saf_num,
                          experimenters,
-                         wavelength=wavelength,test=True)
+                         wavelength=wavelength, test=True)
     # spreadsheet
     xlf = '300000_sample.xlsx'
     src = os.path.join(pytest_dir, xlf)

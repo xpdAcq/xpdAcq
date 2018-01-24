@@ -33,8 +33,8 @@ EXPO_LIST = [5, 0.1, 1, 10, 30, 60]
 DATA_DIR = rs_fn('xpdacq', 'data/')
 
 
-
-def _start_beamtime(PI_last, saf_num, experimenters=[],
+def _start_beamtime(
+                    PI_last, saf_num, experimenters=[],
                     wavelength=None, test=False):
     """function for start a beamtime"""
     home_dir = glbl_dict['home']
@@ -53,7 +53,8 @@ def _start_beamtime(PI_last, saf_num, experimenters=[],
     elif len(f_list) == 0:
         _make_clean_env()
         print("INFO: initiated requried directories for experiment")
-        bt = Beamtime(PI_last, saf_num, experimenters,
+        bt = Beamtime(
+                      PI_last, saf_num, experimenters,
                       wavelength=wavelength)
         os.chdir(home_dir)
         print("INFO: to link newly created beamtime object to xrun, "
@@ -63,7 +64,7 @@ def _start_beamtime(PI_last, saf_num, experimenters=[],
         src = os.path.join(DATA_DIR, 'Ni24.D')
         dst = os.path.join(glbl_dict['usrAnalysis_dir'], 'Ni24.D')
         shutil.copy(src, dst)
-        beamline_config = _load_beamline_config(glbl['blconfig_path'], test=test)
+
 
         # pre-populated scan plan
         for expo in EXPO_LIST:
@@ -128,7 +129,8 @@ def load_beamtime(directory=None):
         directory = glbl_dict['yaml_dir']  # leave room for multi-beamtime
     known_uids = {}
     beamtime_fn = os.path.join(directory, 'bt_bt.yml')
-    sample_fns =  [fn for fn in
+    sample_fns = [
+                   fn for fn in
                    os.listdir(os.path.join(directory, 'samples'))]
     scanplan_fns = [fn for fn in
                     os.listdir(os.path.join(directory, 'scanplans'))]
@@ -198,7 +200,7 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
         3) Ask for user's confirmation
         4.1) if user confirms, flush all sub-directories under
         ``xpdUser`` for a new beamtime.
-        4.2) if user doesn't confirm, leave ``xpdUser`` untouched 
+        4.2) if user doesn't confirm, leave ``xpdUser`` untouched
         and flush remote backup to avoid duplicate archives.
     """
     # NOTE: to avoid network bottleneck, we actually only move all files
@@ -213,10 +215,11 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm='y'):
     if os.path.isdir(glbl_dict['home']):
         files = os.listdir(glbl_dict['home'])
         if len(files) == 0:
-            raise FileNotFoundError("It appears that end_beamtime may have been "
-                                    "run. If so, do not run again but proceed to\n"
-                                    ">>> bt = _start_beamtime(pi_last, saf_num,"
-                                    "experimenters, wavelength=<value>)\n")
+            raise FileNotFoundError(
+                "It appears that end_beamtime may have been "
+                "run. If so, do not run again but proceed to\n"
+                ">>> bt = _start_beamtime(pi_last, saf_num,"
+                "experimenters, wavelength=<value>)\n")
     # laod bt yaml
     ips = get_ipython()
     if not bto:
@@ -270,10 +273,10 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
         # remove dir structure would be:
         # <remote>/<PI_last+uid>/xpdUser/....
         os.makedirs(archive_full_name, exist_ok=True)
-        subprocess.run(['rsync', '-av',
-                        #'--exclude=*.tif',  # not used yet
-                        glbl_dict['home'], archive_full_name],
-                        check=True)
+        subprocess.run([
+                        'rsync', '-av',
+                        # '--exclude=*.tif',  # not used yet
+                        glbl_dict['home'], archive_full_name], check=True)
     finally:
         os.chdir(glbl_dict['home'])
     return archive_full_name
@@ -314,6 +317,7 @@ def _confirm_archive(archive_f_name):
         sys.exit(_graceful_exit("xpdUser directory delete operation "
                                 "cancelled at Users request."))
 
+
 def _delete_home_dir_tree():
     os.chdir(glbl_dict['base'])  # move out from xpdUser before deletion
     dir_to_flush = glbl_dict['home']
@@ -322,7 +326,7 @@ def _delete_home_dir_tree():
             shutil.rmtree(dir_to_flush)
         except:
             # TODO: error is platform-dependent. might want to
-            #discuss if we need to specify error type.
+            # discuss if we need to specify error type.
             print("INFO: Some files are still used by the current "
                   "process.\nIt could be the sample spreadsheet "
                   "located in ``xpdUser/Import`` directory or "

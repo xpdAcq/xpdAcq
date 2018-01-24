@@ -31,7 +31,7 @@ from bluesky.callbacks.broker import verify_files_saved
 
 from xpdacq.glbl import glbl
 from xpdacq.tools import xpdAcqException
-from xpdacq.beamtime import ScanPlan, _summarize
+from xpdacq.beamtime import ScanPlan
 from xpdacq.xpdacq_conf import (xpd_configuration, XPD_SHUTTER_CONF,
                                 XPDACQ_MD_VERSION)
 
@@ -63,7 +63,7 @@ def _update_dark_dict_list(name, doc):
         dark_dict_list.append(dark_dict)
         glbl['_dark_dict_list'] = dark_dict_list  # update glbl._dark_dict_list
     else:
-        #FIXME: replace with logging and detailed warning next PR
+        # replace with logging and detailed warning next PR
         print("INFO: dark scan was not successfully executed.\n"
               "gobal dark frame information will not be updated!")
 
@@ -71,9 +71,10 @@ def _update_dark_dict_list(name, doc):
 def take_dark():
     """a plan for taking a single dark frame"""
     print('INFO: closing shutter...')
-    yield from bps.abs_set(xpd_configuration.get('shutter'),
-                          XPD_SHUTTER_CONF['close'],
-                          wait=True)
+    yield from bps.abs_set(
+        xpd_configuration.get('shutter'),
+        XPD_SHUTTER_CONF['close'],
+        wait=True)
     print('INFO: taking dark frame....')
     # upto this stage, area_det has been configured to so exposure time is
     # correct
@@ -103,7 +104,6 @@ def periodic_dark(plan):
     need_dark = True
 
     def insert_take_dark(msg):
-        now = time.time()
         nonlocal need_dark
         qualified_dark_uid = _validate_dark(expire_time=glbl['dk_window'])
         area_det = xpd_configuration['area_det']
@@ -124,16 +124,16 @@ def periodic_dark(plan):
                               take_dark(),
                               bps.stage(area_det),
                               bpp.single_gen(msg),
-                              bps.abs_set(xpd_configuration.get('shutter'),
+                              bps.abs_set(
+                                        xpd_configuration.get('shutter'),
                                         XPD_SHUTTER_CONF['open'],
-                                        wait=True)
-                             ), None
+                                        wait=True)), None
+
         elif msg.command == 'open_run' and 'dark_frame' not in msg.kwargs:
             return bpp.pchain(bpp.single_gen(msg),
                               bps.abs_set(xpd_configuration.get('shutter'),
                                           XPD_SHUTTER_CONF['open'],
-                                          wait=True)
-                             ), None
+                                          wait=True)), None
         else:
             # do nothing if (not need_dark)
             return None, None
@@ -171,7 +171,7 @@ def _validate_dark(expire_time=None):
                                         time_diff))
     if qualified_dark_list:
         # sort wrt expo_diff and time_diff for best candidate
-        #best_dark = sorted(qualified_dark_list,
+        # best_dark = sorted(qualified_dark_list,
         #                   key=lambda x: x[1] and x[2])[0]
         best_dark = sorted(qualified_dark_list,
                            key=lambda x: x[2])[0]
@@ -235,7 +235,8 @@ def _inject_filter_positions(msg):
         print("INFO: Current filter status")
         for el in filters:
             print("INFO: {} : {}".format(el, getattr(filter_bank, el).value))
-        msg.kwargs['filter_positions'] = {fltr: getattr(filter_bank, fltr).value for fltr in filters}
+        msg.kwargs['filter_positions'] = {
+            fltr: getattr(filter_bank, fltr).value for fltr in filters}
     return msg
 
 
@@ -301,12 +302,12 @@ def _inject_mask_server_uid(msg):
             # inject server uid if it's calibration run
             msg.kwargs.update({'mask_server_uid':
                                exp_hash_uid})
-        #else:
+        # else:
         #    # load mask if exists
         #    compressed_mask = _auto_load_mask()
         #    if compressed_mask:
         #        data, indicies, indptr = compressed_mask
-        #        # inject compressed 
+        #        inject compressed
         #        msg.kwargs['mask'] = (data, indicies, indptr)
 
     return msg
@@ -320,6 +321,7 @@ def update_experiment_hash_uid():
           "{}".format(new_uid))
 
     return new_uid
+
 
 def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
                            wait_time=None, clear=True):
@@ -495,7 +497,8 @@ class CustomizedRunEngine(RunEngine):
             Protocol of taking dark frame during experiment. Default
             to the logic of matching dark frame and light frame with
             the sample exposure time and frame rate. Details can be
-            found at ``http://xpdacq.github.io/xpdAcq/usb_Running.html#automated-dark-collection``
+            found at ``
+            http://xpdacq.github.io/xpdAcq/usb_Running.html#automated-dark-collection``
         metadata_kw:
             Extra keyword arguments for specifying metadata in the
             run time. If the extra metdata has the same key as the
@@ -550,8 +553,10 @@ class CustomizedRunEngine(RunEngine):
                 plan = dark_strategy(plan)
                 plan = bpp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
             # force to close shutter after scan
-            plan = bpp.finalize_wrapper(plan,
-                    bps.abs_set(xpd_configuration['shutter'],
+            plan = bpp.finalize_wrapper(
+                    plan,
+                    bps.abs_set(
+                                xpd_configuration['shutter'],
                                 XPD_SHUTTER_CONF['close'],
                                 wait=True))
 

@@ -81,8 +81,8 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertRaises(FileExistsError,
                           lambda: _start_beamtime(self.PI_name, self.saf_num))
         os.removedirs(self.newdir)
-        # real doing: 
-        os.mkdir(self.home_dir)
+        # real doing:
+        # os.mkdir(self.home_dir)
         self.assertTrue(os.path.isdir(self.home_dir))
         # copying example longterm config file
         pytest_dir = rs_fn('xpdacq', 'tests/')
@@ -91,7 +91,7 @@ class NewBeamtimeTest(unittest.TestCase):
         shutil.copyfile(configsrc, os.path.join(self.config_dir, config))
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
-                                  wavelength=self.wavelength,test=True)
+                                  wavelength=self.wavelength, test=True)
         self.assertIsInstance(self.bt, Beamtime)
         # test normalized md
         self.assertEqual('Billinge', self.bt.get('bt_piLast'))
@@ -128,7 +128,7 @@ class NewBeamtimeTest(unittest.TestCase):
         shutil.copyfile(configsrc, os.path.join(self.config_dir, config))
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
-                                  wavelength=self.wavelength,test=True)
+                                  wavelength=self.wavelength, test=True)
         bt_path_src = os.path.join(glbl_dict['yaml_dir'], 'bt_bt.yml')
         bt_path_dst = os.path.join(glbl_dict['import_dir'], 'bt_bt.yml')
         # move out for now, no bt
@@ -149,25 +149,28 @@ class NewBeamtimeTest(unittest.TestCase):
         archive_full_name = _tar_user_data(archive_name)
         test_tar_name = '_'.join([pi_name, saf_num, bt_uid,
                                   strftime('%Y-%m-%d-%H%M')])
-        # is tar file name correct? 
-        self.assertEqual(archive_full_name,
-                         os.path.join(glbl_dict['archive_dir'],
-                                      test_tar_name))
+        # is tar file name correct?
+        self.assertEqual(
+            archive_full_name,
+            os.path.join(glbl_dict['archive_dir'], test_tar_name))
         # are contents tared correctly?
         archive_test_dir = os.path.join(glbl_dict['home'], 'tar_test')
-        #os.makedirs(archive_test_dir, exist_ok=True)
-        #shutil.unpack_archive(archive_full_name + '.tar', archive_test_dir)
+        # os.makedirs(archive_test_dir, exist_ok=True)
+        # shutil.unpack_archive(archive_full_name + '.tar', archive_test_dir)
         content_list = os.listdir(archive_full_name)
         # is remote copy starting from xpdUser?
         assert 'xpdUser' in content_list
         assert len(content_list) == 1
         # is every directory included
-        full_fp_list = list(map(os.path.basename,
-                                 glbl_dict['allfolders']))
+        full_fp_list = list(
+                                 map(
+                                     os.path.basename,
+                                     glbl_dict['allfolders']))
         exclude_fp_list = ['xpdUser', 'xpdConfig', 'yml',
                            'samples', 'scanplans']
-        bkg_fp_list = [el for el in full_fp_list if el not in
-                exclude_fp_list] # exclude top dirs
+        bkg_fp_list = [
+                el for el in full_fp_list if el not in
+                exclude_fp_list]  # exclude top dirs
         remote_fp_list = os.listdir(os.path.join(archive_full_name,
                                                  'xpdUser'))
         # difference should be empty set
@@ -188,7 +191,8 @@ class NewBeamtimeTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(glbl_dict['usrScript_dir']))
         # case1 : no files in import_dir, should return nothing
         self.assertEqual(import_userScriptsEtc(), None)
-        # case2 : a tar file with three kind of files, test if it is successfully moved and unpacked
+        # case2 : a tar file with three kind of files,
+        # test if it is successfully moved and unpacked
         yaml_name = 'touched.yml'
         py_name = 'touched.py'
         npy_name = 'mask.npy'
@@ -215,7 +219,8 @@ class NewBeamtimeTest(unittest.TestCase):
                                            moved_list_1)))
         # is tar file still there?
         self.assertTrue(os.path.isfile(full_tar_name))
-        # case 3 : tared file, individual files and unexcepted file/dir appear in Import/
+        # case 3 : tared file, individual files and unexcepted file
+        # /dir appear in Import/
         for el in untared_list:
             f_path = os.path.join(src, el)
             open(f_path, 'a').close()

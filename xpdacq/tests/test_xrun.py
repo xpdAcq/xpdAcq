@@ -16,14 +16,14 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime)
 from xpdacq.xpdacq import (_validate_dark, CustomizedRunEngine,
                            _auto_load_calibration_file,
                            set_beamdump_suspender)
-from xpdacq.simulation import pe1c, cs700, shctl1, db, fb 
+from xpdacq.simulation import pe1c, cs700, shctl1, db, fb
 import ophyd
 from bluesky import Msg
 import bluesky.examples as be
 from bluesky.callbacks import collector
 
 from pkg_resources import resource_filename as rs_fn
-pytest_dir = rs_fn('xpdacq', 'tests/') 
+pytest_dir = rs_fn('xpdacq', 'tests/')
 
 
 class xrunTest(unittest.TestCase):
@@ -49,7 +49,7 @@ class xrunTest(unittest.TestCase):
         shutil.copyfile(configsrc, os.path.join(glbl['xpdconfig'], config))
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
-                                  wavelength=self.wavelength,test=True)
+                                  wavelength=self.wavelength, test=True)
         xlf = '300000_sample.xlsx'
         src = os.path.join(os.path.dirname(__file__), xlf)
         shutil.copyfile(src, os.path.join(glbl['import_dir'], xlf))
@@ -94,8 +94,8 @@ class xrunTest(unittest.TestCase):
         glbl['_dark_dict_list'] = dark_dict_list
         rv = _validate_dark(glbl['dk_window'])
         correct_set = sorted([el for el in dark_dict_list if
-                             abs(el['exposure']-light_cnt_time)<acq_time],
-                            key=lambda x: x['exposure'])[0]
+                             abs(el['exposure']-light_cnt_time) < acq_time],
+                             key=lambda x: x['exposure'])[0]
         print(dark_dict_list)
         print("correct_set = {}".format(correct_set))
         assert rv == correct_set.get('uid')
@@ -175,6 +175,7 @@ class xrunTest(unittest.TestCase):
         reload_calibration_md_dict = _auto_load_calibration_file()
         # test with xrun : auto_load_calib = True -> full calib_md
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
@@ -224,7 +225,7 @@ class xrunTest(unittest.TestCase):
             msg_list.append(msg)
 
         self.xrun.msg_hook = msg_rv
-        traj_list = [] # courtesy of bluesky test
+        traj_list = []  # courtesy of bluesky test
         temp_controller = xpd_configuration['temp_controller']
         callback = collector(temp_controller.readback.name,
                              traj_list)
@@ -264,7 +265,7 @@ class xrunTest(unittest.TestCase):
 
         def msg_rv(msg):
             msg_list.append(msg)
-        traj_list = [] # courtesy of bluesky test
+        traj_list = []  # courtesy of bluesky test
         temp_controller = xpd_configuration['temp_controller']
         callback = collector(temp_controller.readback.name,
                              traj_list)
@@ -286,6 +287,7 @@ class xrunTest(unittest.TestCase):
         temp_controller = xpd_configuration['temp_controller']
         exp, Tstart, Tstop, Tstep = 5, 300, 200, 10
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
@@ -297,16 +299,16 @@ class xrunTest(unittest.TestCase):
             try:
                 set_msg = next(set_msgs)
                 if set_msg.obj.name == temp_controller.name:
-                     # after set the temp_controller, must be:
-                     # open shutter -> read -> close
-                     open_msg = next(set_msgs)
-                     assert open_msg.obj.name == shutter.name
-                     assert len(open_msg.args) == 1
-                     assert open_msg.args[0] == 60 # open shutter first
-                     close_msg = next(set_msgs)
-                     assert close_msg.obj.name == shutter.name
-                     assert len(close_msg.args) == 1
-                     assert close_msg.args[0] == 0  # close then move
+                    # after set the temp_controller, must be:
+                    # open shutter -> read -> close
+                    open_msg = next(set_msgs)
+                    assert open_msg.obj.name == shutter.name
+                    assert len(open_msg.args) == 1
+                    assert open_msg.args[0] == 60  # open shutter first
+                    close_msg = next(set_msgs)
+                    assert close_msg.obj.name == shutter.name
+                    assert len(close_msg.args) == 1
+                    assert close_msg.args[0] == 0  # close then move
             except StopIteration:
                 print('stop')
                 break
@@ -354,6 +356,7 @@ class xrunTest(unittest.TestCase):
         key = 'xpdacq_md_version'
         val = XPDACQ_MD_VERSION
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
@@ -368,6 +371,7 @@ class xrunTest(unittest.TestCase):
         key = 'analysis_stage'
         val = 'raw'
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
@@ -384,6 +388,7 @@ class xrunTest(unittest.TestCase):
         client_key = 'mask_client_uid'
         glbl['exp_hash_uid'] = server_val
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
@@ -398,6 +403,7 @@ class xrunTest(unittest.TestCase):
         server_val = self.init_exp_hash_uid
         client_key = 'detector_calibration_client_uid'
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
@@ -419,6 +425,7 @@ class xrunTest(unittest.TestCase):
             config_from_file = yaml.load(f)
         glbl['calib_config_dict'] = config_from_file
         msg_list = []
+
         def msg_rv(msg):
             msg_list.append(msg)
         self.xrun.msg_hook = msg_rv
@@ -439,17 +446,18 @@ class xrunTest(unittest.TestCase):
         assert all(glbl[k] == h.start[k] for k in key_list)
 
 
-    def test_load_beamline_config(self):
+def test_load_beamline_config(self):
         # no beamline config -> raise
         if os.path.exists(glbl['blconfig_path']):
             os.remove(glbl['blconfig_path'])
         with self.assertRaises(xpdAcqException):
-            _load_beamline_config(glbl['blconfig_path'],test=True)
+            _load_beamline_config(glbl['blconfig_path'], test=True)
         # move files
         stem, fn = os.path.split(glbl['blconfig_path'])
         src = os.path.join(pytest_dir, fn)
         shutil.copyfile(src, glbl['blconfig_path'])
-        beamline_config_dict = _load_beamline_config(glbl['blconfig_path'],test=True)
+        beamline_config_dict = _load_beamline_config(
+                              glbl['blconfig_path'], test=True)
         assert 'is_pytest' in beamline_config_dict
         # check md -> only is_pytest in template now
         self.xrun.md['beamline_config'] = beamline_config_dict

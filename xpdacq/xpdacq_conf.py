@@ -79,8 +79,9 @@ if simulation:
     ARCHIVE_BASE_DIR = os.path.join(BASE_DIR, ARCHIVE_BASE_DIR_NAME)
 else:
     BASE_DIR = os.path.abspath('/direct/XF28ID2/pe2_data')
-    ARCHIVE_BASE_DIR = os.path.join(os.path.abspath('/direct/XF28ID2/pe1_data'),
-                                    ARCHIVE_BASE_DIR_NAME)
+    ARCHIVE_BASE_DIR = os.path.join(
+        os.path.abspath('/direct/XF28ID2/pe1_data'),
+        ARCHIVE_BASE_DIR_NAME)
 
 # top directories
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
@@ -184,7 +185,8 @@ def configure_frame_acq_time(new_frame_acq_time):
     print("INFO: area detector has been configured to new "
           "exposure_time = {}s".format(new_frame_acq_time))
 
-def _verify_within_test(beamline_config_fp,verif):
+
+def _verify_within_test(beamline_config_fp, verif):
     while verif != "y":
         with open(beamline_config_fp, 'r') as f:
             beamline_config = yaml.load(f)
@@ -192,13 +194,14 @@ def _verify_within_test(beamline_config_fp,verif):
         verif = "y"
     beamline_config["Verified by"] = "AUTO VERIFIED IN TEST"
     timestamp = datetime.datetime.now()
-    beamline_config["Verification time"] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    beamline_config["Verification time"] = \
+        timestamp.strftime('%Y-%m-%d %H:%M:%S')
     with open(beamline_config_fp, 'w') as f:
-        yaml.dump(beamline_config,f)
+        yaml.dump(beamline_config, f)
     return beamline_config
-    
 
-def _load_beamline_config(beamline_config_fp, verif = "", test=False):
+
+def _load_beamline_config(beamline_config_fp, verif="", test=False):
     if not os.path.isfile(beamline_config_fp):
         raise xpdAcqException("WARNING: can not find long term beamline "
                               "configuration file. Please contact the "
@@ -208,7 +211,7 @@ def _load_beamline_config(beamline_config_fp, verif = "", test=False):
     if os_type == 'Windows':
         editor = 'notepad'
     else:
-        editor = os.environ.get('EDITOR','vim')
+        editor = os.environ.get('EDITOR', 'vim')
     if not test:
         while verif.upper() != ("Y" or "YES"):
             with open(beamline_config_fp, 'r') as f:
@@ -220,11 +223,12 @@ def _load_beamline_config(beamline_config_fp, verif = "", test=False):
                 subprocess.call([editor, beamline_config_fp])
         beamline_config["Verified by"] = input("Please input your initials: ")
         timestamp = datetime.datetime.now()
-        beamline_config["Verification time"] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        beamline_config["Verification time"] =\
+            timestamp.strftime('%Y-%m-%d %H:%M:%S')
         with open(beamline_config_fp, 'w') as f:
-            yaml.dump(beamline_config,f)
+            yaml.dump(beamline_config, f)
     else:
-        beamline_config = _verify_within_test(beamline_config_fp,verif)
+        beamline_config = _verify_within_test(beamline_config_fp, verif)
     return beamline_config
 
 

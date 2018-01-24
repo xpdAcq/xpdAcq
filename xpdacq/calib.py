@@ -46,7 +46,7 @@ def _sample_name_phase_info_configuration(sample_name,
                                           phase_info, tag):
     """function to configure sample_name and phase_info"""
     if sample_name and phase_info:
-        pass # user defined, pass
+        pass  # user defined, pass
     elif sample_name is None and phase_info is None:
         if tag == 'calib':
             sample_name = 'Ni_calib'
@@ -191,6 +191,7 @@ def _inject_calibration_tag(msg):
         msg.kwargs['is_calibration'] = True
     return msg
 
+
 def _inject_mask_tag(msg):
     if msg.command == 'open_run':
         msg.kwargs['is_mask'] = True
@@ -228,7 +229,7 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
     dark_header = db[dark_uid]
     dark_img = dark_header.data(glbl['det_image_field'])
     dark_img = np.asarray(next(dark_img)).squeeze()
-    #dark_img = next(db.get_images(dark_header,
+    # dark_img = next(db.get_images(dark_header,
     #                              glbl['det_image_field']))
     img = light_header.data(glbl['det_image_field'])
     img = np.asarray(next(img)).squeeze()
