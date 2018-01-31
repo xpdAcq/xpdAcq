@@ -270,10 +270,10 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
         # remove dir structure would be:
         # <remote>/<PI_last+uid>/xpdUser/....
         os.makedirs(archive_full_name, exist_ok=True)
-        subprocess.run(['rsync', '-av',
-                        #'--exclude=*.tif',  # not used yet
-                        glbl_dict['home'], archive_full_name],
-                        check=True)
+        rv = subprocess.run(['rsync', '-av', '--timeout=60',
+                             #'--exclude=*.tif',  # not used yet
+                             glbl_dict['home'], archive_full_name],
+                             check=True,)
     finally:
         os.chdir(glbl_dict['home'])
     return archive_full_name
@@ -319,17 +319,17 @@ def _delete_home_dir_tree():
     dir_to_flush = glbl_dict['home']
     while os.path.isdir(dir_to_flush):
         try:
-            shutil.rmtree(dir_to_flush)
+            rv = subprocess.run(['rm', '-r', dir_to_flush],
+                                check=True)
         except:
             # TODO: error is platform-dependent. might want to
             #discuss if we need to specify error type.
-            print("INFO: Some files are still used by the current "
-                  "process.\nIt could be the sample spreadsheet "
-                  "located in ``xpdUser/Import`` directory or "
-                  "could be python script opened in editors.\n"
-                  "Please find all possible files and close them.")
+            print("INFO: Following files are still used by current "
+                  "process, hence _end_beatime can't be done\n")
+            rv = subprocess.run(['find', dir_to_flush],
+                                check=True)
             msg = input("INFO: If files are properly closed, "
-                        "please hit any key to continue the end_beamtime "
+                        "please hit any key to continue the _end_beamtime "
                         "process. ")
             if msg:
                 pass
