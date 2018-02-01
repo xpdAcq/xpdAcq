@@ -23,7 +23,7 @@ from time import strftime
 from IPython import get_ipython
 from pkg_resources import resource_filename as rs_fn
 
-from .beamtime import *
+from .beamtime import (Beamtime, ScanPlan)
 from .tools import _graceful_exit
 from .xpdacq_conf import glbl_dict, _load_beamline_config
 
@@ -33,8 +33,7 @@ EXPO_LIST = [5, 0.1, 1, 10, 30, 60]
 DATA_DIR = rs_fn('xpdacq', 'data/')
 
 
-def _start_beamtime(
-                    PI_last, saf_num, experimenters=[],
+def _start_beamtime(PI_last, saf_num, experimenters=[],
                     wavelength=None, test=False):
     """function for start a beamtime"""
     home_dir = glbl_dict['home']
@@ -64,7 +63,7 @@ def _start_beamtime(
         src = os.path.join(DATA_DIR, 'Ni24.D')
         dst = os.path.join(glbl_dict['usrAnalysis_dir'], 'Ni24.D')
         shutil.copy(src, dst)
-
+        beamline_config = _load_beamline_config(glbl['blconfig_path'], test=test)
 
         # pre-populated scan plan
         for expo in EXPO_LIST:

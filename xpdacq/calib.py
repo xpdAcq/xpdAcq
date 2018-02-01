@@ -103,7 +103,7 @@ def run_calibration(exposure=5, dark_sub_bool=True,
         'PBBA', 'ZnO', 'Si', 'C14H30O', 'cristobaltite', 'LaB6_SRM660a',
         'Au', 'Cr2O3', 'Si_SRM640b', 'LaB6', 'Al', 'mock']
     phase_info : str, optional
-        phase infomation of calibrant, which is required to data
+        phase information of calibrant, which is required to data
         reduction process. This field will be parsed with the same logic
         as the one used in parsing spreadsheet information. For detailed
         information, please visit:
@@ -149,8 +149,7 @@ def run_calibration(exposure=5, dark_sub_bool=True,
     img, fn_template = _collect_img(exposure, dark_sub_bool,
                                     sample_md, 'calib', RE_instance,
                                     detector=detector,
-                                    calibrant=calibrant
-                                    )
+                                    calibrant=calibrant)
     print("INFO: Please navigate to the analysis terminal to complete "
           "the interactive calibration process.\nYou may find the "
           "the analysis terminal similar to data acquisition terminal"

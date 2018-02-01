@@ -79,14 +79,12 @@ if simulation:
     ARCHIVE_BASE_DIR = os.path.join(BASE_DIR, ARCHIVE_BASE_DIR_NAME)
 else:
     BASE_DIR = os.path.abspath('/direct/XF28ID2/pe2_data')
-    ARCHIVE_BASE_DIR = os.path.join(
-        os.path.abspath('/direct/XF28ID2/pe1_data'),
-        ARCHIVE_BASE_DIR_NAME)
+    ARCHIVE_BASE_DIR = os.path.join(os.path.abspath('/direct/XF28ID2/pe1_data'),
+                                    ARCHIVE_BASE_DIR_NAME)
 
 # top directories
 HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
 BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
-
 
 # aquire object directories
 CONFIG_BASE = os.path.join(HOME_DIR, 'config_base')
@@ -223,7 +221,7 @@ def _load_beamline_config(beamline_config_fp, verif="", test=False):
                 subprocess.call([editor, beamline_config_fp])
         beamline_config["Verified by"] = input("Please input your initials: ")
         timestamp = datetime.datetime.now()
-        beamline_config["Verification time"] =\
+        beamline_config["Verification time"] = \
             timestamp.strftime('%Y-%m-%d %H:%M:%S')
         with open(beamline_config_fp, 'w') as f:
             yaml.dump(beamline_config, f)

@@ -1,4 +1,5 @@
 import unittest
+import numpy as np
 import os
 import shutil
 import time
@@ -7,7 +8,8 @@ import uuid
 import warnings
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import _nstep
-from xpdacq.beamtime import *
+from xpdacq.beamtime import xpd_configuration, ScanPlan, \
+    ct, Tramp, tseries, Tlist
 from xpdacq.tools import xpdAcqException
 from xpdacq.utils import import_sample_info
 from xpdacq.xpdacq_conf import (configure_device, XPDACQ_MD_VERSION,

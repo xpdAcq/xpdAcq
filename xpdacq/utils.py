@@ -55,10 +55,9 @@ def composition_analysis(compstring):
     # one and charge specification
     namefracs = re.split('([A-Z][a-z]?(?:[1-8]?[+-])?)', compbare)[1:]
     names = namefracs[0::2]
-    # use unit count when empty, convert to float otherwise
 
-    def getfraction(s):
-        (s == '' and 1.0 or float(s))
+    # use unit count when empty, convert to float otherwise
+    getfraction = lambda s: (s == '' and 1.0 or float(s))
     fractions = [getfraction(w) for w in namefracs[1::2]]
     return names, fractions
 
@@ -227,9 +226,8 @@ class ExceltoYaml:
                                     "naming scheme: '<SAF_num>_sample.xlsx'"
                                     "yet?".format(self.src_dir))
 
-        self.pd_df = pd.read_excel(
-                                     os.path.join(self.src_dir, xl_f.pop()),
-                                     skiprows=[1])
+        self.pd_df = pd.read_excel(os.path.join(self.src_dir, xl_f.pop()),
+                                   skiprows=[1])
 
     def parse_sample_md(self):
         """parse a list of sample metadata into desired format"""
@@ -414,12 +412,9 @@ class ExceltoYaml:
             phase_dict = phase_str
             composition_str = phase_str
         finally:
-            parsed_phase_md.update({'sample_composition':
-                                    composition_dict})
-            parsed_phase_md.update({'sample_phase':
-                                    phase_dict})
-            parsed_phase_md.update({'composition_string':
-                                    composition_str})
+            parsed_phase_md.update({'sample_composition': composition_dict})
+            parsed_phase_md.update({'sample_phase': phase_dict})
+            parsed_phase_md.update({'composition_string': composition_str})
 
         return parsed_phase_md
 

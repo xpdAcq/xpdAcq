@@ -120,13 +120,11 @@ def _shutter_step(detectors, motor, step):
     """
     yield from bps.checkpoint()
     yield from bps.abs_set(motor, step, wait=True)
-    yield from bps.abs_set(
-                          xpd_configuration['shutter'],
-                          XPD_SHUTTER_CONF['open'], wait=True)
+    yield from bps.abs_set(xpd_configuration['shutter'],
+                           XPD_SHUTTER_CONF['open'], wait=True)
     yield from bps.trigger_and_read(list(detectors) + [motor])
-    yield from bps.abs_set(
-                          xpd_configuration['shutter'],
-                          XPD_SHUTTER_CONF['close'], wait=True)
+    yield from bps.abs_set(xpd_configuration['shutter'],
+                           XPD_SHUTTER_CONF['close'], wait=True)
 
 
 def ct(dets, exposure):
@@ -388,6 +386,7 @@ def _nstep(start, stop, step_size):
           .format(step_size, computed_step_size))
     return computed_nsteps, computed_step_size
 
+
 # FIXME: this scanplan is hot-fix for multi-sample scanplan. It serves as
 #       a prototype of the future scanplans but it's incomplete.
 
@@ -412,19 +411,18 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
     # stat_list
     _sorted_mapping = sorted(sample_mapping.items(), key=lambda x: x[1])
     sp_uid = str(uuid.uuid4())
-    xpdacq_md = {
-                'sp_time_per_frame': acq_time,
-                'sp_num_frames': num_frame,
-                'sp_requested_exposure': exposure,
-                'sp_computed_exposure': computed_exposure,
-                'sp_type': 'statTramp',
-                'sp_startingT': Tstart,
-                'sp_endingT': Tstop,
-                'sp_requested_Tstep': Tstep,
-                'sp_computed_Tstep': computed_step_size,
-                'sp_Nsteps': Nsteps,
-                'sp_uid': sp_uid,
-                'sp_plan_name': 'statTramp'}
+    xpdacq_md = {'sp_time_per_frame': acq_time,
+                 'sp_num_frames': num_frame,
+                 'sp_requested_exposure': exposure,
+                 'sp_computed_exposure': computed_exposure,
+                 'sp_type': 'statTramp',
+                 'sp_startingT': Tstart,
+                 'sp_endingT': Tstop,
+                 'sp_requested_Tstep': Tstep,
+                 'sp_computed_Tstep': computed_step_size,
+                 'sp_Nsteps': Nsteps,
+                 'sp_uid': sp_uid,
+                 'sp_plan_name': 'statTramp'}
     # plan
     uids = {k: [] for k in sample_mapping.keys()}
     yield from bp.mv(temp_controller, Tstart)
@@ -436,7 +434,7 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
             md = list(bt.samples.values())[int(s)]
             _md = ChainMap(md, xpdacq_md)
             plan = bp.count([temp_controller, stat_motor,
-                             ring_current]+dets, md=_md)
+                             ring_current] + dets, md=_md)
             plan = bp.subs_wrapper(plan, LiveTable([area_det,
                                                     temp_controller,
                                                     stat_motor,
@@ -461,6 +459,7 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
         df.to_csv(fn)
     return uids
 
+
 # stream_name='primary'
 
 
@@ -468,6 +467,8 @@ register_plan('ct', ct)
 register_plan('Tramp', Tramp)
 register_plan('tseries', tseries)
 register_plan('Tlist', Tlist)
+
+
 # register_plan('statTramp', statTramp)
 
 

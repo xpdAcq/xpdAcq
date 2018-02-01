@@ -162,15 +162,12 @@ class NewBeamtimeTest(unittest.TestCase):
         assert 'xpdUser' in content_list
         assert len(content_list) == 1
         # is every directory included
-        full_fp_list = list(
-                                 map(
-                                     os.path.basename,
-                                     glbl_dict['allfolders']))
+        full_fp_list = list(map(os.path.basename,
+                                glbl_dict['allfolders']))
         exclude_fp_list = ['xpdUser', 'xpdConfig', 'yml',
                            'samples', 'scanplans']
-        bkg_fp_list = [
-                el for el in full_fp_list if el not in
-                exclude_fp_list]  # exclude top dirs
+        bkg_fp_list = [el for el in full_fp_list if el not in
+                       exclude_fp_list]  # exclude top dirs
         remote_fp_list = os.listdir(os.path.join(archive_full_name,
                                                  'xpdUser'))
         # difference should be empty set

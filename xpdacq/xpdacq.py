@@ -36,6 +36,7 @@ from xpdacq.xpdacq_conf import (xpd_configuration, XPD_SHUTTER_CONF,
                                 XPDACQ_MD_VERSION)
 
 from xpdan.tools import compress_mask
+
 XPD_shutter = xpd_configuration.get('shutter')
 
 
@@ -71,10 +72,9 @@ def _update_dark_dict_list(name, doc):
 def take_dark():
     """a plan for taking a single dark frame"""
     print('INFO: closing shutter...')
-    yield from bps.abs_set(
-        xpd_configuration.get('shutter'),
-        XPD_SHUTTER_CONF['close'],
-        wait=True)
+    yield from bps.abs_set(xpd_configuration.get('shutter'),
+                           XPD_SHUTTER_CONF['close'],
+                           wait=True)
     print('INFO: taking dark frame....')
     # upto this stage, area_det has been configured to so exposure time is
     # correct
@@ -104,6 +104,7 @@ def periodic_dark(plan):
     need_dark = True
 
     def insert_take_dark(msg):
+        now = time.time()
         nonlocal need_dark
         qualified_dark_uid = _validate_dark(expire_time=glbl['dk_window'])
         area_det = xpd_configuration['area_det']
@@ -124,10 +125,9 @@ def periodic_dark(plan):
                               take_dark(),
                               bps.stage(area_det),
                               bpp.single_gen(msg),
-                              bps.abs_set(
-                                        xpd_configuration.get('shutter'),
-                                        XPD_SHUTTER_CONF['open'],
-                                        wait=True)), None
+                              bps.abs_set(xpd_configuration.get('shutter'),
+                                          XPD_SHUTTER_CONF['open'],
+                                          wait=True)), None
 
         elif msg.command == 'open_run' and 'dark_frame' not in msg.kwargs:
             return bpp.pchain(bpp.single_gen(msg),
@@ -251,12 +251,11 @@ def _inject_calibration_md(msg):
     if msg.command == 'open_run':
         exp_hash_uid = glbl.get('exp_hash_uid')
         # inject client uid to all runs
-        msg.kwargs.update({'detector_calibration_client_uid':
-                           exp_hash_uid})
+        msg.kwargs.update({'detector_calibration_client_uid': exp_hash_uid})
         if 'is_calibration' in msg.kwargs:
             # inject server uid if it's calibration run
-            msg.kwargs.update({'detector_calibration_server_uid':
-                               exp_hash_uid})
+            msg.kwargs.update({
+                'detector_calibration_server_uid': exp_hash_uid})
         else:
             # load calibration param if exists
             calibration_md = _auto_load_calibration_file()
@@ -296,12 +295,10 @@ def _inject_mask_server_uid(msg):
     if msg.command == 'open_run':
         exp_hash_uid = glbl.get('exp_hash_uid')
         # inject client uid to all runs
-        msg.kwargs.update({'mask_client_uid':
-                           exp_hash_uid})
+        msg.kwargs.update({'mask_client_uid': exp_hash_uid})
         if 'is_mask' in msg.kwargs:
             # inject server uid if it's calibration run
-            msg.kwargs.update({'mask_server_uid':
-                               exp_hash_uid})
+            msg.kwargs.update({'mask_server_uid': exp_hash_uid})
         # else:
         #    # load mask if exists
         #    compressed_mask = _auto_load_mask()
@@ -553,12 +550,11 @@ class CustomizedRunEngine(RunEngine):
                 plan = dark_strategy(plan)
                 plan = bpp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
             # force to close shutter after scan
-            plan = bpp.finalize_wrapper(
-                    plan,
-                    bps.abs_set(
-                                xpd_configuration['shutter'],
-                                XPD_SHUTTER_CONF['close'],
-                                wait=True))
+            plan = bpp.finalize_wrapper(plan,
+                                        bps.abs_set(
+                                            xpd_configuration['shutter'],
+                                            XPD_SHUTTER_CONF['close'],
+                                            wait=True))
 
         # Load calibration file
         if glbl['auto_load_calib']:
