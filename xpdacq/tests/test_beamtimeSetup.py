@@ -1,9 +1,10 @@
-import unittest
 import os
-import shutil
 import yaml
-from pkg_resources import resource_filename as rs_fn
+import glob
+import shutil
+import unittest
 from time import strftime
+from pkg_resources import resource_filename as rs_fn
 
 from xpdacq.xpdacq_conf import glbl_dict
 from xpdacq.beamtime import Beamtime, ScanPlan
@@ -155,8 +156,6 @@ class NewBeamtimeTest(unittest.TestCase):
                                       test_tar_name))
         # are contents tared correctly?
         archive_test_dir = os.path.join(glbl_dict['home'], 'tar_test')
-        #os.makedirs(archive_test_dir, exist_ok=True)
-        #shutil.unpack_archive(archive_full_name + '.tar', archive_test_dir)
         content_list = os.listdir(archive_full_name)
         # is remote copy starting from xpdUser?
         assert 'xpdUser' in content_list
@@ -167,12 +166,13 @@ class NewBeamtimeTest(unittest.TestCase):
         exclude_fp_list = ['xpdUser', 'xpdConfig', 'yml',
                            'samples', 'scanplans']
         bkg_fp_list = [el for el in full_fp_list if el not in
-                exclude_fp_list] # exclude top dirs
+                exclude_fp_list]  # exclude top dirs
         remote_fp_list = os.listdir(os.path.join(archive_full_name,
                                                  'xpdUser'))
         # difference should be empty set
         assert not set(bkg_fp_list).difference(remote_fp_list)
-
+        # hidden files should be excluded from the archive
+        assert not list(glob.glob(archive_full_name+'**/.*'))
         # now test deleting directories
         _delete_home_dir_tree()
         self.assertTrue(len(os.listdir(glbl_dict['home'])) == 0)
