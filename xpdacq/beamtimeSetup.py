@@ -271,6 +271,7 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
         # <remote>/<PI_last+uid>/xpdUser/....
         os.makedirs(archive_full_name, exist_ok=True)
         rv = subprocess.run(['rsync', '-av', '--timeout=60',
+                             '--no-owner', '--no-group',
                              '--exclude=.*',  # exclude all hidden files
                              glbl_dict['home'], archive_full_name],
                              check=True,)
