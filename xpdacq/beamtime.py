@@ -462,13 +462,10 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
 
 # stream_name='primary'
 
-
 register_plan('ct', ct)
 register_plan('Tramp', Tramp)
 register_plan('tseries', tseries)
 register_plan('Tlist', Tlist)
-
-
 # register_plan('statTramp', statTramp)
 
 

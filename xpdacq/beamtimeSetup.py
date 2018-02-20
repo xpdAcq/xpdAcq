@@ -52,8 +52,7 @@ def _start_beamtime(PI_last, saf_num, experimenters=[],
     elif len(f_list) == 0:
         _make_clean_env()
         print("INFO: initiated requried directories for experiment")
-        bt = Beamtime(
-                      PI_last, saf_num, experimenters,
+        bt = Beamtime(PI_last, saf_num, experimenters,
                       wavelength=wavelength)
         os.chdir(home_dir)
         print("INFO: to link newly created beamtime object to xrun, "
@@ -128,9 +127,8 @@ def load_beamtime(directory=None):
         directory = glbl_dict['yaml_dir']  # leave room for multi-beamtime
     known_uids = {}
     beamtime_fn = os.path.join(directory, 'bt_bt.yml')
-    sample_fns = [
-                   fn for fn in
-                   os.listdir(os.path.join(directory, 'samples'))]
+    sample_fns = [fn for fn in
+                  os.listdir(os.path.join(directory, 'samples'))]
     scanplan_fns = [fn for fn in
                     os.listdir(os.path.join(directory, 'scanplans'))]
 
@@ -273,9 +271,9 @@ def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
         # <remote>/<PI_last+uid>/xpdUser/....
         os.makedirs(archive_full_name, exist_ok=True)
         subprocess.run([
-                        'rsync', '-av',
-                        # '--exclude=*.tif',  # not used yet
-                        glbl_dict['home'], archive_full_name], check=True)
+            'rsync', '-av',
+            # '--exclude=*.tif',  # not used yet
+            glbl_dict['home'], archive_full_name], check=True)
     finally:
         os.chdir(glbl_dict['home'])
     return archive_full_name
