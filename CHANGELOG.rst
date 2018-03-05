@@ -4,6 +4,38 @@ xpdAcq Change Log
 
 .. current developments
 
+v0.7.1
+====================
+
+**Added:**
+
+* Requirements folder
+
+
+**Changed:**
+
+* Release template now uses proper version in license
+* Travis now uses the requirements folder
+
+
+**Deprecated:**
+
+* Replace most ``shutil`` functionalities with native Unix commands
+  called by ``subprocess`` to have a clear picture on the system response.
+
+
+**Fixed:**
+
+* Add ``--timeout`` option to rsync during ``_end_beamtime`` to allow 
+  temporally disconnect.
+
+* Exclude hidden files from the ``_end_beamtime`` archival. Those files 
+  are mainly used as configurations by local applications and are less 
+  likely to be reusable even if user requests them.
+
+
+
+
 v0.7.0
 ====================
 
