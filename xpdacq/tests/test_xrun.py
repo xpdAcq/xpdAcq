@@ -378,22 +378,6 @@ class xrunTest(unittest.TestCase):
         assert key in open_run
         assert open_run[key] == val
 
-    def test_mask_client_server_md_insert(self):
-        server_key = 'mask_server_uid'
-        server_val = '777'
-        client_key = 'mask_client_uid'
-        glbl['exp_hash_uid'] = server_val
-        msg_list = []
-        def msg_rv(msg):
-            msg_list.append(msg)
-        self.xrun.msg_hook = msg_rv
-        self.xrun({},
-                  ScanPlan(self.bt, ct, 1.0))
-        open_run = [el.kwargs for el in msg_list
-                    if el.command == 'open_run'].pop()
-        assert client_key in open_run
-        assert open_run[client_key] == server_val
-
     def test_calibration_client_server_md_insert(self):
         server_val = self.init_exp_hash_uid
         client_key = 'detector_calibration_client_uid'

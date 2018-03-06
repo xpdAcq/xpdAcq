@@ -35,7 +35,6 @@ from xpdacq.beamtime import ScanPlan, _summarize
 from xpdacq.xpdacq_conf import (xpd_configuration, XPD_SHUTTER_CONF,
                                 XPDACQ_MD_VERSION)
 
-from xpdan.tools import compress_mask
 XPD_shutter = xpd_configuration.get('shutter')
 
 
@@ -277,38 +276,6 @@ def _inject_analysis_stage(msg):
     """specify at which stage the documents is processed"""
     if msg.command == 'open_run':
         msg.kwargs['analysis_stage'] = 'raw'
-    return msg
-
-
-def _auto_load_mask():
-    mask_path = glbl['mask_path']
-    if os.path.isfile(mask_path):
-        mask = np.load(mask_path)
-        print("INFO: insert mask into your header")
-        data, indicies, indptr = compress_mask(mask)  # rv are lists
-        return data, indicies, indptr
-    else:
-        print("INFO: no mask has been built, scan will keep going...")
-
-
-def _inject_mask_server_uid(msg):
-    if msg.command == 'open_run':
-        exp_hash_uid = glbl.get('exp_hash_uid')
-        # inject client uid to all runs
-        msg.kwargs.update({'mask_client_uid':
-                           exp_hash_uid})
-        if 'is_mask' in msg.kwargs:
-            # inject server uid if it's calibration run
-            msg.kwargs.update({'mask_server_uid':
-                               exp_hash_uid})
-        #else:
-        #    # load mask if exists
-        #    compressed_mask = _auto_load_mask()
-        #    if compressed_mask:
-        #        data, indicies, indptr = compressed_mask
-        #        # inject compressed 
-        #        msg.kwargs['mask'] = (data, indicies, indptr)
-
     return msg
 
 
@@ -558,8 +525,6 @@ class CustomizedRunEngine(RunEngine):
         # Load calibration file
         if glbl['auto_load_calib']:
             plan = bpp.msg_mutator(plan, _inject_calibration_md)
-        # Insert mask clinet uid
-        plan = bpp.msg_mutator(plan, _inject_mask_server_uid)
         # Insert xpdacq md version
         plan = bpp.msg_mutator(plan, _inject_xpdacq_md_version)
         # Insert analysis stage tag

@@ -62,7 +62,6 @@ GROUP = 'XPD'
 FACILITY = 'NSLS-II'
 IMAGE_FIELD = 'pe1_image'
 CALIB_CONFIG_NAME = 'xpdAcq_calib_info.yml'
-MASK_NAME = 'xpdacq_mask.npy'
 GLBL_YAML_NAME = 'glbl.yml'
 BLCONFIG_NAME = 'XPD_beamline_config.yml'
 
@@ -107,7 +106,6 @@ USERSCRIPT_DIR = os.path.join(HOME_DIR, 'userScripts')
 TIFF_BASE = os.path.join(HOME_DIR, 'tiff_base')
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
 GLBL_YAML_PATH = os.path.join(YAML_DIR, GLBL_YAML_NAME)
-MASK_PATH = os.path.join(CONFIG_BASE, MASK_NAME)
 BLCONFIG_PATH = os.path.join(BLCONFIG_DIR, BLCONFIG_NAME)
 
 ALL_FOLDERS = [
@@ -151,7 +149,6 @@ glbl_dict = dict(is_simulation=simulation,
                  allfolders=ALL_FOLDERS,
                  archive_dir=USER_BACKUP_DIR,
                  glbl_yaml_path=GLBL_YAML_PATH,
-                 mask_path=MASK_PATH,
                  blconfig_path=BLCONFIG_PATH,
                  # options for functionalities
                  frame_acq_time=FRAME_ACQUIRE_TIME,
@@ -161,10 +158,6 @@ glbl_dict = dict(is_simulation=simulation,
                  shutter_control=True,
                  auto_load_calib=True,
                  calib_config_name=CALIB_CONFIG_NAME,
-                 mask_dict={'edge': 30, 'lower_thresh': 0.0,
-                            'upper_thresh': None, 'bs_width': 13,
-                            'tri_offset': 13, 'v_asym': 0,
-                            'alpha': 2.5, 'tmsk': None},
                  # instrument config
                  det_image_field=IMAGE_FIELD
                  )
@@ -285,8 +278,8 @@ class GlblYamlDict(YamlDict):
     _MUTABLE_FIELDS = ['frame_acq_time', 'auto_dark', 'dk_window',
                        '_dark_dict_list', 'shutter_control',
                        'auto_load_calib', 'calib_config_name',
-                       'calib_config_dict', 'mask_dict',
-                       'det_image_field', 'exp_hash_uid']
+                       'calib_config_dict', 'det_image_field',
+                       'exp_hash_uid']
 
     def __init__(self, name, **kwargs):
         super().__init__(name=name, **kwargs)
