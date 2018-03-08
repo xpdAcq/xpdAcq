@@ -563,6 +563,7 @@ class CustomizedRunEngine(RunEngine):
 
     def __call__(self, sample, plan, subs=None, *,
                  verify_write=False, dark_strategy=periodic_dark,
+                 robot=False,
                  **metadata_kw):
         """
         Execute a plan
@@ -614,7 +615,12 @@ class CustomizedRunEngine(RunEngine):
         uids : list
             list of uids (i.e. RunStart Document uids) of run(s)
         """
-        if isinstance(sample, list):
+        if self.md.get('robot', None) is not None:
+            raise RuntimeError('Robot must be specified at call time, not in'
+                               'global metadata')
+        if robot:
+            metadata_kw.update(robot=True)
+        if not robot and isinstance(sample, list):
             raise RuntimeError('Multiple samples is not supported without'
                                'the robot')
         # The CustomizedRunEngine knows about a Beamtime object, and it
@@ -672,3 +678,32 @@ class CustomizedRunEngine(RunEngine):
         # Execute
         return super().__call__(plan, subs,
                                 **metadata_kw)
+
+# For convenience, define short plans the use these custom commands.
+
+def load_sample(position, geometry=None):
+    # TODO: I think this can be simpler.
+    return (yield from single_gen(Msg('load_sample', robot, position, geometry)))
+
+def unload_sample():
+    # TODO: I think this can be simpler.
+    return (yield from single_gen(Msg('unload_sample', robot)))
+
+
+# These are usable bluesky plans.
+
+def robot_wrapper(plan, sample):
+    """Wrap a plan in load/unload messages.
+    Parameters
+    ----------
+    plan : a bluesky plan
+    sample : dict
+        must contain 'position'; optionally also 'geometry'
+    Example
+    -------
+    >>> plan = count([pe1c])
+    >>> new_plan = robot_wrapper(plan, {'position': 1})
+    """
+    yield from load_sample(sample['position'], sample.get('geometry', None))
+    yield from plan
+    yield from unload_sample()
