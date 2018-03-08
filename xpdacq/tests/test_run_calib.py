@@ -7,8 +7,7 @@ from .conftest import xpd_pe1c, xpd_configuration
 from xpdacq.xpdacq import update_experiment_hash_uid
 from xpdacq.calib import (_collect_img, xpdAcqException,
                           _sample_name_phase_info_configuration,
-                          run_mask_builder, run_calibration)
-from xpdan.tools import compress_mask
+                          run_calibration)
 from pyFAI.calibrant import Calibrant, CALIBRANT_FACTORY
 from pyFAI.calibration import Calibration
 from pkg_resources import resource_filename as rs_fn
@@ -16,11 +15,8 @@ from pkg_resources import resource_filename as rs_fn
 
 @pytest.mark.parametrize('sample_name, phase_info, tag, exception',
                          [(None, None, 'calib', None),
-                          (None, None, 'mask', None),
                           (None, 'Ni', 'calib', xpdAcqException),
                           ('Ni', None, 'calib', xpdAcqException),
-                          ('kapton', None, 'mask', xpdAcqException),
-                          (None, 'C12H12N2O', 'mask', xpdAcqException),
                           ]
                          )
 def test_configure_sample_info_args(sample_name, phase_info, tag, exception):
@@ -39,12 +35,6 @@ def test_configure_sample_info_args(sample_name, phase_info, tag, exception):
                             'sample_composition': {'Ni': 1.0},
                             'sample_name': 'Ni_calib',
                             'sample_phase': {'Ni': 1.0}}),
-                          (None, None, 'mask',
-                           {'composition_string': 'C12.0H12.0N2.0O1.0',
-                            'sample_composition': {'C': 12.0, 'H': 12.0,
-                                                   'N': 2.0, 'O': 1.0},
-                            'sample_name': 'kapton',
-                            'sample_phase': {'C12H12N2O': 1.0}})
                           ]
                          )
 def test_configure_sample_info_md(sample_name, phase_info, tag, sample_md):
@@ -141,50 +131,3 @@ def test_load_calibrant(fresh_xrun, bt):
                     phase_info='buggy', RE_instance=xrun)
     # clean
     xrun.unsubscribe(t)
-
-def test_mask_md(fresh_xrun, exp_hash_uid, glbl, db):
-    xrun = fresh_xrun
-    # grab calib information
-    pytest_dir = rs_fn('xpdacq', 'tests/')
-    src = os.path.join(pytest_dir, glbl['calib_config_name'])
-    dst = os.path.join(glbl['config_base'], glbl['calib_config_name'])
-    shutil.copyfile(src, dst)
-    # build mask
-    xrun = fresh_xrun
-    # assign detector yields real image for maksing
-    xpd_configuration['area_det'] = xpd_pe1c
-    run_mask_builder(RE_instance=xrun)
-    sample_md = _sample_name_phase_info_configuration(None, None, 'mask')
-    assert os.path.isfile(glbl['mask_path'])
-    hdr = db[-1]
-    assert hdr.start['is_mask'] == True
-    assert all(v == hdr.start[k] for k, v in sample_md.items())
-    assert hdr.start['mask_server_uid'] == exp_hash_uid
-    assert hdr.start['mask_client_uid'] == hdr.start['mask_server_uid']
-    # Note: sparse mask injection has been deprecated
-    # production run
-    #mask = np.load(glbl['mask_path'])
-    #reload_sparse_mask = compress_mask(mask)
-    #xrun(0, 0)
-    #hdr = db[-1]
-    #assert hdr.start['mask_client_uid'] == exp_hash_uid
-    #assert reload_sparse_mask == hdr.start['mask']
-    # update hash uid
-    new_hash = update_experiment_hash_uid()
-    # production run first
-    xrun(0, 0)
-    hdr = db[-1]
-    client_uid = hdr.start['mask_client_uid']
-    assert client_uid == new_hash
-    assert 'mask_server_uid' not in hdr.start
-    # build new mask
-    run_mask_builder(RE_instance=xrun)
-    mask_hdr = db[-1]
-    server_uid = mask_hdr.start['mask_server_uid']
-    client_uid = mask_hdr.start['mask_client_uid']
-    assert server_uid == new_hash
-    assert server_uid == client_uid
-    # md link
-    mask_server_uid = mask_hdr.start['mask_server_uid']
-    hdr_client_uid = hdr.start['mask_client_uid']
-    assert mask_server_uid == hdr_client_uid

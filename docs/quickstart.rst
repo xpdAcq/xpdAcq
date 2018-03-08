@@ -291,22 +291,6 @@ run ``run_calibration()`` again.
   pipeline. Following workflow will be useful if you wish to build the mask
   manually from a specific experimental setup.
 
-The standard mask removes problematic pixels at the edge of the detector, shadows
-the beamstop, and uses an auto-masking scheme to get rid of outlier pixels.
-The automasking has been extensively tested on a low-scattering sample so our mask
-building function has been designed to run on data from an empty kapton tube.
-Load an empty kapton tube, or something similar, on the diffractometer, then in your ``collection-yyQn.x`` terminal type
-
-.. code-block:: python
-
-  run_mask_builder() # be patient, the process takes 10 minutes!
-
-A mask will be generated based on the image collected from this sample. This mask
-will be saved in the header of all future scans until you run ``run_mask_builder()``
-again.  You will always be able to extract your data unmasked, or apply a different mask,
-at analysis time, but if this mask works well, it will save you a lot of time later if
-you do this step now.
-
 You can look at the 2D image with and without the mask in ``SrXgui``.
 You can load the mask file by clicking the 'folder' icon by the "Mask file" field
 in SrXgui, navigating

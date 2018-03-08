@@ -31,7 +31,6 @@ from .tools import _timestampstr, _check_obj, xpdAcqException
 from .utils import ExceltoYaml
 from .xpdacq import _auto_load_calibration_file
 
-from xpdan.tools import mask_img, compress_mask
 from xpdan.calib import (_save_calib_param, _calibration)
 
 from pyFAI.gui.utils import update_fig
@@ -51,9 +50,6 @@ def _sample_name_phase_info_configuration(sample_name,
         if tag == 'calib':
             sample_name = 'Ni_calib'
             phase_info = 'Ni'
-        elif tag == 'mask':
-            sample_name = 'kapton'
-            phase_info = 'C12H12N2O'
     else:
         raise xpdAcqException("Ambiguous sample information. "
                               "Only ``phase_info`` or ``sample_name``"
@@ -191,11 +187,6 @@ def _inject_calibration_tag(msg):
         msg.kwargs['is_calibration'] = True
     return msg
 
-def _inject_mask_tag(msg):
-    if msg.command == 'open_run':
-        msg.kwargs['is_mask'] = True
-    return msg
-
 
 def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
                  *, calibrant=None, detector=None):
@@ -216,8 +207,6 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
         sample_md.update({'dSpacing': dSpacing,
                           'detector': detector})
         plan = bpp.msg_mutator(plan, _inject_calibration_tag)
-    elif tag == 'mask':
-        plan = bpp.msg_mutator(plan, _inject_mask_tag)
 
     # collect image
     uid = RE_instance(sample_md, plan)
@@ -228,8 +217,6 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
     dark_header = db[dark_uid]
     dark_img = dark_header.data(glbl['det_image_field'])
     dark_img = np.asarray(next(dark_img)).squeeze()
-    #dark_img = next(db.get_images(dark_header,
-    #                              glbl['det_image_field']))
     img = light_header.data(glbl['det_image_field'])
     img = np.asarray(next(img)).squeeze()
 
@@ -240,86 +227,3 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
 
     return img, fn_template
 
-
-def run_mask_builder(exposure=300, mask_sample_name=None,
-                     phase_info=None, dark_sub_bool=True,
-                     polarization_factor=0.99,
-                     calib_dict=None, mask_dict=None,
-                     save_name=None, *, RE_instance=None):
-    """function to build a mask based on image collected.
-
-    this function will execute a count scan and generate a mask based on
-    image collected from this scan.
-
-    Parameters
-    ----------
-    exposure : float, optional
-        exposure time of this scan. default is 300s.
-    mask_sample_name : str, optional
-        name of sample that new mask is going to be generated from.
-        default is 'kapton'
-    phase_info : str, optional
-        phase information for the sample that new mask is going to be
-        generated from. default is 'C12H12N2O'
-    dark_sub_bool : bool, optional
-        turn on/off of dark subtraction. default is True.
-    polarization_factor: float, optional.
-        polarization correction factor, ranged from -1(vertical) to +1
-        (horizontal). default is 0.99. set to None for no correction.
-    calib_dict : dict, optional
-        dictionary with parameters for geometry correction
-        software. default is read out from glbl attribute (parameters
-        from the most recent calibration)
-    mask_dict : dict, optional
-        dictionary for arguments in masking function. for more details,
-        please check docstring from ``xpdan.tools.mask_img``
-    save_name : str, optional
-        full path for this mask going to be saved. if it is None,
-        default name 'xpdacq_mask.npy' will be saved inside
-        xpdUser/config_base/
-    RE_instance : bluesky.run_engine.RunEngine instance, optional
-        instance of run engine. Default is xrun. Do not change under
-        normal circumstances.
-
-    Note
-    ----
-    current software dealing with geometry correction is ``pyFAI``
-
-    See also
-    --------
-    xpdan.tools.mask_img
-    """
-    # default behavior
-    calib_dict = _auto_load_calibration_file(False)
-    if not calib_dict:
-        print("INFO: there is no glbl calibration dictionary linked\n"
-              "Please do ``run_calibration()`` or provide your own"
-              "calibration parameter set")
-        return
-    # sample infomation
-    sample_md = _sample_name_phase_info_configuration(mask_sample_name,
-                                                      phase_info,
-                                                      'mask')
-    # grab RE instance
-    if RE_instance is None:
-        xrun_name = _REQUIRED_OBJ_LIST[0]
-        RE_instance = _check_obj(xrun_name)  # will raise error if not exists
-    img, fn_template = _collect_img(exposure, dark_sub_bool,
-                                    sample_md, 'mask', RE_instance)
-    if mask_dict is None:
-        mask_dict = glbl['mask_dict']
-    print("INFO: use mask options: {}".format(mask_dict))
-
-    # setting up geometry parameters
-    ai = AzimuthalIntegrator()
-    ai.setPyFAI(**calib_dict)
-
-    img /= ai.polarization(img.shape, polarization_factor)
-    mask = mask_img(img, ai, **mask_dict)
-
-    if save_name is None:
-        save_name = glbl['mask_path']
-    # still save the most recent mask, as we are in file-based
-    np.save(save_name, mask)
-
-    return

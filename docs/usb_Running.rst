@@ -74,7 +74,6 @@ Let's try to make sure everything is ok.
   >>> xrun(0, 2)
   INFO: requested exposure time = 1 - > computed exposure time= 1.0
   INFO: No calibration file found in config_base. Scan will still keep going on
-  INFO: no mask has been associated with current glbl
   +-----------+------------+------------+
   |   seq_num |       time |  pe1_image |
   +-----------+------------+------------+
@@ -94,7 +93,6 @@ and then compare them.
   >>> xrun(0, 7)  #1.5 seconds
   INFO: requested exposure time = 1.5 - > computed exposure time= 1.5
   INFO: No calibration file found in config_base. Scan will still keep going on
-  INFO: no mask has been associated with current glbl
   +-----------+------------+------------+
   |   seq_num |       time |  pe1_image |
   +-----------+------------+------------+
@@ -106,7 +104,6 @@ and then compare them.
   >>> setupscan(0, 8)  #100.5 seconds
   INFO: requested exposure time = 100.5 - > computed exposure time= 100.5
   INFO: No calibration file found in config_base. Scan will still keep going on
-  INFO: no mask has been associated with current glbl
   +-----------+------------+------------+
   |   seq_num |       time |  pe1_image |
   +-----------+------------+------------+
@@ -129,7 +126,6 @@ to get the first data-set.
   INFO: closing shutter...
   INFO: taking dark frame....
   INFO: No calibration file found in config_base. Scan will still keep going on
-  INFO: no mask has been associated with current glbl
   +-----------+------------+------------+
   |   seq_num |       time |  pe1_image |
   +-----------+------------+------------+
@@ -138,7 +134,6 @@ to get the first data-set.
   generator count ['d770c7'] (scan num: 7)
   opening shutter...
   INFO: No calibration file found in config_base. Scan will still keep going on
-  INFO: no mask has been associated with current glbl
   +-----------+------------+------------+
   |   seq_num |       time |  pe1_image |
   +-----------+------------+------------+
@@ -643,21 +638,6 @@ Applied masks
     mask aims to remove many of the dead/hot pixels and streaks. The default
     alpha is 3 standard deviations.
 
-
-Using the auto-masker
-^^^^^^^^^^^^^^^^^^^^^
-To use the auto-masker once, creating masks used for subsequent images,
-just run the command:
-
- .. code-block:: python
-
-
-  run_mask_builder()
-
-
-This will take a shot and mask it. This mask will then be saved and loaded
-into subsequent experiment `run_headers` allowing them to be used for the next
-images.
 
 
 .. _client_server_md:
