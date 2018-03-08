@@ -297,8 +297,11 @@ def _sample_injector_factory(sample):
 
     """
     def _inject_sample_md(msg):
+        print('inside inject')
         if msg.command == 'open_run':
             # No keys in metadata_kw are allows to collide with sample keys.
+            print('hi CJ')
+            print(sample)
             if set(sample) & set(msg.kwargs):
                 raise ValueError("These keys in metadata_kw are illegal "
                                  "because they are always in sample: "
