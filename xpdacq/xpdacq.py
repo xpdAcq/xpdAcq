@@ -641,7 +641,10 @@ class CustomizedRunEngine(RunEngine):
         # Make the complete plan by chaining the chained plans
         total_plan = []
         for s, p in zip(sample, plan):
-            total_plan.append(p)
+            if robot:
+                total_plan.append(robot_wrapper(p, s))
+            else:
+                total_plan.append(p)
         plan = pchain(*total_plan)
 
         _subs = normalize_subs_input(subs)
@@ -679,15 +682,18 @@ class CustomizedRunEngine(RunEngine):
         return super().__call__(plan, subs,
                                 **metadata_kw)
 
+
 # For convenience, define short plans the use these custom commands.
 
 def load_sample(position, geometry=None):
     # TODO: I think this can be simpler.
-    return (yield from single_gen(Msg('load_sample', robot, position, geometry)))
+    return (yield from single_gen(Msg('load_sample', glbl['robot'],
+                                      position, geometry)))
+
 
 def unload_sample():
     # TODO: I think this can be simpler.
-    return (yield from single_gen(Msg('unload_sample', robot)))
+    return (yield from single_gen(Msg('unload_sample', glbl['robot'])))
 
 
 # These are usable bluesky plans.
