@@ -710,6 +710,7 @@ def robot_wrapper(plan, sample):
     >>> plan = count([pe1c])
     >>> new_plan = robot_wrapper(plan, {'position': 1})
     """
-    yield from load_sample(sample['position'], sample.get('geometry', None))
+    yield from load_sample(sample['robot_identifier'],
+                           sample.get('robot_geometry', None))
     yield from plan
     yield from unload_sample()
