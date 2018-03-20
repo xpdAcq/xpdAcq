@@ -422,6 +422,15 @@ class xrunTest(unittest.TestCase):
         assert all(k in h.start for k in key_list)
         assert all(glbl[k] == h.start[k] for k in key_list)
 
+    def test_double_scan(self):
+        key_list = ['owner', 'facility', 'group']
+        for k in key_list:
+            self.xrun.md[k] = glbl[k]
+        self.xrun({'sample_name': 'double_scan'},
+                  [ScanPlan(self.bt, ct, 1.0), ScanPlan(self.bt, ct, 1.0)])
+        for i in range(1, 3):
+            h = xpd_configuration['db'][-1 * i]
+            assert h['start']['sample_name'] == 'double_scan'
 
     def test_load_beamline_config(self):
         # no beamline config -> raise
