@@ -19,6 +19,7 @@ import time
 import yaml
 import warnings
 from pprint import pprint
+from itertools import groupby
 import numpy as np
 
 import bluesky.plans as bp
@@ -26,8 +27,9 @@ import bluesky.plan_stubs as bps
 import bluesky.preprocessors as bpp
 from bluesky import RunEngine
 from bluesky.suspenders import SuspendFloor
-from bluesky.utils import normalize_subs_input
+from bluesky.utils import normalize_subs_input, single_gen, Msg
 from bluesky.callbacks.broker import verify_files_saved
+from bluesky.preprocessors import pchain
 
 from xpdacq.glbl import glbl
 from xpdacq.tools import xpdAcqException
@@ -62,7 +64,7 @@ def _update_dark_dict_list(name, doc):
         dark_dict_list.append(dark_dict)
         glbl['_dark_dict_list'] = dark_dict_list  # update glbl._dark_dict_list
     else:
-        #FIXME: replace with logging and detailed warning next PR
+        # FIXME: replace with logging and detailed warning next PR
         print("INFO: dark scan was not successfully executed.\n"
               "gobal dark frame information will not be updated!")
 
@@ -71,8 +73,8 @@ def take_dark():
     """a plan for taking a single dark frame"""
     print('INFO: closing shutter...')
     yield from bps.abs_set(xpd_configuration.get('shutter'),
-                          XPD_SHUTTER_CONF['close'],
-                          wait=True)
+                           XPD_SHUTTER_CONF['close'],
+                           wait=True)
     print('INFO: taking dark frame....')
     # upto this stage, area_det has been configured to so exposure time is
     # correct
@@ -124,15 +126,15 @@ def periodic_dark(plan):
                               bps.stage(area_det),
                               bpp.single_gen(msg),
                               bps.abs_set(xpd_configuration.get('shutter'),
-                                        XPD_SHUTTER_CONF['open'],
-                                        wait=True)
-                             ), None
+                                          XPD_SHUTTER_CONF['open'],
+                                          wait=True)
+                              ), None
         elif msg.command == 'open_run' and 'dark_frame' not in msg.kwargs:
             return bpp.pchain(bpp.single_gen(msg),
                               bps.abs_set(xpd_configuration.get('shutter'),
                                           XPD_SHUTTER_CONF['open'],
                                           wait=True)
-                             ), None
+                              ), None
         else:
             # do nothing if (not need_dark)
             return None, None
@@ -170,7 +172,7 @@ def _validate_dark(expire_time=None):
                                         time_diff))
     if qualified_dark_list:
         # sort wrt expo_diff and time_diff for best candidate
-        #best_dark = sorted(qualified_dark_list,
+        # best_dark = sorted(qualified_dark_list,
         #                   key=lambda x: x[1] and x[2])[0]
         best_dark = sorted(qualified_dark_list,
                            key=lambda x: x[2])[0]
@@ -234,7 +236,8 @@ def _inject_filter_positions(msg):
         print("INFO: Current filter status")
         for el in filters:
             print("INFO: {} : {}".format(el, getattr(filter_bank, el).value))
-        msg.kwargs['filter_positions'] = {fltr: getattr(filter_bank, fltr).value for fltr in filters}
+        msg.kwargs['filter_positions'] = {
+            fltr: getattr(filter_bank, fltr).value for fltr in filters}
     return msg
 
 
@@ -279,6 +282,34 @@ def _inject_analysis_stage(msg):
     return msg
 
 
+def _sample_injector_factory(sample):
+    """Factory for message mutators which inject the sample metadata
+
+    Parameters
+    ----------
+    sample : dict
+        The sample metadata
+
+    Returns
+    -------
+    _inject_sample_md : func
+        The message mutator
+
+    """
+    def _inject_sample_md(msg):
+        if msg.command == 'open_run':
+            # No keys in metadata_kw are allows to collide with sample keys.
+            if set(sample) & set(msg.kwargs):
+                raise ValueError("These keys in metadata_kw are illegal "
+                                 "because they are always in sample: "
+                                 "{}".format(set(sample) & set(msg.kwargs)))
+
+            msg.kwargs.update(sample)
+        return msg
+
+    return _inject_sample_md
+
+
 def update_experiment_hash_uid():
     """helper function to assign new uid to glbl state"""
     new_uid = str(uuid.uuid4())
@@ -287,6 +318,7 @@ def update_experiment_hash_uid():
           "{}".format(new_uid))
 
     return new_uid
+
 
 def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
                            wait_time=None, clear=True):
@@ -420,6 +452,115 @@ class CustomizedRunEngine(RunEngine):
         exp_hash_uid = str(uuid.uuid4())
         glbl['exp_hash_uid'] = exp_hash_uid
 
+    def translate_to_sample(self, sample):
+        """Translate a sample into a list of dict
+
+        Parameters
+        ----------
+        sample : list of int or dict-like
+            Sample metadata. If a beamtime object is linked,
+            an integer will be interpreted as the index appears in the
+            ``bt.list()`` method, corresponding metadata will be passed.
+            A customized dict can also be passed as the sample
+            metadata.
+
+        Returns
+        -------
+        sample : list of dict
+            The sample info loaded
+        """
+        if isinstance(sample, list):
+            sample = [self.translate_to_sample(s) for s in sample]
+        if isinstance(sample, int):
+            try:
+                sample = list(self.beamtime.samples.values())[sample]
+            except IndexError:
+                print("WARNING: hmm, there is no sample with index `{}`"
+                      ", please do `bt.list()` to check if it exists yet"
+                      .format(sample))
+                return
+        return sample
+
+    def translate_to_plan(self, plan, sample):
+        """Translate a plan input into a generator
+
+        Parameters
+        ----------
+        sample : list of int or dict-like
+            Sample metadata. If a beamtime object is linked,
+            an integer will be interpreted as the index appears in the
+            ``bt.list()`` method, corresponding metadata will be passed.
+            A customized dict can also be passed as the sample
+            metadata.
+        plan : list of int or generator
+            Scan plan. If a beamtime object is linked, an integer
+            will be interpreted as the index appears in the
+            ``bt.list()`` method, corresponding scan plan will be
+            A generator or that yields ``Msg`` objects (or an iterable
+            that returns such a generator) can also be passed.
+
+        Returns
+        -------
+        plan : generator
+            The generator of messages for the plan
+
+        """
+        if isinstance(plan, list):
+            plan = [self.translate_to_plan(p, s) for p, s in zip(plan, sample)]
+        # If a plan is given as a int, look in up in the global registry.
+        else:
+            if isinstance(plan, int):
+                try:
+                    plan = list(self.beamtime.scanplans.values())[plan]
+                except IndexError:
+                    print("WARNING: hmm, there is no scanplan with index `{}`"
+                          ", please do `bt.list()` to check if it exists yet"
+                          .format(plan))
+                    return
+            # If the plan is an xpdAcq 'ScanPlan', make the actual plan.
+            if isinstance(plan, ScanPlan):
+                plan = plan.factory()
+            mm = _sample_injector_factory(sample)
+            plan = bpp.msg_mutator(plan, mm)
+        return plan
+
+    def _normalize_sample_plan(self, sample, plan):
+        """Normalize samples and plans to list of samples and plans
+
+        Parameters
+        ----------
+        sample : int or dict-like or list of int or dict-like
+            Sample metadata. If a beamtime object is linked,
+            an integer will be interpreted as the index appears in the
+            ``bt.list()`` method, corresponding metadata will be passed.
+            A customized dict can also be passed as the sample
+            metadata.
+        plan : int or generator or list of int or generator
+            Scan plan. If a beamtime object is linked, an integer
+            will be interpreted as the index appears in the
+            ``bt.list()`` method, corresponding scan plan will be
+            A generator or that yields ``Msg`` objects (or an iterable
+            that returns such a generator) can also be passed.
+
+        Returns
+        -------
+        sample : list of samples
+            The list of samples
+        plan : list of plans
+            The list of plans
+
+        """
+        if isinstance(sample, list) and not isinstance(plan, list):
+            plan = [plan] * len(sample)
+        elif not isinstance(sample, list) and isinstance(plan, list):
+            sample = [sample] * len(plan)
+        elif not isinstance(sample, list) and not isinstance(plan, list):
+            plan = [plan]
+            sample = [sample]
+        if len(sample) != len(plan):
+            raise RuntimeError('Samples and Plans must be the same length')
+        return sample, plan
+
     def __call__(self, sample, plan, subs=None, *,
                  verify_write=False, dark_strategy=periodic_dark,
                  **metadata_kw):
@@ -431,13 +572,13 @@ class CustomizedRunEngine(RunEngine):
 
         Parameters
         ----------
-        sample : int or dict-like
+        sample : int or dict-like or list of int or dict-like
             Sample metadata. If a beamtime object is linked,
             an integer will be interpreted as the index appears in the
             ``bt.list()`` method, corresponding metadata will be passed.
             A customized dict can also be passed as the sample
             metadata.
-        plan : int or generator
+        plan : int or generator or list of int or generator
             Scan plan. If a beamtime object is linked, an integer
             will be interpreted as the index appears in the
             ``bt.list()`` method, corresponding scan plan will be
@@ -473,42 +614,37 @@ class CustomizedRunEngine(RunEngine):
         uids : list
             list of uids (i.e. RunStart Document uids) of run(s)
         """
+        if isinstance(sample, list):
+            raise RuntimeError('Multiple samples is not supported without'
+                               'the robot')
         # The CustomizedRunEngine knows about a Beamtime object, and it
         # interprets integers for 'sample' as indexes into the Beamtime's
         # lists of Samples from all its Experiments.
 
-        if isinstance(sample, int):
-            try:
-                sample = list(self.beamtime.samples.values())[sample]
-            except IndexError:
-                print("WARNING: hmm, there is no sample with index `{}`"
-                      ", please do `bt.list()` to check if it exists yet"
-                      .format(sample))
-                return
-        # If a plan is given as a string, look in up in the global registry.
-        if isinstance(plan, int):
-            try:
-                plan = list(self.beamtime.scanplans.values())[plan]
-            except IndexError:
-                print("WARNING: hmm, there is no scanplan with index `{}`"
-                      ", please do `bt.list()` to check if it exists yet"
-                      .format(plan))
-                return
-        # If the plan is an xpdAcq 'ScanPlan', make the actual plan.
-        if isinstance(plan, ScanPlan):
-            plan = plan.factory()
+        # Turn everything into lists
+        sample, plan = self._normalize_sample_plan(sample, plan)
+        # Turn ints into actual samples
+        sample = self.translate_to_sample(sample)
+        # Turn ints into generators
+        plan = self.translate_to_plan(plan, sample)
+
+        # Collect the plans by contiguous samples and chain them
+        sample, plan = zip(*[(k, pchain(*[o[1] for o in v])) for k, v in
+                        groupby(zip(sample, plan), key=lambda x: x[0])])
+
+        # Make the complete plan by chaining the chained plans
+        total_plan = []
+        for s, p in zip(sample, plan):
+            total_plan.append(p)
+        plan = pchain(*total_plan)
+
         _subs = normalize_subs_input(subs)
         if verify_write:
             _subs.update({'stop': verify_files_saved})
-        # No keys in metadata_kw are allows to collide with sample keys.
-        if set(sample) & set(metadata_kw):
-            raise ValueError("These keys in metadata_kw are illegal "
-                             "because they are always in sample: "
-                             "{}".format(set(sample) & set(metadata_kw)))
+
         if self._beamtime.get('bt_wavelength') is None:
             print("WARNING: there is no wavelength information in current"
                   "beamtime object, scan will keep going....")
-        metadata_kw.update(sample)
 
         if glbl['shutter_control']:
             # Alter the plan to incorporate dark frames.
@@ -518,9 +654,10 @@ class CustomizedRunEngine(RunEngine):
                 plan = bpp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
             # force to close shutter after scan
             plan = bpp.finalize_wrapper(plan,
-                    bps.abs_set(xpd_configuration['shutter'],
-                                XPD_SHUTTER_CONF['close'],
-                                wait=True))
+                                        bps.abs_set(
+                                            xpd_configuration['shutter'],
+                                            XPD_SHUTTER_CONF['close'],
+                                            wait=True))
 
         # Load calibration file
         if glbl['auto_load_calib']:
