@@ -572,7 +572,7 @@ class CustomizedRunEngine(RunEngine):
 
         Parameters
         ----------
-        sample : int or dict-like or list of int or dict-like
+        sample : int or dict-like
             Sample metadata. If a beamtime object is linked,
             an integer will be interpreted as the index appears in the
             ``bt.list()`` method, corresponding metadata will be passed.
