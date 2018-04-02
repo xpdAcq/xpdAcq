@@ -1,10 +1,12 @@
 import unittest
 import os
+import copy
 import shutil
 import time
 import yaml
 import uuid
 import warnings
+from pprint import pprint
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import _nstep
 from xpdacq.beamtime import *
@@ -422,13 +424,38 @@ class xrunTest(unittest.TestCase):
         assert all(k in h.start for k in key_list)
         assert all(glbl[k] == h.start[k] for k in key_list)
 
+    def test_double_scan(self):
+        xpd_configuration['db'].prepare_hook = lambda name, doc: copy.deepcopy(doc)
+        key_list = ['owner', 'facility', 'group']
+        for k in key_list:
+            self.xrun.md[k] = glbl[k]
+        uids = self.xrun({'sample_name': 'double_scan'},
+                         [ScanPlan(self.bt, ct, 1.0),
+                          ScanPlan(self.bt, ct, 1.0)])
+        hdrs = [xpd_configuration['db'][-1 * i] for i in [1, 2]]
+        starts = [h['start'] for h in hdrs]
+        for h in hdrs:
+            assert 'dark_frame' not in h['start']
+            assert h['start']['uid'] in uids
+            assert h['start']['sample_name'] == 'double_scan'
+
+        pops = ['uid', 'time', 'sp_uid', 'scan_id',
+                # Due to [] () issues or timestamps
+                'plan_args', 'hints',
+                'bt_experimenters']
+        for p in ['uid', 'time', 'sp_uid', 'scan_id']:
+            for s in starts[1:]:
+                assert s[p] != starts[0][p]
+        [s.pop(p) for s in starts for p in pops]
+        for s in starts:
+            assert s == starts[0]
 
     def test_load_beamline_config(self):
         # no beamline config -> raise
         if os.path.exists(glbl['blconfig_path']):
             os.remove(glbl['blconfig_path'])
         with self.assertRaises(xpdAcqException):
-            _load_beamline_config(glbl['blconfig_path'],test=True)
+            _load_beamline_config(glbl['blconfig_path'], test=True)
         # move files
         stem, fn = os.path.split(glbl['blconfig_path'])
         src = os.path.join(pytest_dir, fn)
