@@ -76,6 +76,9 @@ def configure_device(*, area_det, shutter,
 
 
 glbl_dict = lookup_config()
+base_dirs_list = ['ARCHIVE_ROOT_DIR', 'BASE_DIR']
+for d in base_dirs_list:
+    glbl_dict[d] = os.path.expanduser(d)
 glbl_dict.update(USER_BACKUP_DIR_NAME=strftime('%Y'))
 
 ARCHIVE_BASE_DIR = os.path.join(glbl_dict['ARCHIVE_ROOT_DIR'], 
