@@ -45,7 +45,10 @@ def lookup_config():
     National Laboratory"""
     tried = []
     for path in CONFIG_SEARCH_PATH:
-        filenames = os.listdir(path)
+        if os.path.exists(path):
+            filenames = os.listdir(path)
+        else:
+            filenames = []
         filename = next(iter(filenames), None)
         tried.append(path)
         if os.path.isfile(filename):
