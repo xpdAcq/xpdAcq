@@ -24,12 +24,39 @@ import pprint
 import platform
 import warnings
 import subprocess
+import sys
 
 from .yamldict import YamlDict
 from .tools import xpdAcqException
 
-# shutter configuration, module dict
-XPD_SHUTTER_CONF = {'open': 60, 'close': 0}
+if os.name == 'nt':
+    _user_conf = os.path.join(os.environ['APPDATA'], 'acq')
+    CONFIG_SEARCH_PATH = (_user_conf,)
+else:
+    _user_conf = os.path.join(os.path.expanduser('~'), '.config', 'acq')
+    _local_etc = os.path.join(os.path.dirname(os.path.dirname(sys.executable)),
+                              'etc', 'acq')
+    _system_etc = os.path.join('/', 'etc', 'acq')
+    CONFIG_SEARCH_PATH = (_user_conf, _local_etc, _system_etc)
+
+
+def lookup_config():
+    """Copyright (c) 2014-2017 Brookhaven Science Associates, Brookhaven
+    National Laboratory"""
+    tried = []
+    for path in CONFIG_SEARCH_PATH:
+        filenames = os.listdir(path)
+        filename = next(iter(filenames), None)
+        tried.append(path)
+        if os.path.isfile(filename):
+            with open(filename) as f:
+                return yaml.load(f)
+    else:
+        raise FileNotFoundError("No config file could be found in "
+                                "the following locations:\n{}"
+                                "".format('\n'.join(tried)))
+
+
 XPDACQ_MD_VERSION = 0.1
 
 # special function and dict to store all necessary objects
@@ -48,43 +75,17 @@ def configure_device(*, area_det, shutter,
     xpd_configuration.update(**kwargs)
 
 
-# better to get this from a config file in the fullness of time
-HOME_DIR_NAME = 'xpdUser'
-BLCONFIG_DIR_NAME = 'xpdConfig'
-BEAMLINE_HOST_NAME = ['xf28id2-ws2', 'xf28id2-ws3']
-ARCHIVE_BASE_DIR_NAME = '.userBeamtimeArchive'
+glbl_dict = lookup_config()
+glbl_dict.update(USER_BACKUP_DIR_NAME=strftime('%Y'))
+
+ARCHIVE_BASE_DIR = os.path.join(glbl_dict['ARCHIVE_ROOT_DIR'], 
+                                glbl_dict['ARCHIVE_BASE_DIR_NAME'])
 USER_BACKUP_DIR_NAME = strftime('%Y')
-DARK_WINDOW = 3000  # default value, in terms of minute
-FRAME_ACQUIRE_TIME = 0.1  # pe1 frame acq time
-OWNER = 'XPD'
-BEAMLINE_ID = '28-ID-2'
-GROUP = 'XPD'
-FACILITY = 'NSLS-II'
-IMAGE_FIELD = 'pe1_image'
-CALIB_CONFIG_NAME = 'xpdAcq_calib_info.yml'
-GLBL_YAML_NAME = 'glbl.yml'
-BLCONFIG_NAME = 'XPD_beamline_config.yml'
-
-# change this to be handled by an environment variable later
-hostname = socket.gethostname()
-if hostname in BEAMLINE_HOST_NAME:
-    simulation = False
-else:
-    simulation = True
-
-if simulation:
-    BASE_DIR = os.getcwd()
-    ARCHIVE_BASE_DIR_NAME = 'userSimulationArchive'
-    ARCHIVE_BASE_DIR = os.path.join(BASE_DIR, ARCHIVE_BASE_DIR_NAME)
-else:
-    BASE_DIR = os.path.abspath('/direct/XF28ID2/pe2_data')
-    ARCHIVE_BASE_DIR = os.path.join(os.path.abspath('/direct/XF28ID2/pe1_data'),
-                                    ARCHIVE_BASE_DIR_NAME)
 
 # top directories
-HOME_DIR = os.path.join(BASE_DIR, HOME_DIR_NAME)
-BLCONFIG_DIR = os.path.join(BASE_DIR, BLCONFIG_DIR_NAME)
-
+HOME_DIR = os.path.join(glbl_dict['BASE_DIR'], glbl_dict['HOME_DIR_NAME'])
+BLCONFIG_DIR = os.path.join(glbl_dict['BASE_DIR'],
+                            glbl_dict['BLCONFIG_DIR_NAME'])
 
 # aquire object directories
 CONFIG_BASE = os.path.join(HOME_DIR, 'config_base')
@@ -105,8 +106,8 @@ ANALYSIS_DIR = os.path.join(HOME_DIR, 'userAnalysis')
 USERSCRIPT_DIR = os.path.join(HOME_DIR, 'userScripts')
 TIFF_BASE = os.path.join(HOME_DIR, 'tiff_base')
 USER_BACKUP_DIR = os.path.join(ARCHIVE_BASE_DIR, USER_BACKUP_DIR_NAME)
-GLBL_YAML_PATH = os.path.join(YAML_DIR, GLBL_YAML_NAME)
-BLCONFIG_PATH = os.path.join(BLCONFIG_DIR, BLCONFIG_NAME)
+GLBL_YAML_PATH = os.path.join(YAML_DIR, glbl_dict['GLBL_YAML_NAME'])
+BLCONFIG_PATH = os.path.join(BLCONFIG_DIR, glbl_dict['BLCONFIG_NAME'])
 
 ALL_FOLDERS = [
     HOME_DIR,
@@ -125,15 +126,15 @@ ALL_FOLDERS = [
 _EXCLUDE_DIR = [HOME_DIR, BLCONFIG_DIR, YAML_DIR]
 _EXPORT_TAR_DIR = [CONFIG_BASE, USERSCRIPT_DIR]
 
-glbl_dict = dict(is_simulation=simulation,
+glbl_dict = dict(is_simulation=glbl_dict['SIMULATION'],
                  # beamline info
-                 owner=OWNER,
-                 beamline_id=BEAMLINE_ID,
-                 group=GROUP,
-                 facility=FACILITY,
-                 beamline_host_name=BEAMLINE_HOST_NAME,
+                 owner=glbl_dict['OWNER'],
+                 beamline_id=glbl_dict['BEAMLINE_ID'],
+                 group=glbl_dict['GROUP'],
+                 facility=glbl_dict['FACILITY'],
+                 beamline_host_name=glbl_dict['BEAMLINE_HOST_NAME'],
                  # directory names
-                 base=BASE_DIR,
+                 base=glbl_dict['BASE_DIR'],
                  home=HOME_DIR,
                  _export_tar_dir=_EXPORT_TAR_DIR,
                  xpdconfig=BLCONFIG_DIR,
@@ -151,15 +152,15 @@ glbl_dict = dict(is_simulation=simulation,
                  glbl_yaml_path=GLBL_YAML_PATH,
                  blconfig_path=BLCONFIG_PATH,
                  # options for functionalities
-                 frame_acq_time=FRAME_ACQUIRE_TIME,
+                 frame_acq_time=glbl_dict['FRAME_ACQUIRE_TIME'],
                  auto_dark=True,
-                 dk_window=DARK_WINDOW,
+                 dk_window=glbl_dict['DARK_WINDOW'],
                  _dark_dict_list=[],
                  shutter_control=True,
                  auto_load_calib=True,
-                 calib_config_name=CALIB_CONFIG_NAME,
+                 calib_config_name=glbl_dict['CALIB_CONFIG_NAME'],
                  # instrument config
-                 det_image_field=IMAGE_FIELD
+                 det_image_field=glbl_dict['IMAGE_FIELD']
                  )
 
 
@@ -177,7 +178,8 @@ def configure_frame_acq_time(new_frame_acq_time):
     print("INFO: area detector has been configured to new "
           "exposure_time = {}s".format(new_frame_acq_time))
 
-def _verify_within_test(beamline_config_fp,verif):
+
+def _verify_within_test(beamline_config_fp, verif):
     while verif != "y":
         with open(beamline_config_fp, 'r') as f:
             beamline_config = yaml.load(f)
@@ -185,13 +187,14 @@ def _verify_within_test(beamline_config_fp,verif):
         verif = "y"
     beamline_config["Verified by"] = "AUTO VERIFIED IN TEST"
     timestamp = datetime.datetime.now()
-    beamline_config["Verification time"] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    beamline_config["Verification time"] = timestamp.strftime(
+        '%Y-%m-%d %H:%M:%S')
     with open(beamline_config_fp, 'w') as f:
-        yaml.dump(beamline_config,f)
+        yaml.dump(beamline_config, f)
     return beamline_config
-    
 
-def _load_beamline_config(beamline_config_fp, verif = "", test=False):
+
+def _load_beamline_config(beamline_config_fp, verif="", test=False):
     if not os.path.isfile(beamline_config_fp):
         raise xpdAcqException("WARNING: can not find long term beamline "
                               "configuration file. Please contact the "
@@ -201,7 +204,7 @@ def _load_beamline_config(beamline_config_fp, verif = "", test=False):
     if os_type == 'Windows':
         editor = 'notepad'
     else:
-        editor = os.environ.get('EDITOR','vim')
+        editor = os.environ.get('EDITOR', 'vim')
     if not test:
         while verif.upper() != ("Y" or "YES"):
             with open(beamline_config_fp, 'r') as f:
@@ -213,11 +216,12 @@ def _load_beamline_config(beamline_config_fp, verif = "", test=False):
                 subprocess.call([editor, beamline_config_fp])
         beamline_config["Verified by"] = input("Please input your initials: ")
         timestamp = datetime.datetime.now()
-        beamline_config["Verification time"] = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        beamline_config["Verification time"] = timestamp.strftime(
+            '%Y-%m-%d %H:%M:%S')
         with open(beamline_config_fp, 'w') as f:
-            yaml.dump(beamline_config,f)
+            yaml.dump(beamline_config, f)
     else:
-        beamline_config = _verify_within_test(beamline_config_fp,verif)
+        beamline_config = _verify_within_test(beamline_config_fp, verif)
     return beamline_config
 
 

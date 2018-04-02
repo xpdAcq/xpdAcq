@@ -1,0 +1,18 @@
+ARCHIVE_BASE_DIR_NAME: .userBeamtimeArchive
+ARCHIVE_ROOT_DIR: /direct/XF28ID2/pe1_data
+BASE_DIR: /direct/XF28ID2/pe2_data
+BEAMLINE_HOST_NAME: [xf28id2-ws2, xf28id2-ws3]
+BEAMLINE_ID: 28-ID-2
+BLCONFIG_DIR_NAME: xpdConfig
+BLCONFIG_NAME: XPD_beamline_config.yml
+CALIB_CONFIG_NAME: xpdAcq_calib_info.yml
+DARK_WINDOW: 3000
+FACILITY: NSLS-II
+FRAME_ACQUIRE_TIME: 0.1
+GLBL_YAML_NAME: glbl.yml
+GROUP: XPD
+HOME_DIR_NAME: xpdUser
+IMAGE_FIELD: pe1_image
+OWNER: XPD
+SIMULATION: false
+SHUTTER_CONF: {close: 0, open: 60}
