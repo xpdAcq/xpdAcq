@@ -53,9 +53,9 @@ script:
   - python -c "from bluesky.utils import get_history; get_history()"
   # make sure package data is correctly set
   - python -c "from xpdsim import xpd_pe1c; xpd_pe1c.get()"
+  - mkdir ~/.config/acq
   - python -c "from xpdacq.tests.conftest import *"
   # copy config file over
-  - mkdir ~/.config/acq
   - cp xpdacq/examples/sim.yaml ~/.config/
   - coverage run run_tests.py
   - coverage report -m
