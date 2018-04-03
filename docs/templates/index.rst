@@ -117,3 +117,9 @@ New features introduced to this version:
    :hidden:
 
    release_note
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   changelog
