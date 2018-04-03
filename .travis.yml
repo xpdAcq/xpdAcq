@@ -54,6 +54,9 @@ script:
   # make sure package data is correctly set
   - python -c "from xpdsim import xpd_pe1c; xpd_pe1c.get()"
   - python -c "from xpdacq.tests.conftest import *"
+  # copy config file over
+  - mkdir ~/.config/acq
+  - cp xpdacq/examples/sim.yaml ~/.config/
   - coverage run run_tests.py
   - coverage report -m
   - codecov
