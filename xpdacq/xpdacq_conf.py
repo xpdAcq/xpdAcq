@@ -51,8 +51,8 @@ def lookup_config():
             filenames = []
         filename = next(iter(filenames), None)
         tried.append(path)
-        if filename and os.path.isfile(filename):
-            with open(filename) as f:
+        if filename and os.path.isfile(os.path.join(path, filename)):
+            with open(os.path.join(path, filename)) as f:
                 return yaml.load(f)
     else:
         raise FileNotFoundError("No config file could be found in "
