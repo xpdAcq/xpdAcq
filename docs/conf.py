@@ -294,3 +294,19 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+from jinja2 import Template, Environment, FileSystemLoader
+templated_files = ['quickstart.rst']
+ctx = {'collection_env': 'collection-17Q1.0',
+       'analysis_env': 'analysis-17Q1.1',
+       }
+print(os.path.join(os.path.dirname(__file__), 'templates'))
+env = Environment(loader=FileSystemLoader([
+            'templates',
+            os.path.join(os.path.dirname(__file__), 'templates'),
+        ]))
+for tname in templated_files:
+    template = env.get_template(tname)
+    result = template.render(ctx)
+    with open(os.path.join(os.path.dirname(__file__), tname), 'wt') as f:
+        f.write(result)
