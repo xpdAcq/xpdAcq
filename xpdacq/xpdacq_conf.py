@@ -51,7 +51,7 @@ def lookup_config():
             filenames = []
         filename = next(iter(filenames), None)
         tried.append(path)
-        if os.path.isfile(filename):
+        if filename and os.path.isfile(filename):
             with open(filename) as f:
                 return yaml.load(f)
     else:
