@@ -296,6 +296,7 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
+print('rendering templates')
 templated_files = os.listdir(os.path.join(os.path.dirname(__file__),
                                           'templates'))
 ctx = {'collection_env': 'collection-17Q1.0',
@@ -308,5 +309,6 @@ env = Environment(loader=FileSystemLoader([
 for tname in templated_files:
     template = env.get_template(tname)
     result = template.render(ctx)
-    with open(os.path.join(os.path.dirname(__file__), tname), 'wt') as f:
+    with open(os.path.join(os.path.dirname(__file__), os.path.splitext(tname)[0] + '.rst'), 'wt') as f:
+        print(f.name)
         f.write(result)
