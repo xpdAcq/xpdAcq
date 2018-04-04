@@ -93,7 +93,7 @@ much more power within the ``xpdAcq`` and ``Bluesky`` software that you can expl
 you follow through the following guide step-by-step, typing the commands and seeing what happens, to get used to the software and,
 more importantly, to do things in the right order set up your experiment for success. `XPD-Users Google group
 <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ to find them. IPython terminals start the line with something like ``In[49]:`` and ``Out[50]``, so you should
-see that in a terminal.  Try typing ``show_env()``.  If you see something like ``collection-17Q1.0`` or ``analysis-17Q1.1``
+see that in a terminal.  Try typing ``show_env()``.  If you see something like ``{{collection_env}}`` or ``{{analysis_env}}``
 (the numbers will change with time) then you are good, you will use these terminals to run your
 experiment and to visualize and analyze your data, respectively.  We recommend that you run ``collection`` on
 work-station 2 (the central computer, look for ``ws2`` in the title at the top of the terminal windows) and
@@ -106,7 +106,7 @@ and type ``setup_analysis`` for in the analysis terminal for analysis environmen
 
 
 2. Make sure that the software has been properly configured for your beamtime. In
-your ``collection-yyQn.x`` terminal, type:
+your ``{{collection_env}}`` terminal, type:
 
 .. code-block:: python
 
@@ -130,7 +130,7 @@ Check that your analysis environment is correctly set up
 1. Analysis is done in a separate (but very similar) environment to acquisition.
 This will be in a separate terminal window.
 Use the instructions given above for ``collection`` to check you have found the right terminal window.
-For data analysis ``show_env()`` should return something like ``analysis-17Q3.0``.
+For data analysis ``show_env()`` should return something like ``{{analysis_env}}``.
 
 2. The analysis pipeline will start up automatically.
 
@@ -190,7 +190,7 @@ collection environment.
 """""""""""""""""""""""""""
 
 Place any sample, but maybe the Ni calibrant, at the sample position.  Let's make sure we are getting a nice
-Ni diffraction pattern. In your ``collection-yyQn.x`` terminal type:
+Ni diffraction pattern. In your ``{{collection_env}}`` terminal type:
 
 .. code-block:: python
 
@@ -229,7 +229,7 @@ defined format (a template file may be found at `XPD-Users Google group
 If the IS didn't already do it, save your sample xls file to the ``.../xpdUser/import`` directory using the name
 ``<saf_number>_sample.xlsx``, where you replace ``<saf_number>`` with the number
 of the safety approval form associated with your experiment.  If you are not sure
-what your ``saf_number`` is you can get it by typing the following command in your ````collection-yyQn.x`` terminal:
+what your ``saf_number`` is you can get it by typing the following command in your ``{{collection_env}}`` terminal:
 
 .. code-block:: python
 
@@ -262,7 +262,7 @@ For more info :ref:`import_sample`.
 """"""""""""""
 run this first, then run it again each time the geometry of your measurement changes.
 
-Place the Ni calibrant at the sample position, close the hutch and open the shutter then type in your ``collection-yyQn.x`` terminal:
+Place the Ni calibrant at the sample position, close the hutch and open the shutter then type in your ``{{collection_env}}`` terminal:
 
 .. code-block:: python
 
@@ -321,7 +321,7 @@ For more info: :ref:`auto_mask`.
 
 Now it is time to collect some data.  Load one of your samples on the diffractometer
 and close up the hutch.  To collect a dataset from a sample you will type at the
-``collection-yyQn.x`` terminal: ``xrun(<sample-object>,<ScanPlan-object>)``
+``{{collection_env}}`` terminal: ``xrun(<sample-object>,<ScanPlan-object>)``
 
 where the ``<sample-object>`` contains sample information from the Excel spreadsheet,
 and ``<ScanPlan-object>`` contains information about the scan.  You will make your
@@ -463,7 +463,7 @@ and that they are correctly linked to the samples for which they are the backgro
 
   1. Load the background sample (e.g., empty kapton tube) on the instrument
 
-  2. In your ``collection-yyQn.x`` terminal type
+  2. In your ``{{collection_env}}`` terminal type
 
     .. code-block:: python
 
@@ -472,7 +472,7 @@ and that they are correctly linked to the samples for which they are the backgro
     to locate the relevant background sample object, for example it might be ``kapton-1mmID``
     at position 3 in the list.
 
-  3. Then in the ``collection-yyQn.x`` terminal, you will type ``xrun`` giving as arguments the background sample-object with a ``ct`` ScanPlan object of the desired exposure.
+  3. Then in the ``{{collection_env}}`` terminal, you will type ``xrun`` giving as arguments the background sample-object with a ``ct`` ScanPlan object of the desired exposure.
 
     .. code-block:: python
 
@@ -514,7 +514,7 @@ Get your data
 1. Save images and metadata from scans
 """"""""""""""""""""""""""""""""""""""
 
-These commands can be run in the ``collection-yyQn.x`` or the ``analysis-yyQn.x`` ipython environments.
+These commands can be run in the ``{{collection_env}}`` or the ``{{analysis_env}}`` ipython environments.
 
 Data are saved in the directory ``.../xpdUser/tiff_base/<sample_name>`` where ``<sample_name>`` is the name of the
 sample that you used in the sample spreadsheet, and is the name of the ``Sample`` object.
@@ -541,7 +541,7 @@ you write a script to run your experiment, it will typically have ``xrun(<#>,<#>
 ``integrate_and_save_last()``
 
 The following
-functions are more useful for running in the ``analysis-yyQn.x`` environment to fetch scans from the database
+functions are more useful for running in the ``{{analysis_env}}`` environment to fetch scans from the database
 selectively if you don't want a dump of every scan.
 
 **save images from last 2 scans:**
@@ -574,9 +574,9 @@ more information on headers is `here <http://nsls-ii.github.io/databroker/header
   integrate_and_save_last()   # the most recent scan
 
 You could use this instead of ``save_last_tiff()`` as part of your acquisition
-sequence by typing it in the ``collection-yyQn.x`` environment.
+sequence by typing it in the ``{{collection_env}}`` environment.
 
-Or use these in the ``analysis-yyQn.x`` environment to be analyzing data over here as
+Or use these in the ``{{analysis_env}}`` environment to be analyzing data over here as
 the data are being collected over there...
 
 .. code-block:: python
@@ -690,7 +690,7 @@ Recovering from the paused state caused by an interrupt
 """""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 After a pause, when you are ready to continue working, type one of these commands
-into the ``collection-yyQn.x`` environment:
+into the ``{{collection_env}}`` environment:
 
 ============== ===========
 Command        Outcome

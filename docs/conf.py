@@ -41,6 +41,7 @@ templates_path = ['_templates']
 
 
 from recommonmark.parser import CommonMarkParser
+from jinja2 import Template, Environment, FileSystemLoader
 from xpdacq import __version__ as REVER_VERSION
 
 source_parsers = {
@@ -294,3 +295,18 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+templated_files = os.listdir(os.path.join(os.path.dirname(__file__),
+                                          'templates'))
+ctx = {'collection_env': 'collection-17Q1.0',
+       'analysis_env': 'analysis-17Q1.1',
+       }
+env = Environment(loader=FileSystemLoader([
+            'templates',
+            os.path.join(os.path.dirname(__file__), 'templates'),
+        ]))
+for tname in templated_files:
+    template = env.get_template(tname)
+    result = template.render(ctx)
+    with open(os.path.join(os.path.dirname(__file__), tname), 'wt') as f:
+        f.write(result)
