@@ -11,3 +11,4 @@ For Beamline Staff
    sb_icollection
    sb_newBeamtime
    sb_endBeamtime
+   configuration
