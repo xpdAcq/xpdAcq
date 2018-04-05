@@ -633,6 +633,15 @@ class CustomizedRunEngine(RunEngine):
         sample, plan = self._normalize_sample_plan(sample, plan)
         # Turn ints into actual samples
         sample = self.translate_to_sample(sample)
+        if robot:
+            print('This is the current experimental plan:')
+            for s, p in zip(*[(k, [o[1] for o in v]) for k, v in groupby(zip(sample, plan), key=lambda x: x[0])]):
+                print(s)
+                for pp in p:
+                    print('|------- {}'.format(pp))
+            ip = input('is this ok? [y]/n')
+            if ip.lower() == 'n':
+                return
         # Turn ints into generators
         plan = self.translate_to_plan(plan, sample)
 
