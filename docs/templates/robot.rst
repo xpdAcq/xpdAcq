@@ -37,7 +37,7 @@ For example
 Advanced usage
 --------------
 
-The robot and ``xrun`` are more flexable than just running one scan.
+The robot and ``xrun`` are more flexible than just running one scan.
 Multiple scans can be run per sample.
 
 For example here is a run that runs 3 different plans per sample
@@ -53,7 +53,7 @@ The number of scans doesn't need to be a multiple of the number of samples.
 
     .. code-block:: python
 
-       xurn([3, 4, 5, 5], [2, 2, 2, 5], robot=True)
+       xrun([3, 4, 5, 5], [2, 2, 2, 5], robot=True)
 
 The only constraint is that if the scans are in a list, that the number of
 samples needs to equal the number of scans.

@@ -208,7 +208,7 @@ The definition of **fresh and appropriate** is:
 
   Having ``auto_dark`` set to ``True`` is strongly recommended as this enables
   ``xpdAcq`` to do automated dark frame subtraction when you pull out data from the
-  centralized **NSLSL-II** server.
+  centralized **NSLS-II** server.
 
 
 .. _auto_calib:
@@ -247,7 +247,7 @@ something like this:
   The magnifying tool is enabled by clicking on the button on the toolbar that
   looks like a magnifying glass.
 
-  Now we will select five rings that PyFai will use to do the calibration.  To do this
+  Now we will select five rings that PyFAI will use to do the calibration.  To do this
   click on the magnifying glass button again to deselect the magnifying tool so the cursor
   looks like an arrow.  You will place the tip
   of the arrow on the first ring and then **RIGHT click**.  you will see dots going around the
@@ -300,7 +300,7 @@ something like this:
    You can also find the calibration parameters in a file called
    ``pyFAI_calib.yml`` in ``.../xpdUser/config_base``
 
-3. To clean up you can close all the PyFai windows, including
+3. To clean up you can close all the PyFAI windows, including
    the 1D integration and 2D regrouping results that pop out (see below).
    Return to the ``Quick start tutorial`` by hitting the browser back-arrow.
 
@@ -342,7 +342,7 @@ directory. Then the import process is simply:
 
 
 To parse the information filled inside your spreadsheet, we have designed
-several rules and here are the explantion to each of the rules.
+several rules and here are the explanation to each of the rules.
 
 comma separated fields
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -464,7 +464,7 @@ phase string
   header. Also a search on ``Nacl=0.09`` will include this header as well.
 
 
-dictonary-like fields
+dictionary-like fields
 ^^^^^^^^^^^^^^^^^^^^^
 
   Fields that are utilized to store information as ``key-value pair`` format.
@@ -473,7 +473,7 @@ dictonary-like fields
   Fields following this parsing rule are:
 
   =====================================  ===================================
-  ``structrual database ID for phases``  database name and the ID for
+  ``structural database ID for phases``  database name and the ID for
                                          sample phases
   =====================================  ===================================
 

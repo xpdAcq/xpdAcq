@@ -69,8 +69,8 @@ Device-related options
 
     All of the changes applied to ``xpd_configuration`` only lives
     within one ``ipython`` session. So if you exit out the terminal and 
-    come back, remeber to repeat the configuration step *again*.
+    come back, remember to repeat the configuration step *again*.
 
     .. note::
 
-      desired objects (``eurotherm`` and ``shctl2`` above, for example) should be properly *configured*. How to properly configure a device is beyond the scode of this website, if you have specific requests, please contact beamline staff for more details.
+      desired objects (``eurotherm`` and ``shctl2`` above, for example) should be properly *configured*. How to properly configure a device is beyond the scope of this website, if you have specific requests, please contact beamline staff for more details.

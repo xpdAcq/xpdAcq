@@ -31,10 +31,10 @@ Process Steps
 
     * **File size and contents of remote copy are confirmed to be consistent wit local tree**
 
-      Enter ``y`` in the inteactive command prompt then program will flush all directories under ``xpdUser``
+      Enter ``y`` in the interactive command prompt then program will flush all directories under ``xpdUser``
       and successfully end a beamtime.
 
     * **File size or contents in remote copy appear to be inconsistent with local tree**
 
       Please answer ``n`` in the interactive command prompt and program will stop at this point.
-      No user data will be removed. Please report a bug on `github <https://github.com/xpdAcq/xpdAcq>`_
+      No user data will be removed. Please report a bug on `GitHub <https://github.com/xpdAcq/xpdAcq>`_
