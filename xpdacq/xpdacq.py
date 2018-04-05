@@ -605,6 +605,8 @@ class CustomizedRunEngine(RunEngine):
             to the logic of matching dark frame and light frame with
             the sample exposure time and frame rate. Details can be
             found at ``http://xpdacq.github.io/xpdAcq/usb_Running.html#automated-dark-collection``
+        robot: bool, optional
+            If true run the scan as a robot scan, defaults to False
         metadata_kw:
             Extra keyword arguments for specifying metadata in the
             run time. If the extra metdata has the same key as the

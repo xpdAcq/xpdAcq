@@ -114,6 +114,6 @@ environment setup that need to be fixed. If you ever do have to create
 
 .. code-block:: python
 
-  >>> bt = Beamtime('Billinge',300256, ['Simon','Billinge', 'Chia-Hao','Liu'], 0.18326)
+  >>> bt = Beamtime('Billinge', 300256, ['Simon','Billinge', 'Chia-Hao','Liu'], 0.18326)
 
 We will assume that ``bt`` exists.  Now, we move on to the next step, :ref:`usb_experiment` within our beamtime.
