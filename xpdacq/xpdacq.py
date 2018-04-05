@@ -638,7 +638,7 @@ class CustomizedRunEngine(RunEngine):
             for s, p in zip(*[(k, [o[1] for o in v]) for k, v in groupby(zip(sample, plan), key=lambda x: x[0])]):
                 print(s)
                 for pp in p:
-                    print('|------- {}'.format(pp))
+                    print('|------- {}'.format(self.beamtime.scanplans[pp]))
             ip = input('is this ok? [y]/n')
             if ip.lower() == 'n':
                 return

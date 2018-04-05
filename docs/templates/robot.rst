@@ -25,7 +25,9 @@ If the sample is not in the magazine that's ok just leave the prompt
 -----------------------------------
 
 To run the scans run
-``run(<list of sample numbers>, <scan number>, robot=True)``
+``run(<list of sample numbers>, <scan number>, robot=True)``.
+``xrun`` will report the contents of the scan so you can review it before
+executing.
 
 For example
 
