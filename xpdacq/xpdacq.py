@@ -642,6 +642,8 @@ class CustomizedRunEngine(RunEngine):
         total_plan = []
         for s, p in zip(sample, plan):
             if robot:
+                # If robot scan inject the needed md into the sample
+                s.update(self._beamtime.robot_info[s['uid']])
                 total_plan.append(robot_wrapper(p, s))
             else:
                 total_plan.append(p)

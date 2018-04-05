@@ -534,6 +534,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self._referenced_by = []
         # used by YamlDict when reload
         self.setdefault('bt_uid', new_short_uid())
+        self.robot_info = {}
 
     @property
     def wavelength(self):
@@ -636,6 +637,35 @@ class Beamtime(ValidatedDictLike, YamlDict):
                                           enumerate(self.samples.keys())
                                           if sa_name.startswith('bkgd')]
         print('\n'.join(contents))
+
+    def robot_location_number(self):
+        while True:
+            # Note: geometry needs to be in sample spreadsheet
+            ip = input('Input location, sample number:'
+                       '<location>, <sample number>\n'
+                       'If done, enter done').strip().replace(' ', '')
+            if ip.lower() == 'done':
+                break
+            loc, sn = ip.split(',')
+            self.robot_info[self.samples[sn]['uid']] = {
+                'robot_identifier': loc}
+
+    def robot_barcode_number(self):
+        # PROTOTYPE!!!
+        # while True:
+            # ask for user input
+            # ask for QR from reader
+            # if done brak
+        pass
+
+    def robot_barcode_barcode(self):
+        # PROTOTYPE!!!
+        # Read from barcode reader
+        # split into base and sample via mod 2
+        qrs = []
+        locs, sample_barcode = qrs[::2], qrs[1::2]
+        for l, sb in zip(locs, sample_barcode):
+            self.robot_info[sb] = {'robot_identifer': l}
 
 
 class Sample(ValidatedDictLike, YamlChainMap):
