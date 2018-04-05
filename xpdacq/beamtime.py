@@ -654,7 +654,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
                 self.robot_info[self.samples[sample]['uid']] = {
                     'robot_identifier': loc}
 
-    def robot_barcode_number(self):
+    def _robot_barcode_number(self):
         # PROTOTYPE!!!
         # while True:
         # ask for user input
@@ -662,7 +662,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
         # if done brake
         raise NotImplementedError('This is currently not implemented')
 
-    def robot_barcode_barcode(self):
+    def _robot_barcode_barcode(self):
         # PROTOTYPE!!!
         # Read from barcode reader
         # split into base and sample via mod 2
