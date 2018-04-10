@@ -401,7 +401,7 @@ When the scan has completed, type
 
   integrate_and_save_last()    #remember you can use tab-complete to see what is available
 
-This function saves the just-measured dataset as a tif file in the ``.../xpdUser/tiff_base/Setup``
+This function saves the just-measured dataset as a tiff file in the ``.../xpdUser/tiff_base/Setup``
 directory (as long as you are using the Setup sample-object at position 0).  To view the raw
 data, find your SrXgui window, and use the instructions above to play around with the image.
 
@@ -482,12 +482,12 @@ and that they are correctly linked to the samples for which they are the backgro
       # but to test it you could replace bt.scanplan[3] with bt.scanplan[0]....
 
       # referencing objects explicitly...or...
-      xrun(bt.samples['kepton_1mmOD'], bt.scanplan['ct_900'])
+      xrun(bt.samples['kapton_1mmOD'], bt.scanplan['ct_900'])
 
       # inexplicit: give reference to ``Sample`` and ``ScanPlan`` index from the ``bt`` list.
       xrun(2,3)
 
-  More details are avaliable :ref:`here <background_obj>`.
+  More details are available :ref:`here <background_obj>`.
 
   How long should you run your background scan for? See discussion `here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
   but for kapton we often do it for 15-30 minutes, though it can be highly dependent

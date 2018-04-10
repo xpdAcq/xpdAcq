@@ -121,10 +121,10 @@ def _shutter_step(detectors, motor, step):
     yield from bps.checkpoint()
     yield from bps.abs_set(motor, step, wait=True)
     yield from bps.abs_set(xpd_configuration['shutter'],
-                          XPD_SHUTTER_CONF['open'], wait=True)
+                           XPD_SHUTTER_CONF['open'], wait=True)
     yield from bps.trigger_and_read(list(detectors) + [motor])
     yield from bps.abs_set(xpd_configuration['shutter'],
-                          XPD_SHUTTER_CONF['close'], wait=True)
+                           XPD_SHUTTER_CONF['close'], wait=True)
 
 
 def ct(dets, exposure):
@@ -386,7 +386,8 @@ def _nstep(start, stop, step_size):
           .format(step_size, computed_step_size))
     return computed_nsteps, computed_step_size
 
-#FIXME: this scanplan is hot-fix for multi-sample scanplan. It serves as
+
+# FIXME: this scanplan is hot-fix for multi-sample scanplan. It serves as
 #       a prototype of the future scanplans but it's incomplete.
 def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
               bt=None):
@@ -409,34 +410,34 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
     _sorted_mapping = sorted(sample_mapping.items(), key=lambda x: x[1])
     sp_uid = str(uuid.uuid4())
     xpdacq_md = {'sp_time_per_frame': acq_time,
-                'sp_num_frames': num_frame,
-                'sp_requested_exposure': exposure,
-                'sp_computed_exposure': computed_exposure,
-                'sp_type': 'statTramp',
-                'sp_startingT': Tstart,
-                'sp_endingT': Tstop,
-                'sp_requested_Tstep': Tstep,
-                'sp_computed_Tstep': computed_step_size,
-                'sp_Nsteps': Nsteps,
-                'sp_uid': sp_uid,
-                'sp_plan_name': 'statTramp'}
+                 'sp_num_frames': num_frame,
+                 'sp_requested_exposure': exposure,
+                 'sp_computed_exposure': computed_exposure,
+                 'sp_type': 'statTramp',
+                 'sp_startingT': Tstart,
+                 'sp_endingT': Tstop,
+                 'sp_requested_Tstep': Tstep,
+                 'sp_computed_Tstep': computed_step_size,
+                 'sp_Nsteps': Nsteps,
+                 'sp_uid': sp_uid,
+                 'sp_plan_name': 'statTramp'}
     # plan
     uids = {k: [] for k in sample_mapping.keys()}
     yield from bp.mv(temp_controller, Tstart)
     for t in np.linspace(Tstart, Tstop, Nsteps):
         yield from bp.mv(temp_controller, t)
-        for s, pos in _sorted_mapping: # sample ind
+        for s, pos in _sorted_mapping:  # sample ind
             yield from bp.mv(stat_motor, pos)
             # update md
             md = list(bt.samples.values())[int(s)]
             _md = ChainMap(md, xpdacq_md)
             plan = bp.count([temp_controller, stat_motor,
-                             ring_current]+dets, md=_md)
+                             ring_current] + dets, md=_md)
             plan = bp.subs_wrapper(plan, LiveTable([area_det,
                                                     temp_controller,
                                                     stat_motor,
                                                     ring_current]))
-            #plan = bp.baseline_wrapper(plan, [temp_controller,
+            # plan = bp.baseline_wrapper(plan, [temp_controller,
             #                                  stat_motor,
             #                                  ring_current])
             uid = yield from plan
@@ -456,13 +457,16 @@ def statTramp(dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *,
         df.to_csv(fn)
     return uids
 
-#stream_name='primary'
+
+# stream_name='primary'
 
 register_plan('ct', ct)
 register_plan('Tramp', Tramp)
 register_plan('tseries', tseries)
 register_plan('Tlist', Tlist)
-#register_plan('statTramp', statTramp)
+
+
+# register_plan('statTramp', statTramp)
 
 def new_short_uid():
     return str(uuid.uuid4())[:8]
@@ -534,6 +538,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self._referenced_by = []
         # used by YamlDict when reload
         self.setdefault('bt_uid', new_short_uid())
+        self.robot_info = {}
 
     @property
     def wavelength(self):
@@ -636,6 +641,36 @@ class Beamtime(ValidatedDictLike, YamlDict):
                                           enumerate(self.samples.keys())
                                           if sa_name.startswith('bkgd')]
         print('\n'.join(contents))
+
+    def robot_location_number(self):
+        print('Please input the location of each sample in the robot'
+              'magazine. If the sample is not in the magazine just leave it '
+              'blank and hit <enter>.')
+        for i, sample in enumerate(self.samples.keys()):
+            print(i, sample)
+            ip = input()
+            if ip:
+                loc = int(ip)
+                self.robot_info[self.samples[sample]['uid']] = {
+                    'robot_identifier': loc}
+
+    def _robot_barcode_number(self):
+        # PROTOTYPE!!!
+        # while True:
+        # ask for user input
+        # ask for QR from reader
+        # if done brake
+        raise NotImplementedError('This is currently not implemented')
+
+    def _robot_barcode_barcode(self):
+        # PROTOTYPE!!!
+        # Read from barcode reader
+        # split into base and sample via mod 2
+        qrs = []
+        locs, sample_barcode = qrs[::2], qrs[1::2]
+        for l, sb in zip(locs, sample_barcode):
+            self.robot_info[sb] = {'robot_identifer': l}
+        raise NotImplementedError('This is currently not implemented')
 
 
 class Sample(ValidatedDictLike, YamlChainMap):
@@ -770,7 +805,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         # empty list is for [pe1c]
         bound_arguments = signature.bind([], *self['sp_args'],
                                          **self['sp_kwargs'])
-        #bound_arguments.apply_defaults() # only valid in py 3.5
+        # bound_arguments.apply_defaults() # only valid in py 3.5
         complete_kwargs = bound_arguments.arguments
         # remove place holder for [pe1c]
         complete_kwargs.popitem(False)

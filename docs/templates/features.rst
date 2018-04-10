@@ -54,7 +54,7 @@ And period of dark window can be modified by:
 
 Having ``auto_dark`` set to ``True`` is strongly recommended as this enables
 ``xpdAcq`` to do automated dark frame subtraction when you pull out data from
-centralized **NSLSL-II** server.
+centralized **NSLS-II** server.
 
 .. _auto_calib:
 
@@ -138,7 +138,7 @@ parsing rules
 
 * **comma separated fields**: information entities are separated by a comma.
 
-    * ``cif name``: pointer of potential structures for your sampel, if any.
+    * ``cif name``: pointer of potential structures for your sample, if any.
 
     * ``Tags``: any comment you want to put on for this measurement.
 

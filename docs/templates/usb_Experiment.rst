@@ -1,6 +1,6 @@
 .. _usb_experiment:
 
-Setting up your XPD acuisition objects
+Setting up your XPD acquisition objects
 --------------------------------------
 
 Overview
@@ -49,7 +49,7 @@ ipython will remind you of what the arguments are for that function.
   sample_md : dict
    dictionary contains all sample related metadata
   kwargs :
-   keyword arguments for extr metadata
+   keyword arguments for extra metadata
 
   Examples
   --------
@@ -134,7 +134,7 @@ For the InGaAs phase diagram study for example,we may have to make 5 samples:
 
 Here, careful inspection will indicate that among various ``Sample`` objects,
 there are different sample-ID ``sa_uid`` and ``sample_name`` but all the ``beamtime``
-leve metadata are the same as the other samples (because this series of samples
+level metadata are the same as the other samples (because this series of samples
 is being done at the same beamtime!).
 
 Hopefully you are getting the picture.  We will hand these sample

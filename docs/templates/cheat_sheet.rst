@@ -15,7 +15,7 @@ Here is a sample code covering the entire process from defining ``Sample`` and
   # Ideally, Sample information should be filled before you come.
   # you can fill out the spreadsheet and then use ``import_sample`` function.
   # Let's still have an example here of how to do it explicitly
-  Sample(bt, 'sammple_name':'NaCl',
+  Sample(bt, 'sample_name':'NaCl',
          {'sample_composition': {'Na':0.5, 'Cl':0.5},
           'sample_phase': {'NaCl':1},
           'composition_string': 'Na0.09Cl0.09H1.82O0.91',

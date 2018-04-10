@@ -563,6 +563,7 @@ class CustomizedRunEngine(RunEngine):
 
     def __call__(self, sample, plan, subs=None, *,
                  verify_write=False, dark_strategy=periodic_dark,
+                 robot=False,
                  **metadata_kw):
         """
         Execute a plan
@@ -572,7 +573,7 @@ class CustomizedRunEngine(RunEngine):
 
         Parameters
         ----------
-        sample : int or dict-like
+        sample : int or dict-like or list of int or dict-like
             Sample metadata. If a beamtime object is linked,
             an integer will be interpreted as the index appears in the
             ``bt.list()`` method, corresponding metadata will be passed.
@@ -604,6 +605,8 @@ class CustomizedRunEngine(RunEngine):
             to the logic of matching dark frame and light frame with
             the sample exposure time and frame rate. Details can be
             found at ``http://xpdacq.github.io/xpdAcq/usb_Running.html#automated-dark-collection``
+        robot: bool, optional
+            If true run the scan as a robot scan, defaults to False
         metadata_kw:
             Extra keyword arguments for specifying metadata in the
             run time. If the extra metdata has the same key as the
@@ -614,7 +617,12 @@ class CustomizedRunEngine(RunEngine):
         uids : list
             list of uids (i.e. RunStart Document uids) of run(s)
         """
-        if isinstance(sample, list):
+        if self.md.get('robot', None) is not None:
+            raise RuntimeError('Robot must be specified at call time, not in'
+                               'global metadata')
+        if robot:
+            metadata_kw.update(robot=True)
+        if not robot and isinstance(sample, list):
             raise RuntimeError('Multiple samples is not supported without'
                                'the robot')
         # The CustomizedRunEngine knows about a Beamtime object, and it
@@ -625,6 +633,15 @@ class CustomizedRunEngine(RunEngine):
         sample, plan = self._normalize_sample_plan(sample, plan)
         # Turn ints into actual samples
         sample = self.translate_to_sample(sample)
+        if robot:
+            print('This is the current experimental plan:')
+            for s, p in zip(*[(k, [o[1] for o in v]) for k, v in groupby(zip(sample, plan), key=lambda x: x[0])]):
+                print(s)
+                for pp in p:
+                    print('|------- {}'.format(self.beamtime.scanplans[pp]))
+            ip = input('is this ok? [y]/n')
+            if ip.lower() == 'n':
+                return
         # Turn ints into generators
         plan = self.translate_to_plan(plan, sample)
 
@@ -635,7 +652,12 @@ class CustomizedRunEngine(RunEngine):
         # Make the complete plan by chaining the chained plans
         total_plan = []
         for s, p in zip(sample, plan):
-            total_plan.append(p)
+            if robot:
+                # If robot scan inject the needed md into the sample
+                s.update(self._beamtime.robot_info[s['uid']])
+                total_plan.append(robot_wrapper(p, s))
+            else:
+                total_plan.append(p)
         plan = pchain(*total_plan)
 
         _subs = normalize_subs_input(subs)
@@ -672,3 +694,36 @@ class CustomizedRunEngine(RunEngine):
         # Execute
         return super().__call__(plan, subs,
                                 **metadata_kw)
+
+
+# For convenience, define short plans the use these custom commands.
+
+def load_sample(position, geometry=None):
+    # TODO: I think this can be simpler.
+    return (yield from single_gen(Msg('load_sample', glbl['robot'],
+                                      position, geometry)))
+
+
+def unload_sample():
+    # TODO: I think this can be simpler.
+    return (yield from single_gen(Msg('unload_sample', glbl['robot'])))
+
+
+# These are usable bluesky plans.
+
+def robot_wrapper(plan, sample):
+    """Wrap a plan in load/unload messages.
+    Parameters
+    ----------
+    plan : a bluesky plan
+    sample : dict
+        must contain 'position'; optionally also 'geometry'
+    Example
+    -------
+    >>> plan = count([pe1c])
+    >>> new_plan = robot_wrapper(plan, {'position': 1})
+    """
+    yield from load_sample(sample['robot_identifier'],
+                           sample.get('robot_geometry', None))
+    yield from plan
+    yield from unload_sample()

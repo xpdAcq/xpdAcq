@@ -15,3 +15,4 @@ For XPD Users
    usb_Running
    usb_QuickAssess
    usb_GlobalOptions
+   robot
