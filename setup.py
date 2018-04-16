@@ -8,6 +8,7 @@ setup(
     description='acquisition module',
     zip_safe=False,
     package_data={'xpdacq': ['data/*.D', 'tests/*.D',
-                             'tests/*.xls*', 'tests/*.yml']},
+                             'tests/*.xls*', 'tests/*.yml',
+                             'examples/*.yaml']},
     url='http:/github.com/xpdAcq/xpdacq'
 )

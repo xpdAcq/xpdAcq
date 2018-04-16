@@ -26,6 +26,8 @@ import warnings
 import subprocess
 import sys
 
+from pkg_resources import resource_filename as rs_fn
+
 from .yamldict import YamlDict
 from .tools import xpdAcqException
 
@@ -38,6 +40,9 @@ else:
                               'etc', 'acq')
     _system_etc = os.path.join('/', 'etc', 'acq')
     CONFIG_SEARCH_PATH = (_user_conf, _local_etc, _system_etc)
+
+
+sim_config_path = rs_fn('xpdacq', 'examples/sim.yaml')
 
 
 def lookup_config():
@@ -55,9 +60,13 @@ def lookup_config():
             with open(os.path.join(path, filename)) as f:
                 return yaml.load(f)
     else:
-        raise FileNotFoundError("No config file could be found in "
+        print("No config file could be found in "
                                 "the following locations:\n{}"
                                 "".format('\n'.join(tried)))
+        print('Loading from packaged simulation configuration')
+        with open(sim_config_path) as f:
+            return yaml.load(f)
+        
 
 
 XPDACQ_MD_VERSION = 0.1
