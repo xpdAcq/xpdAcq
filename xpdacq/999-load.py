@@ -24,11 +24,12 @@ if glbl_dict['is_simulation']:
                                    ring_current, fb)
     pe1c = xpd_pe1c # alias
 
-configure_device(area_det=pe1c, shutter=fs,
+configure_device(area_det=pe1c, shutter=fs, db=db,
                  # they are not ready at PDF beamline at this moment
-                 #temp_controller=cs700, db=db,
+                 #temp_controller=cs700, 
                  #filter_bank=fb,
-                 #ring_current=ring_current)
+                 #ring_current=ring_current
+                 )
 
 # cache previous glbl state
 reload_glbl_dict = _reload_glbl()
