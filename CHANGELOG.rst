@@ -3,6 +3,16 @@ xpdAcq Change Log
 
 .. current developments
 
+v0.8.0rc
+====================
+
+**Fixed:**
+
+* Use simulation config if all else fails
+
+
+
+
 v0.7.2
 ====================
 
