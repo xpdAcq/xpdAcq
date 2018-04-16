@@ -28,7 +28,7 @@ configure_device(area_det=pe1c, shutter=fs, db=db,
                  # they are not ready at PDF beamline at this moment
                  #temp_controller=cs700, 
                  #filter_bank=fb,
-                 #ring_current=ring_current
+                 ring_current=ring_current
                  )
 
 # cache previous glbl state
