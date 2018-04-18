@@ -57,7 +57,7 @@ def bt(home_dir):
     config = 'XPD_beamline_config.yml'
     configsrc = os.path.join(pytest_dir, config)
     shutil.copyfile(configsrc, glbl_dict['blconfig_path'])
-    assert(dlbl_dict['blconfig_path']))            
+    assert os.path.isfile(glbl_dict['blconfig_path'])
     bt = _start_beamtime(PI_name, saf_num,
                          experimenters,
                          wavelength=wavelength,test=True)

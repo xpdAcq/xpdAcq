@@ -40,6 +40,7 @@ class BeamtimeObjTest(unittest.TestCase):
         config = 'XPD_beamline_config.yml'
         configsrc = os.path.join(pytest_dir, config)
         shutil.copyfile(configsrc, os.path.join(glbl['xpdconfig'], config))
+        assert os.path.isfile(os.path.join(glbl['xpdconfig'], config))
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength,test=True)
