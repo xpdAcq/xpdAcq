@@ -33,10 +33,6 @@ from xpdsim import (cs700, xpd_pe1c, simple_pe1c, shctl1, ring_current,
 from pkg_resources import resource_filename as rs_fn
 
 
-if not os.path.exists(glbl_dict['home']):
-    os.makedirs(glbl_dict['home'])
-
-
 @pytest.fixture(scope='module')
 def db():
     from xpdsim import db, sim_db_dir
@@ -76,7 +72,11 @@ def bt(home_dir):
 @pytest.fixture(scope='function')
 def glbl(bt):
     from xpdacq.glbl import glbl
+    if not os.path.exists(glbl['home']):
+        os.makedirs(glbl['home'])
     yield glbl
+    # when we are done with the glbl delete the folders.
+    shutil.rmtree(glbl['home'])
 
 
 @pytest.fixture(scope='module')
