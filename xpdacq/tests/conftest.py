@@ -56,7 +56,7 @@ def bt(home_dir):
     pytest_dir = rs_fn('xpdacq', 'tests/')
     config = 'XPD_beamline_config.yml'
     configsrc = os.path.join(pytest_dir, config)
-    shutil.copyfile(configsrc, glbl['blconfig_path'])
+    shutil.copyfile(configsrc, glbl_dict['blconfig_path'])
     assert(os.path.isfile(os.path.join(glbl_dict['xpdconfig'], config)))            
     bt = _start_beamtime(PI_name, saf_num,
                          experimenters,
