@@ -31,8 +31,8 @@ pytest_dir = rs_fn('xpdacq', 'tests/')
 class xrunTest(unittest.TestCase):
     def setUp(self):
         self.base_dir = glbl['base']
-        self.home_dir = os.path.join(self.base_dir, 'xpdUser')
-        self.config_dir = os.path.join(self.base_dir, 'xpdConfig')
+        self.home_dir = glbl['home_dir']
+        self.config_dir = glbl['xpdconfig']
         self.PI_name = 'Billinge '
         # must be 30000 for proper load of config yaml => don't change
         self.saf_num = 300000
