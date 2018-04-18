@@ -26,7 +26,8 @@ import bluesky.preprocessors as bpp
 from bluesky.callbacks import LiveTable
 
 from .glbl import glbl
-from .xpdacq_conf import xpd_configuration, XPD_SHUTTER_CONF
+from .xpdacq_conf import xpd_configuration
+from xpdconf.conf import XPD_SHUTTER_CONF
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 from .tools import regularize_dict_key

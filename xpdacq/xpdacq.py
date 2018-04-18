@@ -34,8 +34,8 @@ from bluesky.preprocessors import pchain
 from xpdacq.glbl import glbl
 from xpdacq.tools import xpdAcqException
 from xpdacq.beamtime import ScanPlan, _summarize
-from xpdacq.xpdacq_conf import (xpd_configuration, XPD_SHUTTER_CONF,
-                                XPDACQ_MD_VERSION)
+from xpdacq.xpdacq_conf import (xpd_configuration, XPDACQ_MD_VERSION)
+from xpdconf.conf import XPD_SHUTTER_CONF
 
 XPD_shutter = xpd_configuration.get('shutter')
 
