@@ -67,6 +67,8 @@ def bt(home_dir):
     shutil.copyfile(src, os.path.join(glbl_dict['import_dir'], xlf))
     import_sample_info(saf_num, bt)
     yield bt
+    # when we are done with the glbl delete the folders.
+    shutil.rmtree(glbl_dict['home'])
 
 
 @pytest.fixture(scope='function')
@@ -75,8 +77,6 @@ def glbl(bt):
     if not os.path.exists(glbl['home']):
         os.makedirs(glbl['home'])
     yield glbl
-    # when we are done with the glbl delete the folders.
-    shutil.rmtree(glbl['home'])
 
 
 @pytest.fixture(scope='module')
