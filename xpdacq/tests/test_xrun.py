@@ -48,7 +48,7 @@ class xrunTest(unittest.TestCase):
         pytest_dir = rs_fn('xpdacq', 'tests/')
         config = 'XPD_beamline_config.yml'
         configsrc = os.path.join(pytest_dir, config)
-        shutil.copyfile(configsrc, os.path.join(glbl['xpdconfig'], config))
+        shutil.copyfile(configsrc, glbl['blconfig_path'])
         self.bt = _start_beamtime(self.PI_name, self.saf_num,
                                   self.experimenters,
                                   wavelength=self.wavelength,test=True)
