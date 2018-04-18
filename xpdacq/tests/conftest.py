@@ -32,6 +32,10 @@ from xpdsim import (cs700, xpd_pe1c, simple_pe1c, shctl1, ring_current,
 
 from pkg_resources import resource_filename as rs_fn
 
+
+if not os.path.exists(glbl_dict['home']):
+    os.makedirs(glbl_dict['home'])
+
 @pytest.fixture(scope='module')
 def db():
     from xpdsim import db, sim_db_dir
