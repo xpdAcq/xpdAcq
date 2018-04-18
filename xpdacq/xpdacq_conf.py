@@ -28,6 +28,7 @@ from xpdconf.conf import glbl_dict, GLBL_YAML_PATH
 from .tools import xpdAcqException
 from .yamldict import YamlDict
 
+glbl_dict.pop('exp_db')
 XPDACQ_MD_VERSION = 0.1
 
 # special function and dict to store all necessary objects
