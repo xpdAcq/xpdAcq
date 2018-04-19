@@ -2,7 +2,7 @@
 
 **Changed:**
 
-* xpdAcq now outsources ``glbl` configuration management to xpdConf
+* xpdAcq now outsources ``glbl`` configuration management to xpdConf
 
 **Deprecated:** None
 
