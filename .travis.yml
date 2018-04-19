@@ -42,6 +42,7 @@ install:
   - source activate testenv
   - conda install --file requirements/build.txt
   - conda install pip
+  - pip install -r requirements/pip.txt
   - pip install .
   - git clean -xfd
 
@@ -53,7 +54,6 @@ script:
   - python -c "from bluesky.utils import get_history; get_history()"
   # make sure package data is correctly set
   - python -c "from xpdsim import xpd_pe1c; xpd_pe1c.get()"
-  - mkdir ~/.config/acq
   - python -c "from xpdacq.tests.conftest import *"
   # copy config file over
   - coverage run run_tests.py

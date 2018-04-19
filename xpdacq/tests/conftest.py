@@ -32,6 +32,7 @@ from xpdsim import (cs700, xpd_pe1c, simple_pe1c, shctl1, ring_current,
 
 from pkg_resources import resource_filename as rs_fn
 
+
 @pytest.fixture(scope='module')
 def db():
     from xpdsim import db, sim_db_dir
@@ -55,8 +56,8 @@ def bt(home_dir):
     pytest_dir = rs_fn('xpdacq', 'tests/')
     config = 'XPD_beamline_config.yml'
     configsrc = os.path.join(pytest_dir, config)
-    shutil.copyfile(configsrc, os.path.join(glbl_dict['xpdconfig'], config))
-    assert(os.path.isfile(os.path.join(glbl_dict['xpdconfig'], config)))            
+    shutil.copyfile(configsrc, glbl_dict['blconfig_path'])
+    assert os.path.isfile(glbl_dict['blconfig_path'])
     bt = _start_beamtime(PI_name, saf_num,
                          experimenters,
                          wavelength=wavelength,test=True)
@@ -66,11 +67,15 @@ def bt(home_dir):
     shutil.copyfile(src, os.path.join(glbl_dict['import_dir'], xlf))
     import_sample_info(saf_num, bt)
     yield bt
+    # when we are done with the glbl delete the folders.
+    shutil.rmtree(glbl_dict['home'])
 
 
 @pytest.fixture(scope='function')
 def glbl(bt):
     from xpdacq.glbl import glbl
+    if not os.path.exists(glbl['home']):
+        os.makedirs(glbl['home'])
     yield glbl
 
 
