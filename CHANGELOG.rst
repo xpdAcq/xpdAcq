@@ -3,6 +3,27 @@ xpdAcq Change Log
 
 .. current developments
 
+v0.8.0rc2
+====================
+
+**Changed:**
+
+* xpdAcq now outsources ``glbl`` configuration management to xpdConf
+* Run CI on conda-forge ``xpdconf``
+
+
+**Removed:**
+
+* ``load_configuration`` (which is now in xpdConf)
+
+
+**Fixed:**
+
+* Pull release notes prepend from GitHub
+
+
+
+
 v0.8.0rc
 ====================
 
