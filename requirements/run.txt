@@ -9,3 +9,4 @@ xpdan
 xpdsim
 databroker
 ophyd
+xpdconf

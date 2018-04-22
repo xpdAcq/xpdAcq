@@ -16,5 +16,9 @@ $TAG_REMOTE = 'git@github.com:xpdAcq/xpdAcq.git'
 
 $GITHUB_REPO = 'xpdAcq'
 $GITHUB_ORG = 'xpdAcq'
-$LICENSE_URL = 'https://github.com/{}/{}/blob/{}/LICENSE'.format($GITHUB_ORG, $GITHUB_REPO, $VERSION)
-$GHRELEASE_PREPEND = open('release_note_stub.rst', 'r').read().format($LICENSE_URL, $PROJECT.lower())
+
+$LICENSE_URL = 'https://github.com/{}/{}/blob/master/LICENSE'.format($GITHUB_ORG, $GITHUB_REPO)
+
+from urllib.request import urlopen
+rns = urlopen('https://raw.githubusercontent.com/xpdAcq/mission-control/master/tools/release_not_stub.md').read().decode('utf-8')
+$GHRELEASE_PREPEND = rns.format($LICENSE_URL, $PROJECT.lower())
