@@ -718,6 +718,10 @@ like ``folder_tag``. When ``folder_tag`` is added
 (eg ``xrun(0, 8, folder_tag='after_saxs')`` then the ``after_saxs`` will be
 added to the file path where the data is saved
 (eg ``<.../tiff_base/sample_name/after_saxs/mask/file_name>``).
+You can also define multiple folder tags by supplying ``folder_tag_list``
+(eg ``xrun(0, 8, folder_tag_list=['status', 'sample_name', bt_piLast'], status='after_saxs')``
+adding the values of the metadata for those keys into the file path
+(eg ``<.../tiff_base/after/saxs/sample_name/bt_piLast/mask/file_name>``).
 
 
 
