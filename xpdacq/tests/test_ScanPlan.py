@@ -46,3 +46,4 @@ def test_tseries_with_shutter_control_xrun(fresh_xrun, glbl):
     p = tseries([xpd_configuration['area_det']], 2, 0.5, 10, True)
     xrun({}, p)
     _verify_tseries_message(xrun_msgs)
+    glbl['shutter_control'] = True  # reset to default
