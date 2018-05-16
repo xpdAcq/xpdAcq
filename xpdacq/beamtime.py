@@ -129,16 +129,20 @@ def _shutter_step(detectors, motor, step):
                            XPD_SHUTTER_CONF['close'], wait=True)
 
 
-def _count_with_shutter(detectors):
-    """main body of a count-like scan. This plan includes messages that
-    keep shutter open before ``trigger_and_read`` and close
-    afterwords"""
+def _open_shutter_stub():
+    """simple function to return a generator that yields messages to
+    open the shutter"""
+    yield from bps.abs_set(xpd_configuration['shutter'],
+            XPD_SHUTTER_CONF['open'], wait=True)
     yield from bps.checkpoint()
+
+
+def _close_shutter_stub():
+    """simple function to return a generator that yields messages to
+    close the shutter"""
     yield from bps.abs_set(xpd_configuration['shutter'],
-                           XPD_SHUTTER_CONF['open'], wait=True)
-    yield from bps.trigger_and_read(list(detectors))
-    yield from bps.abs_set(xpd_configuration['shutter'],
-                           XPD_SHUTTER_CONF['close'], wait=True)
+            XPD_SHUTTER_CONF['close'], wait=True)
+    yield from bps.checkpoint()
 
 
 def ct(dets, exposure):
@@ -335,20 +339,6 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
     yield from plan
 
 
-def _open_shutter_stub():
-    """simple plan messages to ensure shutter open before next message"""
-    yield from bps.abs_set(xpd_configuration['shutter'],
-            XPD_SHUTTER_CONF['open'], wait=True)
-    yield from bps.checkpoint()
-
-
-def _close_shutter_stub():
-    """simple plan messages to ensure shutter close before next message"""
-    yield from bps.abs_set(xpd_configuration['shutter'],
-            XPD_SHUTTER_CONF['close'], wait=True)
-    yield from bps.checkpoint()
-
-
 def tseries(dets, exposure, delay, num, auto_shutter=True):
     """
     time series scan with area detector.
@@ -365,22 +355,27 @@ def tseries(dets, exposure, delay, num, auto_shutter=True):
     num : int
         total number of readings
     auto_shutter: bool, optional
-        option on whether delegate shutter control to xpdAcq. If True,
-        shutter will be closed after each reading.
+        Option on whether delegates shutter control to ``xpdAcq``. If True,
+        following behavior will take place:
 
-        Default behavior:
         `` open shutter - collect data - close shutter ``
 
-        To make shutter always open during the time series scan,
+        To make shutter stay open during ``tseries`` scan,
         pass ``False`` to this argument. See ``Notes`` below for more
         detailed information.
 
     Notes
     -----
-    To see which area detector and temperature controller 
-    will be used, type the following commands:
+    To see which area detector and shutter will be used, type the
+    following commands:
 
         >>> xpd_configuration['area_det']
+        >>> xpd_configuration['shutter']
+
+    To override default behavior and keep the shutter open throughout
+    scan , create ScanPlan with following syntax:
+
+        >>> ScanPlan(bt, tseries, 10, 5, 10, False)
     """
 
     pe1c, = dets
@@ -410,7 +405,10 @@ def tseries(dets, exposure, delay, num, auto_shutter=True):
     plan = bpp.subs_wrapper(plan, LiveTable([]))
     def inner_shutter_control(msg):
         if msg.command=='trigger':
-            return _open_shutter_stub(), None
+            def inner():
+                yield from _open_shutter_stub()
+                yield msg
+            return inner(), None
         elif msg.command=='save':
             return None, _close_shutter_stub()
         else:
