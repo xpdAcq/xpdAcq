@@ -404,12 +404,12 @@ def tseries(dets, exposure, delay, num, auto_shutter=True):
     plan = bp.count([area_det], num, delay, md=_md)
     plan = bpp.subs_wrapper(plan, LiveTable([]))
     def inner_shutter_control(msg):
-        if msg.command=='trigger':
+        if msg.command =='trigger':
             def inner():
                 yield from _open_shutter_stub()
                 yield msg
             return inner(), None
-        elif msg.command=='save':
+        elif msg.command =='save':
             return None, _close_shutter_stub()
         else:
             return None, None
