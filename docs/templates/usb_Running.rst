@@ -714,14 +714,12 @@ User defined folder tag
 
 You can also add metadata to the run by adding key word arguments to the run eg
 ``xrun(0, 8, my_scan_tag='hello world')``. Some pieces of metadata are special,
-like ``folder_tag``. When ``folder_tag`` is added
-(eg ``xrun(0, 8, folder_tag='after_saxs')`` then the ``after_saxs`` will be
-added to the file path where the data is saved
-(eg ``<.../tiff_base/sample_name/after_saxs/mask/file_name>``).
-You can also define multiple folder tags by supplying ``folder_tag_list``
+like ``folder_tag_list``. When ``folder_tag_list`` is added
 (eg ``xrun(0, 8, folder_tag_list=['status', 'sample_name', bt_piLast'], status='after_saxs')``
-adding the values of the metadata for those keys into the file path
-(eg ``<.../tiff_base/after/saxs/sample_name/bt_piLast/mask/file_name>``).
+the values for those keys will be added to the file path in the same order as
+the list
+(eg ``<.../tiff_base/after_saxs/Ni/billinge/mask/file_name>`` for an experiment
+on Nickel run by the Billinge group).
 
 
 
