@@ -17,6 +17,7 @@ import os
 import uuid
 import yaml
 import inspect
+import itertools
 from collections import ChainMap, OrderedDict
 
 import numpy as np
@@ -126,6 +127,22 @@ def _shutter_step(detectors, motor, step):
     yield from bps.trigger_and_read(list(detectors) + [motor])
     yield from bps.abs_set(xpd_configuration['shutter'],
                            XPD_SHUTTER_CONF['close'], wait=True)
+
+
+def _open_shutter_stub():
+    """simple function to return a generator that yields messages to
+    open the shutter"""
+    yield from bps.abs_set(xpd_configuration['shutter'],
+            XPD_SHUTTER_CONF['open'], wait=True)
+    yield from bps.checkpoint()
+
+
+def _close_shutter_stub():
+    """simple function to return a generator that yields messages to
+    close the shutter"""
+    yield from bps.abs_set(xpd_configuration['shutter'],
+            XPD_SHUTTER_CONF['close'], wait=True)
+    yield from bps.checkpoint()
 
 
 def ct(dets, exposure):
@@ -322,7 +339,7 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
     yield from plan
 
 
-def tseries(dets, exposure, delay, num):
+def tseries(dets, exposure, delay, num, auto_shutter=True):
     """
     time series scan with area detector.
 
@@ -337,13 +354,28 @@ def tseries(dets, exposure, delay, num):
         delay between two consecutive readings from area detector in seconds
     num : int
         total number of readings
+    auto_shutter: bool, optional
+        Option on whether delegates shutter control to ``xpdAcq``. If True,
+        following behavior will take place:
+
+        `` open shutter - collect data - close shutter ``
+
+        To make shutter stay open during ``tseries`` scan,
+        pass ``False`` to this argument. See ``Notes`` below for more
+        detailed information.
 
     Notes
     -----
-    To see which area detector and temperature controller 
-    will be used, type the following commands:
+    To see which area detector and shutter will be used, type the
+    following commands:
 
         >>> xpd_configuration['area_det']
+        >>> xpd_configuration['shutter']
+
+    To override default behavior and keep the shutter open throughout
+    scan , create ScanPlan with following syntax:
+
+        >>> ScanPlan(bt, tseries, 10, 5, 10, False)
     """
 
     pe1c, = dets
@@ -371,6 +403,18 @@ def tseries(dets, exposure, delay, num):
                         'sp_plan_name': 'tseries'})
     plan = bp.count([area_det], num, delay, md=_md)
     plan = bpp.subs_wrapper(plan, LiveTable([]))
+    def inner_shutter_control(msg):
+        if msg.command == 'trigger':
+            def inner():
+                yield from _open_shutter_stub()
+                yield msg
+            return inner(), None
+        elif msg.command == 'save':
+            return None, _close_shutter_stub()
+        else:
+            return None, None
+    if auto_shutter:
+        plan = bpp.plan_mutator(plan, inner_shutter_control)
     yield from plan
 
 

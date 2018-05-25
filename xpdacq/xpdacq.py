@@ -664,7 +664,7 @@ class CustomizedRunEngine(RunEngine):
         if verify_write:
             _subs.update({'stop': verify_files_saved})
 
-        if self._beamtime.get('bt_wavelength') is None:
+        if self._beamtime and self._beamtime.get('bt_wavelength') is None:
             print("WARNING: there is no wavelength information in current"
                   "beamtime object, scan will keep going....")
 
