@@ -165,7 +165,7 @@ class GlblYamlDict(YamlDict):
     _MUTABLE_FIELDS = ['frame_acq_time', 'auto_dark', 'dk_window',
                        '_dark_dict_list', 'shutter_control',
                        'auto_load_calib', 'calib_config_name',
-                       'calib_config_dict', 'det_image_field',
+                       'calib_config_dict', 'image_field',
                        'exp_hash_uid']
 
     def __init__(self, name, **kwargs):
