@@ -215,9 +215,9 @@ def _collect_img(exposure, dark_sub_bool, sample_md, tag, RE_instance,
     light_header = db[uid[-1]]
     dark_uid = light_header['start'].get('sc_dk_field_uid')
     dark_header = db[dark_uid]
-    dark_img = dark_header.data(glbl['det_image_field'])
+    dark_img = dark_header.data(glbl['image_field'])
     dark_img = np.asarray(next(dark_img)).squeeze()
-    img = light_header.data(glbl['det_image_field'])
+    img = light_header.data(glbl['image_field'])
     img = np.asarray(next(img)).squeeze()
 
     if dark_sub_bool:
