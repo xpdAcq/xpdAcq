@@ -1,7 +1,7 @@
 ARCHIVE_BASE_DIR_NAME: .userBeamtimeArchive
 ARCHIVE_ROOT_DIR: /direct/XF28ID1/pe1_data
 BASE_DIR: /direct/XF28ID1/pe2_data
-BEAMLINE_HOST_NAME: [xf28id1-ws2, xf28id1-ws3]
+BEAMLINE_HOST_NAME: [xf28id1-ws1, xf28id1-ws2]
 BEAMLINE_ID: 28-ID-1
 BLCONFIG_DIR_NAME: xpdConfig
 BLCONFIG_NAME: PDF_beamline_config.yml
@@ -15,4 +15,4 @@ HOME_DIR_NAME: xpdUser
 IMAGE_FIELD: pe1_image
 OWNER: PDF
 SIMULATION: false
-SHUTTER_CONF: {close: 0, open: 60}
+SHUTTER_CONF: {close: 0, open: 1}
