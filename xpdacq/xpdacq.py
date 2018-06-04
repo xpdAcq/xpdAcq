@@ -16,6 +16,8 @@
 import os
 import uuid
 import time
+from textwrap import indent
+
 import yaml
 import warnings
 from pprint import pprint
@@ -633,19 +635,19 @@ class CustomizedRunEngine(RunEngine):
         if robot:
             print('This is the current experimental plan:')
             print('Sample Name: Sample Position')
-            for s, p in zip(*[(k, [o[1] for o in v]) for k, v in
-                              groupby(zip(sample, plan), key=lambda x: x[0])]):
+            for s, p in [(k, [o[1] for o in v]) for k, v in
+                              groupby(zip(sample, plan), key=lambda x: x[0])]:
                 print(s['sample_name'], ':',
                       self._beamtime.robot_info[s['sa_uid']])
                 for pp in p:
                     # Check if this is a registered scanplan
                     if isinstance(pp, int):
-                        print('{}'.format(list(
-                            self.beamtime.scanplans.values())[pp]))
+                        print(indent('{}'.format(list(
+                            self.beamtime.scanplans.values())[pp])), '\t')
                     else:
                         print('This scan is not a registered scanplan so no '
                               'summary')
-            ip = input('is this ok? [y]/n')
+            ip = input('Is this ok? [y]/n')
             if ip.lower() == 'n':
                 return
         # Turn ints into generators
@@ -706,13 +708,15 @@ class CustomizedRunEngine(RunEngine):
 
 def load_sample(position, geometry=None):
     # TODO: I think this can be simpler.
-    return (yield from single_gen(Msg('load_sample', glbl['robot'],
+    return (yield from single_gen(Msg('load_sample',
+                                      xpd_configuration['robot'],
                                       position, geometry)))
 
 
 def unload_sample():
     # TODO: I think this can be simpler.
-    return (yield from single_gen(Msg('unload_sample', glbl['robot'])))
+    return (yield from single_gen(Msg('unload_sample',
+                                      xpd_configuration['robot'])))
 
 
 # These are usable bluesky plans.
