@@ -59,7 +59,8 @@ def configure_frame_acq_time(new_frame_acq_time):
     time.sleep(1)
     area_det.cam.acquire.put(1)
     print("INFO: area detector has been configured to new "
-          "exposure_time = {}s".format(new_frame_acq_time))
+          "acquisition time (time per frame)  = {}s"
+          .format(new_frame_acq_time))
 
 
 def _verify_within_test(beamline_config_fp, verif):
