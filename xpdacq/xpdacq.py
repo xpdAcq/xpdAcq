@@ -622,9 +622,6 @@ class CustomizedRunEngine(RunEngine):
                                'global metadata')
         if robot:
             metadata_kw.update(robot=True)
-        if not robot and isinstance(sample, list):
-            raise RuntimeError('Multiple samples is not supported without'
-                               'the robot')
         # The CustomizedRunEngine knows about a Beamtime object, and it
         # interprets integers for 'sample' as indexes into the Beamtime's
         # lists of Samples from all its Experiments.
