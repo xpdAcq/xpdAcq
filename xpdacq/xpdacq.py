@@ -622,9 +622,6 @@ class CustomizedRunEngine(RunEngine):
                                'global metadata')
         if robot:
             metadata_kw.update(robot=True)
-        if not robot and isinstance(sample, list):
-            raise RuntimeError('Multiple samples is not supported without'
-                               'the robot')
         # The CustomizedRunEngine knows about a Beamtime object, and it
         # interprets integers for 'sample' as indexes into the Beamtime's
         # lists of Samples from all its Experiments.
@@ -635,10 +632,19 @@ class CustomizedRunEngine(RunEngine):
         sample = self.translate_to_sample(sample)
         if robot:
             print('This is the current experimental plan:')
-            for s, p in zip(*[(k, [o[1] for o in v]) for k, v in groupby(zip(sample, plan), key=lambda x: x[0])]):
-                print(s)
+            print('Sample Name: Sample Position')
+            for s, p in zip(*[(k, [o[1] for o in v]) for k, v in
+                              groupby(zip(sample, plan), key=lambda x: x[0])]):
+                print(s['sample_name'], ':',
+                      self._beamtime.robot_info[s['sa_uid']])
                 for pp in p:
-                    print('|------- {}'.format(self.beamtime.scanplans[pp]))
+                    # Check if this is a registered scanplan
+                    if isinstance(pp, int):
+                        print('{}'.format(list(
+                            self.beamtime.scanplans.values())[pp]))
+                    else:
+                        print('This scan is not a registered scanplan so no '
+                              'summary')
             ip = input('is this ok? [y]/n')
             if ip.lower() == 'n':
                 return
