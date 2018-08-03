@@ -59,12 +59,13 @@ def tune_filters(upper_threshold=8000,
     # Need to set this since it could be non-unique
     filter_configurations = sorted(
         [np.asarray(x) for x in product([0, 1], repeat=4)],
-        key=lambda x: np.prod((x*fb_attenuation)[np.nonzero(x)]),
+        key=lambda x: np.prod((x * fb_attenuation)[np.nonzero(x)]),
         reverse=True
     )
     attenuations = np.asarray(
         [np.prod((x * fb_attenuation)[np.nonzero(x)]) for x in
          filter_configurations])
+
     @bpp.stage_decorator([det])
     @bpp.run_decorator()
     def inner():
@@ -83,7 +84,7 @@ def tune_filters(upper_threshold=8000,
             if v < lower_theshold:
                 continue
         # compute the sample scattering power
-        sp = v/att
+        sp = v / att
         # compute filter config index to use
         fci = np.where((sp / attenuations) < upper_threshold)[0][-1]
         # set the bank
@@ -93,4 +94,5 @@ def tune_filters(upper_threshold=8000,
         # compute the exposure
         exposure = min(5, upper_threshold / (sp / attenuations[fci]))
         yield from bps.abs_set(det.cam.acquire_time, exposure)
+
     return (yield from inner())
