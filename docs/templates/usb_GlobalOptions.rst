@@ -41,6 +41,19 @@ Funtionality related options
   So you don't have to redo the changes from time to time.
 
 
+  The ``glbl`` also has a ``swap`` method. This method allows you to
+  temporarally change the value of a key in the ``glbl``. For instance
+
+  .. code-block:: python
+
+    with glbl.swap(dk_window=1000):
+        xrun(1, 1)
+
+  This will run the scan with a dark window of 1000 seconds. However all
+  subsequent scans would have their dark window set to the old dark window.
+  This is very useful for overnight scans where the state of the ``glbl``
+  might not be remembered.
+
 
 .. _usb_DeviceOptions:
 

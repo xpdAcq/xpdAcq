@@ -47,3 +47,10 @@ class glblTest(unittest.TestCase):
         reload_glbl = GlblYamlDict('glbl', **glbl_dict)
         _set_glbl(reload_glbl, reload_glbl_dict)
         assert reload_glbl == self._glbl
+
+    def test_glbl_swap(self):
+        self._glbl['dk_window'] = 20
+        assert self._glbl['dk_window'] == 20
+        with self._glbl.swap(dk_window=1000):
+            assert self._glbl['dk_window'] == 1000
+        assert self._glbl['dk_window'] == 20
