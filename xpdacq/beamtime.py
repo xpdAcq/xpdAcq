@@ -687,7 +687,17 @@ class Beamtime(ValidatedDictLike, YamlDict):
                                           if sa_name.startswith('bkgd')]
         print('\n'.join(contents))
 
-    def robot_location_number(self):
+    def robot_location_number(self, geometry=None):
+        """Add information about the samples so that they can be loaded by the
+        robot
+
+        Parameters
+        ----------
+        geometry : {'capillary', 'plate', None}, optional
+            The geometry of the samples to be loaded, if None use the capillary
+            geometry. Defaults to None
+
+        """
         print('Please input the location of each sample in the robot'
               'magazine. If the sample is not in the magazine just leave it '
               'blank and hit <enter>.')
@@ -697,7 +707,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
             if ip:
                 loc = int(ip)
                 self.robot_info[self.samples[sample]['uid']] = {
-                    'robot_identifier': loc}
+                    'robot_identifier': loc, 'robot_geometry': geometry}
 
     def _robot_barcode_number(self):
         # PROTOTYPE!!!
