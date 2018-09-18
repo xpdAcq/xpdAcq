@@ -236,11 +236,11 @@ class GlblYamlDict(YamlDict):
         if other is not None:
             for k, v in other.items():
                 old[k] = self.get(k, NotImplemented)
-                self[k] = v
+                dict.__setitem__(self, k, v)
         # kwargs could also have been sent in
         for k, v in kwargs.items():
             old[k] = self.get(k, NotImplemented)
-            self[k] = v
+            dict.__setitem__(self, k, v)
 
         exception = None
         try:

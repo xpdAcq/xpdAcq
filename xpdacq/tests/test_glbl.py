@@ -53,4 +53,7 @@ class glblTest(unittest.TestCase):
         assert self._glbl['dk_window'] == 20
         with self._glbl.swap(dk_window=1000):
             assert self._glbl['dk_window'] == 1000
+            glbl2 = self._glbl.from_yaml(open(self._glbl.filepath, 'r'))
+            assert glbl2 is not self._glbl
+            assert glbl2['dk_window'] == 20
         assert self._glbl['dk_window'] == 20
