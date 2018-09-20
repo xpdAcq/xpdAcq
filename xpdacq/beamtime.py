@@ -864,8 +864,10 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         complete_kwargs = bound_arguments.arguments
         # remove place holder for [pe1c]
         complete_kwargs.popitem(False)
-        # remove callable, per_step, callable is not serializable
-        complete_kwargs.pop('per_step', complete_kwargs)
+        # replace callable objects, with its func name
+        for k, v in complete_kwargs.items():
+            if callable(v):
+                complete_kwargs[k] = v.__name__
         return complete_kwargs
 
     def factory(self):
