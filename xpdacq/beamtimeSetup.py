@@ -244,11 +244,11 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm="y"):
     # load bt info
     archive_name = _load_bt_info(bto, _required_info)
     # archive file
-    archive_full_name = _tar_user_data(archive_name)
+    archive_full_name, local_archive_name = _tar_user_data(archive_name)
     # confirm archive
     _confirm_archive(archive_full_name)
     # flush
-    _delete_home_dir_tree()
+    _delete_archive_dir_tree(local_archive_name)
     # delete bt
     del ips.ns_table["user_global"]["bt"]
 
@@ -280,34 +280,33 @@ def _load_bt_info(bt_obj, required_fields):
 def _tar_user_data(archive_name, root_dir=None, archive_format="tar"):
     """ Create a remote tarball of all user folders under xpdUser directory
     """
-    archive_full_name = os.path.join(glbl_dict["archive_dir"], archive_name)
+    remote_archive_name = os.path.join(glbl_dict["archive_dir"],
+                                       archive_name)
     if root_dir is None:
         root_dir = glbl_dict["base"]
     try:
         os.chdir(root_dir)
-        print(
-            "INFO: Archiving your data now. That may take several"
-            " minutes. Please be patient :)"
-        )
+        # rename xpdUser to <xpdUser_archivefallname>
+        src = glbl_dict['home']
+        local_archive_name = '_'.join([src, archive_name])
+        local_archive_name = shutil.move(src, local_archive_name)
+        # make a fresh xpdUser dir. raise error if renaming wasn't successful
+        os.makedirs(src)
+        assert not os.listdir(src)  # assert empty
+        print("INFO: Archiving your data now. That may take several"
+              " minutes. Please be patient :)")
         # remove dir structure would be:
         # <remote>/<PI_last+uid>/xpdUser/....
-        os.makedirs(archive_full_name, exist_ok=True)
-        rv = subprocess.run(
-            [
-                "rsync",
-                "-av",
-                "--timeout=60",
-                "--no-owner",
-                "--no-group",
-                "--exclude=.*",  # exclude all hidden files
-                glbl_dict["home"],
-                archive_full_name,
-            ],
-            check=True,
-        )
+        os.makedirs(remote_archive_name, exist_ok=True)
+        rv = subprocess.run(['rsync', '-av', '--timeout=60',
+                             '--no-owner', '--no-group',
+                             '--exclude=.*',  # exclude all hidden files
+                             local_archive_name, remote_archive_name],
+                             check=True,)
     finally:
-        os.chdir(glbl_dict["home"])
-    return archive_full_name
+        # move back to fresh xpdUser
+        os.chdir(src)
+    return remote_archive_name, local_archive_name
 
 
 def _load_bt(bt_yaml_path):
@@ -356,9 +355,7 @@ def _confirm_archive(archive_f_name):
         )
 
 
-def _delete_home_dir_tree():
-    os.chdir(glbl_dict["base"])  # move out from xpdUser before deletion
-    dir_to_flush = glbl_dict["home"]
+def _delete_archive_dir_tree(dir_to_flush):
     while os.path.isdir(dir_to_flush):
         try:
             rv = subprocess.run(["rm", "-r", dir_to_flush], check=True)
@@ -377,8 +374,6 @@ def _delete_home_dir_tree():
             )
             if msg:
                 pass
-    os.makedirs(dir_to_flush)
-    os.chdir(dir_to_flush)  # now move back into xpdUser
     return
 
 
@@ -407,25 +402,4 @@ def _start_xpdacq():
 
     else:
         print("INFO: No PI_name has been found")
-
-
-def _tar_user_data(archive_name, root_dir=None, archive_format='tar'):
-    archive_full_name = os.path.join(glbl_dict['archive_dir'],
-                                     archive_name)
-    if root_dir is None:
-        root_dir = glbl_dict['base']
-    #cur_path = os.getcwd()
-    try:
-        os.chdir(root_dir)
-        print("INFO: Archiving your data now. That may take several"
-              " minutes. please be patient :)")
-        tar_return = shutil.make_archive(archive_full_name,
-                                         archive_format,
-                                         root_dir=root_dir,
-                                         base_dir='xpdUser', verbose=1,
-                                         dry_run=False)
-    finally:
-        #os.chdir(cur_path)
-        os.chdir(glbl_dict['home'])
-    return archive_full_name
 """
