@@ -9,18 +9,11 @@ from pkg_resources import resource_filename as rs_fn
 from xpdacq.xpdacq_conf import glbl_dict
 from xpdacq.beamtime import Beamtime, ScanPlan
 import xpdacq.beamtimeSetup as bts
-from xpdacq.beamtimeSetup import (
-    _start_beamtime,
-    _end_beamtime,
-    _delete_home_dir_tree,
-    _make_clean_env,
-    _clean_info,
-    _load_bt,
-    _load_bt_info,
-    _tar_user_data,
-    EXPO_LIST,
-)
-from xpdacq.utils import export_userScriptsEtc, import_userScriptsEtc
+from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
+                                  _delete_archive_dir_tree, _make_clean_env,
+                                  _clean_info, _load_bt, _load_bt_info,
+                                  _tar_user_data, EXPO_LIST)
+from xpdacq.utils import (export_userScriptsEtc, import_userScriptsEtc)
 
 
 class NewBeamtimeTest(unittest.TestCase):
@@ -146,7 +139,7 @@ class NewBeamtimeTest(unittest.TestCase):
     def test_end_beamtime(self):
         _required_info = ["bt_piLast", "bt_safN", "bt_uid"]
         # end_beamtime has been run
-        os.makedirs(self.home_dir)
+        os.makedirs(self.home_dir, exist_ok=True)
         self.assertRaises(FileNotFoundError, lambda: _end_beamtime())
         # entire trip. _start_beamtime to _end_beamtime
         # copying example longterm config file
@@ -176,43 +169,37 @@ class NewBeamtimeTest(unittest.TestCase):
         saf_num = self.bt.get("bt_safN")
         bt_uid = self.bt.get("bt_uid")
         archive_name = _load_bt_info(self.bt, _required_info)
-        os.makedirs(glbl_dict["archive_dir"])
-        assert os.path.isdir(glbl_dict["archive_dir"])
-        archive_full_name = _tar_user_data(archive_name)
-        test_tar_name = "_".join(
-            [pi_name, saf_num, bt_uid, strftime("%Y-%m-%d-%H%M")]
-        )
-        # is tar file name correct?
-        self.assertEqual(
-            archive_full_name,
-            os.path.join(glbl_dict["archive_dir"], test_tar_name),
-        )
+        os.makedirs(glbl_dict['archive_dir'])
+        assert os.path.isdir(glbl_dict['archive_dir'])
+        archive_full_name, local_archive_name = _tar_user_data(archive_name)
+        test_tar_name = '_'.join([pi_name, saf_num, bt_uid,
+                                  strftime('%Y-%m-%d-%H%M')])
+        # is tar file name correct? 
+        self.assertEqual(archive_full_name,
+                         os.path.join(glbl_dict['archive_dir'],
+                                      test_tar_name))
         # are contents tared correctly?
-        archive_test_dir = os.path.join(glbl_dict["home"], "tar_test")
+        #archive_test_dir = os.path.join(glbl_dict['home'], 'tar_test')
         content_list = os.listdir(archive_full_name)
-        # is remote copy starting from xpdUser?
-        assert "xpdUser" in content_list
+        # is remote copy the same name as local archive?
+        assert os.path.basename(local_archive_name) in content_list
         assert len(content_list) == 1
         # is every directory included
-        full_fp_list = list(map(os.path.basename, glbl_dict["allfolders"]))
-        exclude_fp_list = [
-            "xpdUser",
-            "xpdConfig",
-            "yml",
-            "samples",
-            "scanplans",
-        ]
-        bkg_fp_list = [
-            el for el in full_fp_list if el not in exclude_fp_list
-        ]  # exclude top dirs
-        remote_fp_list = os.listdir(os.path.join(archive_full_name, "xpdUser"))
+        full_fp_list = list(map(os.path.basename,
+                                 glbl_dict['allfolders']))
+        exclude_fp_list = ['xpdUser', 'xpdConfig', 'yml',
+                           'samples', 'scanplans']
+        bkg_fp_list = [el for el in full_fp_list if el not in
+                exclude_fp_list]  # exclude top dirs
+        remote_fp_list = os.listdir(os.path.join(archive_full_name,
+                                                 local_archive_name))
         # difference should be empty set
         assert not set(bkg_fp_list).difference(remote_fp_list)
         # hidden files should be excluded from the archive
         assert not list(glob.glob(archive_full_name + "**/.*"))
         # now test deleting directories
-        _delete_home_dir_tree()
-        self.assertTrue(len(os.listdir(glbl_dict["home"])) == 0)
+        _delete_archive_dir_tree(local_archive_name)
+        self.assertFalse(os.path.isdir(local_archive_name))
 
     def test_import_userScript_Etc(self):
         src = glbl_dict["import_dir"]
