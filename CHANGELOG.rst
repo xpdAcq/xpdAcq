@@ -3,6 +3,38 @@ xpdAcq Change Log
 
 .. current developments
 
+v0.8.2
+====================
+
+**Added:**
+
+* ``swap`` capability to the ``glbl`` so that vars can be swapped out via
+  context manager
+
+
+**Changed:**
+
+* ``Beamtime.robot_location_number`` takes in a geometry to specify the sample 
+  geometry
+* Reduce summary field of callable argument in ``ScanPlan`` with only
+  its ``__name__``. Before it use ``__repr__`` which includes hash and
+  special characters that is prone to generate illegal filename for yaml.
+
+
+**Removed:**
+
+* Exception for non-robot multi-sample experiments, since they could happen
+  and we do support this behavior
+
+
+**Fixed:**
+
+* ``per_step`` argument in ``Tlist``. Before this argument is always
+  overridden by default.
+
+
+
+
 v0.8.1
 ====================
 
