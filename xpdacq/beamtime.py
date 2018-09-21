@@ -334,7 +334,7 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
                  }
     # pass xpdacq_md to as additional md to bluesky plan
     plan = bp.list_scan([area_det], T_controller, T_list,
-                        per_step=_shutter_step, md=xpdacq_md)
+                        per_step=per_step, md=xpdacq_md)
     plan = bpp.subs_wrapper(plan, LiveTable([T_controller]))
     yield from plan
 
@@ -864,6 +864,10 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         complete_kwargs = bound_arguments.arguments
         # remove place holder for [pe1c]
         complete_kwargs.popitem(False)
+        # replace callable objects, with its func name
+        for k, v in complete_kwargs.items():
+            if callable(v):
+                complete_kwargs[k] = v.__name__
         return complete_kwargs
 
     def factory(self):
