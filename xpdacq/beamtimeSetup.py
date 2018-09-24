@@ -248,7 +248,7 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm="y"):
     # confirm archive
     _confirm_archive(archive_full_name)
     # flush
-    _delete_archive_dir_tree(local_archive_name)
+    _delete_local_archive(local_archive_name)
     # delete bt
     del ips.ns_table["user_global"]["bt"]
 
@@ -355,7 +355,7 @@ def _confirm_archive(archive_f_name):
         )
 
 
-def _delete_archive_dir_tree(dir_to_flush):
+def _delete_local_archive(dir_to_flush):
     while os.path.isdir(dir_to_flush):
         try:
             rv = subprocess.run(["rm", "-r", dir_to_flush], check=True)

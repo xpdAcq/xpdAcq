@@ -10,7 +10,7 @@ from xpdacq.xpdacq_conf import glbl_dict
 from xpdacq.beamtime import Beamtime, ScanPlan
 import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
-                                  _delete_archive_dir_tree, _make_clean_env,
+                                  _delete_local_archive, _make_clean_env,
                                   _clean_info, _load_bt, _load_bt_info,
                                   _tar_user_data, EXPO_LIST)
 from xpdacq.utils import (export_userScriptsEtc, import_userScriptsEtc)
@@ -198,7 +198,7 @@ class NewBeamtimeTest(unittest.TestCase):
         # hidden files should be excluded from the archive
         assert not list(glob.glob(archive_full_name + "**/.*"))
         # now test deleting directories
-        _delete_archive_dir_tree(local_archive_name)
+        _delete_local_archive(local_archive_name)
         self.assertFalse(os.path.isdir(local_archive_name))
 
     def test_import_userScript_Etc(self):
