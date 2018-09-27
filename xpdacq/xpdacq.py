@@ -633,8 +633,7 @@ class CustomizedRunEngine(RunEngine):
         if robot:
             print('This is the current experimental plan:')
             print('Sample Name: Sample Position')
-            for s, p in zip(*[(k, [o[1] for o in v]) for k, v in
-                              groupby(zip(sample, plan), key=lambda x: x[0])]):
+            for s, p in zip([(k, [o[1] for o in v]) for k, v in groupby(zip(sample, plan), key=lambda x: x[0])]):
                 print(s['sample_name'], ':',
                       self._beamtime.robot_info[s['sa_uid']])
                 for pp in p:
