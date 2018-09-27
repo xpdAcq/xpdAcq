@@ -602,7 +602,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
         return dict(self)
 
     @property
-    def robot_all(self):
+    def show_all_sample_in_magzine(self):
         """All samples in the robot magazine"""
         return [i for i, (k, v) in enumerate(self.samples.items()) if v['sa_uid'] in self.robot_info]
 
