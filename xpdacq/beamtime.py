@@ -601,6 +601,11 @@ class Beamtime(ValidatedDictLike, YamlDict):
         """ metadata of current object """
         return dict(self)
 
+    @property
+    def all_sample_in_magzine(self):
+        """All samples in the robot magazine"""
+        return [i for i, (k, v) in enumerate(self.samples.items()) if v['sa_uid'] in self.robot_info]
+
     def validate(self):
         # This is automatically called whenever the contents are changed.
         missing = set(self._REQUIRED_FIELDS) - set(self)
@@ -706,7 +711,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
             ip = input()
             if ip:
                 loc = int(ip)
-                self.robot_info[self.samples[sample]['uid']] = {
+                self.robot_info[self.samples[sample]['sa_uid']] = {
                     'robot_identifier': loc, 'robot_geometry': geometry}
 
     def _robot_barcode_number(self):
