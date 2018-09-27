@@ -643,7 +643,7 @@ class CustomizedRunEngine(RunEngine):
                     # Check if this is a registered scanplan
                     if isinstance(pp, int):
                         print(indent('{}'.format(list(
-                            self.beamtime.scanplans.values())[pp])), '\t')
+                            self.beamtime.scanplans.values())[pp]), '\t'))
                     else:
                         print('This scan is not a registered scanplan so no '
                               'summary')
