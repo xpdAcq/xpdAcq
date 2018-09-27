@@ -706,7 +706,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
             ip = input()
             if ip:
                 loc = int(ip)
-                self.robot_info[self.samples[sample]['uid']] = {
+                self.robot_info[self.samples[sample]['sa_uid']] = {
                     'robot_identifier': loc, 'robot_geometry': geometry}
 
     def _robot_barcode_number(self):
