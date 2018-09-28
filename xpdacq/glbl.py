@@ -15,4 +15,4 @@
 ##############################################################################
 from .xpdacq_conf import GlblYamlDict, glbl_dict
 
-glbl = GlblYamlDict('glbl', **glbl_dict)
+glbl = GlblYamlDict("glbl", **glbl_dict)

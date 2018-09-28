@@ -13,6 +13,6 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-from xpdsim import (simple_pe1c, xpd_pe1c, shctl1, cs700, db,
-                    ring_current, fb)
-pe1c = simple_pe1c # alias for test
+from xpdsim import simple_pe1c, xpd_pe1c, shctl1, cs700, db, ring_current, fb
+
+pe1c = simple_pe1c  # alias for test

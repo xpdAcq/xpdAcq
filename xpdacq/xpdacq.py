@@ -36,10 +36,10 @@ from bluesky.preprocessors import pchain
 from xpdacq.glbl import glbl
 from xpdacq.tools import xpdAcqException
 from xpdacq.beamtime import ScanPlan, _summarize
-from xpdacq.xpdacq_conf import (xpd_configuration, XPDACQ_MD_VERSION)
+from xpdacq.xpdacq_conf import xpd_configuration, XPDACQ_MD_VERSION
 from xpdconf.conf import XPD_SHUTTER_CONF
 
-XPD_shutter = xpd_configuration.get('shutter')
+XPD_shutter = xpd_configuration.get("shutter")
 
 
 def _update_dark_dict_list(name, doc):
@@ -49,51 +49,55 @@ def _update_dark_dict_list(name, doc):
     frame runs.
     """
     # always grab from glbl state
-    dark_dict_list = list(glbl['_dark_dict_list'])
+    dark_dict_list = list(glbl["_dark_dict_list"])
     # obtain light count time that is already set to area_det
-    area_det = xpd_configuration['area_det']
+    area_det = xpd_configuration["area_det"]
     acq_time = area_det.cam.acquire_time.get()
     num_frame = area_det.images_per_set.get()
     light_cnt_time = acq_time * num_frame
 
     dark_dict = {}
-    dark_dict['acq_time'] = acq_time
-    dark_dict['exposure'] = light_cnt_time
-    dark_dict['timestamp'] = doc['time']
-    dark_dict['uid'] = doc['run_start']
-    if doc['exit_status'] == 'success':
-        print('dark frame complete, update dark dict')
+    dark_dict["acq_time"] = acq_time
+    dark_dict["exposure"] = light_cnt_time
+    dark_dict["timestamp"] = doc["time"]
+    dark_dict["uid"] = doc["run_start"]
+    if doc["exit_status"] == "success":
+        print("dark frame complete, update dark dict")
         dark_dict_list.append(dark_dict)
-        glbl['_dark_dict_list'] = dark_dict_list  # update glbl._dark_dict_list
+        glbl["_dark_dict_list"] = dark_dict_list  # update glbl._dark_dict_list
     else:
         # FIXME: replace with logging and detailed warning next PR
-        print("INFO: dark scan was not successfully executed.\n"
-              "gobal dark frame information will not be updated!")
+        print(
+            "INFO: dark scan was not successfully executed.\n"
+            "gobal dark frame information will not be updated!"
+        )
 
 
 def take_dark():
     """a plan for taking a single dark frame"""
-    print('INFO: closing shutter...')
-    yield from bps.abs_set(xpd_configuration.get('shutter'),
-                           XPD_SHUTTER_CONF['close'],
-                           wait=True)
-    print('INFO: taking dark frame....')
+    print("INFO: closing shutter...")
+    yield from bps.abs_set(
+        xpd_configuration.get("shutter"), XPD_SHUTTER_CONF["close"], wait=True
+    )
+    print("INFO: taking dark frame....")
     # upto this stage, area_det has been configured to so exposure time is
     # correct
-    area_det = xpd_configuration['area_det']
+    area_det = xpd_configuration["area_det"]
     acq_time = area_det.cam.acquire_time.get()
     num_frame = area_det.images_per_set.get()
     computed_exposure = acq_time * num_frame
     # update md
-    _md = {'sp_time_per_frame': acq_time,
-           'sp_num_frames': num_frame,
-           'sp_computed_exposure': computed_exposure,
-           'sp_type': 'ct',
-           'sp_plan_name': 'dark_{}'.format(computed_exposure),
-           'dark_frame': True}
+    _md = {
+        "sp_time_per_frame": acq_time,
+        "sp_num_frames": num_frame,
+        "sp_computed_exposure": computed_exposure,
+        "sp_type": "ct",
+        "sp_plan_name": "dark_{}".format(computed_exposure),
+        "dark_frame": True,
+    }
     c = bp.count([area_det], md=_md)
-    yield from bpp.subs_wrapper(c, {'stop': [_update_dark_dict_list]})
-    print('opening shutter...')
+    yield from bpp.subs_wrapper(c, {"stop": [_update_dark_dict_list]})
+    print("opening shutter...")
 
 
 def periodic_dark(plan):
@@ -108,35 +112,49 @@ def periodic_dark(plan):
     def insert_take_dark(msg):
         now = time.time()
         nonlocal need_dark
-        qualified_dark_uid = _validate_dark(expire_time=glbl['dk_window'])
-        area_det = xpd_configuration['area_det']
+        qualified_dark_uid = _validate_dark(expire_time=glbl["dk_window"])
+        area_det = xpd_configuration["area_det"]
 
         if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
-        if need_dark \
-                and (not qualified_dark_uid) \
-                and msg.command == 'open_run' \
-                and ('dark_frame' not in msg.kwargs):
+        if (
+            need_dark
+            and (not qualified_dark_uid)
+            and msg.command == "open_run"
+            and ("dark_frame" not in msg.kwargs)
+        ):
             # We are about to start a new 'run' (e.g., a count or a scan).
             # Insert a dark frame run first.
             need_dark = False
             # Annoying detail: the detector was probably already staged.
             # Unstage it (if it wasn't staged, nothing will happen) and
             # then take_dark() and then re-stage it.
-            return bpp.pchain(bps.unstage(area_det),
-                              take_dark(),
-                              bps.stage(area_det),
-                              bpp.single_gen(msg),
-                              bps.abs_set(xpd_configuration.get('shutter'),
-                                          XPD_SHUTTER_CONF['open'],
-                                          wait=True)
-                              ), None
-        elif msg.command == 'open_run' and 'dark_frame' not in msg.kwargs:
-            return bpp.pchain(bpp.single_gen(msg),
-                              bps.abs_set(xpd_configuration.get('shutter'),
-                                          XPD_SHUTTER_CONF['open'],
-                                          wait=True)
-                              ), None
+            return (
+                bpp.pchain(
+                    bps.unstage(area_det),
+                    take_dark(),
+                    bps.stage(area_det),
+                    bpp.single_gen(msg),
+                    bps.abs_set(
+                        xpd_configuration.get("shutter"),
+                        XPD_SHUTTER_CONF["open"],
+                        wait=True,
+                    ),
+                ),
+                None,
+            )
+        elif msg.command == "open_run" and "dark_frame" not in msg.kwargs:
+            return (
+                bpp.pchain(
+                    bpp.single_gen(msg),
+                    bps.abs_set(
+                        xpd_configuration.get("shutter"),
+                        XPD_SHUTTER_CONF["open"],
+                        wait=True,
+                    ),
+                ),
+                None,
+            )
         else:
             # do nothing if (not need_dark)
             return None, None
@@ -151,13 +169,13 @@ def _validate_dark(expire_time=None):
     keys: 'exposure', 'uid' and 'timestamp'
     """
     if expire_time is None:
-        expire_time = glbl['dk_window']
-    dark_dict_list = glbl['_dark_dict_list']
+        expire_time = glbl["dk_window"]
+    dark_dict_list = glbl["_dark_dict_list"]
     # if glbl.dark_dict_list = None, do a dark anyway
     if not dark_dict_list:
         return None
     # obtain light count time that is already set to pe1c
-    area_det = xpd_configuration['area_det']
+    area_det = xpd_configuration["area_det"]
     acq_time = area_det.cam.acquire_time.get()
     num_frame = area_det.images_per_set.get()
     light_cnt_time = acq_time * num_frame
@@ -165,19 +183,19 @@ def _validate_dark(expire_time=None):
     now = time.time()
     qualified_dark_list = []
     for el in dark_dict_list:
-        expo_diff = abs(el['exposure'] - light_cnt_time)
-        time_diff = abs(el['timestamp'] - now)
-        if (expo_diff < acq_time) and \
-                (time_diff < expire_time * 60) and \
-                (el['acq_time'] == acq_time):
-            qualified_dark_list.append((el.get('uid'), expo_diff,
-                                        time_diff))
+        expo_diff = abs(el["exposure"] - light_cnt_time)
+        time_diff = abs(el["timestamp"] - now)
+        if (
+            (expo_diff < acq_time)
+            and (time_diff < expire_time * 60)
+            and (el["acq_time"] == acq_time)
+        ):
+            qualified_dark_list.append((el.get("uid"), expo_diff, time_diff))
     if qualified_dark_list:
         # sort wrt expo_diff and time_diff for best candidate
         # best_dark = sorted(qualified_dark_list,
         #                   key=lambda x: x[1] and x[2])[0]
-        best_dark = sorted(qualified_dark_list,
-                           key=lambda x: x[2])[0]
+        best_dark = sorted(qualified_dark_list, key=lambda x: x[2])[0]
         best_dark_uid = best_dark[0]
         return best_dark_uid
     else:
@@ -209,78 +227,83 @@ def _auto_load_calibration_file(in_scan=True):
     file exits in xpdUser/config_base, returns None.
     """
 
-    config_dir = glbl['config_base']
+    config_dir = glbl["config_base"]
     if not os.path.isdir(config_dir):
-        raise xpdAcqException("WARNING: Required directory {} doesn't"
-                              " exist, did you accidentally delete it?"
-                              .format(config_dir))
-    calib_yaml_name = os.path.join(config_dir,
-                                   glbl['calib_config_name'])
+        raise xpdAcqException(
+            "WARNING: Required directory {} doesn't"
+            " exist, did you accidentally delete it?".format(config_dir)
+        )
+    calib_yaml_name = os.path.join(config_dir, glbl["calib_config_name"])
     # no calib, skip
     if not os.path.isfile(calib_yaml_name):
         if in_scan:
-            print("INFO: No calibration file found in config_base.\n"
-                  "Scan will still keep going on....")
+            print(
+                "INFO: No calibration file found in config_base.\n"
+                "Scan will still keep going on...."
+            )
         return
     else:
         with open(calib_yaml_name) as f:
             calib_dict = yaml.load(f)
         if in_scan:
-            print("INFO: This scan will append calibration parameters "
-                  "recorded in {}".format(calib_dict['poni_file_name']))
+            print(
+                "INFO: This scan will append calibration parameters "
+                "recorded in {}".format(calib_dict["poni_file_name"])
+            )
         return calib_dict
 
 
 def _inject_filter_positions(msg):
-    if msg.command == 'open_run':
-        filter_bank = xpd_configuration['filter_bank']
+    if msg.command == "open_run":
+        filter_bank = xpd_configuration["filter_bank"]
         filters = filter_bank.read_attrs
         print("INFO: Current filter status")
         for el in filters:
             print("INFO: {} : {}".format(el, getattr(filter_bank, el).value))
-        msg.kwargs['filter_positions'] = {
-            fltr: getattr(filter_bank, fltr).value for fltr in filters}
+        msg.kwargs["filter_positions"] = {
+            fltr: getattr(filter_bank, fltr).value for fltr in filters
+        }
     return msg
 
 
 def _inject_qualified_dark_frame_uid(msg):
-    if msg.command == 'open_run' and msg.kwargs.get('dark_frame') is not True:
-        dark_uid = _validate_dark(glbl['dk_window'])
-        msg.kwargs['sc_dk_field_uid'] = dark_uid
+    if msg.command == "open_run" and msg.kwargs.get("dark_frame") is not True:
+        dark_uid = _validate_dark(glbl["dk_window"])
+        msg.kwargs["sc_dk_field_uid"] = dark_uid
     return msg
 
 
 def _inject_calibration_md(msg):
-    if msg.command == 'open_run':
-        exp_hash_uid = glbl.get('exp_hash_uid')
+    if msg.command == "open_run":
+        exp_hash_uid = glbl.get("exp_hash_uid")
         # inject client uid to all runs
-        msg.kwargs.update({'detector_calibration_client_uid':
-                               exp_hash_uid})
-        if 'is_calibration' in msg.kwargs:
+        msg.kwargs.update({"detector_calibration_client_uid": exp_hash_uid})
+        if "is_calibration" in msg.kwargs:
             # inject server uid if it's calibration run
-            msg.kwargs.update({'detector_calibration_server_uid':
-                                   exp_hash_uid})
+            msg.kwargs.update(
+                {"detector_calibration_server_uid": exp_hash_uid}
+            )
         else:
             # load calibration param if exists
             calibration_md = _auto_load_calibration_file()
             if calibration_md:
                 injected_calib_dict = dict(calibration_md)
                 # inject calibration md
-                msg.kwargs['calibration_md'] = injected_calib_dict
+                msg.kwargs["calibration_md"] = injected_calib_dict
     return msg
 
 
 def _inject_xpdacq_md_version(msg):
     """simply insert xpdAcq md version"""
-    if msg.command == 'open_run':
-        msg.kwargs['xpdacq_md_version'] = XPDACQ_MD_VERSION
+    if msg.command == "open_run":
+        msg.kwargs["xpdacq_md_version"] = XPDACQ_MD_VERSION
     return msg
 
 
 def _inject_analysis_stage(msg):
     """specify at which stage the documents is processed"""
-    if msg.command == 'open_run':
-        msg.kwargs['analysis_stage'] = 'raw'
+    if msg.command == "open_run":
+        msg.kwargs["analysis_stage"] = "raw"
     return msg
 
 
@@ -298,13 +321,16 @@ def _sample_injector_factory(sample):
         The message mutator
 
     """
+
     def _inject_sample_md(msg):
-        if msg.command == 'open_run':
+        if msg.command == "open_run":
             # No keys in metadata_kw are allows to collide with sample keys.
             if set(sample) & set(msg.kwargs):
-                raise ValueError("These keys in metadata_kw are illegal "
-                                 "because they are always in sample: "
-                                 "{}".format(set(sample) & set(msg.kwargs)))
+                raise ValueError(
+                    "These keys in metadata_kw are illegal "
+                    "because they are always in sample: "
+                    "{}".format(set(sample) & set(msg.kwargs))
+                )
 
             msg.kwargs.update(sample)
         return msg
@@ -315,15 +341,15 @@ def _sample_injector_factory(sample):
 def update_experiment_hash_uid():
     """helper function to assign new uid to glbl state"""
     new_uid = str(uuid.uuid4())
-    glbl['exp_hash_uid'] = new_uid
-    print("INFO: experiment hash uid as been updated to "
-          "{}".format(new_uid))
+    glbl["exp_hash_uid"] = new_uid
+    print("INFO: experiment hash uid as been updated to " "{}".format(new_uid))
 
     return new_uid
 
 
-def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
-                           wait_time=None, clear=True):
+def set_beamdump_suspender(
+    xrun, suspend_thres=None, resume_thres=None, wait_time=None, clear=True
+):
     """helper function to set suspender based on ring_current
 
     Parameters
@@ -347,12 +373,14 @@ def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
         option on whether to clear all the existing suspender(s).
         default is True (only newly added suspender will be applied)
     """
-    signal = xpd_configuration.get('ring_current', None)
+    signal = xpd_configuration.get("ring_current", None)
     if signal is None:
         # edge case, attribute is accidentally removed
-        raise RuntimeError("no ring current signal is found in "
-                           "current configuration, please reach out to "
-                           "local contact for more help.")
+        raise RuntimeError(
+            "no ring current signal is found in "
+            "current configuration, please reach out to "
+            "local contact for more help."
+        )
     signal_val = signal.get()
     default_suspend_thres = 50
     default_resume_thres = 50
@@ -363,24 +391,28 @@ def set_beamdump_suspender(xrun, suspend_thres=None, resume_thres=None,
     if wait_time is None:
         wait_time = 1200
     if suspend_thres <= 50:
-        warnings.warn("suspender set when beam current is low.\n"
-                      "For the best operation, run:\n"
-                      ">>> {}\n"
-                      "when beam current is at its full value."
-                      "To interrogate suspenders have"
-                      " been installed, please run :\n"
-                      ">>> {}\n"
-                      .format("set_suspender(xrun)",
-                              "xrun.suspenders"),
-                      UserWarning)
-    sus = SuspendFloor(signal, suspend_thres,
-                       resume_thresh=resume_thres, sleep=wait_time)
+        warnings.warn(
+            "suspender set when beam current is low.\n"
+            "For the best operation, run:\n"
+            ">>> {}\n"
+            "when beam current is at its full value."
+            "To interrogate suspenders have"
+            " been installed, please run :\n"
+            ">>> {}\n".format("set_suspender(xrun)", "xrun.suspenders"),
+            UserWarning,
+        )
+    sus = SuspendFloor(
+        signal, suspend_thres, resume_thresh=resume_thres, sleep=wait_time
+    )
     if clear:
         xrun.clear_suspenders()
     xrun.install_suspender(sus)
-    print("INFO: suspender on signal {}, with suspend threshold {} and "
-          "resume threshold={}, wait time ={}s has been installed.\n"
-          .format(signal.name, suspend_thres, resume_thres, wait_time))
+    print(
+        "INFO: suspender on signal {}, with suspend threshold {} and "
+        "resume threshold={}, wait time ={}s has been installed.\n".format(
+            signal.name, suspend_thres, resume_thres, wait_time
+        )
+    )
 
 
 PAUSE_MSG = """
@@ -437,10 +469,12 @@ class CustomizedRunEngine(RunEngine):
     @property
     def beamtime(self):
         if self._beamtime is None:
-            raise RuntimeError("Your beamtime environment is not properly "
-                               "setup. Please do\n"
-                               ">>> xrun.beamtime = bt\n"
-                               "then retry")
+            raise RuntimeError(
+                "Your beamtime environment is not properly "
+                "setup. Please do\n"
+                ">>> xrun.beamtime = bt\n"
+                "then retry"
+            )
         return self._beamtime
 
     @beamtime.setter
@@ -448,11 +482,11 @@ class CustomizedRunEngine(RunEngine):
         self._beamtime = bt_obj
         self.md.update(bt_obj.md)
         print("INFO: beamtime object has been linked\n")
-        if not glbl['is_simulation']:
+        if not glbl["is_simulation"]:
             set_beamdump_suspender(self)
         # assign hash of experiment condition
         exp_hash_uid = str(uuid.uuid4())
-        glbl['exp_hash_uid'] = exp_hash_uid
+        glbl["exp_hash_uid"] = exp_hash_uid
 
     def translate_to_sample(self, sample):
         """Translate a sample into a list of dict
@@ -477,9 +511,12 @@ class CustomizedRunEngine(RunEngine):
             try:
                 sample = list(self.beamtime.samples.values())[sample]
             except IndexError:
-                print("WARNING: hmm, there is no sample with index `{}`"
-                      ", please do `bt.list()` to check if it exists yet"
-                      .format(sample))
+                print(
+                    "WARNING: hmm, there is no sample with index `{}`"
+                    ", please do `bt.list()` to check if it exists yet".format(
+                        sample
+                    )
+                )
                 return
         return sample
 
@@ -515,9 +552,12 @@ class CustomizedRunEngine(RunEngine):
                 try:
                     plan = list(self.beamtime.scanplans.values())[plan]
                 except IndexError:
-                    print("WARNING: hmm, there is no scanplan with index `{}`"
-                          ", please do `bt.list()` to check if it exists yet"
-                          .format(plan))
+                    print(
+                        "WARNING: hmm, there is no scanplan with index `{}`"
+                        ", please do `bt.list()` to check if it exists yet".format(
+                            plan
+                        )
+                    )
                     return
             # If the plan is an xpdAcq 'ScanPlan', make the actual plan.
             if isinstance(plan, ScanPlan):
@@ -560,13 +600,20 @@ class CustomizedRunEngine(RunEngine):
             plan = [plan]
             sample = [sample]
         if len(sample) != len(plan):
-            raise RuntimeError('Samples and Plans must be the same length')
+            raise RuntimeError("Samples and Plans must be the same length")
         return sample, plan
 
-    def __call__(self, sample, plan, subs=None, *,
-                 verify_write=False, dark_strategy=periodic_dark,
-                 robot=False,
-                 **metadata_kw):
+    def __call__(
+        self,
+        sample,
+        plan,
+        subs=None,
+        *,
+        verify_write=False,
+        dark_strategy=periodic_dark,
+        robot=False,
+        **metadata_kw
+    ):
         """
         Execute a plan
 
@@ -619,9 +666,11 @@ class CustomizedRunEngine(RunEngine):
         uids : list
             list of uids (i.e. RunStart Document uids) of run(s)
         """
-        if self.md.get('robot', None) is not None:
-            raise RuntimeError('Robot must be specified at call time, not in'
-                               'global metadata')
+        if self.md.get("robot", None) is not None:
+            raise RuntimeError(
+                "Robot must be specified at call time, not in"
+                "global metadata"
+            )
         if robot:
             metadata_kw.update(robot=True)
         # The CustomizedRunEngine knows about a Beamtime object, and it
@@ -633,36 +682,53 @@ class CustomizedRunEngine(RunEngine):
         # Turn ints into actual samples
         sample = self.translate_to_sample(sample)
         if robot:
-            print('This is the current experimental plan:')
-            print('Sample Name: Sample Position')
-            for s, p in [(k, [o[1] for o in v]) for k, v in
-                              groupby(zip(sample, plan), key=lambda x: x[0])]:
-                print(s['sample_name'], ':',
-                      self._beamtime.robot_info[s['sa_uid']])
+            print("This is the current experimental plan:")
+            print("Sample Name: Sample Position")
+            for s, p in [
+                (k, [o[1] for o in v])
+                for k, v in groupby(zip(sample, plan), key=lambda x: x[0])
+            ]:
+                print(
+                    s["sample_name"],
+                    ":",
+                    self._beamtime.robot_info[s["sa_uid"]],
+                )
                 for pp in p:
                     # Check if this is a registered scanplan
                     if isinstance(pp, int):
-                        print(indent('{}'.format(list(
-                            self.beamtime.scanplans.values())[pp]), '\t'))
+                        print(
+                            indent(
+                                "{}".format(
+                                    list(self.beamtime.scanplans.values())[pp]
+                                ),
+                                "\t",
+                            )
+                        )
                     else:
-                        print('This scan is not a registered scanplan so no '
-                              'summary')
-            ip = input('Is this ok? [y]/n')
-            if ip.lower() == 'n':
+                        print(
+                            "This scan is not a registered scanplan so no "
+                            "summary"
+                        )
+            ip = input("Is this ok? [y]/n")
+            if ip.lower() == "n":
                 return
         # Turn ints into generators
         plan = self.translate_to_plan(plan, sample)
 
         # Collect the plans by contiguous samples and chain them
-        sample, plan = zip(*[(k, pchain(*[o[1] for o in v])) for k, v in
-                             groupby(zip(sample, plan), key=lambda x: x[0])])
+        sample, plan = zip(
+            *[
+                (k, pchain(*[o[1] for o in v]))
+                for k, v in groupby(zip(sample, plan), key=lambda x: x[0])
+            ]
+        )
 
         # Make the complete plan by chaining the chained plans
         total_plan = []
         for s, p in zip(sample, plan):
             if robot:
                 # If robot scan inject the needed md into the sample
-                s.update(self._beamtime.robot_info[s['sa_uid']])
+                s.update(self._beamtime.robot_info[s["sa_uid"]])
                 total_plan.append(robot_wrapper(p, s))
             else:
                 total_plan.append(p)
@@ -670,27 +736,32 @@ class CustomizedRunEngine(RunEngine):
 
         _subs = normalize_subs_input(subs)
         if verify_write:
-            _subs.update({'stop': verify_files_saved})
+            _subs.update({"stop": verify_files_saved})
 
-        if self._beamtime and self._beamtime.get('bt_wavelength') is None:
-            print("WARNING: there is no wavelength information in current"
-                  "beamtime object, scan will keep going....")
+        if self._beamtime and self._beamtime.get("bt_wavelength") is None:
+            print(
+                "WARNING: there is no wavelength information in current"
+                "beamtime object, scan will keep going...."
+            )
 
-        if glbl['shutter_control']:
+        if glbl["shutter_control"]:
             # Alter the plan to incorporate dark frames.
             # only works if user allows shutter control
-            if glbl['auto_dark']:
+            if glbl["auto_dark"]:
                 plan = dark_strategy(plan)
                 plan = bpp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
             # force to close shutter after scan
-            plan = bpp.finalize_wrapper(plan,
-                                        bps.abs_set(
-                                            xpd_configuration['shutter'],
-                                            XPD_SHUTTER_CONF['close'],
-                                            wait=True))
+            plan = bpp.finalize_wrapper(
+                plan,
+                bps.abs_set(
+                    xpd_configuration["shutter"],
+                    XPD_SHUTTER_CONF["close"],
+                    wait=True,
+                ),
+            )
 
         # Load calibration file
-        if glbl['auto_load_calib']:
+        if glbl["auto_load_calib"]:
             plan = bpp.msg_mutator(plan, _inject_calibration_md)
         # Insert xpdacq md version
         plan = bpp.msg_mutator(plan, _inject_xpdacq_md_version)
@@ -700,26 +771,30 @@ class CustomizedRunEngine(RunEngine):
         plan = bpp.msg_mutator(plan, _inject_filter_positions)
 
         # Execute
-        return super().__call__(plan, subs,
-                                **metadata_kw)
+        return super().__call__(plan, subs, **metadata_kw)
 
 
 # For convenience, define short plans the use these custom commands.
 
+
 def load_sample(position, geometry=None):
     # TODO: I think this can be simpler.
-    return (yield from single_gen(Msg('load_sample',
-                                      xpd_configuration['robot'],
-                                      position, geometry)))
+    return (
+        yield from single_gen(
+            Msg("load_sample", xpd_configuration["robot"], position, geometry)
+        )
+    )
 
 
 def unload_sample():
     # TODO: I think this can be simpler.
-    return (yield from single_gen(Msg('unload_sample',
-                                      xpd_configuration['robot'])))
+    return (
+        yield from single_gen(Msg("unload_sample", xpd_configuration["robot"]))
+    )
 
 
 # These are usable bluesky plans.
+
 
 def robot_wrapper(plan, sample):
     """Wrap a plan in load/unload messages.

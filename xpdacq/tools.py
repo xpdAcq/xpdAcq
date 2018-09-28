@@ -36,15 +36,19 @@ def regularize_dict_key(input_dict, target_chr, replace_chr):
     for k, v in input_dict.items():
         if isinstance(v, dict):
             if isinstance(k, str) and target_chr in k:
-                print("replacing character {} with character {} "
-                      "in dictionary".format(target_chr, replace_chr))
+                print(
+                    "replacing character {} with character {} "
+                    "in dictionary".format(target_chr, replace_chr)
+                )
                 clean_k = k.replace(target_chr, replace_chr)
                 input_dict[clean_k] = input_dict.pop(k)
             regularize_dict_key(v, target_chr, replace_chr)
         else:
             if isinstance(k, str) and target_chr in k:
-                print("replacing character {} with character {} "
-                      "in dictionary".format(target_chr, replace_chr))
+                print(
+                    "replacing character {} with character {} "
+                    "in dictionary".format(target_chr, replace_chr)
+                )
                 clean_k = k.replace(target_chr, replace_chr)
                 input_dict[clean_k] = input_dict.pop(k)
 
@@ -73,16 +77,18 @@ def validate_dict_key(input_dict, invalid_chr, suggested_chr):
             if isinstance(k, str) and invalid_chr in k:
                 invalid_key_list.append(k)
     if invalid_key_list:
-        raise RuntimeError("Sadly our database can't digest periods in "
-                           "dictionary keys. We have found a number of "
-                           "entries in your spreadsheet that will "
-                           "violate this. these are listed below:\n{}\n"
-                           "As annoying as this is, we suggest you change "
-                           "the sample name to remove the {} characters,"
-                           " for example, you could replace {} with {} in "
-                           "your spreadsheet."
-                           .format(invalid_key_list, invalid_chr,
-                                   invalid_chr, suggested_chr))
+        raise RuntimeError(
+            "Sadly our database can't digest periods in "
+            "dictionary keys. We have found a number of "
+            "entries in your spreadsheet that will "
+            "violate this. these are listed below:\n{}\n"
+            "As annoying as this is, we suggest you change "
+            "the sample name to remove the {} characters,"
+            " for example, you could replace {} with {} in "
+            "your spreadsheet.".format(
+                invalid_key_list, invalid_chr, invalid_chr, suggested_chr
+            )
+        )
 
 
 class xpdAcqException(Exception):
@@ -98,7 +104,7 @@ def _graceful_exit(error_message):
         raise RuntimeError(error_message)
         return 0
     except Exception as err:
-        sys.stderr.write('WHOOPS: {}'.format(str(err)))
+        sys.stderr.write("WHOOPS: {}".format(str(err)))
         return 1
 
 
@@ -114,10 +120,12 @@ def _check_obj(obj_name, error_msg=None):
         namespace
     """
     if error_msg is None:
-        error_msg = "Required object {} doesn't exist in" \
-                    "current namespace".format(obj_name)
+        error_msg = (
+            "Required object {} doesn't exist in"
+            "current namespace".format(obj_name)
+        )
     ips = get_ipython()
-    obj = ips.ns_table['user_global'].get(obj_name, None)
+    obj = ips.ns_table["user_global"].get(obj_name, None)
     if not obj:
         raise NameError(error_msg)
     else:
@@ -127,5 +135,6 @@ def _check_obj(obj_name, error_msg=None):
 def _timestampstr(timestamp):
     """convert timestamp to strftime formate"""
     timestring = datetime.datetime.fromtimestamp(float(timestamp)).strftime(
-        '%Y%m%d-%H%M%S')
+        "%Y%m%d-%H%M%S"
+    )
     return timestring

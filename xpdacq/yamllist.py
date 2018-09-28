@@ -5,8 +5,12 @@
 # BSD 3-Clause                                                         #
 # ######################################################################
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import (
+    absolute_import,
+    division,
+    print_function,
+    unicode_literals,
+)
 import yaml
 
 
@@ -18,9 +22,10 @@ class YamlList(list):
     to manually update the file to the state of the list. The method is
     automatically called on `__setitem__`, `__del__`, and on Python exit.
     """
+
     def __init__(self, fname):
         self.fname = fname
-        with open(fname, 'r') as f:
+        with open(fname, "r") as f:
             lst = yaml.load(f)
         # If file is empty, make it an empty list.
         if lst is None:
@@ -56,7 +61,7 @@ class YamlList(list):
     def insert(self, index, val):
         super().insert(index, val)
         self.flush()
-        
+
     def pop(self, val=None):
         super().pop(val)
         self.flush()
@@ -77,5 +82,5 @@ class YamlList(list):
         """
         Ensure any mutable values are updated on disk.
         """
-        with open(self.fname, 'w') as f:
+        with open(self.fname, "w") as f:
             yaml.dump(list(self), f)

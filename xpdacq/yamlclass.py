@@ -61,5 +61,5 @@ class YamlClass:
 
     def flush(self):
         """method to yamlize allowed attributes"""
-        with open(self._filepath, 'w') as f:
+        with open(self._filepath, "w") as f:
             yaml.dump(self._internal_dict, f, default_flow_style=False)

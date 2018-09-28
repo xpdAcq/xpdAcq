@@ -29,28 +29,27 @@ from xpdconf.conf import glbl_dict, GLBL_YAML_PATH
 from .tools import xpdAcqException
 from .yamldict import YamlDict
 
-glbl_dict.pop('exp_db')
+glbl_dict.pop("exp_db")
 XPDACQ_MD_VERSION = 0.1
 
 # special function and dict to store all necessary objects
 xpd_configuration = {}
 
 
-def configure_device(*, area_det, shutter,
-                     temp_controller, db, **kwargs):
+def configure_device(*, area_det, shutter, temp_controller, db, **kwargs):
     """function to set up required device/objects for xpdacq"""
     # specifically assign minimum requirements
-    xpd_configuration['area_det'] = area_det
-    xpd_configuration['shutter'] = shutter
-    xpd_configuration['temp_controller'] = temp_controller
-    xpd_configuration['db'] = db
+    xpd_configuration["area_det"] = area_det
+    xpd_configuration["shutter"] = shutter
+    xpd_configuration["temp_controller"] = temp_controller
+    xpd_configuration["db"] = db
     # extra kwargs
     xpd_configuration.update(**kwargs)
 
 
 def configure_frame_acq_time(new_frame_acq_time):
     """function to configure frame acquire time of area detector"""
-    area_det = xpd_configuration['area_det']
+    area_det = xpd_configuration["area_det"]
     # stop acquisition
     area_det.cam.acquire.put(0)
     time.sleep(1)
@@ -59,51 +58,56 @@ def configure_frame_acq_time(new_frame_acq_time):
     # extra wait time for device to set
     time.sleep(1)
     area_det.cam.acquire.put(1)
-    print("INFO: area detector has been configured to new "
-          "acquisition time (time per frame)  = {}s"
-          .format(new_frame_acq_time))
+    print(
+        "INFO: area detector has been configured to new "
+        "acquisition time (time per frame)  = {}s".format(new_frame_acq_time)
+    )
 
 
 def _verify_within_test(beamline_config_fp, verif):
     while verif != "y":
-        with open(beamline_config_fp, 'r') as f:
+        with open(beamline_config_fp, "r") as f:
             beamline_config = yaml.load(f)
         warnings.warn("Not verified")
         verif = "y"
     beamline_config["Verified by"] = "AUTO VERIFIED IN TEST"
     timestamp = datetime.datetime.now()
     beamline_config["Verification time"] = timestamp.strftime(
-        '%Y-%m-%d %H:%M:%S')
-    with open(beamline_config_fp, 'w') as f:
+        "%Y-%m-%d %H:%M:%S"
+    )
+    with open(beamline_config_fp, "w") as f:
         yaml.dump(beamline_config, f)
     return beamline_config
 
 
 def _load_beamline_config(beamline_config_fp, verif="", test=False):
     if not os.path.isfile(beamline_config_fp):
-        raise xpdAcqException("WARNING: can not find long term beamline "
-                              "configuration file. Please contact the "
-                              "beamline scientist ASAP")
+        raise xpdAcqException(
+            "WARNING: can not find long term beamline "
+            "configuration file. Please contact the "
+            "beamline scientist ASAP"
+        )
     pp = pprint.PrettyPrinter()
     os_type = platform.system()
-    if os_type == 'Windows':
-        editor = 'notepad'
+    if os_type == "Windows":
+        editor = "notepad"
     else:
-        editor = os.environ.get('EDITOR', 'vim')
+        editor = os.environ.get("EDITOR", "vim")
     if not test:
         while verif.upper() != ("Y" or "YES"):
-            with open(beamline_config_fp, 'r') as f:
+            with open(beamline_config_fp, "r") as f:
                 beamline_config = yaml.load(f)
             pp.pprint(beamline_config)
             verif = input("\nIs this configuration correct? y/n: ")
             if verif.upper() == ("N" or "NO"):
-                print('Edit, save, and close the configuration file.\n')
+                print("Edit, save, and close the configuration file.\n")
                 subprocess.call([editor, beamline_config_fp])
         beamline_config["Verified by"] = input("Please input your initials: ")
         timestamp = datetime.datetime.now()
         beamline_config["Verification time"] = timestamp.strftime(
-            '%Y-%m-%d %H:%M:%S')
-        with open(beamline_config_fp, 'w') as f:
+            "%Y-%m-%d %H:%M:%S"
+        )
+        with open(beamline_config_fp, "w") as f:
             yaml.dump(beamline_config, f)
     else:
         beamline_config = _verify_within_test(beamline_config_fp, verif)
@@ -119,9 +123,9 @@ def _reload_glbl(glbl_yaml_path=None):
         filepath to local yaml
     """
     if glbl_yaml_path is None:
-        glbl_yaml_path = glbl_dict['glbl_yaml_path']
+        glbl_yaml_path = glbl_dict["glbl_yaml_path"]
     if os.path.isfile(glbl_yaml_path):
-        with open(glbl_dict['glbl_yaml_path']) as f:
+        with open(glbl_dict["glbl_yaml_path"]) as f:
             reload_dict = yaml.load(f)
         return reload_dict
     else:
@@ -161,14 +165,21 @@ class GlblYamlDict(YamlDict):
     """
 
     # required attributes for yaml
-    _VALID_ATTRS = ['_name', '_filepath', 'filepath', '_referenced_by']
+    _VALID_ATTRS = ["_name", "_filepath", "filepath", "_referenced_by"]
 
     # keys for fields allowed to change
-    _MUTABLE_FIELDS = ['frame_acq_time', 'auto_dark', 'dk_window',
-                       '_dark_dict_list', 'shutter_control',
-                       'auto_load_calib', 'calib_config_name',
-                       'calib_config_dict', 'image_field',
-                       'exp_hash_uid']
+    _MUTABLE_FIELDS = [
+        "frame_acq_time",
+        "auto_dark",
+        "dk_window",
+        "_dark_dict_list",
+        "shutter_control",
+        "auto_load_calib",
+        "calib_config_name",
+        "calib_config_dict",
+        "image_field",
+        "exp_hash_uid",
+    ]
 
     def __init__(self, name, **kwargs):
         super().__init__(name=name, **kwargs)
@@ -185,11 +196,12 @@ class GlblYamlDict(YamlDict):
 
     def __setitem__(self, key, val):
         if key not in self._MUTABLE_FIELDS:
-            raise xpdAcqException("key='{}' is not allowed to change!"
-                                  .format(key))
+            raise xpdAcqException(
+                "key='{}' is not allowed to change!".format(key)
+            )
         else:
             # annoying logic specifically for area_det
-            if key == 'frame_acq_time':
+            if key == "frame_acq_time":
                 configure_frame_acq_time(val)
             super().__setitem__(key, val)
 
@@ -197,15 +209,15 @@ class GlblYamlDict(YamlDict):
         if key not in self._VALID_ATTRS:
             if key in self._MUTABLE_FIELDS:
                 # back-support
-                raise DeprecationWarning("{} has been changed, please do "
-                                         "this command instead\n"
-                                         ">>> {}['{}']={}"
-                                         .format(self._name,
-                                                 self._name,
-                                                 key, val))
+                raise DeprecationWarning(
+                    "{} has been changed, please do "
+                    "this command instead\n"
+                    ">>> {}['{}']={}".format(self._name, self._name, key, val)
+                )
             else:
-                raise AttributeError("{} doesn't support setting attribute"
-                                     .format(self._name))
+                raise AttributeError(
+                    "{} doesn't support setting attribute".format(self._name)
+                )
         else:
             super().__setattr__(key, val)
 
