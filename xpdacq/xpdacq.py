@@ -733,7 +733,11 @@ def robot_wrapper(plan, sample):
     >>> plan = count([pe1c])
     >>> new_plan = robot_wrapper(plan, {'position': 1})
     """
+    yield from bps.checkpoint()
     yield from load_sample(sample['robot_identifier'],
                            sample.get('robot_geometry', None))
+    yield from bps.checkpoint()
     yield from plan
+    yield from bps.checkpoint()
     yield from unload_sample()
+    yield from bps.checkpoint()
