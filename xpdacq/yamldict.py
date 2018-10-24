@@ -5,8 +5,12 @@
 # BSD 3-Clause                                                         #
 # ######################################################################
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import (
+    absolute_import,
+    division,
+    print_function,
+    unicode_literals,
+)
 import os
 import tempfile
 import yaml
@@ -92,7 +96,7 @@ class _YamlDictLike:
         """
         Ensure any mutable values are updated on disk.
         """
-        with open(self.filepath, 'w') as f:
+        with open(self.filepath, "w") as f:
             self.to_yaml(f)
         for ref in self._referenced_by:
             ref.flush()
@@ -109,8 +113,9 @@ class YamlDict(_YamlDictLike, dict):
         if d is None:
             d = {}
         elif not isinstance(d, dict):
-            raise TypeError("yamldict only applies to YAML files with a "
-                            "mapping")
+            raise TypeError(
+                "yamldict only applies to YAML files with a " "mapping"
+            )
         instance = cls(d)
         if not isinstance(f, str):
             instance.filepath = os.path.abspath(f.name)
@@ -119,8 +124,9 @@ class YamlDict(_YamlDictLike, dict):
 
 class YamlChainMap(_YamlDictLike, ChainMap):
     def to_yaml(self, f=None):
-        return yaml.dump(list(map(dict, self.maps)), f,
-                         default_flow_style=False)
+        return yaml.dump(
+            list(map(dict, self.maps)), f, default_flow_style=False
+        )
 
     @classmethod
     def from_yaml(cls, f):
@@ -129,8 +135,10 @@ class YamlChainMap(_YamlDictLike, ChainMap):
         if maps is None:
             maps = []
         elif not isinstance(maps, list):
-            raise TypeError("yamlchainmap only applies to YAML files with "
-                            "list of mappings")
+            raise TypeError(
+                "yamlchainmap only applies to YAML files with "
+                "list of mappings"
+            )
         instance = cls(*maps)
         if not isinstance(f, str):
             instance.filepath = os.path.abspath(f.name)
