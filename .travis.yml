@@ -60,6 +60,7 @@ script:
   - codecov
   - conda install --yes --file requirements/docs.txt
   - cd docs
+  - python -c "from xpdacq import __version__"
   - make html
   - cd ..
   - doctr deploy . --built-docs ./docs/_build/html;
