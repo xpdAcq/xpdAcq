@@ -22,7 +22,6 @@ addons:
 matrix:
   include:
     - python: 3.6
-    - python: 3.5
 
 before_install:
   - git clone https://github.com/NSLS-II/nsls2-ci --branch master --single-branch ~/ci_scripts
@@ -43,7 +42,7 @@ install:
   - conda install --file requirements/build.txt
   - conda install pip
   - pip install -r requirements/pip.txt
-  - pip install .
+  - python -m pip install . --no-deps --ignore-installed --no-cache-dir -vvv
   - git clean -xfd
 
 script:
