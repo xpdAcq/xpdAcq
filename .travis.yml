@@ -42,7 +42,7 @@ install:
   - conda install --file requirements/build.txt
   - conda install pip
   - pip install -r requirements/pip.txt
-  - python -m pip install . --no-deps --ignore-installed --no-cache-dir -vvv
+  - python -m pip install . --no-deps --ignore-installed --no-cache-dir -vvv -e
   - git clean -xfd
 
 script:
