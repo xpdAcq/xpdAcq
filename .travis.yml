@@ -59,7 +59,10 @@ script:
   - coverage report -m
   - codecov
   - conda install --yes --file requirements/docs.txt
+  - python -m pip install -e . --no-deps --ignore-installed --no-cache-dir -vvv
   - cd docs
+  - which python
+  - python --version
   - python -c "from xpdacq import __version__"
   - make html
   - cd ..
