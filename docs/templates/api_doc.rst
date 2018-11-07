@@ -16,3 +16,13 @@ xrun API Documentation
 .. autoclass:: xpdacq.xpdacq.CustomizedRunEngine
 
    .. automethod:: xpdacq.xpdacq.CustomizedRunEngine.__call__
+
+.. _ScanPlan_api:
+
+ScanPlan API Documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: xpdacq.beamtime.ct
+.. autofunction:: xpdacq.beamtime.Tramp
+.. autofunction:: xpdacq.beamtime.Tlist
+.. autofunction:: xpdacq.beamtime.tseries
