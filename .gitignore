@@ -69,3 +69,6 @@ docs/_build
 
 # Rever
 rever/
+
+# pytest cache
+.pytest_cache/
