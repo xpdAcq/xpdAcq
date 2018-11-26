@@ -135,6 +135,7 @@ def _shutter_step(detectors, motor, step):
     yield from bps.abs_set(
         xpd_configuration["shutter"], XPD_SHUTTER_CONF["open"], wait=True
     )
+    yield from bps.sleep(glbl['shutter_sleep'])
     yield from bps.trigger_and_read(list(detectors) + [motor])
     yield from bps.abs_set(
         xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"], wait=True
@@ -147,6 +148,7 @@ def _open_shutter_stub():
     yield from bps.abs_set(
         xpd_configuration["shutter"], XPD_SHUTTER_CONF["open"], wait=True
     )
+    yield from bps.sleep(glbl['shutter_sleep'])
     yield from bps.checkpoint()
 
 
