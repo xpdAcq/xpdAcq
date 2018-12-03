@@ -140,6 +140,7 @@ def periodic_dark(plan):
                         XPD_SHUTTER_CONF["open"],
                         wait=True,
                     ),
+                    bps.sleep(glbl['shutter_sleep']),
                 ),
                 None,
             )
@@ -152,6 +153,7 @@ def periodic_dark(plan):
                         XPD_SHUTTER_CONF["open"],
                         wait=True,
                     ),
+                    bps.sleep(glbl['shutter_sleep'])
                 ),
                 None,
             )
