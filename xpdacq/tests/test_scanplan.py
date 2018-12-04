@@ -15,11 +15,12 @@ def _verify_tseries_message(msgs):
     # expected message stream:  set -> wait -> checkpoint -> trigger
     # expected message stream:  save -> set -> wait -> checkpoint
     trigger_msg_pos = [i for i, x in enumerate(msgs) if x.command == "trigger"]
-    print([msgs[ind - 3].args for ind in trigger_msg_pos])
-    assert all([msgs[ind - 3].command == "set" for ind in trigger_msg_pos])
+    print([msgs[ind - 4].args for ind in trigger_msg_pos])
+    print([m.command for m in msgs])
+    assert all([msgs[ind - 4].command == "set" for ind in trigger_msg_pos])
     assert all(
         [
-            msgs[ind - 3].args[0] == XPD_SHUTTER_CONF["open"]
+            msgs[ind - 4].args[0] == XPD_SHUTTER_CONF["open"]
             for ind in trigger_msg_pos
         ]
     )  # first arg
@@ -42,6 +43,7 @@ def test_tseries_with_shutter_control_pureMsg(fresh_xrun):
     print(xpd_configuration)
     p = tseries([xpd_configuration["area_det"]], 2, 0.5, 10, True)
     msgs = list(p)
+    print([m.command for m in msgs])
     _verify_tseries_message(msgs)
 
 
