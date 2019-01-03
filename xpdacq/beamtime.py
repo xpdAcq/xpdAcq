@@ -19,11 +19,14 @@ import yaml
 import inspect
 import itertools
 from collections import ChainMap, OrderedDict
+from itertools import product
+import time
 
 import numpy as np
 import bluesky.plans as bp
 import bluesky.plan_stubs as bps
 import bluesky.preprocessors as bpp
+from bluesky import Msg
 from bluesky.callbacks import LiveTable
 
 from .glbl import glbl
@@ -32,6 +35,7 @@ from xpdconf.conf import XPD_SHUTTER_CONF
 from .yamldict import YamlDict, YamlChainMap
 from .validated_dict import ValidatedDictLike
 from .tools import regularize_dict_key
+from xpdan.vend.callbacks.core import Retrieve
 
 # This is used to map plan names (strings in the YAML file) to actual
 # plan functions in Python.
@@ -768,6 +772,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
             "{}: {}".format(i, sa_name)
             for i, sa_name in enumerate(self.samples.keys())
             if sa_name.startswith("bkgd")
+
         ]
         print("\n".join(contents))
 
@@ -1016,3 +1021,206 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         arg_value_str = map(str, self.bound_arguments.values())
         fn = "_".join([self["sp_plan_name"]] + list(arg_value_str))
         return os.path.join(glbl["yaml_dir"], "scanplans", "%s.yml" % fn)
+
+
+# Acq
+def dark_light(rt):
+    """Plan to take a light then a dark and subtract the two for use in plans
+    """
+    # take dark
+    yield from bps.abs_set(
+        xpd_configuration["shutter"], glbl["shutter_conf"]["close"], wait=True
+    )
+    data = yield from bps.trigger_and_read(
+        [
+            xpd_configuration["area_det"],
+            xpd_configuration["filter_bank"],
+            xpd_configuration["shutter"],
+        ],
+        name="dark",
+    )
+    dark = rt.retrieve(data[glbl["image_field"]]["value"])
+    # take data
+    yield from bps.abs_set(
+        xpd_configuration["shutter"], glbl["shutter_conf"]["open"], wait=True
+    )
+    data = yield from bps.trigger_and_read(
+        [
+            xpd_configuration["area_det"],
+            xpd_configuration["filter_bank"],
+            xpd_configuration["shutter"],
+        ]
+    )
+    light = rt.retrieve(data[glbl["image_field"]]["value"])
+    yield from bps.abs_set(
+        xpd_configuration["shutter"], glbl["shutter_conf"]["close"], wait=True
+    )
+    data = light.astype(np.float32) - dark.astype(np.float32)
+
+    return data
+
+
+def tune_filters(
+    upper_threshold=8000,
+    percentile=100 - .01,
+    lower_threshold=500,
+    desired_exposure=.1,
+    images_per_set=1,
+    auto_exposure=True,
+):
+    """Tune the filters to the desired exposure time while not burning the
+    detector.
+
+    Parameters
+    ----------
+    upper_threshold : float
+        Max number of counts for detector safety
+    percentile : float
+        Percentile to use to measure the max intensity (use percentile because
+        of bad pixels)
+    lower_threshold : float
+        Threshold below which data is unreliable for measuring sample
+        scattering power
+    desired_exposure : float
+        The desired exposure. The exposure must be within the capabilities of
+        the detector. This will also be used to sample the sample's scattering
+        power.
+    images_per_set : int
+        The number of images to take, defaults to 1
+    auto_exposure : bool
+        If true modify the exposure to optimize counts, else use the
+        desired exposure. Defaults to True
+
+    Returns
+    -------
+    plan : generator
+        The plan
+
+    Notes
+    -----
+    This requires accurate attenuation factors for the filters.
+     """
+    # List of filter configurations in order of filter power
+    filter_configurations = []
+    for x in product([0, 1], repeat=4):
+        filter_configurations.append(x)
+
+    def compute_attenuation(x):
+        y = (~np.asarray(x, dtype=bool)).astype(int)
+
+        # If all the values are out then no attenuation
+        if y[np.nonzero(y)].size == 0:
+            return 1
+
+        z = np.nan_to_num(
+            1
+            / np.prod(
+                y[np.nonzero(y)]
+                * np.asarray(glbl["filter_bank_attenuation"])[np.nonzero(y)]
+            )
+        )
+        return z
+
+    filter_configurations = sorted(
+        filter_configurations, key=lambda x: compute_attenuation(x)
+    )
+
+    # TODO: Need to set this since it could be non-unique
+
+    attenuations = []
+    for x in filter_configurations:
+        attenuations.append(compute_attenuation(x))
+    attenuations = np.asarray(attenuations)
+
+    @bpp.stage_decorator(
+        [
+            xpd_configuration["area_det"],
+            xpd_configuration["filter_bank"],
+            xpd_configuration["shutter"],
+        ]
+    )
+    @bpp.run_decorator()
+    def inner():
+        # add the Retrieve callback on
+        rt = Retrieve(handler_reg=glbl["exp_db"].reg.handler_reg)
+        token = yield from bps.subscribe("all", rt)
+
+        t0 = time.time()
+        yield from bps.abs_set(
+            xpd_configuration["area_det"].cam.acquire_time,
+            desired_exposure,
+            wait=True,
+        )
+        yield from bps.abs_set(
+            xpd_configuration["area_det"].images_per_set,
+            images_per_set,
+            wait=True,
+        )
+
+        print("set det time {}".format(time.time() - t0))
+
+        for i, fc in enumerate(filter_configurations):
+            # set the filter banks
+            for f, io in zip(
+                xpd_configuration["filter_bank"].component_names, fc
+            ):
+                t0 = time.time()
+                yield from bps.abs_set(
+                    getattr(xpd_configuration["filter_bank"], f), io, wait=True
+                )
+                print("set filter {} time {}".format(f, time.time() - t0))
+
+            filter_bank = xpd_configuration["filter_bank"]
+            filters = filter_bank.read_attrs
+
+            print("INFO: Current filter status")
+            for el in filters:
+                print(
+                    "INFO: {} : {}".format(el, getattr(filter_bank, el).value)
+                )
+
+            t0 = time.time()
+            data = yield from dark_light(rt)
+            print("take data time {}".format(time.time() - t0))
+            t0 = time.time()
+            # calculate the value of the top .01 percentile pixel
+            v = np.percentile(data, percentile)
+            print("compute percentile time {}".format(time.time() - t0))
+            # The value is too low to evaluate, bump to next configuration
+            if v < lower_threshold:
+                continue
+            else:
+                break
+
+        # compute the sample scattering power
+        sp = v / (attenuations[i] * desired_exposure)
+        # compute filter config index to use
+        fci = np.where(
+            (sp * attenuations * desired_exposure) < upper_threshold
+        )[0][-1]
+        # set the bank
+        for f, io in zip(
+            xpd_configuration["filter_bank"].component_names,
+            filter_configurations[fci],
+        ):
+            yield from bps.abs_set(
+                getattr(xpd_configuration["filter_bank"], f), io, wait=True
+            )
+
+        if auto_exposure:
+            # compute the exposure
+            computed_exposure = upper_threshold / (sp * attenuations[fci])
+            print("Extrapolated exposure: {}".format(computed_exposure))
+            exposure = min(5, computed_exposure)
+            print("Using exposure: {}".format(exposure))
+            expected_counts = sp * attenuations[fci] * exposure
+            print("Expected counts: {}".format(expected_counts))
+            yield from bps.abs_set(
+                xpd_configuration["area_det"].cam.acquire_time, exposure
+            )
+        yield from bps.unsubscribe(token)
+
+    return (yield from inner())
+
+
+register_plan("auto_filters", tune_filters)
