@@ -162,6 +162,7 @@ def _close_shutter_stub():
     yield from bps.abs_set(
         xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"], wait=True
     )
+    yield from bps.sleep(glbl['shutter_sleep'])
     yield from bps.checkpoint()
 
 
