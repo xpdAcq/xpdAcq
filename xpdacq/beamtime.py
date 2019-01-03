@@ -147,7 +147,7 @@ def _open_shutter_stub():
     yield from bps.abs_set(
         xpd_configuration["shutter"], XPD_SHUTTER_CONF["open"], wait=True
     )
-    yield from bps.sleep(glbl['shutter_sleep'])
+    yield from bps.sleep(glbl["shutter_sleep"])
     yield from bps.checkpoint()
 
 
@@ -157,7 +157,7 @@ def _close_shutter_stub():
     yield from bps.abs_set(
         xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"], wait=True
     )
-    yield from bps.sleep(glbl['shutter_sleep'])
+    yield from bps.sleep(glbl["shutter_sleep"])
     yield from bps.checkpoint()
 
 
@@ -768,7 +768,6 @@ class Beamtime(ValidatedDictLike, YamlDict):
             "{}: {}".format(i, sa_name)
             for i, sa_name in enumerate(self.samples.keys())
             if sa_name.startswith("bkgd")
-
         ]
         print("\n".join(contents))
 
