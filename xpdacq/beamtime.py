@@ -1028,9 +1028,7 @@ def dark_light(rt):
     """Plan to take a light then a dark and subtract the two for use in plans
     """
     # take dark
-    yield from bps.abs_set(
-        xpd_configuration["shutter"], glbl["shutter_conf"]["close"], wait=True
-    )
+    yield from _close_shutter_stub()
     data = yield from bps.trigger_and_read(
         [
             xpd_configuration["area_det"],
@@ -1041,9 +1039,7 @@ def dark_light(rt):
     )
     dark = rt.retrieve(data[glbl["image_field"]]["value"])
     # take data
-    yield from bps.abs_set(
-        xpd_configuration["shutter"], glbl["shutter_conf"]["open"], wait=True
-    )
+    yield from _open_shutter_stub()
     data = yield from bps.trigger_and_read(
         [
             xpd_configuration["area_det"],
@@ -1052,9 +1048,7 @@ def dark_light(rt):
         ]
     )
     light = rt.retrieve(data[glbl["image_field"]]["value"])
-    yield from bps.abs_set(
-        xpd_configuration["shutter"], glbl["shutter_conf"]["close"], wait=True
-    )
+    yield from _close_shutter_stub()
     data = light.astype(np.float32) - dark.astype(np.float32)
 
     return data
