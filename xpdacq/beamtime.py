@@ -15,6 +15,8 @@
 ##############################################################################
 import os
 import uuid
+
+import caproto.threading.pyepics_compat as epics
 import yaml
 import inspect
 import itertools
@@ -487,7 +489,7 @@ def _nstep(start, stop, step_size):
 # FIXME: this scanplan is hot-fix for multi-sample scanplan. It serves as
 #       a prototype of the future scanplans but it's incomplete.
 def statTramp(
-    dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *, bt=None
+        dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *, bt=None
 ):
     """
     Parameters:
@@ -633,7 +635,8 @@ class Beamtime(ValidatedDictLike, YamlDict):
     _REQUIRED_FIELDS = ["bt_piLast", "bt_safN"]
 
     def __init__(
-        self, pi_last, saf_num, experimenters=[], *, wavelength=None, **kwargs
+            self, pi_last, saf_num, experimenters=[], *, wavelength=None,
+            **kwargs
     ):
         super().__init__(
             bt_piLast=_clean_info(pi_last),
@@ -693,7 +696,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self._referenced_by.append(scanplan)
         # save order
         with open(
-            os.path.join(glbl["config_base"], ".scanplan_order.yml"), "w+"
+                os.path.join(glbl["config_base"], ".scanplan_order.yml"), "w+"
         ) as f:
             scanplan_order = {}
             for i, name in enumerate(self.scanplans.keys()):
@@ -711,7 +714,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self._referenced_by.append(sample)
         # save order
         with open(
-            os.path.join(glbl["config_base"], ".sample_order.yml"), "w+"
+                os.path.join(glbl["config_base"], ".sample_order.yml"), "w+"
         ) as f:
             sample_order = {}
             for i, name in enumerate(self.samples.keys()):
@@ -741,16 +744,16 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     def __str__(self):
         contents = (
-            ["", "ScanPlans:"]
-            + [
-                "{}: {}".format(i, sp_name)
-                for i, sp_name in enumerate(self.scanplans.keys())
-            ]
-            + ["", "Samples:"]
-            + [
-                "{}: {}".format(i, sa_name)
-                for i, sa_name in enumerate(self.samples.keys())
-            ]
+                ["", "ScanPlans:"]
+                + [
+                    "{}: {}".format(i, sp_name)
+                    for i, sp_name in enumerate(self.scanplans.keys())
+                ]
+                + ["", "Samples:"]
+                + [
+                    "{}: {}".format(i, sa_name)
+                    for i, sa_name in enumerate(self.samples.keys())
+                ]
         )
         return "\n".join(contents)
 
@@ -1016,3 +1019,27 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
         arg_value_str = map(str, self.bound_arguments.values())
         fn = "_".join([self["sp_plan_name"]] + list(arg_value_str))
         return os.path.join(glbl["yaml_dir"], "scanplans", "%s.yml" % fn)
+
+
+# TODO: figure out how to send enough metadata for the system to realize
+#  that it needs to perform the summation and thresholding. Maybe this is
+#  better expressed as a plan or message mutator. A mutator would give us
+#  access to both the start document so we can modify the metadata to say
+#  this is an adaptive scan.
+def auto_acquire_stub(dets):
+    """Plan stub for running auto acquire
+
+    Parameters
+    ----------
+    dets : list
+        The list of detectors to read from
+
+    Yields
+    -------
+    msg: Msg
+        The messages associated with the plan
+
+    """
+    while epics.caget(xpd_configuration["analysis_device"]):
+        yield from bps.trigger_and_read(
+            dets + [xpd_configuration["analysis_device"]])
