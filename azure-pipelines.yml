@@ -1,0 +1,46 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+jobs:
+
+- job: 'Test'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  strategy:
+    matrix:
+      Python35:
+        python.version: '3.5'
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+    maxParallel: 4
+
+  steps:
+  - task: CondaEnvironment@1
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+      architecture: 'x64'
+
+  - script: |
+      echo '##vso[task.setvariable variable=TRAVIS_PYTHON_VERSION]$(python.version)'
+      conda config --set always_yes yes --set changeps1 no --set quiet true
+      conda config --add channels conda-forge && conda update conda --yes
+    displayName: 'install conda things'
+
+  - script: |
+      conda create -n testenv python=$TRAVIS_PYTHON_VERSION orch
+      source activate testenv
+      orch score.yaml
+    displayName: 'Install dependencies'
+
+  - script: |
+      coverage run run_tests.py
+      coverage report -m
+      codecov
+    displayName: 'pytest'
+
