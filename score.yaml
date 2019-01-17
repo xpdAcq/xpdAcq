@@ -1,0 +1,74 @@
+section_order:
+  - build
+  - install
+  - run
+  - test
+  - docs
+install: pip install .
+build:
+  pip:
+    default:
+      conda: setuptools
+  python:
+    default:
+      conda: python==$TRAVIS_PYTHON_VERSION
+run:
+  bluesky:
+    default: {conda: bluesky}
+  databroker:
+    default: {conda: databroker}
+  matplotlib:
+    default: {conda: matplotlib}
+  numpy:
+    default: {conda: numpy}
+  ophyd:
+    default: {conda: ophyd}
+  pyfai:
+    default: {conda: pyfai}
+  pyxdameraulevenshtein:
+    default: {conda: pyxdameraulevenshtein}
+  pyyaml:
+    default: {conda: pyyaml}
+  scikit-beam:
+    default: {conda: scikit-beam}
+  scipy:
+    default: {conda: scipy}
+  shed:
+    default: {conda: shed}
+    bleeding: {orch: 'https://github.com/xpdAcq/SHED.git'}
+  xpdconf:
+    default: {conda: xpdconf}
+  xpdsim:
+    default: {conda: xpdsim}
+  xpdtools:
+    default: {conda: xpdtools}
+    bleeding: {orch: 'https://github.com/xpdAcq/xpdtools.git'}
+  xpdview:
+    default: {conda: xpdview}
+  xray-vision:
+    default: {conda: xray-vision}
+  rapidz:
+    default: {conda: rapidz}
+test:
+  pytest:
+    default:
+      conda: pytest
+  flake8:
+    default:
+      conda: flake8
+  codecov:
+    default:
+      conda: codecov
+  coverage:
+    default:
+      conda: coverage
+  pytest-env:
+    default:
+      conda: pytest-env
+docs:
+  doctr:
+    default: {conda: doctr}
+  sphinx:
+    default: {conda: sphinx}
+  sphinx_rtd_theme:
+    default: {conda: sphinx_rtd_theme}

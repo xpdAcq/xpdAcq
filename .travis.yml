@@ -37,18 +37,12 @@ before_install:
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
-  - conda create -n testenv python=$TRAVIS_PYTHON_VERSION
+  - conda create -n testenv python=$TRAVIS_PYTHON_VERSION orch
   - source activate testenv
-  - conda install --file requirements/build.txt
-  - conda install pip
-  - pip install -r requirements/pip.txt
-  - python -m pip install -e . --no-deps --ignore-installed --no-cache-dir -vvv
-  - git clean -xfd
+  - orch score.yaml
 
 script:
   - set -e
-  - conda install --file requirements/run.txt
-  - conda install --file requirements/test.txt
   # make sure the sqlite file exists to avoid race conditions
   - python -c "from bluesky.utils import get_history; get_history()"
   # make sure package data is correctly set
@@ -58,8 +52,7 @@ script:
   - coverage run run_tests.py
   - coverage report -m
   - codecov
-  - conda install --yes --file requirements/docs.txt
-  - python -m pip install -e . --no-deps --ignore-installed --no-cache-dir -vvv
+#  - python -m pip install -e . --no-deps --ignore-installed --no-cache-dir -vvv
   - cd docs
   - which python
   - python --version
