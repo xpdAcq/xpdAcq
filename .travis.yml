@@ -8,6 +8,13 @@ cache:
 env:
   global:
     - secure: "ePWjP2xNjB2Wa+XlJKiNe+D8VEcY4woC72ySFWYXh6nfW2+OZwOb9TLYojNU67gacc/JKizMSBOKnH5EWeVZRwzR3x5kFFJ5ccv3EPGO1qw15rYExWAWPY45IXBZbmz4u58R4t3viTddZnUtVmMfgS9PzYSe1uNtVYqYfLnfRGX+6uG28xkNRb2TH62coXT0GThvLi/4uP19K5Wvo4Sxoep+WJ7F1AaP6NIoM8Cquxmm2qCE580UOEBEM7myxNzA6tW9aNQwsnJdZt53XyWdXotkOqxLV9/G/hshslsE8xJYHm+HUq2AuhGIVdtq5VUZTnqGPnSaayW8fO+wVsXAqXAO4eV08pMW61VFmmPQ9hGvKteuehVUaeRxVgGEYidyR4SpnVBZFIAylHqpzVIq5VJr2hAzXyJt4SlEZLrDLL7PLJ7b+gDDXM9BECKOdiFN9rl9W1s7+d6Hqlb/F2OPIiv7EpEgK97B6EqHauPK8neEp3VpE9JaLr7AWwbygNlCpJxfOFHq64OGtwmElk0FbxVkM/XSXMjfW8592js6rkybEAjhYvPA1Uunlpb59HyN26Tsd5asV1GTrjAaraKBCyV3mAfqI23tHQP9BFqDGbsfwSfMFQf3nNPprfROLi16mKXxdxibJmOP/tXuoQRe9zMqX0tH8QQO5SLi0e4amBQ="
+  matrix:
+    - PRECEDENCE='default'
+    - PRECEDENCE='default bleeding'
+
+matrix:
+  allow_failures:
+    - env: PRECEDENCE='default'
 
 services:
   - mongodb
@@ -19,9 +26,8 @@ addons:
     packages:
     - mongodb-org-server
 
-matrix:
-  include:
-    - python: 3.6
+python:
+  - 3.6
 
 before_install:
   - git clone https://github.com/NSLS-II/nsls2-ci --branch master --single-branch ~/ci_scripts
