@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='xpdacq',
-    version='0.8.2',
+    version='0.8.3',
     packages=find_packages(),
     description='acquisition module',
     zip_safe=False,

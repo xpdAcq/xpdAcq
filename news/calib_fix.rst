@@ -1,6 +1,4 @@
-**Added:**
-
-* Add shutter sleep so in-situ works
+**Added:** None
 
 **Changed:** None
 
@@ -8,6 +6,8 @@
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
+
+* Try except for new pyFAI calibration api vs old
 
 **Security:** None

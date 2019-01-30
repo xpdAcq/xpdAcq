@@ -3,6 +3,30 @@ xpdAcq Change Log
 
 .. current developments
 
+v0.8.3
+====================
+
+**Added:**
+
+* ``bt.robot_all`` to have a listing of all samples in the current mag
+* ScanPlan API doc in https://xpdacq.github.io/xpdAcq/api_doc.html
+* Add shutter sleep so in-situ works
+
+
+**Changed:**
+
+* Robot scan plan now has checkpoints, allowing better pausing
+
+
+**Fixed:**
+
+* Robot print statments now work properly
+
+* Removed bad zip for robot
+
+
+
+
 v0.8.2
 ====================
 

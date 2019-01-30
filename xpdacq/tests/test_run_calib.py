@@ -10,9 +10,9 @@ from xpdacq.calib import (
     xpdAcqException,
     _sample_name_phase_info_configuration,
     run_calibration,
+    Calibration
 )
 from pyFAI.calibrant import Calibrant, CALIBRANT_FACTORY
-from pyFAI.calibration import Calibration
 from pkg_resources import resource_filename as rs_fn
 
 
@@ -61,7 +61,7 @@ def test_calib_md(fresh_xrun, exp_hash_uid, glbl, db):
     sample_md = _sample_name_phase_info_configuration(None, None, "calib")
     calibrant = os.path.join(glbl["usrAnalysis_dir"], "Ni24.D")
     detector = "perkin_elmer"
-    img, fn_template = _collect_img(
+    _collect_img(
         5,
         True,
         sample_md,
@@ -70,7 +70,6 @@ def test_calib_md(fresh_xrun, exp_hash_uid, glbl, db):
         detector=detector,
         calibrant=calibrant,
     )
-    assert img.shape == (5, 5)
     calib_hdr = db[-1]
     assert "Ni_calib" == calib_hdr.start["sample_name"]
     assert detector == calib_hdr.start["detector"]
@@ -97,7 +96,7 @@ def test_calib_md(fresh_xrun, exp_hash_uid, glbl, db):
     assert client_uid == new_hash
     assert "detector_calibration_server_uid" not in hdr.start
     # new calib run
-    img, fn_template = _collect_img(
+    _collect_img(
         5,
         True,
         sample_md,
@@ -106,7 +105,6 @@ def test_calib_md(fresh_xrun, exp_hash_uid, glbl, db):
         detector=detector,
         calibrant=calibrant,
     )
-    assert img.shape == (5, 5)
     calib_hdr = db[-1]
     server_uid = calib_hdr.start["detector_calibration_server_uid"]
     client_uid = calib_hdr.start["detector_calibration_client_uid"]
