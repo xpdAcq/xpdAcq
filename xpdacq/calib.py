@@ -31,10 +31,13 @@ from .tools import _timestampstr, _check_obj, xpdAcqException
 from .utils import ExceltoYaml
 from .xpdacq import _auto_load_calibration_file
 
-from xpdan.calib import _save_calib_param, _calibration
+from xpdtools.calib import _save_calib_param, _calibration
 
 from pyFAI.gui.utils import update_fig
-from pyFAI.calibration import Calibration, PeakPicker, Calibrant
+try:
+    from pyFAI.gui.cli_calibration import Calibration, PeakPicker, Calibrant
+except ImportError:
+    from pyFAI.calibration import Calibration, PeakPicker, Calibrant
 from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 
 from pkg_resources import resource_filename as rs_fn
@@ -153,7 +156,7 @@ def run_calibration(
     if RE_instance is None:
         xrun_name = _REQUIRED_OBJ_LIST[0]
         RE_instance = _check_obj(xrun_name)  # will raise error if not exists
-    img, fn_template = _collect_img(
+    _collect_img(
         exposure,
         dark_sub_bool,
         sample_md,
@@ -174,7 +177,7 @@ def run_calibration(
         "process, please visit our web-doc at:\n"
         "https://xpdacq.github.io/xpdAcq/usb_Running.html#calib-manual\n"
     )
-
+    """
     if not parallel:  # backup when pipeline fails
         # get wavelength from bt
         if wavelength is None:
@@ -201,6 +204,7 @@ def run_calibration(
             glbl["config_base"], glbl["calib_config_name"]
         )
         _save_calib_param(calib_c, timestr, calib_yml_fp)
+    """
 
 
 def _inject_calibration_tag(msg):
@@ -238,6 +242,7 @@ def _collect_img(
 
     # collect image
     uid = RE_instance(sample_md, plan)
+    """
     # last one must be light
     db = xpd_configuration["db"]
     light_header = db[uid[-1]]
@@ -254,3 +259,4 @@ def _collect_img(
     fn_template = "from_calib_func_{}.poni".format(_timestampstr(time.time()))
 
     return img, fn_template
+    """
