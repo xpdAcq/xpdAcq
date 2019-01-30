@@ -10,9 +10,9 @@ from xpdacq.calib import (
     xpdAcqException,
     _sample_name_phase_info_configuration,
     run_calibration,
+    Calibration
 )
 from pyFAI.calibrant import Calibrant, CALIBRANT_FACTORY
-from pyFAI.calibration import Calibration
 from pkg_resources import resource_filename as rs_fn
 
 
