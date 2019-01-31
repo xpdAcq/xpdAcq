@@ -3,6 +3,22 @@ xpdAcq Change Log
 
 .. current developments
 
+v0.9.0
+====================
+
+**Changed:**
+
+* `endbeamtime` process renames the local `xpdUser` to
+  `xpdUser_<archive_name>` first before archiving and transferring 
+  file to remote location. This is to make sure the next beamtime 
+  will not be blocked by the backup process of last beamtime.
+
+**Fixed:**
+
+* Try except for new pyFAI calibration api vs old
+
+
+
 v0.8.3
 ====================
 
