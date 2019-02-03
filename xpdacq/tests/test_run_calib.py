@@ -128,7 +128,8 @@ def test_load_calibrant(fresh_xrun, bt):
 
         t = xrun.subscribe(check_eq, "start")
         # execute
-        run_calibration(calibrant=k, phase_info=k, RE_instance=xrun)
+        run_calibration(calibrant=k, phase_info=k, RE_instance=xrun,
+                        wait_for_cal=False)
         # clean
         xrun.unsubscribe(t)
     # invalid calibrant
