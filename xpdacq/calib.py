@@ -181,7 +181,7 @@ def run_calibration(
         "process, please visit our web-doc at:\n"
         "https://xpdacq.github.io/xpdAcq/usb_Running.html#calib-manual\n"
     )
-    if wait_for_cal:
+    if wait_for_cal:  # pragma: no cover
         print('Waiting for calibration to finish\n\n'
               'If calibration has failed please press Ctrl+C in this '
               'terminal and run ``run_calibration`` again!\n\n')
