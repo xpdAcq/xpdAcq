@@ -42,6 +42,8 @@ from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 
 from pkg_resources import resource_filename as rs_fn
 
+from hashlib import sha256
+
 _REQUIRED_OBJ_LIST = ["xrun"]
 
 
@@ -73,11 +75,10 @@ def run_calibration(
     dark_sub_bool=True,
     calibrant=None,
     phase_info=None,
-    wavelength=None,
     detector=None,
     *,
     RE_instance=None,
-    parallel=True,
+    wait_for_cal=True,
     **kwargs
 ):
     """function to run entire calibration process.
@@ -119,20 +120,16 @@ def run_calibration(
         http://xpdacq.github.io/usb_Running.html#phase-string
         If both ``calibrant`` and ``phase_info`` arguments are not provided,
         this field will be defaulted to ``Ni``.
-    wavelength : float, optional
-        x-ray wavelength in angstrom. default to value stored in
-        existing Beamtime object
     detector : str or pyFAI.detector.Detector instance, optional.
         detector used to collect data. default value is 'perkin-elmer'.
         other allowed values are in pyFAI documentation.
     RE_instance : bluesky.run_engine.RunEngine instance, optional
         instance of run engine. Default is xrun. Do not change under
         normal circumstances.
-    parallel : bool, optional
-        Tag for whether run the calibration step in a separte
-        process. Running in parallel in principle yields better resource
-        allocation. Default is ``True``, only change to ``False`` if
-        error is raised.
+    wait_for_cal : bool
+        If True wait for the new calibration to be produced before giving up
+        xrun control, otherwise give up control at the end of the scan.
+        Defaults to True
     kwargs:
         Additional keyword argument for calibration. please refer to
         pyFAI documentation for all options.
@@ -156,6 +153,13 @@ def run_calibration(
     if RE_instance is None:
         xrun_name = _REQUIRED_OBJ_LIST[0]
         RE_instance = _check_obj(xrun_name)  # will raise error if not exists
+
+    calib_file = os.path.join(glbl["config_base"], glbl["calib_config_name"])
+    calib_file_hash = '1'
+    if os.path.exists(calib_file):
+        with open(calib_file, 'r') as f:
+            calib_file_hash = sha256(f.read().encode('utf-8')).hexdigest()
+
     _collect_img(
         exposure,
         dark_sub_bool,
@@ -177,6 +181,20 @@ def run_calibration(
         "process, please visit our web-doc at:\n"
         "https://xpdacq.github.io/xpdAcq/usb_Running.html#calib-manual\n"
     )
+    if wait_for_cal:  # pragma: no cover
+        print('Waiting for calibration to finish\n\n'
+              'If calibration has failed please press Ctrl+C in this '
+              'terminal and run ``run_calibration`` again!\n\n')
+        while True:
+            if os.path.exists(calib_file):
+                with open(calib_file, 'r') as f:
+                    new_calib_file_hash = sha256(f.read().encode('utf-8')).hexdigest()
+            else:
+                new_calib_file_hash = '1'
+            if new_calib_file_hash != calib_file_hash:
+                break
+            else:
+                time.sleep(1)
     """
     if not parallel:  # backup when pipeline fails
         # get wavelength from bt
