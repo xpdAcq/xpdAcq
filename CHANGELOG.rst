@@ -3,6 +3,19 @@ xpdAcq Change Log
 
 .. current developments
 
+v0.9.1
+====================
+
+**Changed:**
+
+* Don't release xpdAcq until new calibration has been written
+
+**Fixed:**
+
+* use shuter stubs in ``_shutter_step`` so the shutter delay is supported
+
+
+
 v0.9.0
 ====================
 
