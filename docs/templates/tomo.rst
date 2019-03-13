@@ -6,8 +6,6 @@ Running Tomography
 The XPD acquisition and analysis stack supports the acquisition and processing
 of tomographic data in both full field and pencil beam geometries.
 
-XPD is equipped with a sample loading robot, which requires special syntax to use properly.
-
 Running a tomographic scan
 --------------------------
 
