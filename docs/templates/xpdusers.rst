@@ -16,3 +16,4 @@ For XPD Users
    usb_QuickAssess
    usb_GlobalOptions
    robot
+   tomo
