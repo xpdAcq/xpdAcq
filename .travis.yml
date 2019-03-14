@@ -46,7 +46,6 @@ install:
   - git clean -xfd
 
 script:
-  - set -e
   - conda install --file requirements/run.txt
   - conda install --file requirements/test.txt
   # make sure the sqlite file exists to avoid race conditions
@@ -58,6 +57,7 @@ script:
   - coverage run run_tests.py
   - coverage report -m
   - codecov
+  - set -e
   - conda install --yes --file requirements/docs.txt
   - python -m pip install -e . --no-deps --ignore-installed --no-cache-dir -vvv
   - cd docs
