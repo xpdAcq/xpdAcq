@@ -82,14 +82,23 @@ def _summarize(plan):
 
 def _configure_area_det(exposure):
     """private function to configure pe1c with continuous acquisition mode"""
+    det = xpd_configuration["area_det"]
     # cs studio configuration doesn't propagate to python level
-    xpd_configuration["area_det"].cam.acquire_time.put(glbl["frame_acq_time"])
-    # compute number of frames
-    acq_time = xpd_configuration["area_det"].cam.acquire_time.get()
+
+    det.cam.acquire_time.put(glbl["frame_acq_time"])
+    acq_time = det.cam.acquire_time.get()
     _check_mini_expo(exposure, acq_time)
-    num_frame = np.ceil(exposure / acq_time)
+    if hasattr(det, 'image_per_set'):
+        # compute number of frames
+        num_frame = np.ceil(exposure / acq_time)
+        det.images_per_set.put(num_frame)
+    else:
+        # The dexela detector does not support `images_per_set` so we just
+        # use whatever the user asks for as the thing
+        # TODO: maybe put in warnings if the exposure is too long?
+        num_frame = 1
     computed_exposure = num_frame * acq_time
-    xpd_configuration["area_det"].images_per_set.put(num_frame)
+
     # print exposure time
     print(
         "INFO: requested exposure time = {} - > computed exposure time"

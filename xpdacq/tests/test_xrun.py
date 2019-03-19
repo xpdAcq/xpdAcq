@@ -31,6 +31,7 @@ import bluesky.examples as be
 from bluesky.callbacks import collector
 
 from pkg_resources import resource_filename as rs_fn
+from xpdsim import dexela
 
 pytest_dir = rs_fn("xpdacq", "tests/")
 
@@ -535,3 +536,12 @@ class xrunTest(unittest.TestCase):
         hdr = xpd_configuration["db"][-1]
         print(beamline_config_dict)
         assert hdr.start["beamline_config"] == beamline_config_dict
+
+
+def test_dexela(fresh_xrun):
+    xpd_configuration['area_det'] = dexela
+    xrun = fresh_xrun
+    L = []
+    xrun.subscribe(lambda *x: L.append(x))
+    xrun({}, 0)
+    assert L

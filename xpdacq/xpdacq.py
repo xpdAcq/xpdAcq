@@ -53,7 +53,10 @@ def _update_dark_dict_list(name, doc):
     # obtain light count time that is already set to area_det
     area_det = xpd_configuration["area_det"]
     acq_time = area_det.cam.acquire_time.get()
-    num_frame = area_det.images_per_set.get()
+    if hasattr(area_det, 'image_per_set'):
+        num_frame = area_det.images_per_set.get()
+    else:
+        num_frame = 1
     light_cnt_time = acq_time * num_frame
 
     dark_dict = {}
@@ -84,7 +87,10 @@ def take_dark():
     # correct
     area_det = xpd_configuration["area_det"]
     acq_time = area_det.cam.acquire_time.get()
-    num_frame = area_det.images_per_set.get()
+    if hasattr(area_det, 'image_per_set'):
+        num_frame = area_det.images_per_set.get()
+    else:
+        num_frame = 1
     computed_exposure = acq_time * num_frame
     # update md
     _md = {
@@ -179,7 +185,10 @@ def _validate_dark(expire_time=None):
     # obtain light count time that is already set to pe1c
     area_det = xpd_configuration["area_det"]
     acq_time = area_det.cam.acquire_time.get()
-    num_frame = area_det.images_per_set.get()
+    if hasattr(area_det, 'image_per_set'):
+        num_frame = area_det.images_per_set.get()
+    else:
+        num_frame = 1
     light_cnt_time = acq_time * num_frame
     # find fresh and qualified dark
     now = time.time()
