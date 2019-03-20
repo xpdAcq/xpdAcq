@@ -282,6 +282,7 @@ def _tar_user_data(archive_name, root_dir=None, archive_format="tar"):
     """
     remote_archive_name = os.path.join(glbl_dict["archive_dir"],
                                        archive_name)
+    os.makedirs(remote_archive_name, exist_ok=True)
     if root_dir is None:
         root_dir = glbl_dict["base"]
     try:
