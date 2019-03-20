@@ -251,6 +251,9 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm="y"):
     _delete_local_archive(local_archive_name)
     # delete bt
     del ips.ns_table["user_global"]["bt"]
+    # remove bt from xrun
+    xrun_obj = ips.ns_table["user_global"]["xrun"]
+    xrun_obj.beamtime = None
 
 
 def _clean_info(obj):
