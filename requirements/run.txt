@@ -1,5 +1,5 @@
 numpy
-pyyaml==3.12
+pyyaml==3
 pandas
 xlrd
 pyfai
