@@ -88,7 +88,7 @@ def _configure_area_det(exposure):
     det.cam.acquire_time.put(glbl["frame_acq_time"])
     acq_time = det.cam.acquire_time.get()
     _check_mini_expo(exposure, acq_time)
-    if hasattr(det, 'image_per_set'):
+    if hasattr(det, 'images_per_set'):
         # compute number of frames
         num_frame = np.ceil(exposure / acq_time)
         det.images_per_set.put(num_frame)
