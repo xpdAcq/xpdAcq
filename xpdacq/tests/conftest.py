@@ -32,6 +32,7 @@ from xpdsim import (
     ring_current,
     xpd_wavelength,
     fb,
+    dexela
 )
 
 
@@ -97,6 +98,7 @@ def fresh_xrun(bt, db):
     xrun.md["group"] = glbl_dict["group"]
     xrun.md["facility"] = glbl_dict["facility"]
     xrun.ignore_callback_exceptions = False
+    xrun.beamtime = bt
     # link mds
     xrun.subscribe(db.insert, "all")
     # set simulation objects
