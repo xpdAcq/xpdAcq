@@ -99,6 +99,13 @@ class xpdAcqException(Exception):
     pass
 
 
+class xpdAcqError(xpdAcqException):
+    """
+    customized error for xpaAcq-related error
+    """
+
+    pass
+
 def _graceful_exit(error_message):
     try:
         raise RuntimeError(error_message)
