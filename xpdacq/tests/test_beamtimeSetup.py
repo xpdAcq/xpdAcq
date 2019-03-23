@@ -31,6 +31,8 @@ class NewBeamtimeTest(unittest.TestCase):
             ("Terban ", " Max", 2),
         ]
         os.makedirs(self.config_dir, exist_ok=True)
+        # initialize beamtime status
+        xpd_configuration['active_beamtime'] = True
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -299,11 +301,18 @@ class NewBeamtimeTest(unittest.TestCase):
         )
 
     def test_blocking_beamtime(self):
+        os.mkdir(self.home_dir)
+        # copying example longterm config file
+        pytest_dir = rs_fn("xpdacq", "tests/")
+        config = "XPD_beamline_config.yml"
+        configsrc = os.path.join(pytest_dir, config)
+        shutil.copyfile(configsrc, os.path.join(self.config_dir, config))
         # test if start_beamtime properly modify the state
-        _start_beamtime(self.PI_name, self.saf_num)
+        _start_beamtime(self.PI_name, self.saf_num, test=True)
         assert xpd_configuration['active_beamtime']
         # test if it blocks after beamtime
         xpd_configuration['active_beamtime'] = False
         self.assertRaises(xpdAcqError,
                           lambda: _start_beamtime(self.PI_name,
-                                                  self.saf_num))
+                                                  self.saf_num,
+                                                  test=True))

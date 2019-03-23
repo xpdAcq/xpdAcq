@@ -40,7 +40,7 @@ def _start_beamtime(
     """function for start a beamtime"""
     # check status first
     active_beamtime = xpd_configuration.get('active_beamtime')
-    if not active_beamtime:
+    if active_beamtime is False:
         raise xpdAcqError("It appears that end_beamtime may have been "
                           "run.\nIf you wish to start a new beamtime, "
                           "please open a new terminal and proceed "
@@ -262,6 +262,7 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm="y"):
     _delete_local_archive(local_archive_name)
     # update beamtime state
     xpd_configuration['active_beamtime'] = False
+
 
 def _clean_info(obj):
     """ stringtify and replace space"""
