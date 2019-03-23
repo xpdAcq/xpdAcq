@@ -24,8 +24,9 @@ from IPython import get_ipython
 from pkg_resources import resource_filename as rs_fn
 
 from .beamtime import *
-from .tools import _graceful_exit
-from .xpdacq_conf import glbl_dict, _load_beamline_config
+from .tools import _graceful_exit, xpdAcqError
+from .xpdacq_conf import (glbl_dict, _load_beamline_config,
+                          xpd_configuration)
 
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime
@@ -37,7 +38,16 @@ def _start_beamtime(
     PI_last, saf_num, experimenters=[], wavelength=None, test=False
 ):
     """function for start a beamtime"""
-    home_dir = glbl_dict["home"]
+    # check status first
+    active_beamtime = xpd_configuration.get('active_beamtime')
+    if not active_beamtime:
+        raise xpdAcqError("It appears that end_beamtime may have been "
+                          "run.\nIf you wish to start a new beamtime, "
+                          "please open a new terminal and proceed "
+                          "with the standard starting sequence.")
+        return
+    # check directory
+    home_dir = glbl_dict['home']
     if not os.path.exists(home_dir):
         raise RuntimeError(
             "WARNING: fundamental directory {} does not "
@@ -71,10 +81,11 @@ def _start_beamtime(
         beamline_config = _load_beamline_config(
             glbl["blconfig_path"], test=test
         )
-
         # pre-populated scan plan
         for expo in EXPO_LIST:
             ScanPlan(bt, ct, expo)
+        # inject beamtime state
+        xpd_configuration['active_beamtime'] = True
 
         return bt
 
@@ -249,9 +260,8 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm="y"):
     _confirm_archive(archive_full_name)
     # flush
     _delete_local_archive(local_archive_name)
-    # delete bt
-    del ips.ns_table["user_global"]["bt"]
-
+    # update beamtime state
+    xpd_configuration['active_beamtime'] = False
 
 def _clean_info(obj):
     """ stringtify and replace space"""
