@@ -16,6 +16,7 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
 from xpdacq.utils import (export_userScriptsEtc, import_userScriptsEtc)
 from xpdacq.xpdacq_conf import xpd_configuration
 from xpdacq.tools import xpdAcqError
+from xpdacq.glbl import glbl
 
 class NewBeamtimeTest(unittest.TestCase):
     def setUp(self):
@@ -31,8 +32,6 @@ class NewBeamtimeTest(unittest.TestCase):
             ("Terban ", " Max", 2),
         ]
         os.makedirs(self.config_dir, exist_ok=True)
-        # initialize beamtime status
-        xpd_configuration['active_beamtime'] = True
 
     def tearDown(self):
         os.chdir(self.base_dir)
@@ -309,10 +308,12 @@ class NewBeamtimeTest(unittest.TestCase):
         shutil.copyfile(configsrc, os.path.join(self.config_dir, config))
         # test if start_beamtime properly modify the state
         _start_beamtime(self.PI_name, self.saf_num, test=True)
-        assert xpd_configuration['active_beamtime']
+        assert glbl['_active_beamtime']
         # test if it blocks after beamtime
-        xpd_configuration['active_beamtime'] = False
+        glbl['_active_beamtime'] = False
         self.assertRaises(xpdAcqError,
                           lambda: _start_beamtime(self.PI_name,
                                                   self.saf_num,
                                                   test=True))
+        # restore
+        glbl['_active_beamtime'] = True
