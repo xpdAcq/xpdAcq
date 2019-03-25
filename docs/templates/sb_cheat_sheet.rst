@@ -26,6 +26,19 @@ Start a beamtime
                        experimenters = ['Emma', 'Watson', 'Tim', 'Liu'],
                        wavelength=0.184649)
 
+``xpdAcq`` will raise an error if a user inadvertently attempts to start a new beatime in previous ``python`` session. 
+
+If you receive this ``xpdAcqError`` message,
+
+.. code-block:: python
+
+  It appears that end_beamtime may have been run. 
+  If you wish to start a new beamtime, 
+  please open a new terminal and proceed with the standard starting sequence
+
+please open a new terminal, type in ``bsui`` to enter a fresh collection enviornment (``ipython session``) and start beamtime again.
+
+
 4. link bt to xrun
 
 .. code-block:: python
