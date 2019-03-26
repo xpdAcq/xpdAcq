@@ -24,8 +24,10 @@ from IPython import get_ipython
 from pkg_resources import resource_filename as rs_fn
 
 from .beamtime import *
-from .tools import _graceful_exit
-from .xpdacq_conf import glbl_dict, _load_beamline_config
+from .tools import _graceful_exit, xpdAcqError
+from .xpdacq_conf import (glbl_dict, _load_beamline_config,
+                          xpd_configuration)
+from .glbl import glbl
 
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime
@@ -37,7 +39,16 @@ def _start_beamtime(
     PI_last, saf_num, experimenters=[], wavelength=None, test=False
 ):
     """function for start a beamtime"""
-    home_dir = glbl_dict["home"]
+    # check status first
+    active_beamtime = glbl.get('_active_beamtime')
+    if active_beamtime is False:
+        raise xpdAcqError("It appears that end_beamtime may have been "
+                          "run.\nIf you wish to start a new beamtime, "
+                          "please open a new terminal and proceed "
+                          "with the standard starting sequence.")
+        return
+    # check directory
+    home_dir = glbl_dict['home']
     if not os.path.exists(home_dir):
         raise RuntimeError(
             "WARNING: fundamental directory {} does not "
@@ -71,10 +82,11 @@ def _start_beamtime(
         beamline_config = _load_beamline_config(
             glbl["blconfig_path"], test=test
         )
-
         # pre-populated scan plan
         for expo in EXPO_LIST:
             ScanPlan(bt, ct, expo)
+        # inject beamtime state
+        glbl['_active_beamtime'] = True
 
         return bt
 
@@ -243,14 +255,14 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm="y"):
         bto = ips.ns_table["user_global"]["bt"]
     # load bt info
     archive_name = _load_bt_info(bto, _required_info)
+    # update beamtime state
+    glbl['_active_beamtime'] = False
     # archive file
     archive_full_name, local_archive_name = _tar_user_data(archive_name)
     # confirm archive
     _confirm_archive(archive_full_name)
     # flush
     _delete_local_archive(local_archive_name)
-    # delete bt
-    del ips.ns_table["user_global"]["bt"]
 
 
 def _clean_info(obj):

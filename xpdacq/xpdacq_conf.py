@@ -179,6 +179,7 @@ class GlblYamlDict(YamlDict):
         "calib_config_dict",
         "image_field",
         "exp_hash_uid",
+        "_active_beamtime"
     ]
 
     def __init__(self, name, **kwargs):

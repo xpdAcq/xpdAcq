@@ -14,7 +14,9 @@ from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
                                   _clean_info, _load_bt, _load_bt_info,
                                   _tar_user_data, EXPO_LIST)
 from xpdacq.utils import (export_userScriptsEtc, import_userScriptsEtc)
-
+from xpdacq.xpdacq_conf import xpd_configuration
+from xpdacq.tools import xpdAcqError
+from xpdacq.glbl import glbl
 
 class NewBeamtimeTest(unittest.TestCase):
     def setUp(self):
@@ -296,3 +298,22 @@ class NewBeamtimeTest(unittest.TestCase):
                 )
             )
         )
+
+    def test_blocking_beamtime(self):
+        os.mkdir(self.home_dir)
+        # copying example longterm config file
+        pytest_dir = rs_fn("xpdacq", "tests/")
+        config = "XPD_beamline_config.yml"
+        configsrc = os.path.join(pytest_dir, config)
+        shutil.copyfile(configsrc, os.path.join(self.config_dir, config))
+        # test if start_beamtime properly modify the state
+        _start_beamtime(self.PI_name, self.saf_num, test=True)
+        assert glbl['_active_beamtime']
+        # test if it blocks after beamtime
+        glbl['_active_beamtime'] = False
+        self.assertRaises(xpdAcqError,
+                          lambda: _start_beamtime(self.PI_name,
+                                                  self.saf_num,
+                                                  test=True))
+        # restore
+        glbl['_active_beamtime'] = True
