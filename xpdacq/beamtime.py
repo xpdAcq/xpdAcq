@@ -268,6 +268,17 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=shutter_step):
 
     This will create a ``Tramp`` ScanPlan, with shutter always
     open during the ramping.
+
+    3. To change the default behavior to take dark while changing temperature,
+    please pass the argument for ``per_step`` in the ``ScanPlan``
+    definition, as follows:
+
+        >>> from functools import partial
+        >>> ScanPlan(bt, Tramp, 5, [300, 250, 198],
+        ...          per_step=partial(shutter_step, take_dark=True))
+
+    This will create a ``Tramp`` ScanPlan, with a dark at every point
+    during the ramping.
     """
 
     pe1c, = dets
@@ -357,6 +368,17 @@ def Tlist(dets, exposure, T_list, *, per_step=shutter_step):
 
     This will create a ``Tlist`` ScanPlan, with shutter always
     open during the ramping.
+
+    3. To change the default behavior to take dark while changing temperature,
+    please pass the argument for ``per_step`` in the ``ScanPlan``
+    definition, as follows:
+
+        >>> from functools import partial
+        >>> ScanPlan(bt, Tlist, 5, [300, 250, 198],
+        ...          per_step=partial(shutter_step, take_dark=True))
+
+    This will create a ``Tlist`` ScanPlan, with a dark at every point
+    during the ramping.
     """
 
     pe1c, = dets
