@@ -15,6 +15,8 @@
 ##############################################################################
 import os
 import uuid
+from functools import partial
+
 import yaml
 import inspect
 import itertools
@@ -88,7 +90,7 @@ def _configure_area_det(exposure):
     det.cam.acquire_time.put(glbl["frame_acq_time"])
     acq_time = det.cam.acquire_time.get()
     _check_mini_expo(exposure, acq_time)
-    if hasattr(det, 'images_per_set'):
+    if hasattr(det, "images_per_set"):
         # compute number of frames
         num_frame = np.ceil(exposure / acq_time)
         det.images_per_set.put(num_frame)
@@ -140,13 +142,12 @@ def shutter_step(detectors, motor, step, take_dark=False):
     reading at each motor point and close shutter after reading
     """
     yield from bps.checkpoint()
-    yield from bps.abs_set(motor, step, group='dark_group')
+    yield from bps.abs_set(motor, step, group="dark_group")
     if take_dark:
-        yield from bps.trigger_and_read(list(detectors) + [motor],
-                                                   name='dark')
-    yield from bps.wait(group='dark_group')
+        yield from bps.trigger_and_read(list(detectors) + [motor], name="dark")
+    yield from bps.wait(group="dark_group")
     yield from open_shutter_stub()
-    yield from bps.sleep(glbl['shutter_sleep'])
+    yield from bps.sleep(glbl["shutter_sleep"])
     yield from bps.trigger_and_read(list(detectors) + [motor])
     yield from close_shutter_stub()
 
@@ -157,7 +158,7 @@ def open_shutter_stub():
     yield from bps.abs_set(
         xpd_configuration["shutter"], XPD_SHUTTER_CONF["open"], wait=True
     )
-    yield from bps.sleep(glbl['shutter_sleep'])
+    yield from bps.sleep(glbl["shutter_sleep"])
     yield from bps.checkpoint()
 
 
@@ -216,7 +217,15 @@ def ct(dets, exposure):
     yield from plan
 
 
-def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=shutter_step):
+def Tramp(
+    dets,
+    exposure,
+    Tstart,
+    Tstop,
+    Tstep,
+    *,
+    per_step=partial(shutter_step, take_dark=False)
+):
     """
     Collect data over a range of temperatures
 
@@ -320,7 +329,9 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=shutter_step):
     yield from plan
 
 
-def Tlist(dets, exposure, T_list, *, per_step=shutter_step):
+def Tlist(
+    dets, exposure, T_list, *, per_step=partial(shutter_step, take_dark=False)
+):
     """
     Collect data over a list of user-specific temperatures
 
