@@ -135,19 +135,23 @@ def _check_mini_expo(exposure, acq_time):
         )
 
 
-def _shutter_step(detectors, motor, step):
+def shutter_step(detectors, motor, step, take_dark=False):
     """ customized step to ensure shutter is open before
     reading at each motor point and close shutter after reading
     """
     yield from bps.checkpoint()
-    yield from bps.abs_set(motor, step, wait=True)
-    yield from _open_shutter_stub()
+    yield from bps.abs_set(motor, step, group='dark_group')
+    if take_dark:
+        yield from bps.trigger_and_read(list(detectors) + [motor],
+                                                   name='dark')
+    yield from bps.wait(group='dark_group')
+    yield from open_shutter_stub()
     yield from bps.sleep(glbl['shutter_sleep'])
     yield from bps.trigger_and_read(list(detectors) + [motor])
-    yield from _close_shutter_stub()
+    yield from close_shutter_stub()
 
 
-def _open_shutter_stub():
+def open_shutter_stub():
     """simple function to return a generator that yields messages to
     open the shutter"""
     yield from bps.abs_set(
@@ -157,7 +161,7 @@ def _open_shutter_stub():
     yield from bps.checkpoint()
 
 
-def _close_shutter_stub():
+def close_shutter_stub():
     """simple function to return a generator that yields messages to
     close the shutter"""
     yield from bps.abs_set(
@@ -212,7 +216,7 @@ def ct(dets, exposure):
     yield from plan
 
 
-def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=_shutter_step):
+def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=shutter_step):
     """
     Collect data over a range of temperatures
 
@@ -305,7 +309,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=_shutter_step):
     yield from plan
 
 
-def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
+def Tlist(dets, exposure, T_list, *, per_step=shutter_step):
     """
     Collect data over a list of user-specific temperatures
 
@@ -458,12 +462,12 @@ def tseries(dets, exposure, delay, num, auto_shutter=True):
         if msg.command == "trigger":
 
             def inner():
-                yield from _open_shutter_stub()
+                yield from open_shutter_stub()
                 yield msg
 
             return inner(), None
         elif msg.command == "save":
-            return None, _close_shutter_stub()
+            return None, close_shutter_stub()
         else:
             return None, None
 
