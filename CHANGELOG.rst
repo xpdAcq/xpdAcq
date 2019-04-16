@@ -3,6 +3,20 @@ xpdAcq Change Log
 
 .. current developments
 
+v0.10.0
+====================
+
+**Added:**
+
+* Explicitly block user from starting new beamtime in the same python session
+  after ``_end_beamtime`` has been run.
+
+**Fixed:**
+
+* Guard ``images_per_set`` because ``dexela`` detector doesn't have it
+
+
+
 v0.9.1
 ====================
 
