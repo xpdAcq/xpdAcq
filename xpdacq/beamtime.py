@@ -85,13 +85,13 @@ def _configure_area_det(exposure):
     det = xpd_configuration["area_det"]
     # cs studio configuration doesn't propagate to python level
 
-    det.cam.acquire_time.put(glbl["frame_acq_time"])
+    yield from bps.abs_set(det.cam.acquire_time, glbl["frame_acq_time"])
     acq_time = det.cam.acquire_time.get()
     _check_mini_expo(exposure, acq_time)
-    if hasattr(det, 'images_per_set'):
+    if hasattr(det, "images_per_set"):
         # compute number of frames
         num_frame = np.ceil(exposure / acq_time)
-        det.images_per_set.put(num_frame)
+        yield from bps.abs_set(det.images_per_set, num_frame)
     else:
         # The dexela detector does not support `images_per_set` so we just
         # use whatever the user asks for as the thing
@@ -135,29 +135,29 @@ def _check_mini_expo(exposure, acq_time):
         )
 
 
-def _shutter_step(detectors, motor, step):
+def shutter_step(detectors, motor, step):
     """ customized step to ensure shutter is open before
     reading at each motor point and close shutter after reading
     """
     yield from bps.checkpoint()
     yield from bps.abs_set(motor, step, wait=True)
-    yield from _open_shutter_stub()
-    yield from bps.sleep(glbl['shutter_sleep'])
+    yield from open_shutter_stub()
+    yield from bps.sleep(glbl["shutter_sleep"])
     yield from bps.trigger_and_read(list(detectors) + [motor])
-    yield from _close_shutter_stub()
+    yield from close_shutter_stub()
 
 
-def _open_shutter_stub():
+def open_shutter_stub():
     """simple function to return a generator that yields messages to
     open the shutter"""
     yield from bps.abs_set(
         xpd_configuration["shutter"], XPD_SHUTTER_CONF["open"], wait=True
     )
-    yield from bps.sleep(glbl['shutter_sleep'])
+    yield from bps.sleep(glbl["shutter_sleep"])
     yield from bps.checkpoint()
 
 
-def _close_shutter_stub():
+def close_shutter_stub():
     """simple function to return a generator that yields messages to
     close the shutter"""
     yield from bps.abs_set(
@@ -192,7 +192,9 @@ def ct(dets, exposure):
     pe1c, = dets
     md = {}
     # setting up area_detector
-    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
+    (num_frame, acq_time, computed_exposure) = yield from _configure_area_det(
+        exposure
+    )
     area_det = xpd_configuration["area_det"]
     # update md
     _md = ChainMap(
@@ -212,7 +214,7 @@ def ct(dets, exposure):
     yield from plan
 
 
-def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=_shutter_step):
+def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=shutter_step):
     """
     Collect data over a range of temperatures
 
@@ -269,7 +271,9 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=_shutter_step):
     pe1c, = dets
     md = {}
     # setting up area_detector
-    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
+    (num_frame, acq_time, computed_exposure) = yield from _configure_area_det(
+        exposure
+    )
     area_det = xpd_configuration["area_det"]
     temp_controller = xpd_configuration["temp_controller"]
     # compute Nsteps
@@ -305,7 +309,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=_shutter_step):
     yield from plan
 
 
-def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
+def Tlist(dets, exposure, T_list, *, per_step=shutter_step):
     """
     Collect data over a list of user-specific temperatures
 
@@ -357,7 +361,9 @@ def Tlist(dets, exposure, T_list, *, per_step=_shutter_step):
 
     pe1c, = dets
     # setting up area_detector and temp_controller
-    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
+    (num_frame, acq_time, computed_exposure) = yield from _configure_area_det(
+        exposure
+    )
     area_det = xpd_configuration["area_det"]
     T_controller = xpd_configuration["temp_controller"]
     xpdacq_md = {
@@ -421,7 +427,9 @@ def tseries(dets, exposure, delay, num, auto_shutter=True):
     md = {}
     # setting up area_detector
     area_det = xpd_configuration["area_det"]
-    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
+    (num_frame, acq_time, computed_exposure) = yield from _configure_area_det(
+        exposure
+    )
     real_delay = max(0, delay - computed_exposure)
     period = max(computed_exposure, real_delay + computed_exposure)
     print(
@@ -458,12 +466,12 @@ def tseries(dets, exposure, delay, num, auto_shutter=True):
         if msg.command == "trigger":
 
             def inner():
-                yield from _open_shutter_stub()
+                yield from open_shutter_stub()
                 yield msg
 
             return inner(), None
         elif msg.command == "save":
-            return None, _close_shutter_stub()
+            return None, close_shutter_stub()
         else:
             return None, None
 
@@ -502,7 +510,9 @@ def statTramp(
     """
     pe1c, = dets
     # setting up area_detector
-    (num_frame, acq_time, computed_exposure) = _configure_area_det(exposure)
+    (num_frame, acq_time, computed_exposure) = yield from _configure_area_det(
+        exposure
+    )
     area_det = xpd_configuration["area_det"]
     temp_controller = xpd_configuration["temp_controller"]
     stat_motor = xpd_configuration["stat_motor"]
