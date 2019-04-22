@@ -35,7 +35,8 @@ from bluesky.preprocessors import pchain
 
 from xpdacq.glbl import glbl
 from xpdacq.tools import xpdAcqException
-from xpdacq.beamtime import ScanPlan, _summarize
+from xpdacq.beamtime import ScanPlan, _summarize, close_shutter_stub, \
+    open_shutter_stub
 from xpdacq.xpdacq_conf import xpd_configuration, XPDACQ_MD_VERSION
 from xpdconf.conf import XPD_SHUTTER_CONF
 
@@ -79,9 +80,7 @@ def _update_dark_dict_list(name, doc):
 def take_dark():
     """a plan for taking a single dark frame"""
     print("INFO: closing shutter...")
-    yield from bps.abs_set(
-        xpd_configuration.get("shutter"), XPD_SHUTTER_CONF["close"], wait=True
-    )
+    yield from close_shutter_stub()
     print("INFO: taking dark frame....")
     # upto this stage, area_det has been configured to so exposure time is
     # correct
@@ -103,6 +102,7 @@ def take_dark():
     }
     c = bp.count([area_det], md=_md)
     yield from bpp.subs_wrapper(c, {"stop": [_update_dark_dict_list]})
+    # TODO: remove this, since it kinda depends on what happens next?
     print("opening shutter...")
 
 
@@ -141,12 +141,7 @@ def periodic_dark(plan):
                     take_dark(),
                     bps.stage(area_det),
                     bpp.single_gen(msg),
-                    bps.abs_set(
-                        xpd_configuration.get("shutter"),
-                        XPD_SHUTTER_CONF["open"],
-                        wait=True,
-                    ),
-                    bps.sleep(glbl['shutter_sleep']),
+                    open_shutter_stub(),
                 ),
                 None,
             )
@@ -154,12 +149,7 @@ def periodic_dark(plan):
             return (
                 bpp.pchain(
                     bpp.single_gen(msg),
-                    bps.abs_set(
-                        xpd_configuration.get("shutter"),
-                        XPD_SHUTTER_CONF["open"],
-                        wait=True,
-                    ),
-                    bps.sleep(glbl['shutter_sleep'])
+                    open_shutter_stub()
                 ),
                 None,
             )
