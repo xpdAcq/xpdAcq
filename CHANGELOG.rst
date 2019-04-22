@@ -3,6 +3,17 @@ xpdAcq Change Log
 
 .. current developments
 
+v0.10.1
+====================
+
+**Changed:**
+
+* promote ``_close_shutter_stub`` and ``_open_shutter_stub`` to non-private
+* use ``close_shutter_stub`` and ``open_shutter_stub`` where possible
+* ``_configurate_area_det`` now yields properly
+
+
+
 v0.10.0
 ====================
 
