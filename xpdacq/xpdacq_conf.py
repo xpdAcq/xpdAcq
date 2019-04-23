@@ -53,7 +53,8 @@ def configure_frame_acq_time(new_frame_acq_time):
     # stop acquisition
     area_det.cam.acquire.put(0)
     time.sleep(1)
-    area_det.number_of_sets.put(1)
+    if hasattr(area_det, 'number_of_sets'):
+        area_det.number_of_sets.put(1)
     area_det.cam.acquire_time.put(new_frame_acq_time)
     # extra wait time for device to set
     time.sleep(1)
