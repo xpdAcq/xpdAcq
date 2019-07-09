@@ -15,5 +15,6 @@ For XPD Users
    usb_Running
    usb_QuickAssess
    usb_GlobalOptions
+   db_export
    robot
    tomo
