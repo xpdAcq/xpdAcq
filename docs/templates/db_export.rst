@@ -38,6 +38,7 @@ The hard way
 .. code-block:: python
 
     import io
+    import os
     import yaml
     p = 'path/to/mounted/disk/folder'
     portable_template = """description: 'raw database'
