@@ -65,10 +65,7 @@ The hard way
     db.export(hdrs, pdb, new_root=os.path.join(p, 'raw', 'data'))
 
 
-This will send data to the portable db server which will then write the associated files into the folder
-
-6. Shut down the server once it is done copying files (use ``Ctrl+C``)
-7. Unmount your drive
+7. Once finished unmount your drive
 
 Finding the headers
 ===================
