@@ -79,6 +79,7 @@ Here is an example
 
 .. code-block:: python
 
+    from xpdan.db_utils import query_background
     # search for a bunch of sample uids
     hdrs = []
     for uid in ['thing1', 'thing2']:
@@ -87,10 +88,7 @@ Here is an example
     # don't forget the backgrounds
     bg_hdrs = []
     for hdr in hdrs:
-        # note that we are only getting one background here if you wanted all
-        # the associated backgrounds use
-        # bg_hdrs.extend(list(query_background(hdr.start, db)))
-        bg_hdrs.append(next(query_background(hdr.start, db)))
+        bg_hdrs.extend(query_background(hdr.start, db))
     hdrs += bg_hdrs
 
     # and the darks
