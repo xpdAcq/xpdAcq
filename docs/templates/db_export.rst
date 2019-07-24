@@ -38,6 +38,7 @@ The hard way
 .. code-block:: python
 
     import io
+    import os
     import yaml
     p = 'path/to/mounted/disk/folder'
     portable_template = """description: 'raw database'
@@ -64,10 +65,7 @@ The hard way
     db.export(hdrs, pdb, new_root=os.path.join(p, 'raw', 'data'))
 
 
-This will send data to the portable db server which will then write the associated files into the folder
-
-6. Shut down the server once it is done copying files (use ``Ctrl+C``)
-7. Unmount your drive
+7. Once finished unmount your drive
 
 Finding the headers
 ===================
@@ -78,6 +76,7 @@ Here is an example
 
 .. code-block:: python
 
+    from xpdan.db_utils import query_background
     # search for a bunch of sample uids
     hdrs = []
     for uid in ['thing1', 'thing2']:
@@ -86,10 +85,7 @@ Here is an example
     # don't forget the backgrounds
     bg_hdrs = []
     for hdr in hdrs:
-        # note that we are only getting one background here if you wanted all
-        # the associated backgrounds use
-        # bg_hdrs.extend(list(query_background(hdr.start, db)))
-        bg_hdrs.append(next(query_background(hdr.start, db)))
+        bg_hdrs.extend(query_background(hdr.start, db))
     hdrs += bg_hdrs
 
     # and the darks
