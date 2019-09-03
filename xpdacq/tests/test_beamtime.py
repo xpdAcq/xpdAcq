@@ -107,7 +107,7 @@ class BeamtimeObjTest(unittest.TestCase):
         expected_bound_args = {"exposure": 1}  # py3.4 only get args
         self.assertEqual(dict(sp.bound_arguments), expected_bound_args)
         # reload
-        reload_dict = yaml.safe_load(sp.to_yaml())
+        reload_dict = yaml.unsafe_load(sp.to_yaml())
         self.assertEqual(len(reload_dict), 2)  # bt and sp
         ## contents of chainmap
         self.assertEqual(reload_dict[0], sp.maps[0])
@@ -146,15 +146,15 @@ class BeamtimeObjTest(unittest.TestCase):
         #      .format(reload_scanplan))
         # print('scanplan = {}'.format(sp.maps))
         # from_yaml
-        # self.assertEqual(len(yaml.safe_load(reload_scanplan.to_yaml())), 3)
+        # self.assertEqual(len(yaml.unsafe_load(reload_scanplan.to_yaml())), 3)
         # print('reload scanplan = {}'
-        #      .format(yaml.safe_load(reload_scanplan.to_yaml())))
+        #      .format(yaml.unsafe_load(reload_scanplan.to_yaml())))
         # print('scanplan = {}'.format(sp.maps))
-        # self.assertEqual(yaml.safe_load(reload_scanplan.to_yaml())[0],
+        # self.assertEqual(yaml.unsafe_load(reload_scanplan.to_yaml())[0],
         #                 sp.maps[0])
-        # self.assertEqual(yaml.safe_load(reload_scanplan.to_yaml())[1],
+        # self.assertEqual(yaml.unsafe_load(reload_scanplan.to_yaml())[1],
         #                 sp.maps[1])
-        # self.assertEqual(yaml.safe_load(reload_scanplan.to_yaml())[2],
+        # self.assertEqual(yaml.unsafe_load(reload_scanplan.to_yaml())[2],
         #                 sp.maps[2])
 
     def test_yaml_sync(self):

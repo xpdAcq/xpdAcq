@@ -68,7 +68,7 @@ def configure_frame_acq_time(new_frame_acq_time):
 def _verify_within_test(beamline_config_fp, verif):
     while verif != "y":
         with open(beamline_config_fp, "r") as f:
-            beamline_config = yaml.safe_load(f)
+            beamline_config = yaml.unsafe_load(f)
         warnings.warn("Not verified")
         verif = "y"
     beamline_config["Verified by"] = "AUTO VERIFIED IN TEST"
@@ -97,7 +97,7 @@ def _load_beamline_config(beamline_config_fp, verif="", test=False):
     if not test:
         while verif.upper() != ("Y" or "YES"):
             with open(beamline_config_fp, "r") as f:
-                beamline_config = yaml.safe_load(f)
+                beamline_config = yaml.unsafe_load(f)
             pp.pprint(beamline_config)
             verif = input("\nIs this configuration correct? y/n: ")
             if verif.upper() == ("N" or "NO"):
@@ -127,7 +127,7 @@ def _reload_glbl(glbl_yaml_path=None):
         glbl_yaml_path = glbl_dict["glbl_yaml_path"]
     if os.path.isfile(glbl_yaml_path):
         with open(glbl_dict["glbl_yaml_path"]) as f:
-            reload_dict = yaml.safe_load(f)
+            reload_dict = yaml.unsafe_load(f)
         return reload_dict
     else:
         pass
@@ -226,7 +226,7 @@ class GlblYamlDict(YamlDict):
     @classmethod
     def from_yaml(cls, f):
         """method to reload object from local yaml"""
-        d = yaml.safe_load(f)
+        d = yaml.unsafe_load(f)
         instance = cls.from_dict(d)
         if not isinstance(f, str):
             instance.filepath = os.path.abspath(f.name)

@@ -108,7 +108,7 @@ class YamlDict(_YamlDictLike, dict):
 
     @classmethod
     def from_yaml(cls, f):
-        d = yaml.safe_load(f)
+        d = yaml.unsafe_load(f)
         # If file is empty, make it an empty dict.
         if d is None:
             d = {}
@@ -130,7 +130,7 @@ class YamlChainMap(_YamlDictLike, ChainMap):
 
     @classmethod
     def from_yaml(cls, f):
-        maps = yaml.safe_load(f)
+        maps = yaml.unsafe_load(f)
         # If file is empty, make it an empty list.
         if maps is None:
             maps = []
