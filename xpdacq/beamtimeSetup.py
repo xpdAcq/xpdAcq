@@ -168,7 +168,7 @@ def load_beamtime(directory=None):
     )
     if os.path.isfile(scanplan_order_fn):
         with open(scanplan_order_fn) as f:
-            scanplan_order = yaml.load(f)
+            scanplan_order = yaml.safe_load(f)
         for fn in sorted(
             scanplan_fns, key=list(scanplan_order.values()).index
         ):
@@ -180,7 +180,7 @@ def load_beamtime(directory=None):
     )
     if os.path.isfile(sample_order_fn):
         with open(sample_order_fn) as f:
-            sample_order = yaml.load(f)
+            sample_order = yaml.safe_load(f)
         for fn in sorted(sample_fns, key=list(sample_order.values()).index):
             with open(os.path.join(directory, "samples", fn), "r") as f:
                 load_yaml(f, known_uids)
@@ -197,7 +197,7 @@ def load_yaml(f, known_uids=None):
     """
     if known_uids is None:
         known_uids = {}
-    data = yaml.load(f)
+    data = yaml.safe_load(f)
     # If f is a file handle, 'rewind' it so we can read it again.
     if not isinstance(f, str):
         f.seek(0)
@@ -334,7 +334,7 @@ def _load_bt(bt_yaml_path):
             )
         )
     with open(btoname, "r") as f:
-        bto = yaml.load(f)
+        bto = yaml.safe_load(f)
     return bto
 
 

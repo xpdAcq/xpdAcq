@@ -210,7 +210,7 @@ class xrunTest(unittest.TestCase):
         cfg_dst = os.path.join(glbl["config_base"], cfg_f_name)
         shutil.copy(cfg_src, cfg_dst)
         with open(cfg_dst) as f:
-            config_from_file = yaml.load(f)
+            config_from_file = yaml.safe_load(f)
         reload_calibration_md_dict = _auto_load_calibration_file()
         # test with xrun : auto_load_calib = True -> full calib_md
         msg_list = []
@@ -457,7 +457,7 @@ class xrunTest(unittest.TestCase):
         cfg_dst = os.path.join(glbl["config_base"], cfg_f_name)
         shutil.copy(cfg_src, cfg_dst)
         with open(cfg_dst) as f:
-            config_from_file = yaml.load(f)
+            config_from_file = yaml.safe_load(f)
         glbl["calib_config_dict"] = config_from_file
         msg_list = []
 

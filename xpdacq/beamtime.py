@@ -737,7 +737,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
 
     @classmethod
     def from_yaml(cls, f):
-        d = yaml.load(f)
+        d = yaml.safe_load(f)
         instance = cls.from_dict(d)
         if not isinstance(f, str):
             instance.filepath = os.path.abspath(f.name)
@@ -887,7 +887,7 @@ class Sample(ValidatedDictLike, YamlChainMap):
 
     @classmethod
     def from_yaml(cls, f, beamtime=None):
-        map1, map2 = yaml.load(f)
+        map1, map2 = yaml.safe_load(f)
         instance = cls.from_dicts(map1, map2, beamtime=beamtime)
         if not isinstance(f, str):
             instance.filepath = os.path.abspath(f.name)
@@ -1009,7 +1009,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap):
 
     @classmethod
     def from_yaml(cls, f, beamtime=None):
-        map1, map2 = yaml.load(f)
+        map1, map2 = yaml.safe_load(f)
         instance = cls.from_dicts(map1, map2, beamtime=beamtime)
         if not isinstance(f, str):
             instance.filepath = os.path.abspath(f.name)
