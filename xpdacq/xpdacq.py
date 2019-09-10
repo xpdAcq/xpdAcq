@@ -245,7 +245,7 @@ def _auto_load_calibration_file(in_scan=True):
         return
     else:
         with open(calib_yaml_name) as f:
-            calib_dict = yaml.load(f)
+            calib_dict = yaml.unsafe_load(f)
         if in_scan:
             print(
                 "INFO: This scan will append calibration parameters "

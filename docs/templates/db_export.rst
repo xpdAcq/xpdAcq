@@ -60,7 +60,7 @@ The hard way
         """
     with open(os.path.join(p, 'raw.yml'), 'w') as f:
         f.write(portable_template)
-    pdb = Broker.from_config(yaml.load(io.StringIO(portable_template)))
+    pdb = Broker.from_config(yaml.unsafe_load(io.StringIO(portable_template)))
     # hdrs is the headers that you want to export
     db.export(hdrs, pdb, new_root=os.path.join(p, 'raw', 'data'))
 

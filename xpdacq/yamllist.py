@@ -26,7 +26,7 @@ class YamlList(list):
     def __init__(self, fname):
         self.fname = fname
         with open(fname, "r") as f:
-            lst = yaml.load(f)
+            lst = yaml.unsafe_load(f)
         # If file is empty, make it an empty list.
         if lst is None:
             lst = []
