@@ -3,6 +3,15 @@ xpdAcq Change Log
 
 .. current developments
 
+v0.10.3
+====================
+
+**Fixed:**
+
+* fix yaml load synthax for pyyaml > 3.13
+
+
+
 v0.10.1
 ====================
 
