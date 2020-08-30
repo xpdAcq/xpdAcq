@@ -80,18 +80,27 @@ def _summarize(plan):
     return "\n".join(output)
 
 
-def _configure_area_det(exposure):
-    """private function to configure pe1c with continuous acquisition mode"""
-    det = xpd_configuration["area_det"]
-    # cs studio configuration doesn't propagate to python level
-
-    yield from bps.abs_set(det.cam.acquire_time, glbl["frame_acq_time"])
-    acq_time = det.cam.acquire_time.get()
-    _check_mini_expo(exposure, acq_time)
+def configure_area_det(det, exposure):
+    """Configure exposure time of a detector in continuous acquisition mode"""
+    # switch to using bps.rd when can depend on it
+    ret = yield from bps.read(det.cam.acquire_time)
+    if ret is None:
+        acq_time = 1
+    else:
+        acq_time = ret[det.cam.acquire_time.name]["value"]
+    if exposure < acq_time:
+        raise ValueError(
+            "WARNING: total exposure time: {}s is shorter "
+            "than frame acquisition time {}s\n"
+            "you have two choices:\n"
+            "1) increase your exposure time to be at least"
+            "larger than frame acquisition time\n"
+            "2) increase the frame rate, if possible\n"
+        )
     if hasattr(det, "images_per_set"):
         # compute number of frames
         num_frame = np.ceil(exposure / acq_time)
-        yield from bps.abs_set(det.images_per_set, num_frame)
+        yield from bps.mov(det.images_per_set, num_frame)
     else:
         # The dexela detector does not support `images_per_set` so we just
         # use whatever the user asks for as the thing
@@ -105,6 +114,21 @@ def _configure_area_det(exposure):
         "= {}".format(exposure, computed_exposure)
     )
     return num_frame, acq_time, computed_exposure
+
+
+def _configure_area_det(exposure):
+    """private function to configure pe1c
+
+    This binds the general public function to the xpdacq global state
+    """
+
+    det = xpd_configuration["area_det"]
+    # cs studio configuration doesn't propagate to python level
+
+    yield from bps.mv(det.cam.acquire_time, glbl["frame_acq_time"])
+    acq_time = det.cam.acquire_time.get()
+    _check_mini_expo(exposure, acq_time)
+    return configure_area_det(det, exposure)
 
 
 def _check_mini_expo(exposure, acq_time):
@@ -133,6 +157,8 @@ def _check_mini_expo(exposure, acq_time):
                 ">>> glbl['frame_acq_time'] = 0.5  #set" " to 0.5s",
             )
         )
+
+
 
 
 def shutter_step(detectors, motor, step):
@@ -221,7 +247,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=shutter_step):
     This plan sets the sample temperature using a temp_controller device
     and exposes a detector for a set time at each temperature.
     It also has logic for equilibrating the temperature before each
-    acquisition. By default it closes the fast shutter at XPD in between 
+    acquisition. By default it closes the fast shutter at XPD in between
     exposures. This behavior may be overridden, leaving the fast shutter
     open for the entire scan. Please see below.
 
@@ -252,13 +278,13 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=shutter_step):
 
     Notes
     -----
-    1. To see which area detector and temperature controller 
+    1. To see which area detector and temperature controller
     will be used, type the following commands:
 
         >>> xpd_configuration['area_det']
         >>> xpd_configuration['temp_controller']
 
-    2. To change the default behavior to shutter-always-open, 
+    2. To change the default behavior to shutter-always-open,
     please pass the argument for ``per_step`` in the ``ScanPlan``
     definition, as follows:
 
@@ -316,7 +342,7 @@ def Tlist(dets, exposure, T_list, *, per_step=shutter_step):
     This plan sets the sample temperature using a temp_controller device
     and exposes a detector for a set time at each temperature.
     It also has logic for equilibrating the temperature before each
-    acquisition. By default it closes the fast shutter at XPD in between 
+    acquisition. By default it closes the fast shutter at XPD in between
     exposures. This behavior may be overridden, leaving the fast shutter
     open for the entire scan. Please see below.
 
@@ -343,13 +369,13 @@ def Tlist(dets, exposure, T_list, *, per_step=shutter_step):
 
     Notes
     -----
-    1. To see which area detector and temperature controller 
+    1. To see which area detector and temperature controller
     will be used, type the following commands:
 
         >>> xpd_configuration['area_det']
         >>> xpd_configuration['temp_controller']
 
-    2. To change the default behavior to shutter-always-open, 
+    2. To change the default behavior to shutter-always-open,
     please pass the argument for ``per_step`` in the ``ScanPlan``
     definition, as follows:
 
