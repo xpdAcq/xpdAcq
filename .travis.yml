@@ -19,10 +19,6 @@ addons:
     packages:
     - mongodb-org-server
 
-matrix:
-  include:
-    - python: 3.6
-
 before_install:
   - git clone https://github.com/NSLS-II/nsls2-ci --branch master --single-branch ~/ci_scripts
   - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
@@ -32,42 +28,24 @@ before_install:
   - ./miniconda.sh -b -p ~/mc
   - export PATH=~/mc/bin:$PATH
   - conda config --set always_yes yes --set changeps1 no --set quiet true
-  - conda update conda --yes
-  - conda config --add channels conda-forge
+  - conda update conda
+  - conda config --append channels nsls2forge
+  - conda config --append channels conda-forge
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
-  - conda create -n testenv python=$TRAVIS_PYTHON_VERSION
-  - source activate testenv
-  - conda install --file requirements/build.txt
-  - conda install pip
-  - pip install -r requirements/pip.txt
-  - python -m pip install -e . --no-deps --ignore-installed --no-cache-dir -vvv
+  - conda create -n test --file requirements/build.txt --file requirements/run.txt --file requirements/docs.txt --file requirements/test.txt
+  - python -m pip install -e . --no-deps -vv
   - git clean -xfd
 
 script:
-  - conda install --file requirements/run.txt
-  - conda install --file requirements/test.txt
-  # make sure the sqlite file exists to avoid race conditions
+  - set -e
   - python -c "from bluesky.utils import get_history; get_history()"
-  # make sure package data is correctly set
   - python -c "from xpdsim import xpd_pe1c; xpd_pe1c.get()"
   - python -c "from xpdacq.tests.conftest import *"
-  # copy config file over
-  - coverage run run_tests.py
+  - coverage run -m pytest run_tests.py
   - coverage report -m
-  - codecov
-  - set -e
-  - conda install --yes --file requirements/docs.txt
-  - python -m pip install -e . --no-deps --ignore-installed --no-cache-dir -vvv
-  - cd docs
-  - which python
-  - python --version
-  - python -c "from xpdacq import __version__"
-  - make html
-  - cd ..
-  - doctr deploy . --built-docs ./docs/_build/html;
-
-after_script:
-  - set +e
+  - bash <(curl -s https://codecov.io/bash)
   - flake8 .
+  - make -C docs html
+  - doctr deploy . --built-docs ./docs/_build/html
