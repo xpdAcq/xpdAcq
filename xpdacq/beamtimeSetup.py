@@ -46,7 +46,6 @@ def _start_beamtime(
                           "run.\nIf you wish to start a new beamtime, "
                           "please open a new terminal and proceed "
                           "with the standard starting sequence.")
-        return
     # check directory
     home_dir = glbl_dict['home']
     if not os.path.exists(home_dir):
@@ -227,7 +226,7 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm="y"):
         3) Ask for user's confirmation
         4.1) if user confirms, flush all sub-directories under
         ``xpdUser`` for a new beamtime.
-        4.2) if user doesn't confirm, leave ``xpdUser`` untouched 
+        4.2) if user doesn't confirm, leave ``xpdUser`` untouched
         and flush remote backup to avoid duplicate archives.
     """
     # NOTE: to avoid network bottleneck, we actually only move all files

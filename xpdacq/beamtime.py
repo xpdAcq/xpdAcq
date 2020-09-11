@@ -221,7 +221,7 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=shutter_step):
     This plan sets the sample temperature using a temp_controller device
     and exposes a detector for a set time at each temperature.
     It also has logic for equilibrating the temperature before each
-    acquisition. By default it closes the fast shutter at XPD in between 
+    acquisition. By default it closes the fast shutter at XPD in between
     exposures. This behavior may be overridden, leaving the fast shutter
     open for the entire scan. Please see below.
 
@@ -252,13 +252,13 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=shutter_step):
 
     Notes
     -----
-    1. To see which area detector and temperature controller 
+    1. To see which area detector and temperature controller
     will be used, type the following commands:
 
         >>> xpd_configuration['area_det']
         >>> xpd_configuration['temp_controller']
 
-    2. To change the default behavior to shutter-always-open, 
+    2. To change the default behavior to shutter-always-open,
     please pass the argument for ``per_step`` in the ``ScanPlan``
     definition, as follows:
 
@@ -316,7 +316,7 @@ def Tlist(dets, exposure, T_list, *, per_step=shutter_step):
     This plan sets the sample temperature using a temp_controller device
     and exposes a detector for a set time at each temperature.
     It also has logic for equilibrating the temperature before each
-    acquisition. By default it closes the fast shutter at XPD in between 
+    acquisition. By default it closes the fast shutter at XPD in between
     exposures. This behavior may be overridden, leaving the fast shutter
     open for the entire scan. Please see below.
 
@@ -343,13 +343,13 @@ def Tlist(dets, exposure, T_list, *, per_step=shutter_step):
 
     Notes
     -----
-    1. To see which area detector and temperature controller 
+    1. To see which area detector and temperature controller
     will be used, type the following commands:
 
         >>> xpd_configuration['area_det']
         >>> xpd_configuration['temp_controller']
 
-    2. To change the default behavior to shutter-always-open, 
+    2. To change the default behavior to shutter-always-open,
     please pass the argument for ``per_step`` in the ``ScanPlan``
     definition, as follows:
 
@@ -860,7 +860,7 @@ class Sample(ValidatedDictLike, YamlChainMap):
     _REQUIRED_FIELDS = ["sample_name"]
 
     def __init__(self, beamtime, sample_md, **kwargs):
-        regularize_dict_key(sample_md, ".", ",")
+        sample_md = regularize_dict_key(sample_md, ".", ",")
         try:
             super().__init__(sample_md, beamtime)  # ChainMap signature
         except:
