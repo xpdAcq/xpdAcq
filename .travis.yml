@@ -1,6 +1,3 @@
-language: python
-sudo: false
-
 cache:
   directories:
     - $HOME/.cache/pip
@@ -28,7 +25,6 @@ before_install:
   - ./miniconda.sh -b -p ~/mc
   - export PATH=~/mc/bin:$PATH
   - conda config --set always_yes yes --set changeps1 no --set quiet true
-  - conda update conda
   - conda config --append channels nsls2forge
   - conda config --append channels conda-forge
 
@@ -40,10 +36,11 @@ install:
 
 script:
   - set -e
+  - soure activate test
   - python -c "from bluesky.utils import get_history; get_history()"
   - python -c "from xpdsim import xpd_pe1c; xpd_pe1c.get()"
   - python -c "from xpdacq.tests.conftest import *"
-  - coverage run -m pytest run_tests.py
+  - coverage run -m pytest xpdacq/tests --showlocals
   - coverage report -m
   - bash <(curl -s https://codecov.io/bash)
   - flake8 .
