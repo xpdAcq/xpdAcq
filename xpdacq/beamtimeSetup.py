@@ -25,8 +25,7 @@ from pkg_resources import resource_filename as rs_fn
 
 from .beamtime import *
 from .tools import _graceful_exit, xpdAcqError
-from .xpdacq_conf import (glbl_dict, _load_beamline_config,
-                          xpd_configuration)
+from .xpdacq_conf import glbl_dict, _load_beamline_config
 from .glbl import glbl
 
 # list of exposure times for pre-poluated ScanPlan inside
