@@ -89,11 +89,7 @@ def glbl(bt):
 
 @pytest.fixture(scope="module")
 def fresh_xrun(bt, db):
-    # loop
-    loop = asyncio.new_event_loop()
-    loop.set_debug(True)
-    # create xrun
-    xrun = CustomizedRunEngine(None, loop=loop)
+    xrun = CustomizedRunEngine(None)
     xrun.md["beamline_id"] = glbl_dict["beamline_id"]
     xrun.md["group"] = glbl_dict["group"]
     xrun.md["facility"] = glbl_dict["facility"]
@@ -112,14 +108,7 @@ def fresh_xrun(bt, db):
         ring_current=ring_current,
         filter_bank=fb,
     )
-    yield xrun
-    # clean
-    print("Clean xrun loop")
-    if xrun.state != "idle":
-        xrun.halt()
-    ev = asyncio.Event(loop=loop)
-    ev.set()
-    loop.run_until_complete(ev.wait())
+    return xrun
 
 
 @pytest.fixture(scope="function")

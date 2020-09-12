@@ -1,4 +1,5 @@
 import unittest
+import asyncio
 import os
 import copy
 import shutil
@@ -363,40 +364,18 @@ class xrunTest(unittest.TestCase):
                 break
 
     def test_set_beamdump_suspender(self):
-        loop = self.xrun._loop
-        # no suspender
-        self.xrun({}, ScanPlan(self.bt, ct, 1))
-
         # operate at full current
         sig = ophyd.Signal(name="ring_current")
-
-        def putter(val):
-            sig.put(val)
-
         xpd_configuration["ring_current"] = sig
-        putter(200)
-        wait_time = 0.2
-        set_beamdump_suspender(self.xrun, wait_time=wait_time)
-        # test
-        start = time.time()
-        # queue up fail and resume conditions
-        loop.call_later(.1, putter, 90)  # lower than 50%, trigger
-        loop.call_later(1., putter, 190)  # higher than 90%, resume
-        # start the scan
+        set_beamdump_suspender(self.xrun, wait_time=0.1)
+        sig.put(200)
         self.xrun({}, ScanPlan(self.bt, ct, .1))
-        stop = time.time()
-        # assert we waited at least 2 seconds +
-        # the settle time
-        delta = stop - start
-        print(delta)
-        assert delta > .1 + wait_time + 1.
-
         # operate at low current, test user warnning
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             # trigger warning
-            putter(30)  # low current
-            set_beamdump_suspender(self.xrun, wait_time=wait_time)
+            sig.put(30)  # low current
+            set_beamdump_suspender(self.xrun, wait_time=0.1)
             # check warning
             assert len(w) == 1
             assert issubclass(w[-1].category, UserWarning)
