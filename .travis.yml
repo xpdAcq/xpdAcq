@@ -36,7 +36,7 @@ install:
 
 script:
   - set -e
-  - soure activate test
+  - source activate test
   - python -c "from bluesky.utils import get_history; get_history()"
   - python -c "from xpdsim import xpd_pe1c; xpd_pe1c.get()"
   - python -c "from xpdacq.tests.conftest import *"
