@@ -20,6 +20,7 @@ import numpy as np
 import time
 import pytest
 from xpdacq.xpdacq_conf import glbl_dict, configure_device, xpd_configuration
+from databroker import Broker
 
 from xpdacq.xpdacq import CustomizedRunEngine
 from xpdacq.beamtimeSetup import _start_beamtime
@@ -39,20 +40,19 @@ from xpdsim import (
 from pkg_resources import resource_filename as rs_fn
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def db():
-    from xpdsim import db, sim_db_dir
-
+    db = Broker.named("temp")
     return db
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def bt(home_dir):
     # start a beamtime
     pi = "Billinge "
     saf_num = 300000
     wavelength = xpd_wavelength
-    experimenters = [("van der Banerjee", "S0ham", 1), ("Terban ", " Max", 2)]
+    experimenters = [["van der Banerjee", "S0ham", 1], ["Terban ", " Max", 2]]
     # copying example longterm config file
     os.makedirs(glbl_dict["xpdconfig"], exist_ok=True)
     pytest_dir = rs_fn("xpdacq", "tests/")
@@ -73,7 +73,7 @@ def bt(home_dir):
     shutil.rmtree(glbl_dict["home"])
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def glbl(bt):
     from xpdacq.glbl import glbl
 
@@ -113,7 +113,7 @@ def exp_hash_uid(bt, fresh_xrun, glbl):
     return exp_hash_uid
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def home_dir():
     stem = glbl_dict["home"]
     config_dir = glbl_dict["xpdconfig"]
