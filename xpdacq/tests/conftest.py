@@ -43,18 +43,13 @@ from pkg_resources import resource_filename as rs_fn
 def db():
     from xpdsim import db, sim_db_dir
 
-    yield db
-    # NOTE: do not flush for now since test might be caught in the
-    # middle of flushing/creating database
-    # if os.path.exists(sim_db_dir):
-    #    print('Flush db dir')
-    #    shutil.rmtree(sim_db_dir)
+    return db
 
 
 @pytest.fixture(scope="module")
 def bt(home_dir):
     # start a beamtime
-    PI_name = "Billinge "
+    pi = "Billinge "
     saf_num = 300000
     wavelength = xpd_wavelength
     experimenters = [("van der Banerjee", "S0ham", 1), ("Terban ", " Max", 2)]
@@ -66,7 +61,7 @@ def bt(home_dir):
     shutil.copyfile(configsrc, glbl_dict["blconfig_path"])
     assert os.path.isfile(glbl_dict["blconfig_path"])
     bt = _start_beamtime(
-        PI_name, saf_num, experimenters, wavelength=wavelength, test=True
+        pi, saf_num, experimenters, wavelength=wavelength, test=True
     )
     # spreadsheet
     xlf = "300000_sample.xlsx"
@@ -84,10 +79,10 @@ def glbl(bt):
 
     if not os.path.exists(glbl["home"]):
         os.makedirs(glbl["home"])
-    yield glbl
+    return glbl
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def fresh_xrun(bt, db):
     xrun = CustomizedRunEngine(None)
     xrun.md["beamline_id"] = glbl_dict["beamline_id"]
@@ -115,7 +110,7 @@ def fresh_xrun(bt, db):
 def exp_hash_uid(bt, fresh_xrun, glbl):
     fresh_xrun.beamtime = bt
     exp_hash_uid = glbl["exp_hash_uid"]
-    yield exp_hash_uid
+    return exp_hash_uid
 
 
 @pytest.fixture(scope="module")
