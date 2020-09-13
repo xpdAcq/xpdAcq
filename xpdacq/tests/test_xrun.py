@@ -90,13 +90,10 @@ class xrunTest(unittest.TestCase):
         self.init_exp_hash_uid = glbl["exp_hash_uid"]
 
     def tearDown(self):
-        os.chdir(self.base_dir)
-        if os.path.isdir(self.home_dir):
+        if self.home_dir.is_dir():
             shutil.rmtree(self.home_dir)
-        if os.path.isdir(os.path.join(self.base_dir, "xpdConfig")):
-            shutil.rmtree(os.path.join(self.base_dir, "xpdConfig"))
-        if os.path.isdir(os.path.join(self.base_dir, "pe2_data")):
-            shutil.rmtree(os.path.join(self.base_dir, "pe2_data"))
+        if self.config_dir.is_dir():
+            shutil.rmtree(self.config_dir)
 
     def test_validate_dark(self):
         """ test login in this function """
