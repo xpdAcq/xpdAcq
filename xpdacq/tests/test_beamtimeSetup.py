@@ -18,6 +18,7 @@ from xpdacq.xpdacq_conf import xpd_configuration
 from xpdacq.tools import xpdAcqError
 from xpdacq.glbl import glbl
 
+
 class NewBeamtimeTest(unittest.TestCase):
     def setUp(self):
         self.base_dir = glbl_dict["base"]
@@ -176,23 +177,23 @@ class NewBeamtimeTest(unittest.TestCase):
         archive_full_name, local_archive_name = _tar_user_data(archive_name)
         test_tar_name = '_'.join([pi_name, saf_num, bt_uid,
                                   strftime('%Y-%m-%d-%H%M')])
-        # is tar file name correct? 
+        # is tar file name correct?
         self.assertEqual(archive_full_name,
                          os.path.join(glbl_dict['archive_dir'],
                                       test_tar_name))
         # are contents tared correctly?
-        #archive_test_dir = os.path.join(glbl_dict['home'], 'tar_test')
+        # archive_test_dir = os.path.join(glbl_dict['home'], 'tar_test')
         content_list = os.listdir(archive_full_name)
         # is remote copy the same name as local archive?
         assert os.path.basename(local_archive_name) in content_list
         assert len(content_list) == 1
         # is every directory included
         full_fp_list = list(map(os.path.basename,
-                                 glbl_dict['allfolders']))
+                                glbl_dict['allfolders']))
         exclude_fp_list = ['xpdUser', 'xpdConfig', 'yml',
                            'samples', 'scanplans']
         bkg_fp_list = [el for el in full_fp_list if el not in
-                exclude_fp_list]  # exclude top dirs
+                       exclude_fp_list]  # exclude top dirs
         remote_fp_list = os.listdir(os.path.join(archive_full_name,
                                                  local_archive_name))
         # difference should be empty set

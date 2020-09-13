@@ -14,35 +14,16 @@
 #
 ##############################################################################
 import os
-import uuid
 import time
-import yaml
-import logging
-import numpy as np
-from IPython import get_ipython
-
-import bluesky.plans as bp
-import bluesky.preprocessors as bpp
-
-from .glbl import glbl
-from .xpdacq_conf import xpd_configuration
-from .beamtime import Beamtime, ScanPlan, Sample, ct
-from .tools import _timestampstr, _check_obj, xpdAcqException
-from .utils import ExceltoYaml
-from .xpdacq import _auto_load_calibration_file
-
-from xpdtools.calib import _save_calib_param, _calibration
-
-from pyFAI.gui.utils import update_fig
-try:
-    from pyFAI.gui.cli_calibration import Calibration, PeakPicker, Calibrant
-except ImportError:
-    from pyFAI.calibration import Calibration, PeakPicker, Calibrant
-from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
-
-from pkg_resources import resource_filename as rs_fn
-
 from hashlib import sha256
+
+import bluesky.preprocessors as bpp
+from pyFAI.gui.cli_calibration import Calibration
+
+from .beamtime import ScanPlan, ct
+from .glbl import glbl
+from .tools import _check_obj, xpdAcqException
+from .utils import ExceltoYaml
 
 _REQUIRED_OBJ_LIST = ["xrun"]
 
@@ -71,15 +52,15 @@ def _sample_name_phase_info_configuration(sample_name, phase_info, tag):
 
 
 def run_calibration(
-    exposure=5,
-    dark_sub_bool=True,
-    calibrant=None,
-    phase_info=None,
-    detector=None,
-    *,
-    RE_instance=None,
-    wait_for_cal=True,
-    **kwargs
+        exposure=5,
+        dark_sub_bool=True,
+        calibrant=None,
+        phase_info=None,
+        detector=None,
+        *,
+        RE_instance=None,
+        wait_for_cal=True,
+        **kwargs
 ):
     """function to run entire calibration process.
 
@@ -232,14 +213,14 @@ def _inject_calibration_tag(msg):
 
 
 def _collect_img(
-    exposure,
-    dark_sub_bool,
-    sample_md,
-    tag,
-    RE_instance,
-    *,
-    calibrant=None,
-    detector=None
+        exposure,
+        dark_sub_bool,
+        sample_md,
+        tag,
+        RE_instance,
+        *,
+        calibrant=None,
+        detector=None
 ):
     """helper function to collect image and return it"""
     # grab beamtime object linked to run_engine
@@ -259,7 +240,7 @@ def _collect_img(
         plan = bpp.msg_mutator(plan, _inject_calibration_tag)
 
     # collect image
-    uid = RE_instance(sample_md, plan)
+    RE_instance(sample_md, plan)
     """
     # last one must be light
     db = xpd_configuration["db"]

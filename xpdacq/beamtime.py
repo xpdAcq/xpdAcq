@@ -15,9 +15,10 @@
 ##############################################################################
 import os
 import uuid
+from abc import ABC
+
 import yaml
 import inspect
-import itertools
 from collections import ChainMap, OrderedDict
 
 import numpy as np
@@ -500,7 +501,7 @@ def _nstep(start, stop, step_size):
 # FIXME: this scanplan is hot-fix for multi-sample scanplan. It serves as
 #       a prototype of the future scanplans but it's incomplete.
 def statTramp(
-    dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *, bt=None
+        dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *, bt=None
 ):
     """
     Parameters:
@@ -608,7 +609,7 @@ class MDOrderedDict(OrderedDict):
         return md_dict
 
 
-class Beamtime(ValidatedDictLike, YamlDict):
+class Beamtime(ValidatedDictLike, YamlDict, ABC):
     """
     class that carries necessary information for a beamtime
 
@@ -648,8 +649,10 @@ class Beamtime(ValidatedDictLike, YamlDict):
     _REQUIRED_FIELDS = ["bt_piLast", "bt_safN"]
 
     def __init__(
-        self, pi_last, saf_num, experimenters=[], *, wavelength=None, **kwargs
+            self, pi_last, saf_num, experimenters=None, *, wavelength=None, **kwargs
     ):
+        if experimenters is None:
+            experimenters = []
         super().__init__(
             bt_piLast=_clean_info(pi_last),
             bt_safN=_clean_info(saf_num),
@@ -708,7 +711,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self._referenced_by.append(scanplan)
         # save order
         with open(
-            os.path.join(glbl["config_base"], ".scanplan_order.yml"), "w+"
+                os.path.join(glbl["config_base"], ".scanplan_order.yml"), "w+"
         ) as f:
             scanplan_order = {}
             for i, name in enumerate(self.scanplans.keys()):
@@ -726,7 +729,7 @@ class Beamtime(ValidatedDictLike, YamlDict):
         self._referenced_by.append(sample)
         # save order
         with open(
-            os.path.join(glbl["config_base"], ".sample_order.yml"), "w+"
+                os.path.join(glbl["config_base"], ".sample_order.yml"), "w+"
         ) as f:
             sample_order = {}
             for i, name in enumerate(self.samples.keys()):
@@ -755,14 +758,20 @@ class Beamtime(ValidatedDictLike, YamlDict):
         )
 
     def __str__(self):
-        contents = (
-            ["", "ScanPlans:"]
-            + [
+        contents = [
+            "", "ScanPlans:"
+        ]
+        contents.extend(
+            [
                 "{}: {}".format(i, sp_name)
                 for i, sp_name in enumerate(self.scanplans.keys())
             ]
-            + ["", "Samples:"]
-            + [
+        )
+        contents.extend(
+            ["", "Samples:"]
+        )
+        contents.extend(
+            [
                 "{}: {}".format(i, sa_name)
                 for i, sa_name in enumerate(self.samples.keys())
             ]
@@ -826,12 +835,12 @@ class Beamtime(ValidatedDictLike, YamlDict):
         # split into base and sample via mod 2
         qrs = []
         locs, sample_barcode = qrs[::2], qrs[1::2]
-        for l, sb in zip(locs, sample_barcode):
-            self.robot_info[sb] = {"robot_identifer": l}
+        for loc, sb in zip(locs, sample_barcode):
+            self.robot_info[sb] = {"robot_identifer": loc}
         raise NotImplementedError("This is currently not implemented")
 
 
-class Sample(ValidatedDictLike, YamlChainMap):
+class Sample(ValidatedDictLike, YamlChainMap, ABC):
     """
     class that carries sample-related metadata
 
@@ -859,19 +868,17 @@ class Sample(ValidatedDictLike, YamlChainMap):
 
     _REQUIRED_FIELDS = ["sample_name"]
 
-    def __init__(self, beamtime, sample_md, **kwargs):
-        sample_md = regularize_dict_key(sample_md, ".", ",")
-        try:
-            super().__init__(sample_md, beamtime)  # ChainMap signature
-        except:
-            print(
+    def __init__(self, beamtime: Beamtime, sample_md: dict):
+        if ('sample_name' not in sample_md) and ('sample_composition' not in sample_md):
+            raise ValueError(
                 "At least sample_name and sample_composition is needed.\n"
                 "For example\n"
                 ">>> sample_md = {'sample_name':'Ni',"
                 "'sample_composition':{'Ni':1}}\n"
                 ">>> Sample(bt, sample_md)\n"
             )
-            return
+        sample_md = regularize_dict_key(sample_md, ".", ",")
+        super().__init__(sample_md, beamtime)  # ChainMap signature
         self.setdefault("sa_uid", new_short_uid())
         beamtime.register_sample(self)
 
@@ -897,13 +904,7 @@ class Sample(ValidatedDictLike, YamlChainMap):
     def from_dicts(cls, map1, map2, beamtime=None):
         if beamtime is None:
             beamtime = Beamtime.from_dict(map2)
-        # uid = map1.pop('sa_uid')
-        return cls(
-            beamtime,
-            map1,
-            # sa_uid=uid,
-            **map1
-        )
+        return cls(beamtime, map1)
 
 
 class ScanPlan(ValidatedDictLike, YamlChainMap):

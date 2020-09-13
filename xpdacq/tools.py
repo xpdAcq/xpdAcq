@@ -16,8 +16,6 @@
 
 import sys
 import datetime
-import warnings
-from time import strftime
 from IPython import get_ipython
 import copy
 
@@ -100,6 +98,7 @@ class xpdAcqError(xpdAcqException):
     """
 
     pass
+
 
 def _graceful_exit(error_message):
     try:
