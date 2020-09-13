@@ -68,7 +68,7 @@ class ImportSamplTest(unittest.TestCase):
         xlf2 = "999999_sample.xlsx"
         src = os.path.join(os.path.dirname(__file__), xlf2)
         shutil.copyfile(src, os.path.join(glbl["import_dir"], xlf2))
-        ## test with ordinary import ##
+        # test with ordinary import ##
         # expect to pass with explicit argument
         _import_sample_info(300000, self.bt)
         # check imported sample metadata

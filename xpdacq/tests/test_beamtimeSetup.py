@@ -55,7 +55,7 @@ class NewBeamtimeTest(unittest.TestCase):
         yml_dir = os.path.join(self.home_dir, usrconfig_dir, "yml")
         sample_dir = os.path.join(yml_dir, "samples")
         scanplan_dir = os.path.join(yml_dir, "scanplans")
-        dirs = _make_clean_env()
+        _make_clean_env()
         dir_list = [
             home_dir,
             conf_dir,

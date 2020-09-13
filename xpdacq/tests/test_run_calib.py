@@ -2,7 +2,6 @@ import os
 import pytest
 import shutil
 import uuid
-import numpy as np
 from xpdacq.xpdacq import update_experiment_hash_uid
 from xpdacq.calib import (
     _collect_img,
@@ -35,15 +34,15 @@ def test_configure_sample_info_args(sample_name, phase_info, tag, exception):
     "sample_name, phase_info, tag, sample_md",
     [
         (
-                None,
-                None,
-                "calib",
-                {
-                    "composition_string": "Ni1.0",
-                    "sample_composition": {"Ni": 1.0},
-                    "sample_name": "Ni_calib",
-                    "sample_phase": {"Ni": 1.0},
-                },
+            None,
+            None,
+            "calib",
+            {
+                "composition_string": "Ni1.0",
+                "sample_composition": {"Ni": 1.0},
+                "sample_name": "Ni_calib",
+                "sample_phase": {"Ni": 1.0},
+            },
         )
     ],
 )

@@ -213,8 +213,6 @@ class xrunTest(unittest.TestCase):
         cfg_src = os.path.join(pytest_dir, cfg_f_name)
         cfg_dst = os.path.join(glbl["config_base"], cfg_f_name)
         shutil.copy(cfg_src, cfg_dst)
-        with open(cfg_dst) as f:
-            config_from_file = yaml.unsafe_load(f)
         reload_calibration_md_dict = _auto_load_calibration_file()
         # test with xrun : auto_load_calib = True -> full calib_md
         msg_list = []
@@ -224,7 +222,7 @@ class xrunTest(unittest.TestCase):
 
         self.xrun.msg_hook = msg_rv
         glbl["auto_load_calib"] = True
-        xrun_uid = self.xrun(0, 0)
+        self.xrun(0, 0)
         open_run = [el.kwargs for el in msg_list if el.command == "open_run"][
             0
         ]
@@ -244,7 +242,7 @@ class xrunTest(unittest.TestCase):
 
         self.xrun.msg_hook = msg_rv
         glbl["auto_load_calib"] = False
-        xrun_uid = self.xrun(0, 0)
+        self.xrun(0, 0)
         open_run = [el.kwargs for el in msg_list if el.command == "open_run"][
             0
         ]
@@ -425,7 +423,7 @@ class xrunTest(unittest.TestCase):
 
         self.xrun.msg_hook = msg_rv
         glbl["auto_load_calib"] = True
-        assert glbl["auto_load_calib"] == True
+        assert glbl["auto_load_calib"]
         # calibration hasn't been run -> still receive client uid
         self.xrun({}, ScanPlan(self.bt, ct, 1.0))
         open_run = [
