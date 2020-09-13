@@ -3,7 +3,6 @@ import pytest
 import shutil
 import uuid
 import numpy as np
-from .conftest import xpd_pe1c, xpd_configuration
 from xpdacq.xpdacq import update_experiment_hash_uid
 from xpdacq.calib import (
     _collect_img,

@@ -1,41 +1,39 @@
-import unittest
-import asyncio
-import os
 import copy
+import os
 import shutil
 import time
-import yaml
+import unittest
 import uuid
 import warnings
-from pprint import pprint
 from pathlib import Path
 
-from xpdacq.glbl import glbl
+import databroker
+import numpy as np
+import ophyd
+import yaml
+from bluesky.callbacks import collector
+from pkg_resources import resource_filename as rs_fn
+from xpdsim import dexela
+
+from xpdacq.beamtime import ScanPlan, ct, Tramp, tseries, Tlist
 from xpdacq.beamtime import _nstep
-from xpdacq.beamtime import *
+from xpdacq.beamtimeSetup import _start_beamtime
+from xpdacq.glbl import glbl
+from xpdacq.simulation import pe1c, cs700, shctl1, fb
 from xpdacq.tools import xpdAcqException
 from xpdacq.utils import import_sample_info
-from xpdacq.xpdacq_conf import (
-    configure_device,
-    XPDACQ_MD_VERSION,
-    _load_beamline_config,
-)
-from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
 from xpdacq.xpdacq import (
     _validate_dark,
     CustomizedRunEngine,
     _auto_load_calibration_file,
     set_beamdump_suspender,
 )
-from xpdacq.simulation import pe1c, cs700, shctl1, fb
-import ophyd
-from bluesky import Msg
-import bluesky.examples as be
-from bluesky.callbacks import collector
-import databroker
-
-from pkg_resources import resource_filename as rs_fn
-from xpdsim import dexela
+from xpdacq.xpdacq_conf import (
+    configure_device,
+    XPDACQ_MD_VERSION,
+    _load_beamline_config,
+)
+from xpdacq.xpdacq_conf import xpd_configuration
 
 pytest_dir = rs_fn("xpdacq", "tests/")
 

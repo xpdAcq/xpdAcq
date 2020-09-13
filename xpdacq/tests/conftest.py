@@ -13,30 +13,24 @@
 #
 ##############################################################################
 import os
-import sys
 import shutil
-import asyncio
-import numpy as np
-import time
-import pytest
-from xpdacq.xpdacq_conf import glbl_dict, configure_device, xpd_configuration
-import databroker
 
-from xpdacq.xpdacq import CustomizedRunEngine
-from xpdacq.beamtimeSetup import _start_beamtime
-from xpdacq.utils import import_sample_info, ExceltoYaml
+import databroker
+import pytest
+from pkg_resources import resource_filename as rs_fn
 from xpdsim import (
     cs700,
-    xpd_pe1c,
     simple_pe1c,
     shctl1,
     ring_current,
     xpd_wavelength,
-    fb,
-    dexela
+    fb
 )
 
-from pkg_resources import resource_filename as rs_fn
+from xpdacq.beamtimeSetup import _start_beamtime
+from xpdacq.utils import import_sample_info
+from xpdacq.xpdacq import CustomizedRunEngine
+from xpdacq.xpdacq_conf import glbl_dict, configure_device
 
 
 @pytest.fixture(scope="session")

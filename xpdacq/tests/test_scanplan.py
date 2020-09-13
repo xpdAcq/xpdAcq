@@ -1,12 +1,7 @@
-import os
-import itertools
-import bluesky.plans as bp
-import bluesky.plan_stubs as bps
-import bluesky.preprocessors as bpp
-
-from xpdacq.xpdacq_conf import xpd_configuration, glbl_dict
 from xpdconf.conf import XPD_SHUTTER_CONF
+
 from xpdacq.beamtime import tseries
+from xpdacq.xpdacq_conf import xpd_configuration
 
 
 def _verify_tseries_message(msgs):

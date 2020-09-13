@@ -1,6 +1,6 @@
 import pytest
+
 from xpdacq.tools import regularize_dict_key, validate_dict_key
-from xpdacq.xpdacq_conf import _load_beamline_config
 
 
 @pytest.mark.parametrize(

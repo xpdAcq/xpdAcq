@@ -1,10 +1,10 @@
 import os
-import copy
-import time
-import uuid
 import shutil
+import time
 import unittest
+import uuid
 
+from xpdacq.simulation import pe1c, cs700, shctl1, db, fb
 from xpdacq.xpdacq_conf import (
     GlblYamlDict,
     glbl_dict,
@@ -12,8 +12,6 @@ from xpdacq.xpdacq_conf import (
     _set_glbl,
     configure_device,
 )
-
-from xpdacq.simulation import pe1c, cs700, shctl1, db, fb
 
 
 class glblTest(unittest.TestCase):

@@ -1,24 +1,21 @@
 import os
-import yaml
 import shutil
 import unittest
 
-from xpdacq.glbl import glbl
+import yaml
 from pkg_resources import resource_filename as rs_fn
-from xpdacq.xpdacq_conf import configure_device
-from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime, load_beamtime
+
 from xpdacq.beamtime import (
-    _summarize,
     ScanPlan,
     ct,
-    Tramp,
-    tseries,
     Beamtime,
     Sample,
 )
+from xpdacq.beamtimeSetup import _start_beamtime, load_beamtime
+from xpdacq.glbl import glbl
 from xpdacq.simulation import pe1c, db, shctl1, cs700, fb
-import bluesky.examples as be
 from xpdacq.xpdacq import CustomizedRunEngine
+from xpdacq.xpdacq_conf import configure_device
 
 
 # print messages for debugging
@@ -109,7 +106,7 @@ class BeamtimeObjTest(unittest.TestCase):
         # reload
         reload_dict = yaml.unsafe_load(sp.to_yaml())
         self.assertEqual(len(reload_dict), 2)  # bt and sp
-        ## contents of chainmap
+        # contents of chainmap
         self.assertEqual(reload_dict[0], sp.maps[0])
         self.assertEqual(reload_dict[1], sp.maps[1])
 
@@ -122,47 +119,29 @@ class BeamtimeObjTest(unittest.TestCase):
     def test_beamtime_roundtrip(self):
         # This includes checking that a new uid is only generated once
         # and persists thereafter.
-        bt = Beamtime("Simon", "123", [], wavelength=0.1828)
-        reloaded_bt = Beamtime.from_yaml(bt.to_yaml())
-        os.remove(bt.filepath)
-        self.assertEqual(reloaded_bt, bt)
+        reloaded_bt = Beamtime.from_yaml(self.bt.to_yaml())
+        os.remove(self.bt.filepath)
+        self.assertEqual(reloaded_bt, self.bt)
 
     def test_sample_roundtrip(self):
         sa_dict = {"sample_name": "Ni", "sample_composition": {"Ni": 1}}
-        bt = Beamtime("Simon", "123", [], wavelength=0.1828)
-        sam = Sample(bt, sa_dict)
+        sam = Sample(self.bt, sa_dict)
         reloaded_sam = Sample.from_yaml(sam.to_yaml())
-        os.remove(bt.filepath)
+        os.remove(self.bt.filepath)
         os.remove(sam.filepath)
         self.assertEqual(reloaded_sam, sam)
 
     def test_scanplan_roundtrip(self):
-        bt = Beamtime("Simon", "123", [], wavelength=0.1828)
         sp = ScanPlan(self.bt, ct, 1)
         reload_sp = ScanPlan.from_yaml(sp.to_yaml())
         self.assertEqual(reload_sp, sp)
-        # reload_scanplan = ScanPlan.from_yaml(sp.to_yaml())
-        # print('reload scanplan = {}'
-        #      .format(reload_scanplan))
-        # print('scanplan = {}'.format(sp.maps))
-        # from_yaml
-        # self.assertEqual(len(yaml.unsafe_load(reload_scanplan.to_yaml())), 3)
-        # print('reload scanplan = {}'
-        #      .format(yaml.unsafe_load(reload_scanplan.to_yaml())))
-        # print('scanplan = {}'.format(sp.maps))
-        # self.assertEqual(yaml.unsafe_load(reload_scanplan.to_yaml())[0],
-        #                 sp.maps[0])
-        # self.assertEqual(yaml.unsafe_load(reload_scanplan.to_yaml())[1],
-        #                 sp.maps[1])
-        # self.assertEqual(yaml.unsafe_load(reload_scanplan.to_yaml())[2],
-        #                 sp.maps[2])
 
     def test_yaml_sync(self):
         """Updating the object immediately, automatically updates the file."""
 
         # Adding a field syncs
         bt = Beamtime(
-            "Simon", "123", [], wavelength=0.1828, field_to_update="before"
+            "Simon", 123, [], wavelength=0.1828, field_to_update="before"
         )
         bt["new_field"] = "test"
         with open(bt.filepath, "r") as f:
@@ -173,7 +152,7 @@ class BeamtimeObjTest(unittest.TestCase):
 
         # Setting to an existing field syncs
         bt = Beamtime(
-            "Simon", "123", [], wavelength=0.1828, field_to_update="before"
+            "Simon", 123, [], wavelength=0.1828, field_to_update="before"
         )
         with open(bt.filepath, "r") as f:
             reloaded_bt_before_change = bt.from_yaml(f)
@@ -189,7 +168,7 @@ class BeamtimeObjTest(unittest.TestCase):
 
         # Updating syncs
         bt = Beamtime(
-            "Simon", "123", [], wavelength=0.1828, field_to_update="before"
+            "Simon", 123, [], wavelength=0.1828, field_to_update="before"
         )
         with open(bt.filepath, "r") as f:
             reloaded_bt_before_change = bt.from_yaml(f)
@@ -205,7 +184,7 @@ class BeamtimeObjTest(unittest.TestCase):
 
         # Deleting a field syncs
         bt = Beamtime(
-            "Simon", "123", [], wavelength=0.1828, field_to_remove="before"
+            "Simon", 123, [], wavelength=0.1828, field_to_remove="before"
         )
         with open(bt.filepath, "r") as f:
             reloaded_bt_before_change = bt.from_yaml(f)
@@ -219,7 +198,7 @@ class BeamtimeObjTest(unittest.TestCase):
 
         # Popping a field syncs
         bt = Beamtime(
-            "Simon", "123", [], wavelength=0.1828, field_to_remove="before"
+            "Simon", 123, [], wavelength=0.1828, field_to_remove="before"
         )
         with open(bt.filepath, "r") as f:
             reloaded_bt_before_change = bt.from_yaml(f)
@@ -233,7 +212,7 @@ class BeamtimeObjTest(unittest.TestCase):
 
         # setdefault syncs
         bt = Beamtime(
-            "Simon", "123", [], wavelength=0.1828, field_to_update="before"
+            "Simon", 123, [], wavelength=0.1828, field_to_update="before"
         )
         bt.setdefault("new_field", "test")
         with open(bt.filepath, "r") as f:
@@ -253,7 +232,8 @@ class BeamtimeObjTest(unittest.TestCase):
                 reloaded_sa = el.from_yaml(f)
             self.assertTrue("new_bt_field" in reloaded_sa)
 
-    def test_chaining(self):
+    @staticmethod
+    def test_chaining():
         """All contents of Beamtime and Experiment should propagate into
         Sample."""
         bt = Beamtime("Simon", 123, [], wavelength=0.1828, custom1="A")
@@ -271,7 +251,8 @@ class BeamtimeObjTest(unittest.TestCase):
         self.assertEqual(bt2, bt)
         self.assertEqual(list(bt2.samples.values())[0], sa)
 
-    def test_list_bkg_smoke(self):
+    @staticmethod
+    def test_list_bkg_smoke():
         bt = Beamtime("Simon", 123, [], wavelength=0.1828, custom1="A")
         bt.list_bkg()
 
