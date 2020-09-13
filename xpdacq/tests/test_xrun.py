@@ -8,6 +8,8 @@ import yaml
 import uuid
 import warnings
 from pprint import pprint
+from pathlib import Path
+
 from xpdacq.glbl import glbl
 from xpdacq.beamtime import _nstep
 from xpdacq.beamtime import *
@@ -39,9 +41,9 @@ pytest_dir = rs_fn("xpdacq", "tests/")
 
 class xrunTest(unittest.TestCase):
     def setUp(self):
-        self.base_dir = glbl["base"]
-        self.home_dir = glbl["home_dir"]
-        self.config_dir = glbl["xpdconfig"]
+        self.base_dir = Path(glbl["base"])
+        self.home_dir = Path(glbl["home_dir"])
+        self.config_dir = Path(glbl["xpdconfig"])
         self.PI_name = "Billinge "
         # must be 30000 for proper load of config yaml => don't change
         self.saf_num = 300000
@@ -51,7 +53,9 @@ class xrunTest(unittest.TestCase):
             ("Terban ", " Max", 2),
         ]
         # make xpdUser dir. That is required for simulation
-        os.makedirs(self.home_dir, exist_ok=True)
+        if self.home_dir.is_dir():
+            shutil.rmtree(self.home_dir)
+        self.home_dir.mkdir()
         # set simulation objects
         configure_device(
             area_det=pe1c,
@@ -60,10 +64,12 @@ class xrunTest(unittest.TestCase):
             db=db,
             filter_bank=fb,
         )
-        os.makedirs(glbl["xpdconfig"], exist_ok=True)
-        pytest_dir = rs_fn("xpdacq", "tests/")
+        if self.config_dir.is_dir():
+            shutil.rmtree(self.config_dir)
+        self.config_dir.mkdir()
+        pytest_dir = Path(rs_fn("xpdacq", "tests/"))
         config = "XPD_beamline_config.yml"
-        configsrc = os.path.join(pytest_dir, config)
+        configsrc = pytest_dir.joinpath(config)
         shutil.copyfile(configsrc, glbl["blconfig_path"])
         self.bt = _start_beamtime(
             self.PI_name,

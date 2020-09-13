@@ -40,13 +40,13 @@ from xpdsim import (
 from pkg_resources import resource_filename as rs_fn
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def db():
     db = Broker.named("temp")
     return db
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def bt(home_dir):
     # start a beamtime
     pi = "Billinge "
@@ -73,7 +73,7 @@ def bt(home_dir):
     shutil.rmtree(glbl_dict["home"])
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def glbl(bt):
     from xpdacq.glbl import glbl
 
@@ -113,7 +113,7 @@ def exp_hash_uid(bt, fresh_xrun, glbl):
     return exp_hash_uid
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def home_dir():
     stem = glbl_dict["home"]
     config_dir = glbl_dict["xpdconfig"]
