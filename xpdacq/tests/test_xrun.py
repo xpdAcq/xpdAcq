@@ -27,11 +27,12 @@ from xpdacq.xpdacq import (
     _auto_load_calibration_file,
     set_beamdump_suspender,
 )
-from xpdacq.simulation import pe1c, cs700, shctl1, db, fb
+from xpdacq.simulation import pe1c, cs700, shctl1, fb
 import ophyd
 from bluesky import Msg
 import bluesky.examples as be
 from bluesky.callbacks import collector
+import databroker
 
 from pkg_resources import resource_filename as rs_fn
 from xpdsim import dexela
@@ -57,6 +58,7 @@ class xrunTest(unittest.TestCase):
             shutil.rmtree(self.home_dir)
         self.home_dir.mkdir()
         # set simulation objects
+        db = databroker.v1.temp()
         configure_device(
             area_det=pe1c,
             temp_controller=cs700,
@@ -85,7 +87,7 @@ class xrunTest(unittest.TestCase):
         self.xrun = CustomizedRunEngine({})
         self.xrun.beamtime = self.bt
         # link mds
-        self.xrun.subscribe(xpd_configuration["db"].insert, "all")
+        self.xrun.subscribe(db.v1.insert, "all")
         # grad init_exp_hash_uid
         self.init_exp_hash_uid = glbl["exp_hash_uid"]
 

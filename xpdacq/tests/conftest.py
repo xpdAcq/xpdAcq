@@ -20,7 +20,7 @@ import numpy as np
 import time
 import pytest
 from xpdacq.xpdacq_conf import glbl_dict, configure_device, xpd_configuration
-from databroker import Broker
+import databroker
 
 from xpdacq.xpdacq import CustomizedRunEngine
 from xpdacq.beamtimeSetup import _start_beamtime
@@ -40,9 +40,9 @@ from xpdsim import (
 from pkg_resources import resource_filename as rs_fn
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def db():
-    db = Broker.named("temp")
+    db = databroker.v1.temp()
     return db
 
 
@@ -91,7 +91,7 @@ def fresh_xrun(bt, db):
     xrun.ignore_callback_exceptions = False
     xrun.beamtime = bt
     # link mds
-    xrun.subscribe(db.insert, "all")
+    xrun.subscribe(db.v1.insert, "all")
     # set simulation objects
     # alias
     pe1c = simple_pe1c
