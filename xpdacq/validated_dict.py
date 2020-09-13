@@ -1,4 +1,4 @@
-class ValidatedDictLike(dict):
+class ValidatedDictLike:
     """
     This a dict with a `validate` method that may raise any exception.
 

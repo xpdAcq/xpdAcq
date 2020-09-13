@@ -258,14 +258,14 @@ class BeamtimeObjTest(unittest.TestCase):
         Sample."""
         bt = Beamtime("Simon", 123, [], wavelength=0.1828, custom1="A")
         sa_dict = {"sample_name": "Ni", "sample_composition": {"Ni": 1}}
-        sa = Sample(bt, sa_dict, custom3="C")
+        sa = Sample(bt, sa_dict)
         for k, v in bt.items():
             assert sa[k] == bt[k]
 
     def test_load_beamtime(self):
         bt = Beamtime("Simon", 123, [], wavelength=0.1828, custom1="A")
         sa_dict = {"sample_name": "Ni", "sample_composition": {"Ni": 1}}
-        sa = Sample(bt, sa_dict, custom3="C")
+        sa = Sample(bt, sa_dict)
 
         bt2 = load_beamtime()
         self.assertEqual(bt2, bt)
