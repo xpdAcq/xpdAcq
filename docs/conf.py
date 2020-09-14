@@ -18,16 +18,18 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+# sys.path.insert(0, os.path.abspath('.'))
 
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-#needs_sphinx = '1.0'
+# needs_sphinx = '1.0'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+import sphinx_rtd_theme
+
 extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.autodoc',
@@ -39,7 +41,6 @@ extensions = [
 templates_path = ['_templates']
 
 from recommonmark.parser import CommonMarkParser
-from jinja2 import Environment, FileSystemLoader
 from xpdacq import __version__ as REVER_VERSION
 
 source_parsers = {
@@ -119,7 +120,6 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 html_theme = 'sphinx_rtd_theme'
-import sphinx_rtd_theme
 
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
@@ -295,20 +295,3 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
-
-print('rendering templates')
-templated_files = os.listdir(os.path.join(os.path.dirname(__file__),
-                                          'templates'))
-ctx = {'collection_env': 'collection-17Q1.0',
-       'analysis_env': 'analysis-17Q1.1',
-       }
-env = Environment(loader=FileSystemLoader([
-            'templates',
-            os.path.join(os.path.dirname(__file__), 'templates'),
-        ]))
-for tname in templated_files:
-    template = env.get_template(tname)
-    result = template.render(ctx)
-    with open(os.path.join(os.path.dirname(__file__), os.path.splitext(tname)[0] + '.rst'), 'wt') as f:
-        print(f.name)
-        f.write(result)
