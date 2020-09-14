@@ -1,0 +1,378 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Setting up your XPD acquisition objects &mdash; xpdAcq 0.10.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ScanPlan objects" href="usb_Scan.html" />
+    <link rel="prev" title="Setting up your Beamtime" href="usb_Beamtime.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.10
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="xpdusers.html">For XPD Users</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sb_overview.html">Overview of xpd acquisition environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_icollection.html">Overview of the bsui+xpdAcq environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Beamtime.html">Setting up your Beamtime</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Setting up your XPD acquisition objects</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hierarchy-of-sample-objects">Hierarchy of Sample objects</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Scan.html">ScanPlan objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html">Where did all my Sample and Scan objects go?????</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-is-your-friends">bt.list() is your friends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-gotchas">bt.list() Gotchas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Running.html">Running scans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_QuickAssess.html">Initial assessment of your data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_GlobalOptions.html">xpdAcq Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_export.html">Databroker Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot.html">Using the Robot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tomo.html">Running Tomography</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="xpdusers.html">For XPD Users</a> &raquo;</li>
+        
+      <li>Setting up your XPD acquisition objects</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/usb_Experiment.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="setting-up-your-xpd-acquisition-objects">
+<span id="usb-experiment"></span><h1>Setting up your XPD acquisition objects<a class="headerlink" href="#setting-up-your-xpd-acquisition-objects" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The basic workflow is</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Set up xpdAcq <code class="docutils literal notranslate"><span class="pre">Sample</span></code> objects. These contain information about the samples and experimental conditions.</p></li>
+<li><p>Set up xpdAcq <code class="docutils literal notranslate"><span class="pre">ScanPlan</span></code> objects.  These contain information used to run the scan, and metadata about the scan.</p></li>
+<li><p>Run scans by passing one <code class="docutils literal notranslate"><span class="pre">Sample</span></code> and one <code class="docutils literal notranslate"><span class="pre">ScanPlan</span></code> object to the run engine <code class="docutils literal notranslate"><span class="pre">xrun</span></code>. Data will be measured and saved to the NSLS-II file-store with all the metadata in the objects saved with it.</p></li>
+<li><p>Extract scans and data that you want from the data-store by searching on the metadata, selecting the data you want and extracting it in the form you want it (e.g., tiff files)</p></li>
+<li><p>Analyze the data, by integrating images to 1D diffraction patterns, F(Q), and PDFs, subtracting backgrounds, plotting and fitting models</p></li>
+<li><p>Export all the data, both raw tiffs and analyzed data, that you want.</p></li>
+</ol>
+</div></blockquote>
+<p>Note that the raw data, and metadata, will be stored indefinitely by NSLS-II, and can be searched for and extracted at any time in the future.</p>
+</div>
+<div class="section" id="hierarchy-of-sample-objects">
+<h2>Hierarchy of Sample objects<a class="headerlink" href="#hierarchy-of-sample-objects" title="Permalink to this headline">¶</a></h2>
+<p>The goal of the <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> is to save data with as much accurate metadata
+as possible with as little user-typing as possible.  To do this we associate
+metadata with appropriate levels of the beamtime hierarchy laid out in <a class="reference internal" href="sb_icollection.html#sb-icollection"><span class="std std-ref">Overview of the bsui+xpdAcq environment</span></a>.
+In <a class="reference internal" href="usb_Beamtime.html#usb-beamtime"><span class="std std-ref">Setting up your Beamtime</span></a> we discussed setting up the main <code class="docutils literal notranslate"><span class="pre">Beamtime</span></code> object.  Here we set
+up the an object at the next level down in hierarchy, <code class="docutils literal notranslate"><span class="pre">Sample</span></code>.</p>
+<p>The basic syntax is <code class="docutils literal notranslate"><span class="pre">sa</span> <span class="pre">=</span> <span class="pre">Sample(arg1,</span> <span class="pre">arg2,...)</span></code>, where the <code class="docutils literal notranslate"><span class="pre">args</span></code> are the arguments
+or parameters of the object, but it is always helpful to have a little reminder
+of what are the required and optional arguments of this object.  <code class="docutils literal notranslate"><span class="pre">ipython</span></code> offers a
+handy feature that you can type a <code class="docutils literal notranslate"><span class="pre">?</span></code> instead of the parentheses after a function and
+ipython will remind you of what the arguments are for that function.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; sa = Sample?
+Init signature: Sample(beamtime, sample_md, **kwargs)
+Docstring:
+class that carries sample-related metadata
+
+after creation, this Sample object will be related to Beamtime
+object given as argument and will be available in bt.list()
+
+Parameters
+----------
+beamtime : xpdacq.beamtime.Beamtime
+ object representing current beamtime
+sample_md : dict
+ dictionary contains all sample related metadata
+kwargs :
+ keyword arguments for extra metadata
+
+Examples
+--------
+&gt;&gt;&gt; Sample(bt, {&#39;sample_name&#39;: &#39;Ni&#39;, &#39;sample_composition&#39;:{&#39;Ni&#39;: 1}})
+
+&gt;&gt;&gt; Sample(bt, {&#39;sample_name&#39;: &#39;TiO2&#39;,
+             &#39;sample_composition&#39;:{&#39;Ti&#39;: 1, &#39;O&#39;: 2}})
+
+Please refer to http://xpdacq.github.io for more examples.
+Init docstring:
+Initialize a ChainMap by setting *maps* to the given mappings.
+If no mappings are provided, a single empty dictionary is used.
+</pre></div>
+</div>
+<p>Here we see that <code class="docutils literal notranslate"><span class="pre">Sample</span></code> takes 3 arguments (this will change in later versions of
+the software, so always check!), <code class="docutils literal notranslate"><span class="pre">beamtime</span></code>, <code class="docutils literal notranslate"><span class="pre">sample_md</span></code> and <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>.
+<code class="docutils literal notranslate"><span class="pre">beamtime</span></code> which is a beamtime object,``sample_md`` is a dictionary and <code class="docutils literal notranslate"><span class="pre">kwargs</span></code> is
+a standard python argument. See reference <a class="reference external" href="https://docs.python.org/3.5/faq/programming.html">here</a>.</p>
+<p>We also see there are examples on how to create a valid <code class="docutils literal notranslate"><span class="pre">Sample</span></code> object, so let’s go ahead and create it</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sa</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;sample_name&#39;</span><span class="p">:</span> <span class="s1">&#39;Ni&#39;</span><span class="p">,</span> <span class="s1">&#39;sample_composition&#39;</span><span class="p">:{</span><span class="s1">&#39;Ni&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}})</span>
+</pre></div>
+</div>
+<p>and, just as before we can investigate it</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">sa</span><span class="p">)</span>
+<span class="go">xpdacq.beamtime.Sample</span>
+</pre></div>
+</div>
+<p>so it is an object of type <code class="docutils literal notranslate"><span class="pre">xpdacq.beamtime.Sample</span></code>.</p>
+<p>Let’s take a look at its metadata store</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sa</span><span class="o">.</span><span class="n">md</span>
+<span class="go">{&#39;bt_experimenters&#39;: [&#39;Tim&#39;, &#39;Liu&#39;],</span>
+<span class="go">&#39;bt_piLast&#39;: &#39;Billinge&#39;,</span>
+<span class="go">&#39;bt_safN&#39;: &#39;300564&#39;,</span>
+<span class="go">&#39;bt_uid&#39;: &#39;fbb381c3&#39;,</span>
+<span class="go">&#39;bt_wavelength&#39;: 0.1832,</span>
+<span class="go">&#39;sa_uid&#39;: &#39;f3323ad0&#39;,</span>
+<span class="go">&#39;sample_composition&#39;: {&#39;Ni&#39;: 1},</span>
+<span class="go">&#39;sample_name&#39;: &#39;Ni&#39;}</span>
+</pre></div>
+</div>
+<p>So it has a couple of experiment metadata items, ‘sa_uid’ (it created)
+and ‘sample_name’ (we gave it), but interestingly it carries with it all
+the metadata from the beamtime object <code class="docutils literal notranslate"><span class="pre">bt</span></code> that we passed to it.</p>
+<p>For the InGaAs phase diagram study for example,we may have to make 5 samples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s1</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;sample_name&#39;</span><span class="p">:</span><span class="s1">&#39;GaAs&#39;</span><span class="p">,</span> <span class="s1">&#39;sample_composition&#39;</span><span class="p">:{</span><span class="s1">&#39;Ga&#39;</span><span class="p">:</span><span class="mf">1.</span><span class="p">,</span> <span class="s1">&#39;As&#39;</span><span class="p">:</span><span class="mf">1.</span><span class="p">}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s2</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;sample_name&#39;</span><span class="p">:</span><span class="s1">&#39;In0.25Ga0.75As&#39;</span><span class="p">,</span> <span class="s1">&#39;sample_composition&#39;</span><span class="p">:{</span><span class="s1">&#39;In&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;Ga&#39;</span><span class="p">:</span><span class="mf">0.75</span><span class="p">,</span> <span class="s1">&#39;As&#39;</span><span class="p">:</span><span class="mf">1.</span><span class="p">}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s3</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;sample_name&#39;</span><span class="p">:</span><span class="s1">&#39;In0.5Ga0.5As&#39;</span><span class="p">,</span> <span class="s1">&#39;sample_composition&#39;</span><span class="p">:{</span><span class="s1">&#39;In&#39;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;Ga&#39;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;As&#39;</span><span class="p">:</span><span class="mf">1.</span><span class="p">}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s4</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;sample_name&#39;</span><span class="p">:</span><span class="s1">&#39;In0.75Ga0.25As&#39;</span><span class="p">,</span> <span class="s1">&#39;sample_composition&#39;</span><span class="p">:{</span><span class="s1">&#39;In&#39;</span><span class="p">:</span><span class="mf">0.75</span><span class="p">,</span> <span class="s1">&#39;Ga&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;As&#39;</span><span class="p">:</span><span class="mf">1.</span><span class="p">}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s5</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;sample_name&#39;</span><span class="p">:</span><span class="s1">&#39;InAs&#39;</span><span class="p">,</span> <span class="s1">&#39;sample_composition&#39;</span><span class="p">:{</span><span class="s1">&#39;In&#39;</span><span class="p">:</span><span class="mf">1.</span><span class="p">,</span> <span class="s1">&#39;As&#39;</span><span class="p">:</span><span class="mf">1.</span><span class="p">}})</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s1</span><span class="o">.</span><span class="n">md</span>
+<span class="go">{&#39;bt_experimenters&#39;: [&#39;Tim&#39;, &#39;Liu&#39;],</span>
+<span class="go">&#39;bt_piLast&#39;: &#39;Billinge&#39;,</span>
+<span class="go">&#39;bt_safN&#39;: &#39;300564&#39;,</span>
+<span class="go">&#39;bt_uid&#39;: &#39;fbb381c3&#39;,</span>
+<span class="go">&#39;bt_wavelength&#39;: 0.1832,</span>
+<span class="go">&#39;sa_uid&#39;: &#39;4557b649&#39;,</span>
+<span class="go">&#39;sample_composition&#39;: {&#39;As&#39;: 1.0, &#39;Ga&#39;: 1.0},</span>
+<span class="go">&#39;sample_name&#39;: &#39;GaAs&#39;}</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s3</span><span class="o">.</span><span class="n">md</span>
+<span class="go">{&#39;bt_experimenters&#39;: [&#39;Tim&#39;, &#39;Liu&#39;],</span>
+<span class="go">&#39;bt_piLast&#39;: &#39;Billinge&#39;,</span>
+<span class="go">&#39;bt_safN&#39;: &#39;300564&#39;,</span>
+<span class="go">&#39;bt_uid&#39;: &#39;fbb381c3&#39;,</span>
+<span class="go">&#39;bt_wavelength&#39;: 0.1832,</span>
+<span class="go">&#39;sa_uid&#39;: &#39;3bac77a8&#39;,</span>
+<span class="go">&#39;sample_composition&#39;: {&#39;As&#39;: 1.0, &#39;Ga&#39;: 0.5, &#39;In&#39;: 0.5},</span>
+<span class="go">&#39;sample_name&#39;: &#39;In0.5Ga0.5As&#39;}</span>
+</pre></div>
+</div>
+<p>Here, careful inspection will indicate that among various <code class="docutils literal notranslate"><span class="pre">Sample</span></code> objects,
+there are different sample-ID <code class="docutils literal notranslate"><span class="pre">sa_uid</span></code> and <code class="docutils literal notranslate"><span class="pre">sample_name</span></code> but all the <code class="docutils literal notranslate"><span class="pre">beamtime</span></code>
+level metadata are the same as the other samples (because this series of samples
+is being done at the same beamtime!).</p>
+<p>Hopefully you are getting the picture.  We will hand these sample
+objects to the run engine when each scan is launched and
+all the metadata up the stack will be associated with each scan, easily allowing
+us to search, for example, for “all the scans done on sample <code class="docutils literal notranslate"><span class="pre">'InGas'</span></code> as
+part of this beamtime”.</p>
+<p>Other metadata is saved such as date-time at the time of running, so we could
+search for “the scan that was running at 5pm on Friday”.  We also differentiate
+production runs and setup scans.  By default the search will not return the
+setup scans, though they can be retrieved if and when needed.  You can also
+store any other metadata that you want at each level so you can tag data
+and search in a very powerful way.  The search capabilities in the xpdAcq suite
+are still under development, so please share your requests (<a class="reference external" href="mailto:sb2896&#37;&#52;&#48;columbia&#46;edu">sb2896<span>&#64;</span>columbia<span>&#46;</span>edu</a>).</p>
+<p>At the time of writing, each object, such as Sample, is a container
+for the barest minimum of metadata.  As time goes on we will increase
+the number of things that you may save about samples and experiments.
+Send us your requests here too (<a class="reference external" href="mailto:sb2896&#37;&#52;&#48;columbia&#46;edu">sb2896<span>&#64;</span>columbia<span>&#46;</span>edu</a>)!</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="usb_Scan.html" class="btn btn-neutral float-right" title="ScanPlan objects" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="usb_Beamtime.html" class="btn btn-neutral float-left" title="Setting up your Beamtime" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright (c) 2016 trustees of Columbia University in the City of New York
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

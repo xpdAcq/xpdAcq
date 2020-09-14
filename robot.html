@@ -1,0 +1,292 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Using the Robot &mdash; xpdAcq 0.10.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Running Tomography" href="tomo.html" />
+    <link rel="prev" title="Databroker Export" href="db_export.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.10
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="xpdusers.html">For XPD Users</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sb_overview.html">Overview of xpd acquisition environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_icollection.html">Overview of the bsui+xpdAcq environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Beamtime.html">Setting up your Beamtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Experiment.html">Setting up your XPD acquisition objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Scan.html">ScanPlan objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html">Where did all my Sample and Scan objects go?????</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-is-your-friends">bt.list() is your friends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-gotchas">bt.list() Gotchas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Running.html">Running scans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_QuickAssess.html">Initial assessment of your data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_GlobalOptions.html">xpdAcq Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_export.html">Databroker Export</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Using the Robot</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#load-data-into-bt-as-usual">0. Load data into <code class="docutils literal notranslate"><span class="pre">bt</span></code> as usual</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tell-bt-about-where-the-samples-are-loaded-in-the-robot-magazine">1. Tell <code class="docutils literal notranslate"><span class="pre">bt</span></code> about where the samples are loaded in the robot magazine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#run-xrun-with-the-robot-flag">2. Run <code class="docutils literal notranslate"><span class="pre">xrun</span></code> with the robot flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#advanced-usage">Advanced usage</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tomo.html">Running Tomography</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="xpdusers.html">For XPD Users</a> &raquo;</li>
+        
+      <li>Using the Robot</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/robot.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="using-the-robot">
+<span id="robot"></span><h1>Using the Robot<a class="headerlink" href="#using-the-robot" title="Permalink to this headline">¶</a></h1>
+<p>XPD is equipped with a sample loading robot, which requires special syntax to use properly.</p>
+<div class="section" id="load-data-into-bt-as-usual">
+<h2>0. Load data into <code class="docutils literal notranslate"><span class="pre">bt</span></code> as usual<a class="headerlink" href="#load-data-into-bt-as-usual" title="Permalink to this headline">¶</a></h2>
+<p>Follow the normal routine for loading data from the sample spreadsheet from <a href="#id1"><span class="problematic" id="id2">import_sample_</span></a>.</p>
+</div>
+<div class="section" id="tell-bt-about-where-the-samples-are-loaded-in-the-robot-magazine">
+<h2>1. Tell <code class="docutils literal notranslate"><span class="pre">bt</span></code> about where the samples are loaded in the robot magazine<a class="headerlink" href="#tell-bt-about-where-the-samples-are-loaded-in-the-robot-magazine" title="Permalink to this headline">¶</a></h2>
+<p>To use the robot properly <code class="docutils literal notranslate"><span class="pre">bt</span></code> needs to know where the samples are loaded.
+This is achieved by running <code class="docutils literal notranslate"><span class="pre">bt.robot_location_number()</span></code>.
+This will prompt you to enter the location for each sample currently in
+<code class="docutils literal notranslate"><span class="pre">bt</span></code>.
+If the sample is not in the magazine that’s ok just leave the prompt</p>
+<blockquote>
+<div><p>blank and hit <code class="docutils literal notranslate"><span class="pre">&lt;enter&gt;</span></code>.</p>
+</div></blockquote>
+</div>
+<div class="section" id="run-xrun-with-the-robot-flag">
+<h2>2. Run <code class="docutils literal notranslate"><span class="pre">xrun</span></code> with the robot flag<a class="headerlink" href="#run-xrun-with-the-robot-flag" title="Permalink to this headline">¶</a></h2>
+<p>To run the scans run
+<code class="docutils literal notranslate"><span class="pre">run(&lt;list</span> <span class="pre">of</span> <span class="pre">sample</span> <span class="pre">numbers&gt;,</span> <span class="pre">&lt;scan</span> <span class="pre">number&gt;,</span> <span class="pre">robot=True)</span></code>.
+<code class="docutils literal notranslate"><span class="pre">xrun</span></code> will report the contents of the scan so you can review it before
+executing.</p>
+<p>For example</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">xrun</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="n">robot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="advanced-usage">
+<h2>Advanced usage<a class="headerlink" href="#advanced-usage" title="Permalink to this headline">¶</a></h2>
+<p>The robot and <code class="docutils literal notranslate"><span class="pre">xrun</span></code> are more flexible than just running one scan.
+Multiple scans can be run per sample.</p>
+<p>For example here is a run that runs different plans per sample</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">xrun</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="n">robot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Note that sample <code class="docutils literal notranslate"><span class="pre">5</span></code> has two scans, <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">5</span></code>.</p>
+<p>The only constraint is that if the scans are in a list, that the number of
+samples needs to equal the number of scans.
+Don’t worry about listing a sample multiple times in a row,
+we won’t unload and reload the same sample.
+If samples not in a row, eg. <code class="docutils literal notranslate"><span class="pre">[3,</span> <span class="pre">4,</span> <span class="pre">5,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5]</span></code> we <em>will</em> uload and reload
+the samples.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tomo.html" class="btn btn-neutral float-right" title="Running Tomography" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="db_export.html" class="btn btn-neutral float-left" title="Databroker Export" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright (c) 2016 trustees of Columbia University in the City of New York
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,290 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Cheat Sheet &mdash; xpdAcq 0.10.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Initializing a new beamtime for a user" href="sb_newBeamtime.html" />
+    <link rel="prev" title="For Beamline Staff" href="beamlinestaff.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.10
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="xpdusers.html">For XPD Users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Cheat Sheet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#start-a-beamtime">Start a beamtime</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="sb_overview.html">Overview of xpd acquisition environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_icollection.html">Overview of the bsui+xpdAcq environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_newBeamtime.html">Initializing a new beamtime for a user</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_endBeamtime.html">Finalizing and ending a completed beamtime for a user</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="beamlinestaff.html">For Beamline Staff</a> &raquo;</li>
+        
+      <li>Cheat Sheet</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/sb_cheat_sheet.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="cheat-sheet">
+<span id="sb-cheat-sheet"></span><h1>Cheat Sheet<a class="headerlink" href="#cheat-sheet" title="Permalink to this headline">¶</a></h1>
+<p>Please use this page as a reminder and to copy  and paste code snippets into your <code class="docutils literal notranslate"><span class="pre">collection-yyQn.x</span></code>
+and <code class="docutils literal notranslate"><span class="pre">analysis</span></code> ipython terminals.</p>
+<p>To understand in more detail what the code does, please go to <a class="reference internal" href="xpdusers.html#xpdu"><span class="std std-ref">For XPD Users</span></a></p>
+<div class="section" id="start-a-beamtime">
+<h2>Start a beamtime<a class="headerlink" href="#start-a-beamtime" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>run <code class="docutils literal notranslate"><span class="pre">xpdui</span></code> to start a collection ipython environment</p></li>
+<li><p>run the end-beamtime sequence if it has not been run</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">bt</span> <span class="o">=</span> <span class="n">_end_beamtime</span><span class="p">()</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>run the start-beamtime sequence</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">bt</span> <span class="o">=</span> <span class="n">_start_beamtime</span><span class="p">(</span><span class="n">PI_last</span><span class="o">=&lt;</span><span class="n">last_name_of_pi_on_the_SAF</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">saf_num</span><span class="o">=&lt;</span><span class="n">saf_number</span><span class="o">&gt;</span><span class="p">,</span>
+                     <span class="n">experimenters</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Emma&#39;</span><span class="p">,</span> <span class="s1">&#39;Watson&#39;</span><span class="p">,</span> <span class="s1">&#39;Tim&#39;</span><span class="p">,</span> <span class="s1">&#39;Liu&#39;</span><span class="p">],</span>
+                     <span class="n">wavelength</span><span class="o">=</span><span class="mf">0.184649</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> will raise an error if a user inadvertently attempts to start a new beatime in previous <code class="docutils literal notranslate"><span class="pre">python</span></code> session.</p>
+<p>If you receive this <code class="docutils literal notranslate"><span class="pre">xpdAcqError</span></code> message,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">It</span> <span class="n">appears</span> <span class="n">that</span> <span class="n">end_beamtime</span> <span class="n">may</span> <span class="n">have</span> <span class="n">been</span> <span class="n">run</span><span class="o">.</span>
+<span class="n">If</span> <span class="n">you</span> <span class="n">wish</span> <span class="n">to</span> <span class="n">start</span> <span class="n">a</span> <span class="n">new</span> <span class="n">beamtime</span><span class="p">,</span>
+<span class="n">please</span> <span class="nb">open</span> <span class="n">a</span> <span class="n">new</span> <span class="n">terminal</span> <span class="ow">and</span> <span class="n">proceed</span> <span class="k">with</span> <span class="n">the</span> <span class="n">standard</span> <span class="n">starting</span> <span class="n">sequence</span>
+</pre></div>
+</div>
+<p>please open a new terminal, type in <code class="docutils literal notranslate"><span class="pre">bsui</span></code> to enter a fresh collection enviornment (<code class="docutils literal notranslate"><span class="pre">ipython</span> <span class="pre">session</span></code>) and start beamtime again.</p>
+<ol class="arabic simple" start="4">
+<li><p>link bt to xrun</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">xrun</span><span class="o">.</span><span class="n">beamtime</span> <span class="o">=</span> <span class="n">bt</span>
+</pre></div>
+</div>
+<p>5. Copy the Excel spreadsheet provided by the experimenters with their samples in it to the <code class="docutils literal notranslate"><span class="pre">xpdUser/import</span></code> directory. Check that it has the name <code class="docutils literal notranslate"><span class="pre">&lt;saf_number&gt;_samples.xlsx</span></code>
+where the &lt;saf_number&gt; must match that of the current beamtime.  If the user didn’t supply such a thing, then copy the file <code class="docutils literal notranslate"><span class="pre">300000_samples.xls</span></code> from the <code class="docutils literal notranslate"><span class="pre">xpdConfig</span></code> directory
+(which is at the same level of the directory tree as the <code class="docutils literal notranslate"><span class="pre">xpdUser</span></code> directory) to <code class="docutils literal notranslate"><span class="pre">xpdUser/import</span></code> and edit the filename so that it has the <code class="docutils literal notranslate"><span class="pre">saf_number</span></code> of the current beamtime.</p>
+<ol class="arabic simple" start="6">
+<li><p>load the info in the spreadsheet by typing:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">import_sample_info</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The sample objects may be updated at any time by editing the spreadsheet in the <code class="docutils literal notranslate"><span class="pre">xpdUser/import</span></code> directory
+and rerunning <code class="docutils literal notranslate"><span class="pre">load_sample_info()</span></code></p>
+</div>
+<ol class="arabic" start="8">
+<li><p>calibrate the wavelength.</p>
+<p>FIXME</p>
+</li>
+</ol>
+<p>Things should now be set up for the user to run the experiment.  Information about this is in
+the main part of the documentation.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="sb_newBeamtime.html" class="btn btn-neutral float-right" title="Initializing a new beamtime for a user" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="beamlinestaff.html" class="btn btn-neutral float-left" title="For Beamline Staff" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright (c) 2016 trustees of Columbia University in the City of New York
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

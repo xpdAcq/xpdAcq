@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Setting up your Beamtime &mdash; xpdAcq 0.10.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Setting up your XPD acquisition objects" href="usb_Experiment.html" />
+    <link rel="prev" title="Overview of the bsui+xpdAcq environment" href="sb_icollection.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.10
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="xpdusers.html">For XPD Users</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sb_overview.html">Overview of xpd acquisition environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_icollection.html">Overview of the bsui+xpdAcq environment</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Setting up your Beamtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Experiment.html">Setting up your XPD acquisition objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Scan.html">ScanPlan objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html">Where did all my Sample and Scan objects go?????</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-is-your-friends">bt.list() is your friends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-gotchas">bt.list() Gotchas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Running.html">Running scans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_QuickAssess.html">Initial assessment of your data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_GlobalOptions.html">xpdAcq Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_export.html">Databroker Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot.html">Using the Robot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tomo.html">Running Tomography</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="xpdusers.html">For XPD Users</a> &raquo;</li>
+        
+      <li>Setting up your Beamtime</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/usb_Beamtime.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="setting-up-your-beamtime">
+<span id="usb-beamtime"></span><h1>Setting up your Beamtime<a class="headerlink" href="#setting-up-your-beamtime" title="Permalink to this headline">¶</a></h1>
+<p>This will usually be carried out by the beamline scientist.  To check if all is well,
+carry out the following steps:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Check if you are in the collection environment</p></li>
+<li><p>Type <code class="docutils literal notranslate"><span class="pre">bt</span></code>.  It should return similar output as the following:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bt</span>
+<span class="go">{&#39;bt_experimenters&#39;: [&#39;Tim&#39;, &#39;Liu&#39;],</span>
+<span class="go"> &#39;bt_piLast&#39;: &#39;Billinge&#39;,</span>
+<span class="go"> &#39;bt_safN&#39;: &#39;300564&#39;,</span>
+<span class="go"> &#39;bt_uid&#39;: &#39;c76a6fe1&#39;,</span>
+<span class="go"> &#39;bt_wavelength&#39;: 0.1832}</span>
+</pre></div>
+</div>
+<p>If not, please contact your beamline scientist.</p>
+</div></blockquote>
+<p>This object is a container that contains critical information about
+your beamtime.  You can investigate what is inside.</p>
+<p>To see the kinds of information is contained, place a dot after bt and hit <cite>tab</cite>. The information (but not their values) will be listed.</p>
+<a class="reference internal image-reference" href="_images/usb_beamtime_bt_0.png"><img alt="_images/usb_beamtime_bt_0.png" class="align-center" src="_images/usb_beamtime_bt_0.png" style="width: 400px; height: 200px;" /></a>
+<p>To see what is contained in a specific field, type <code class="docutils literal notranslate"><span class="pre">bt.&lt;thing&gt;</span></code> and hit return. For example, in our case:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bt</span><span class="o">.</span><span class="n">wavelength</span>
+<span class="go">0.1832</span>
+</pre></div>
+</div>
+<p>this is a beamtime (<cite>‘bt’</cite>) type of object with name <cite>‘bt’</cite>.  More interesting
+is the metadata it contains:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bt</span><span class="o">.</span><span class="n">md</span>
+<span class="go">{&#39;bt_experimenters&#39;: [&#39;Tim&#39;, &#39;Liu&#39;],</span>
+<span class="go"> &#39;bt_piLast&#39;: &#39;Billinge&#39;,</span>
+<span class="go"> &#39;bt_safN&#39;: &#39;300564&#39;,</span>
+<span class="go"> &#39;bt_uid&#39;: &#39;c76a6fe1&#39;,</span>
+<span class="go"> &#39;bt_wavelength&#39;: 0.1832}</span>
+</pre></div>
+</div>
+<p>The instrument responsible, created an initial version of <code class="docutils literal notranslate"><span class="pre">bt</span></code> with information
+from the Safety Approval Form (SAF) form: PI’s last name, SAF number
+and the experimenters.</p>
+<p>When the beamtime object is created, it is given its own unique-ID, the <code class="docutils literal notranslate"><span class="pre">bt_uid</span></code>.
+As long as you use the XPD acquisition software, every scan you make during your beamtime,
+along with the other Beamtime level metadata,
+will contain this <code class="docutils literal notranslate"><span class="pre">'bt_uid'</span></code> metadata field with the same uid value.
+This can be searched for later in the scan headers, and used to find all the data
+collected during your beamtime.</p>
+<p>Some of the other things in the container are not quantities, or attributes, but
+functions, or <cite>methods</cite>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bt</span><span class="o">.</span><span class="n">list</span>
+<span class="go">&lt;bound method XPD.list of &lt;class &#39;xpdacq.beamtime.Beamtime&#39;&gt;&gt;</span>
+</pre></div>
+</div>
+<p>This means that <code class="docutils literal notranslate"><span class="pre">bt</span></code> not only contains beamtime information, but it can do things.  In this
+case, <code class="docutils literal notranslate"><span class="pre">bt.list</span></code> will list all the xpd-acquire-objects that have been created at
+the time.  To execute a method, add a parentheses to the end of <code class="docutils literal notranslate"><span class="pre">bt.list()</span></code>
+and hit return.  So far, there is only 1 object, the <cite>bt</cite> object with name <cite>bt</cite>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bt</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
+
+<span class="go"> ScanPlans:</span>
+<span class="go"> 0: &#39;ct_5&#39;</span>
+<span class="go"> 1: &#39;ct_0.1&#39;</span>
+<span class="go"> 2: &#39;ct_1&#39;</span>
+<span class="go"> 3: &#39;ct_10&#39;</span>
+<span class="go"> 4: &#39;ct_30&#39;</span>
+<span class="go"> 5: &#39;ct_60&#39;</span>
+
+<span class="go"> Samples:</span>
+<span class="go"> 0: Setup</span>
+<span class="go"> 1: Ni_calibrant</span>
+<span class="go"> 2: bkgd_kapton_0.9mmOD</span>
+<span class="go"> 3: bkgd_kapton_1mmOD</span>
+<span class="go"> 4: bkgd_kapton_0.5mmOD</span>
+<span class="go"> 5: activated_carbon_1</span>
+<span class="go"> 6: activated_carbon_2</span>
+<span class="go"> 7: activated_carbon_3</span>
+<span class="go"> ...</span>
+</pre></div>
+</div>
+<p>As we mentioned before, if <code class="docutils literal notranslate"><span class="pre">bt</span></code> doesn’t exist,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bt</span>
+<span class="go">---------------------------------------------------------------------------</span>
+<span class="go">NameError                                 Traceback (most recent call last)</span>
+<span class="go">&lt;ipython-input-1-d0d7ab093f8d&gt; in &lt;module&gt;()</span>
+<span class="go">----&gt; 1 bt</span>
+
+<span class="go">NameError: name &#39;bt&#39; is not defined</span>
+</pre></div>
+</div>
+<p>speak to your beamline scientist as there may be other aspects of the
+environment setup that need to be fixed. If you ever do have to create
+(we call it <cite>instantiate</cite>) a new <code class="docutils literal notranslate"><span class="pre">bt</span></code> object, it is done like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bt</span> <span class="o">=</span> <span class="n">Beamtime</span><span class="p">(</span><span class="s1">&#39;Billinge&#39;</span><span class="p">,</span> <span class="mi">300256</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Simon&#39;</span><span class="p">,</span><span class="s1">&#39;Billinge&#39;</span><span class="p">,</span> <span class="s1">&#39;Chia-Hao&#39;</span><span class="p">,</span><span class="s1">&#39;Liu&#39;</span><span class="p">],</span> <span class="mf">0.18326</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We will assume that <code class="docutils literal notranslate"><span class="pre">bt</span></code> exists.  Now, we move on to the next step, <a class="reference internal" href="usb_Experiment.html#usb-experiment"><span class="std std-ref">Setting up your XPD acquisition objects</span></a> within our beamtime.</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="usb_Experiment.html" class="btn btn-neutral float-right" title="Setting up your XPD acquisition objects" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="sb_icollection.html" class="btn btn-neutral float-left" title="Overview of the bsui+xpdAcq environment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright (c) 2016 trustees of Columbia University in the City of New York
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,381 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Where did all my Sample and Scan objects go????? &mdash; xpdAcq 0.10.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Running scans" href="usb_Running.html" />
+    <link rel="prev" title="ScanPlan objects" href="usb_Scan.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.10
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="xpdusers.html">For XPD Users</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sb_overview.html">Overview of xpd acquisition environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_icollection.html">Overview of the bsui+xpdAcq environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Beamtime.html">Setting up your Beamtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Experiment.html">Setting up your XPD acquisition objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Scan.html">ScanPlan objects</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Where did all my Sample and Scan objects go?????</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bt-list-is-your-friends">bt.list() is your friends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bt-list-gotchas">bt.list() Gotchas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Running.html">Running scans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_QuickAssess.html">Initial assessment of your data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_GlobalOptions.html">xpdAcq Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_export.html">Databroker Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot.html">Using the Robot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tomo.html">Running Tomography</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="xpdusers.html">For XPD Users</a> &raquo;</li>
+        
+      <li>Where did all my Sample and Scan objects go?????</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/usb_Where.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="where-did-all-my-sample-and-scan-objects-go">
+<span id="usb-where"></span><h1>Where did all my Sample and Scan objects go?????<a class="headerlink" href="#where-did-all-my-sample-and-scan-objects-go" title="Permalink to this headline">¶</a></h1>
+<p>You just spent hours typing in metadata and creating
+<a class="reference internal" href="usb_Experiment.html#usb-experiment"><span class="std std-ref">sample</span></a> and <a class="reference internal" href="usb_Scan.html#usb-scan"><span class="std std-ref">scan</span></a>
+objects, and now they have suddenly disappeared!  This
+is a disaster!</p>
+<p>As Douglas Adams taught us <cite>DON’T PANIC</cite> .  This is actually
+<cite>normal</cite> (or at least <cite>expected</cite> ) behavior in xpdAcq.  Remember that
+one of the design goals of the software project was to minimize
+users’ typing.  The design had to take into account that the
+collection <code class="docutils literal notranslate"><span class="pre">ipython</span></code> environment is not so stable
+(e.g., see <a class="reference internal" href="troubleshooting.html#troubleshooting"><span class="std std-ref">Troubleshooting</span></a> ) and we should expect periodic
+restarts of it.  How bad if we had to retype our metadata every
+time?  So every time you create an xpdAcq acquisition object,
+the details are saved to a file on the local hard-drive.  When
+<code class="docutils literal notranslate"><span class="pre">xpdui</span></code> is run, the main <code class="docutils literal notranslate"><span class="pre">bt</span></code> object (if it exists) is
+automatically reloaded, but not the other acquisition objects.
+But don’t worry, they are all safe and sound.</p>
+</div>
+<div class="section" id="bt-list-is-your-friends">
+<span id="usb-bt-list"></span><h1>bt.list() is your friends<a class="headerlink" href="#bt-list-is-your-friends" title="Permalink to this headline">¶</a></h1>
+<p>To see what xpdAcquire acquisition objects you have available
+to you, type <code class="docutils literal notranslate"><span class="pre">bt.list()</span></code> .  This lists the name and type of all
+the acquisition objects that are on the hard-drive and available
+to you….your objects: e.g.,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bt</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
+
+<span class="go">ScanPlans:</span>
+<span class="go">0: &#39;ct_5&#39;</span>
+<span class="go">1: &#39;ct_30&#39;</span>
+<span class="go">2: &#39;ct_1&#39;</span>
+<span class="go">3: &#39;ct_10&#39;</span>
+<span class="go">4: &#39;ct_60&#39;</span>
+<span class="go">5: &#39;ct_0.1&#39;</span>
+
+<span class="go">Samples:</span>
+<span class="go">0: Ni</span>
+<span class="go">1: TiO2</span>
+<span class="go">2: GaAs</span>
+<span class="go">3: In0.5Ga0.5As</span>
+<span class="go">4: In0.25Ga0.75As</span>
+<span class="go">5: In0.75Ga0.25As</span>
+<span class="go">6: InA</span>
+</pre></div>
+</div>
+<p>so they are all there, and we can get them, but we can no longer refer to them by the
+assignment we used when we created them</p>
+<p>To get them, we can explicitly reload them again or just use <strong>index</strong> of this object.
+For example, consider the following sequence of code blocks:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s1</span>
+<span class="go">---------------------------------------------------------------------------</span>
+<span class="go">NameError                                 Traceback (most recent call last)</span>
+<span class="go">&lt;ipython-input-5-51081833a770&gt; in &lt;module&gt;()</span>
+<span class="go">----&gt; 1 s1</span>
+
+<span class="go">NameError: name &#39;s1&#39; is not defined</span>
+</pre></div>
+</div>
+<p>Oh no, my <code class="docutils literal notranslate"><span class="pre">s1</span></code> sample object, which as my sample named <cite>GaAs</cite> , has disappeared!  <code class="docutils literal notranslate"><span class="pre">bt.list()</span></code> to the rescue…</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bt</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
+
+<span class="go">ScanPlans:</span>
+<span class="go">0: &#39;ct_5&#39;</span>
+<span class="go">1: &#39;ct_30&#39;</span>
+<span class="go">2: &#39;ct_1&#39;</span>
+<span class="go">3: &#39;ct_10&#39;</span>
+<span class="go">4: &#39;ct_60&#39;</span>
+<span class="go">5: &#39;ct_0.1&#39;</span>
+
+<span class="go">Samples:</span>
+<span class="go">0: Ni</span>
+<span class="go">1: TiO2</span>
+<span class="go">2: GaAs</span>
+<span class="go">3: In0.5Ga0.5As</span>
+<span class="go">4: In0.25Ga0.75As</span>
+<span class="go">5: In0.75Ga0.25As</span>
+<span class="go">6: InA</span>
+</pre></div>
+</div>
+<p>That’s it with a list index of 2, inside the Samples category. type object called.
+Just to be sane, let’s reload it. We can give it any name, it doesn’t have to be
+the same name as last time, so let’s reload it as <code class="docutils literal notranslate"><span class="pre">s1_again</span></code> :</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s1_again</span> <span class="o">=</span> <span class="n">bt</span><span class="o">.</span><span class="n">samples</span><span class="p">[</span><span class="s1">&#39;GaAs&#39;</span><span class="p">]</span> <span class="c1"># e.g., the sample name is GaAs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s1_again</span>
+<span class="go">{&#39;bt_experimenters&#39;: [&#39;Tim&#39;, &#39;Liu&#39;],</span>
+<span class="go"> &#39;bt_piLast&#39;: &#39;Billinge&#39;,</span>
+<span class="go"> &#39;bt_safN&#39;: &#39;300564&#39;,</span>
+<span class="go"> &#39;bt_uid&#39;: &#39;fbb381c3&#39;,</span>
+<span class="go"> &#39;bt_wavelength&#39;: 0.1832,</span>
+<span class="go"> &#39;sa_uid&#39;: &#39;4557b649&#39;,</span>
+<span class="go"> &#39;sample_composition&#39;: {&#39;As&#39;: 1.0, &#39;Ga&#39;: 1.0},</span>
+<span class="go"> &#39;sample_name&#39;: &#39;GaAs&#39;}</span>
+</pre></div>
+</div>
+<p>As you get used to this, you will realize that you don’t actually have to reload
+it at all, and can just refer directly to it.</p>
+<p>You see that the <em>indexing method</em> acts exactly like (in fact it <cite>is</cite> ) the <code class="docutils literal notranslate"><span class="pre">#</span></code> th object
+in the list returned by <code class="docutils literal notranslate"><span class="pre">bt.list()</span></code> . And it persists for your entire beamtime,
+even if you hang up the entire software and have to have it restarted by one of the
+IT guys.</p>
+<p>Just remember.  First type <code class="docutils literal notranslate"><span class="pre">bt.list()</span></code> to locate the object you want, then use
+object index to reference it based on categories. For example if I want to interrogate metadata
+from <code class="docutils literal notranslate"><span class="pre">ScanPlan</span></code> object <code class="docutils literal notranslate"><span class="pre">ct_5</span></code>, you can do:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bt</span><span class="o">.</span><span class="n">scanplans</span><span class="o">.</span><span class="n">get_md</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">INFO: requested exposure time = 5 - &gt; computed exposure time= 5.0</span>
+<span class="go">{&#39;detectors&#39;: [&#39;pe1c&#39;],</span>
+<span class="go"> &#39;num_steps&#39;: 1,</span>
+<span class="go"> &#39;plan_args&#39;: {&#39;detectors&#39;: [&#39;PE1C(name=pe1c)&#39;], &#39;num&#39;: 1},</span>
+<span class="go"> &#39;plan_name&#39;: &#39;count&#39;,</span>
+<span class="go"> &#39;sp_computed_exposure&#39;: 5.0,</span>
+<span class="go"> &#39;sp_num_frames&#39;: 50.0,</span>
+<span class="go"> &#39;sp_plan_name&#39;: &#39;ct&#39;,</span>
+<span class="go"> &#39;sp_requested_exposure&#39;: 5,</span>
+<span class="go"> &#39;sp_time_per_frame&#39;: 0.1,</span>
+<span class="go"> &#39;sp_type&#39;: &#39;ct&#39;,</span>
+<span class="go"> &#39;sp_uid&#39;: &#39;bc3886a2-793a-4ee2-8269-a2ccb3030342&#39;}</span>
+</pre></div>
+</div>
+<p>Don’t forget the <code class="docutils literal notranslate"><span class="pre">bt.list()</span></code> first because your object may change its position
+in the list over time.</p>
+<p>As you probably noticed, we have <code class="docutils literal notranslate"><span class="pre">bt.list()</span></code> prints out two categories,
+<code class="docutils literal notranslate"><span class="pre">ScanPlans</span></code> and <code class="docutils literal notranslate"><span class="pre">Samples</span></code>. The whole purpose of this is to make it easy to reference
+desired objects.</p>
+</div>
+<div class="section" id="bt-list-gotchas">
+<span id="usb-gotchas"></span><h1>bt.list() Gotchas<a class="headerlink" href="#bt-list-gotchas" title="Permalink to this headline">¶</a></h1>
+<p>Once you get used to this design we hope you will like it, but there are a
+couple of important <cite>Gotchas</cite> that you should bear in mind that could lead to
+confusion until you get used to them.</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p>If you create a <cite>new</cite> object with the same type and name as an existing one, the existing one will be <strong>OVERWRITTEN</strong> by the new one!  You will lose the old one forever.</p>
+<p>This is actually a feature of the code (we want each object to be unique and the only thing that makes it unique from one <code class="docutils literal notranslate"><span class="pre">collection</span></code> session to the next is its name and type).
+But please be careful about your naming! Why is it a feature?  You can use this to update an object by redefining it with the same name.</p>
+</li>
+<li><p>At the time of writing, our xpdacq objects incorporate metadata from higher
+in the stack (e.g., <code class="docutils literal notranslate"><span class="pre">Sample</span></code> inheriting <code class="docutils literal notranslate"><span class="pre">Beamtime</span></code> metadata) dynamically.
+Any change on <code class="docutils literal notranslate"><span class="pre">Beamtime</span></code> metadata will automatically propagate down
+to all <code class="docutils literal notranslate"><span class="pre">Sample</span></code> and <code class="docutils literal notranslate"><span class="pre">ScanPlan</span></code> objects.</p></li>
+</ol>
+</div></blockquote>
+<p>go to <a class="reference internal" href="usb_Scan.html#usb-scan"><span class="std std-ref">ScanPlan objects</span></a></p>
+<p>go to <a class="reference internal" href="usb_Running.html#usb-running"><span class="std std-ref">Running scans</span></a></p>
+<p>return to <a class="reference internal" href="xpdusers.html#xpdu"><span class="std std-ref">For XPD Users</span></a></p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="usb_Running.html" class="btn btn-neutral float-right" title="Running scans" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="usb_Scan.html" class="btn btn-neutral float-left" title="ScanPlan objects" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright (c) 2016 trustees of Columbia University in the City of New York
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
