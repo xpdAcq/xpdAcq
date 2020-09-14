@@ -5,5 +5,8 @@ exclude =
     docs/conf.py,
     old,
     build,
-    dist
+    dist,
+    xpdacq/999-load.py
+max-line-length = 115
 max-complexity = 10
+ignore = C901

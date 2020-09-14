@@ -14,31 +14,28 @@
 #
 ##############################################################################
 import os
-import uuid
 import time
+import uuid
+import warnings
+from itertools import groupby
+from pprint import pprint
 from textwrap import indent
 
-import yaml
-import warnings
-from pprint import pprint
-from itertools import groupby
-import numpy as np
-
-import bluesky.plans as bp
 import bluesky.plan_stubs as bps
+import bluesky.plans as bp
 import bluesky.preprocessors as bpp
+import yaml
 from bluesky import RunEngine
-from bluesky.suspenders import SuspendFloor
-from bluesky.utils import normalize_subs_input, single_gen, Msg
 from bluesky.callbacks.broker import verify_files_saved
 from bluesky.preprocessors import pchain
+from bluesky.suspenders import SuspendFloor
+from bluesky.utils import normalize_subs_input, single_gen, Msg
+from xpdconf.conf import XPD_SHUTTER_CONF
 
+from xpdacq.beamtime import ScanPlan, close_shutter_stub, open_shutter_stub
 from xpdacq.glbl import glbl
 from xpdacq.tools import xpdAcqException
-from xpdacq.beamtime import ScanPlan, _summarize, close_shutter_stub, \
-    open_shutter_stub
 from xpdacq.xpdacq_conf import xpd_configuration, XPDACQ_MD_VERSION
-from xpdconf.conf import XPD_SHUTTER_CONF
 
 XPD_shutter = xpd_configuration.get("shutter")
 
@@ -116,19 +113,16 @@ def periodic_dark(plan):
     need_dark = True
 
     def insert_take_dark(msg):
-        now = time.time()
         nonlocal need_dark
         qualified_dark_uid = _validate_dark(expire_time=glbl["dk_window"])
         area_det = xpd_configuration["area_det"]
 
         if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
-        if (
-            need_dark
-            and (not qualified_dark_uid)
-            and msg.command == "open_run"
-            and ("dark_frame" not in msg.kwargs)
-        ):
+        if need_dark and \
+                (not qualified_dark_uid) and \
+                msg.command == "open_run" and \
+                ("dark_frame" not in msg.kwargs):
             # We are about to start a new 'run' (e.g., a count or a scan).
             # Insert a dark frame run first.
             need_dark = False
@@ -186,11 +180,9 @@ def _validate_dark(expire_time=None):
     for el in dark_dict_list:
         expo_diff = abs(el["exposure"] - light_cnt_time)
         time_diff = abs(el["timestamp"] - now)
-        if (
-            (expo_diff < acq_time)
-            and (time_diff < expire_time * 60)
-            and (el["acq_time"] == acq_time)
-        ):
+        if (expo_diff < acq_time) \
+                and (time_diff < expire_time * 60) \
+                and (el["acq_time"] == acq_time):
             qualified_dark_list.append((el.get("uid"), expo_diff, time_diff))
     if qualified_dark_list:
         # sort wrt expo_diff and time_diff for best candidate
@@ -349,7 +341,7 @@ def update_experiment_hash_uid():
 
 
 def set_beamdump_suspender(
-    xrun, suspend_thres=None, resume_thres=None, wait_time=None, clear=True
+        xrun, suspend_thres=None, resume_thres=None, wait_time=None, clear=True
 ):
     """helper function to set suspender based on ring_current
 
@@ -605,15 +597,8 @@ class CustomizedRunEngine(RunEngine):
         return sample, plan
 
     def __call__(
-        self,
-        sample,
-        plan,
-        subs=None,
-        *,
-        verify_write=False,
-        dark_strategy=periodic_dark,
-        robot=False,
-        **metadata_kw
+            self, sample, plan, subs=None, *, verify_write=False, dark_strategy=periodic_dark, robot=False,
+            **metadata_kw
     ):
         """
         Execute a plan

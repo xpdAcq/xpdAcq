@@ -14,21 +14,18 @@
 #
 ##############################################################################
 import os
-import yaml
 import shutil
 import tarfile as tar
-import uuid
-import warnings
 from itertools import takewhile
-from time import strftime
 from shutil import ReadError
-from IPython import get_ipython
+from time import strftime
 
 import pandas as pd
+from IPython import get_ipython
 
+from .beamtime import Beamtime, Sample
 from .glbl import glbl
 from .tools import validate_dict_key, _check_obj, _graceful_exit
-from .beamtime import Beamtime, Sample
 
 
 def composition_analysis(compstring):
@@ -45,7 +42,7 @@ def composition_analysis(compstring):
     import re
 
     # remove all blanks
-    compbare = re.sub("\s", "", compstring)
+    compbare = re.sub(r"\s", "", compstring)
     # reusable error message
     # make sure there is at least one uppercase character in the compstring
     upcasechars = any(str.isupper(c) for c in compbare)
@@ -57,9 +54,22 @@ def composition_analysis(compstring):
     namefracs = re.split("([A-Z][a-z]?(?:[1-8]?[+-])?)", compbare)[1:]
     names = namefracs[0::2]
     # use unit count when empty, convert to float otherwise
-    getfraction = lambda s: (s == "" and 1.0 or float(s))
-    fractions = [getfraction(w) for w in namefracs[1::2]]
+    fractions = map(
+        floatify,
+        namefracs[1::2]
+    )
     return names, fractions
+
+
+def floatify(s: str) -> float:
+    """Convert a string to a float. If failed, return 1.0"""
+    if len(s) == 0:
+        return 1.0
+    try:
+        num = float(s)
+    except ValueError:
+        num = 1.0
+    return num
 
 
 def export_userScriptsEtc():
@@ -118,7 +128,6 @@ def import_userScriptsEtc():
         moved_list : list
         a list of file names that have been moved successfully
     """
-    _f_ext_dst_dict = ["py", "npy", "yml"]
     src_dir = glbl["import_dir"]
     f_list = os.listdir(src_dir)
     if len(f_list) == 0:
@@ -162,7 +171,7 @@ def import_userScriptsEtc():
         else:
             # don't expect user to have directory
             print(
-                "I can only import files, not directories."
+                "Only files can be imported, not directories {}."
                 "Please place in the import directory either:\n"
                 "(1) all your files such as scripts, masks and xpdAcq "
                 "object yaml files\n"
@@ -236,8 +245,7 @@ class ExceltoYaml:
         xl_f = [
             f
             for f in os.listdir(self.src_dir)
-            if f
-            in (str(saf_num) + "_sample.xls", str(saf_num) + "_sample.xlsx")
+            if f in (str(saf_num) + "_sample.xls", str(saf_num) + "_sample.xlsx")
         ]
         if not xl_f:
             raise FileNotFoundError(
@@ -561,7 +569,13 @@ def import_sample_info(saf_num=None, bt=None, validate_only=False):
     """
 
     if bt is None:
-        error_msg = "WARNING: Beamtime object does not exist in current" "ipython session. Please make sure:\n" "1. a beamtime has been started\n" "2. double check 'bt_bt.yml' exists under " "xpdUser/config_base/yml directory.\n" "\n" "If any of these checks fails or problem " "persists, please contact beamline staff immediately"
+        error_msg = "WARNING: Beamtime object does not exist in current" \
+                    "ipython session. Please make sure:\n" \
+                    "1. a beamtime has been started\n" \
+                    "2. double check 'bt_bt.yml' exists under " "xpdUser/config_base/yml directory.\n" \
+                    "\n" \
+                    "If any of these checks fails or problem " \
+                    "persists, please contact beamline staff immediately"
         _check_obj("bt", error_msg)  # raise NameError if bt is not alive
         ips = get_ipython()
         bt = ips.ns_table["user_global"]["bt"]

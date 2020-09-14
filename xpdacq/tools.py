@@ -14,15 +14,15 @@
 #
 ##############################################################################
 
-import sys
+import copy
 import datetime
-import warnings
-from time import strftime
+import sys
+
 from IPython import get_ipython
 
 
-def regularize_dict_key(input_dict, target_chr, replace_chr):
-    """recursively replace target character in keys with desired one
+def regularize_dict_key(input_dict: dict, target_chr: str, replace_chr: str) -> dict:
+    """recursively replace target character in keys with desired one. Return a new dictionary.
 
     Parameters
     ----------
@@ -33,24 +33,18 @@ def regularize_dict_key(input_dict, target_chr, replace_chr):
     replace_chr : str
         character that is going to replace target character
     """
-    for k, v in input_dict.items():
+    dct = dict()
+    for k, v in copy.deepcopy(input_dict).items():
+        if isinstance(k, str) and target_chr in k:
+            print(
+                "replacing character {} with character {} "
+                "in dictionary".format(target_chr, replace_chr)
+            )
+            k = k.replace(target_chr, replace_chr)
         if isinstance(v, dict):
-            if isinstance(k, str) and target_chr in k:
-                print(
-                    "replacing character {} with character {} "
-                    "in dictionary".format(target_chr, replace_chr)
-                )
-                clean_k = k.replace(target_chr, replace_chr)
-                input_dict[clean_k] = input_dict.pop(k)
-            regularize_dict_key(v, target_chr, replace_chr)
-        else:
-            if isinstance(k, str) and target_chr in k:
-                print(
-                    "replacing character {} with character {} "
-                    "in dictionary".format(target_chr, replace_chr)
-                )
-                clean_k = k.replace(target_chr, replace_chr)
-                input_dict[clean_k] = input_dict.pop(k)
+            v = regularize_dict_key(v, target_chr, replace_chr)
+        dct[k] = v
+    return dct
 
 
 def validate_dict_key(input_dict, invalid_chr, suggested_chr):
@@ -105,6 +99,7 @@ class xpdAcqError(xpdAcqException):
     """
 
     pass
+
 
 def _graceful_exit(error_message):
     try:

@@ -1,5 +1,5 @@
 [run]
-source = 
+source =
     xpdacq
 [report]
 omit =
@@ -8,6 +8,12 @@ omit =
     # ignore _version.py and versioneer.py
     .*version.*
     *_version.py
+    */tests/*
+    */examples
+    */data/*
+    */999-load.py
+    */yamlclass.py
+    */yamllist.py
 
 exclude_lines =
     if __name__ == '__main__':

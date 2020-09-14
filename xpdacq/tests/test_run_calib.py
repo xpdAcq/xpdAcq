@@ -1,10 +1,11 @@
 import os
-import pytest
 import shutil
 import uuid
-import numpy as np
-from .conftest import xpd_pe1c, xpd_configuration
-from xpdacq.xpdacq import update_experiment_hash_uid
+
+import pytest
+from pkg_resources import resource_filename as rs_fn
+from pyFAI.calibrant import Calibrant, CALIBRANT_FACTORY
+
 from xpdacq.calib import (
     _collect_img,
     xpdAcqException,
@@ -12,8 +13,7 @@ from xpdacq.calib import (
     run_calibration,
     Calibration
 )
-from pyFAI.calibrant import Calibrant, CALIBRANT_FACTORY
-from pkg_resources import resource_filename as rs_fn
+from xpdacq.xpdacq import update_experiment_hash_uid
 
 
 @pytest.mark.parametrize(
@@ -74,11 +74,14 @@ def test_calib_md(fresh_xrun, exp_hash_uid, glbl, db):
     assert "Ni_calib" == calib_hdr.start["sample_name"]
     assert detector == calib_hdr.start["detector"]
     calibrant_obj = Calibrant(calibrant)
-    assert calibrant_obj.dSpacing == calib_hdr.start["dSpacing"]
-    assert calib_hdr.start["is_calibration"] == True
-    assert all(v == calib_hdr.start[k] for k, v in sample_md.items())
-    server_uid = calib_hdr.start["detector_calibration_server_uid"]
-    client_uid = calib_hdr.start["detector_calibration_client_uid"]
+    start_doc = calib_hdr.start
+    assert calibrant_obj.dSpacing == start_doc["dSpacing"]
+    assert start_doc["is_calibration"]
+    for k, expected in sample_md.items():
+        actual = start_doc[k]
+        assert expected == actual
+    server_uid = start_doc["detector_calibration_server_uid"]
+    client_uid = start_doc["detector_calibration_client_uid"]
     assert server_uid == exp_hash_uid
     assert server_uid == client_uid
     # production run

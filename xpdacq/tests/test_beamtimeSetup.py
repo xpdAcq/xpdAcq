@@ -1,22 +1,21 @@
-import os
-import yaml
 import glob
+import os
 import shutil
 import unittest
 from time import strftime
+
 from pkg_resources import resource_filename as rs_fn
 
-from xpdacq.xpdacq_conf import glbl_dict
 from xpdacq.beamtime import Beamtime, ScanPlan
-import xpdacq.beamtimeSetup as bts
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,
                                   _delete_local_archive, _make_clean_env,
-                                  _clean_info, _load_bt, _load_bt_info,
+                                  _load_bt, _load_bt_info,
                                   _tar_user_data, EXPO_LIST)
-from xpdacq.utils import (export_userScriptsEtc, import_userScriptsEtc)
-from xpdacq.xpdacq_conf import xpd_configuration
-from xpdacq.tools import xpdAcqError
 from xpdacq.glbl import glbl
+from xpdacq.tools import xpdAcqError
+from xpdacq.utils import (export_userScriptsEtc, import_userScriptsEtc)
+from xpdacq.xpdacq_conf import glbl_dict
+
 
 class NewBeamtimeTest(unittest.TestCase):
     def setUp(self):
@@ -56,7 +55,7 @@ class NewBeamtimeTest(unittest.TestCase):
         yml_dir = os.path.join(self.home_dir, usrconfig_dir, "yml")
         sample_dir = os.path.join(yml_dir, "samples")
         scanplan_dir = os.path.join(yml_dir, "scanplans")
-        dirs = _make_clean_env()
+        _make_clean_env()
         dir_list = [
             home_dir,
             conf_dir,
@@ -176,23 +175,23 @@ class NewBeamtimeTest(unittest.TestCase):
         archive_full_name, local_archive_name = _tar_user_data(archive_name)
         test_tar_name = '_'.join([pi_name, saf_num, bt_uid,
                                   strftime('%Y-%m-%d-%H%M')])
-        # is tar file name correct? 
+        # is tar file name correct?
         self.assertEqual(archive_full_name,
                          os.path.join(glbl_dict['archive_dir'],
                                       test_tar_name))
         # are contents tared correctly?
-        #archive_test_dir = os.path.join(glbl_dict['home'], 'tar_test')
+        # archive_test_dir = os.path.join(glbl_dict['home'], 'tar_test')
         content_list = os.listdir(archive_full_name)
         # is remote copy the same name as local archive?
         assert os.path.basename(local_archive_name) in content_list
         assert len(content_list) == 1
         # is every directory included
         full_fp_list = list(map(os.path.basename,
-                                 glbl_dict['allfolders']))
+                                glbl_dict['allfolders']))
         exclude_fp_list = ['xpdUser', 'xpdConfig', 'yml',
                            'samples', 'scanplans']
         bkg_fp_list = [el for el in full_fp_list if el not in
-                exclude_fp_list]  # exclude top dirs
+                       exclude_fp_list]  # exclude top dirs
         remote_fp_list = os.listdir(os.path.join(archive_full_name,
                                                  local_archive_name))
         # difference should be empty set

@@ -1,46 +1,48 @@
-import unittest
-import os
 import copy
+import os
 import shutil
 import time
-import yaml
+import unittest
 import uuid
 import warnings
-from pprint import pprint
-from xpdacq.glbl import glbl
+from pathlib import Path
+
+import databroker
+import numpy as np
+import ophyd
+import yaml
+from bluesky.callbacks import collector
+from pkg_resources import resource_filename as rs_fn
+from xpdsim import dexela
+
+from xpdacq.beamtime import ScanPlan, ct, Tramp, tseries, Tlist
 from xpdacq.beamtime import _nstep
-from xpdacq.beamtime import *
+from xpdacq.beamtimeSetup import _start_beamtime
+from xpdacq.glbl import glbl
+from xpdacq.simulation import pe1c, cs700, shctl1, fb
 from xpdacq.tools import xpdAcqException
 from xpdacq.utils import import_sample_info
-from xpdacq.xpdacq_conf import (
-    configure_device,
-    XPDACQ_MD_VERSION,
-    _load_beamline_config,
-)
-from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
 from xpdacq.xpdacq import (
     _validate_dark,
     CustomizedRunEngine,
     _auto_load_calibration_file,
     set_beamdump_suspender,
 )
-from xpdacq.simulation import pe1c, cs700, shctl1, db, fb
-import ophyd
-from bluesky import Msg
-import bluesky.examples as be
-from bluesky.callbacks import collector
-
-from pkg_resources import resource_filename as rs_fn
-from xpdsim import dexela
+from xpdacq.xpdacq_conf import (
+    configure_device,
+    XPDACQ_MD_VERSION,
+    _load_beamline_config,
+)
+from xpdacq.xpdacq_conf import xpd_configuration
 
 pytest_dir = rs_fn("xpdacq", "tests/")
 
 
 class xrunTest(unittest.TestCase):
     def setUp(self):
-        self.base_dir = glbl["base"]
-        self.home_dir = glbl["home_dir"]
-        self.config_dir = glbl["xpdconfig"]
+        self.base_dir = Path(glbl["base"])
+        self.home_dir = Path(glbl["home_dir"])
+        self.config_dir = Path(glbl["xpdconfig"])
         self.PI_name = "Billinge "
         # must be 30000 for proper load of config yaml => don't change
         self.saf_num = 300000
@@ -50,8 +52,11 @@ class xrunTest(unittest.TestCase):
             ("Terban ", " Max", 2),
         ]
         # make xpdUser dir. That is required for simulation
-        os.makedirs(self.home_dir, exist_ok=True)
+        if self.home_dir.is_dir():
+            shutil.rmtree(self.home_dir)
+        self.home_dir.mkdir()
         # set simulation objects
+        db = databroker.v1.temp()
         configure_device(
             area_det=pe1c,
             temp_controller=cs700,
@@ -59,10 +64,12 @@ class xrunTest(unittest.TestCase):
             db=db,
             filter_bank=fb,
         )
-        os.makedirs(glbl["xpdconfig"], exist_ok=True)
-        pytest_dir = rs_fn("xpdacq", "tests/")
+        if self.config_dir.is_dir():
+            shutil.rmtree(self.config_dir)
+        self.config_dir.mkdir()
+        pytest_dir = Path(rs_fn("xpdacq", "tests/"))
         config = "XPD_beamline_config.yml"
-        configsrc = os.path.join(pytest_dir, config)
+        configsrc = pytest_dir.joinpath(config)
         shutil.copyfile(configsrc, glbl["blconfig_path"])
         self.bt = _start_beamtime(
             self.PI_name,
@@ -78,18 +85,15 @@ class xrunTest(unittest.TestCase):
         self.xrun = CustomizedRunEngine({})
         self.xrun.beamtime = self.bt
         # link mds
-        self.xrun.subscribe(xpd_configuration["db"].insert, "all")
+        self.xrun.subscribe(db.v1.insert, "all")
         # grad init_exp_hash_uid
         self.init_exp_hash_uid = glbl["exp_hash_uid"]
 
     def tearDown(self):
-        os.chdir(self.base_dir)
-        if os.path.isdir(self.home_dir):
+        if self.home_dir.is_dir():
             shutil.rmtree(self.home_dir)
-        if os.path.isdir(os.path.join(self.base_dir, "xpdConfig")):
-            shutil.rmtree(os.path.join(self.base_dir, "xpdConfig"))
-        if os.path.isdir(os.path.join(self.base_dir, "pe2_data")):
-            shutil.rmtree(os.path.join(self.base_dir, "pe2_data"))
+        if self.config_dir.is_dir():
+            shutil.rmtree(self.config_dir)
 
     def test_validate_dark(self):
         """ test login in this function """
@@ -209,8 +213,6 @@ class xrunTest(unittest.TestCase):
         cfg_src = os.path.join(pytest_dir, cfg_f_name)
         cfg_dst = os.path.join(glbl["config_base"], cfg_f_name)
         shutil.copy(cfg_src, cfg_dst)
-        with open(cfg_dst) as f:
-            config_from_file = yaml.unsafe_load(f)
         reload_calibration_md_dict = _auto_load_calibration_file()
         # test with xrun : auto_load_calib = True -> full calib_md
         msg_list = []
@@ -220,7 +222,7 @@ class xrunTest(unittest.TestCase):
 
         self.xrun.msg_hook = msg_rv
         glbl["auto_load_calib"] = True
-        xrun_uid = self.xrun(0, 0)
+        self.xrun(0, 0)
         open_run = [el.kwargs for el in msg_list if el.command == "open_run"][
             0
         ]
@@ -240,7 +242,7 @@ class xrunTest(unittest.TestCase):
 
         self.xrun.msg_hook = msg_rv
         glbl["auto_load_calib"] = False
-        xrun_uid = self.xrun(0, 0)
+        self.xrun(0, 0)
         open_run = [el.kwargs for el in msg_list if el.command == "open_run"][
             0
         ]
@@ -363,40 +365,18 @@ class xrunTest(unittest.TestCase):
                 break
 
     def test_set_beamdump_suspender(self):
-        loop = self.xrun._loop
-        # no suspender
-        self.xrun({}, ScanPlan(self.bt, ct, 1))
-
         # operate at full current
         sig = ophyd.Signal(name="ring_current")
-
-        def putter(val):
-            sig.put(val)
-
         xpd_configuration["ring_current"] = sig
-        putter(200)
-        wait_time = 0.2
-        set_beamdump_suspender(self.xrun, wait_time=wait_time)
-        # test
-        start = time.time()
-        # queue up fail and resume conditions
-        loop.call_later(.1, putter, 90)  # lower than 50%, trigger
-        loop.call_later(1., putter, 190)  # higher than 90%, resume
-        # start the scan
+        set_beamdump_suspender(self.xrun, wait_time=0.1)
+        sig.put(200)
         self.xrun({}, ScanPlan(self.bt, ct, .1))
-        stop = time.time()
-        # assert we waited at least 2 seconds +
-        # the settle time
-        delta = stop - start
-        print(delta)
-        assert delta > .1 + wait_time + 1.
-
         # operate at low current, test user warnning
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             # trigger warning
-            putter(30)  # low current
-            set_beamdump_suspender(self.xrun, wait_time=wait_time)
+            sig.put(30)  # low current
+            set_beamdump_suspender(self.xrun, wait_time=0.1)
             # check warning
             assert len(w) == 1
             assert issubclass(w[-1].category, UserWarning)
@@ -443,7 +423,7 @@ class xrunTest(unittest.TestCase):
 
         self.xrun.msg_hook = msg_rv
         glbl["auto_load_calib"] = True
-        assert glbl["auto_load_calib"] == True
+        assert glbl["auto_load_calib"]
         # calibration hasn't been run -> still receive client uid
         self.xrun({}, ScanPlan(self.bt, ct, 1.0))
         open_run = [

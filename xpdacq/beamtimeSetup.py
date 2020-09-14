@@ -14,20 +14,21 @@
 #
 ##############################################################################
 import os
-import sys
-import yaml
 import shutil
 import subprocess
+import sys
+import typing as tp
+from pathlib import Path
 from time import strftime
 
+import yaml
 from IPython import get_ipython
 from pkg_resources import resource_filename as rs_fn
 
-from .beamtime import *
-from .tools import _graceful_exit, xpdAcqError
-from .xpdacq_conf import (glbl_dict, _load_beamline_config,
-                          xpd_configuration)
+from .beamtime import Beamtime, ScanPlan, Sample, ct
 from .glbl import glbl
+from .tools import _graceful_exit, xpdAcqError
+from .xpdacq_conf import glbl_dict, _load_beamline_config
 
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime
@@ -36,7 +37,7 @@ DATA_DIR = rs_fn("xpdacq", "data/")
 
 
 def _start_beamtime(
-    PI_last, saf_num, experimenters=[], wavelength=None, test=False
+        PI_last, saf_num, experimenters=[], wavelength=None, test=False
 ):
     """function for start a beamtime"""
     # check status first
@@ -46,7 +47,6 @@ def _start_beamtime(
                           "run.\nIf you wish to start a new beamtime, "
                           "please open a new terminal and proceed "
                           "with the standard starting sequence.")
-        return
     # check directory
     home_dir = glbl_dict['home']
     if not os.path.exists(home_dir):
@@ -79,7 +79,7 @@ def _start_beamtime(
         src = os.path.join(DATA_DIR, "Ni24.D")
         dst = os.path.join(glbl_dict["usrAnalysis_dir"], "Ni24.D")
         shutil.copy(src, dst)
-        beamline_config = _load_beamline_config(
+        _load_beamline_config(
             glbl["blconfig_path"], test=test
         )
         # pre-populated scan plan
@@ -107,14 +107,12 @@ def start_xpdacq():
         bt_list = [
             f
             for f in os.listdir(glbl_dict["yaml_dir"])
-            if f.startswith("bt")
-            and os.path.isfile(os.path.join(glbl_dict["yaml_dir"], f))
+            if f.startswith("bt") and os.path.isfile(os.path.join(glbl_dict["yaml_dir"], f))
         ]
     except FileNotFoundError:
         return _no_beamtime()
 
     if len(bt_list) == 1:
-        bt_f = bt_list[-1]
         bt = load_beamtime()
         return bt
 
@@ -170,7 +168,7 @@ def load_beamtime(directory=None):
         with open(scanplan_order_fn) as f:
             scanplan_order = yaml.unsafe_load(f)
         for fn in sorted(
-            scanplan_fns, key=list(scanplan_order.values()).index
+                scanplan_fns, key=list(scanplan_order.values()).index
         ):
             with open(os.path.join(directory, "scanplans", fn), "r") as f:
                 load_yaml(f, known_uids)
@@ -227,7 +225,7 @@ def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm="y"):
         3) Ask for user's confirmation
         4.1) if user confirms, flush all sub-directories under
         ``xpdUser`` for a new beamtime.
-        4.2) if user doesn't confirm, leave ``xpdUser`` untouched 
+        4.2) if user doesn't confirm, leave ``xpdUser`` untouched
         and flush remote backup to avoid duplicate archives.
     """
     # NOTE: to avoid network bottleneck, we actually only move all files
@@ -310,11 +308,13 @@ def _tar_user_data(archive_name, root_dir=None, archive_format="tar"):
         # remove dir structure would be:
         # <remote>/<PI_last+uid>/xpdUser/....
         os.makedirs(remote_archive_name, exist_ok=True)
-        rv = subprocess.run(['rsync', '-av', '--timeout=60',
-                             '--no-owner', '--no-group',
-                             '--exclude=.*',  # exclude all hidden files
-                             local_archive_name, remote_archive_name],
-                             check=True,)
+        subprocess.run([
+            'rsync', '-av', '--timeout=60',
+            '--no-owner', '--no-group',
+            '--exclude=.*',  # exclude all hidden files
+            local_archive_name, remote_archive_name
+        ],
+            check=True, )
     finally:
         # move back to fresh xpdUser
         os.chdir(src)
@@ -367,25 +367,28 @@ def _confirm_archive(archive_f_name):
         )
 
 
-def _delete_local_archive(dir_to_flush):
-    while os.path.isdir(dir_to_flush):
-        try:
-            rv = subprocess.run(["rm", "-r", dir_to_flush], check=True)
-        except:
-            # TODO: error is platform-dependent. might want to
-            # discuss if we need to specify error type.
-            print(
-                "INFO: Following files are still used by current "
-                "process, hence _end_beatime can't be done\n"
-            )
-            rv = subprocess.run(["find", dir_to_flush], check=True)
-            msg = input(
-                "INFO: If files are properly closed, "
-                "please hit any key to continue the _end_beamtime "
-                "process. "
-            )
-            if msg:
-                pass
+def _delete_local_archive(dir_to_flush: str) -> None:
+    dir_path = Path(dir_to_flush)
+    while dir_path.is_dir():
+        shutil.rmtree(dir_path, onerror=handle_error)
+    return
+
+
+def handle_error(func: tp.Callable, path: str, exc_info: str) -> None:
+    print(
+        "INFO: Following files are unable to be deleted, maybe they are still used by current "
+        "process, hence _end_beatime can't be done\n",
+        path
+    )
+    print("Below is the exception message.")
+    print(exc_info)
+    msg = input(
+        "INFO: If files are properly closed, "
+        "please hit any key to continue the _end_beamtime "
+        "process."
+    )
+    if msg:
+        func(path)
     return
 
 

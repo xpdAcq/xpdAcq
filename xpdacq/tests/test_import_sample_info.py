@@ -1,22 +1,12 @@
 import os
-import yaml
 import shutil
-import warnings
 import unittest
+
 from pkg_resources import resource_filename as rs_fn
 
+from xpdacq.beamtimeSetup import _start_beamtime
 from xpdacq.glbl import glbl
-from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime, load_beamtime
-from xpdacq.beamtime import (
-    _summarize,
-    ScanPlan,
-    ct,
-    Tramp,
-    tseries,
-    Beamtime,
-    Sample,
-)
-from xpdacq.utils import import_sample_info, _import_sample_info
+from xpdacq.utils import _import_sample_info
 
 
 # print messages for debugging
@@ -78,7 +68,7 @@ class ImportSamplTest(unittest.TestCase):
         xlf2 = "999999_sample.xlsx"
         src = os.path.join(os.path.dirname(__file__), xlf2)
         shutil.copyfile(src, os.path.join(glbl["import_dir"], xlf2))
-        ## test with ordinary import ##
+        # test with ordinary import ##
         # expect to pass with explicit argument
         _import_sample_info(300000, self.bt)
         # check imported sample metadata
