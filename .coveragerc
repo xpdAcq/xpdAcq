@@ -8,7 +8,6 @@ omit =
     # ignore _version.py and versioneer.py
     .*version.*
     *_version.py
-    */tests/*
     */examples
     */data/*
     */999-load.py
