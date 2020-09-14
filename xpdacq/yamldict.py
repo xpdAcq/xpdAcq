@@ -11,11 +11,13 @@ from __future__ import (
     print_function,
     unicode_literals,
 )
+
+import abc
 import os
 import tempfile
-import yaml
-import abc
 from collections import ChainMap
+
+import yaml
 
 
 class _YamlDictLike:

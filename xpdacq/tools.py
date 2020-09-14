@@ -14,10 +14,11 @@
 #
 ##############################################################################
 
-import sys
-import datetime
-from IPython import get_ipython
 import copy
+import datetime
+import sys
+
+from IPython import get_ipython
 
 
 def regularize_dict_key(input_dict: dict, target_chr: str, replace_chr: str) -> dict:

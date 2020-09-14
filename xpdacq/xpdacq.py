@@ -14,29 +14,28 @@
 #
 ##############################################################################
 import os
-import uuid
 import time
+import uuid
+import warnings
+from itertools import groupby
+from pprint import pprint
 from textwrap import indent
 
-import yaml
-import warnings
-from pprint import pprint
-from itertools import groupby
-
-import bluesky.plans as bp
 import bluesky.plan_stubs as bps
+import bluesky.plans as bp
 import bluesky.preprocessors as bpp
+import yaml
 from bluesky import RunEngine
-from bluesky.suspenders import SuspendFloor
-from bluesky.utils import normalize_subs_input, single_gen, Msg
 from bluesky.callbacks.broker import verify_files_saved
 from bluesky.preprocessors import pchain
+from bluesky.suspenders import SuspendFloor
+from bluesky.utils import normalize_subs_input, single_gen, Msg
+from xpdconf.conf import XPD_SHUTTER_CONF
 
+from xpdacq.beamtime import ScanPlan, close_shutter_stub, open_shutter_stub
 from xpdacq.glbl import glbl
 from xpdacq.tools import xpdAcqException
-from xpdacq.beamtime import ScanPlan, close_shutter_stub, open_shutter_stub
 from xpdacq.xpdacq_conf import xpd_configuration, XPDACQ_MD_VERSION
-from xpdconf.conf import XPD_SHUTTER_CONF
 
 XPD_shutter = xpd_configuration.get("shutter")
 

@@ -24,8 +24,8 @@ import time
 import warnings
 
 import yaml
-
 from xpdconf.conf import glbl_dict, GLBL_YAML_PATH
+
 from .tools import xpdAcqException
 from .yamldict import YamlDict
 

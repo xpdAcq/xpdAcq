@@ -569,12 +569,12 @@ def import_sample_info(saf_num=None, bt=None, validate_only=False):
     """
 
     if bt is None:
-        error_msg = "WARNING: Beamtime object does not exist in current"\
-                    "ipython session. Please make sure:\n"\
-                    "1. a beamtime has been started\n"\
-                    "2. double check 'bt_bt.yml' exists under " "xpdUser/config_base/yml directory.\n"\
-                    "\n"\
-                    "If any of these checks fails or problem "\
+        error_msg = "WARNING: Beamtime object does not exist in current" \
+                    "ipython session. Please make sure:\n" \
+                    "1. a beamtime has been started\n" \
+                    "2. double check 'bt_bt.yml' exists under " "xpdUser/config_base/yml directory.\n" \
+                    "\n" \
+                    "If any of these checks fails or problem " \
                     "persists, please contact beamline staff immediately"
         _check_obj("bt", error_msg)  # raise NameError if bt is not alive
         ips = get_ipython()

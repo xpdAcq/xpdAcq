@@ -14,21 +14,21 @@
 #
 ##############################################################################
 import os
-import sys
-import yaml
 import shutil
 import subprocess
-from time import strftime
-from pathlib import Path
+import sys
 import typing as tp
+from pathlib import Path
+from time import strftime
 
+import yaml
 from IPython import get_ipython
 from pkg_resources import resource_filename as rs_fn
 
 from .beamtime import Beamtime, ScanPlan, Sample, ct
+from .glbl import glbl
 from .tools import _graceful_exit, xpdAcqError
 from .xpdacq_conf import glbl_dict, _load_beamline_config
-from .glbl import glbl
 
 # list of exposure times for pre-poluated ScanPlan inside
 # _start_beamtime

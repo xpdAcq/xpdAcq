@@ -13,26 +13,25 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
+import inspect
 import os
 import uuid
 from abc import ABC
-
-import yaml
-import inspect
 from collections import ChainMap, OrderedDict
 
-import numpy as np
-import bluesky.plans as bp
 import bluesky.plan_stubs as bps
+import bluesky.plans as bp
 import bluesky.preprocessors as bpp
+import numpy as np
+import yaml
 from bluesky.callbacks import LiveTable
+from xpdconf.conf import XPD_SHUTTER_CONF
 
 from .glbl import glbl
-from .xpdacq_conf import xpd_configuration
-from xpdconf.conf import XPD_SHUTTER_CONF
-from .yamldict import YamlDict, YamlChainMap
-from .validated_dict import ValidatedDictLike
 from .tools import regularize_dict_key
+from .validated_dict import ValidatedDictLike
+from .xpdacq_conf import xpd_configuration
+from .yamldict import YamlDict, YamlChainMap
 
 # This is used to map plan names (strings in the YAML file) to actual
 # plan functions in Python.
