@@ -28,6 +28,7 @@ before_install:
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
   - conda create -n test --file requirements/build.txt --file requirements/run.txt --file requirements/docs.txt --file requirements/test.txt
+  - source activate test
   - python -m pip install . --no-deps -vv
   - git clean -xfd
 
