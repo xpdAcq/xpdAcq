@@ -43,6 +43,7 @@ script:
   - bash <(curl -s https://codecov.io/bash)
   - flake8 .
   - make -C docs html
+  - touch docs/_build/html/.nojekyll
 
 deploy:
   provider: pages
