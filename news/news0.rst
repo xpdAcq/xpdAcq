@@ -9,3 +9,5 @@
 **Fixed:**
 
 * Fix bugs in tests
+
+* Fix the filter_band warnings
