@@ -117,3 +117,8 @@ def home_dir():
         if os.path.isdir(el):
             print("flush {}".format(el))
             shutil.rmtree(el)
+
+
+@pytest.fixture(scope="session")
+def beamline_config_file():
+    return rs_fn("xpdacq", "tests/XPD_beamline_config.yml")
