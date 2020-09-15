@@ -14,15 +14,15 @@ from .xpdacq_conf import configure_device, _reload_glbl, _set_glbl
 
 
 def ipysetup(
-        area_det: SynSignalWithRegistry,
-        shutter: SynAxis,
-        temp_controller: SynAxis,
-        filter_bank: SimFilterBank,
-        ring_current: SynSignalRO,
-        db: Broker,
-        glbl_yaml: str = None,
-        blconfig_yaml: str = None,
-        test: bool = False
+    area_det: SynSignalWithRegistry,
+    shutter: SynAxis,
+    temp_controller: SynAxis,
+    filter_bank: SimFilterBank,
+    ring_current: SynSignalRO,
+    db: Broker,
+    glbl_yaml: str = None,
+    blconfig_yaml: str = None,
+    test: bool = False
 ) -> tp.Tuple[GlblYamlDict, Beamtime, CustomizedRunEngine]:
     """Set up the beamtime, run engine and global configuration.
 
