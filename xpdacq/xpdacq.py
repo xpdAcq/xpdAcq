@@ -245,13 +245,13 @@ def _auto_load_calibration_file(in_scan=True):
 def _inject_filter_positions(msg):
     if msg.command == "open_run":
         filter_bank = xpd_configuration["filter_bank"]
-        filters = filter_bank.read_attrs
-        print("INFO: Current filter status")
-        for el in filters:
-            print("INFO: {} : {}".format(el, getattr(filter_bank, el).value))
-        msg.kwargs["filter_positions"] = {
-            fltr: getattr(filter_bank, fltr).value for fltr in filters
+        filter_status = {
+            name: getattr(filter_bank, name).get() for name in filter_bank.read_attrs
         }
+        print("INFO: Current filter status")
+        for name, status in filter_status.items():
+            print("INFO: {} : {}".format(name, status))
+        msg.kwargs["filter_positions"] = filter_status
     return msg
 
 
