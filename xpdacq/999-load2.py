@@ -1,26 +1,38 @@
 import os
 from pathlib import Path
 
-from xpdacq.xpdacq_conf import glbl_dict
-from xpdacq.ipysetup import ipysetup
-# useful functions
-print("INFO: Import _start_beamtime, _end_beamtime ...")
-from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
-print("INFO: Import import_userScriptsEtc, import_sample_info ...")
-from xpdacq.utils import import_userScriptsEtc, import_sample_info
-print("INFO: Import ScanPlan, Sample, ct, Tramp, Tlist, tseries ...")
-from xpdacq.beamtime import ScanPlan, Sample, ct, Tramp, Tlist, tseries
-print("INFO: Import run_calibration ...")
-from xpdacq.calib import run_calibration
-print("INFO: Import save_last_tiff, save_tiff, integrate_and_save, integrate_and_save_last ...")
 from xpdan.data_reduction import save_last_tiff, save_tiff, integrate_and_save, integrate_and_save_last
 
+from xpdacq.beamtime import ScanPlan, Sample, ct, Tramp, Tlist, tseries
+from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
+from xpdacq.calib import run_calibration
+from xpdacq.ipysetup import ipysetup
+from xpdacq.utils import import_userScriptsEtc, import_sample_info
+from xpdacq.xpdacq_conf import glbl_dict
+from xpdacq.xpdacq_conf import xpd_configuration
+
 if glbl_dict["is_simulation"]:
-    print("INFO: Start simulation environment ...")
-    print("INFO: Import pe1c, shctl1, cs700, db, ring_current, fb ...")
     from xpdsim import xpd_pe1c, shctl1, cs700, db, ring_current, fb
+
     pe1c = xpd_pe1c
     del xpd_pe1c
+
+_start_beamtime = _start_beamtime
+_end_beamtime = _end_beamtime
+import_userScriptsEtc = import_userScriptsEtc
+import_sample_info = import_sample_info
+ScanPlan = ScanPlan
+Sample = Sample
+ct = ct
+Tramp = Tramp
+Tlist = Tlist
+tseries = tseries
+run_calibration = run_calibration
+save_last_tiff = save_last_tiff
+save_tiff = save_tiff
+integrate_and_save = integrate_and_save
+integrate_and_save_last = integrate_and_save_last
+xpd_configuration = xpd_configuration
 print("INFO: Initializing the XPD data acquisition environment ...")
 glbl, bt, xrun = ipysetup(
     area_det=pe1c,
