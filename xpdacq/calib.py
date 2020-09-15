@@ -52,15 +52,15 @@ def _sample_name_phase_info_configuration(sample_name, phase_info, tag):
 
 
 def run_calibration(
-        exposure=5,
-        dark_sub_bool=True,
-        calibrant=None,
-        phase_info=None,
-        detector=None,
-        *,
-        RE_instance=None,
-        wait_for_cal=True,
-        **kwargs
+    exposure=5,
+    dark_sub_bool=True,
+    calibrant=None,
+    phase_info=None,
+    detector=None,
+    *,
+    RE_instance=None,
+    wait_for_cal=True,
+    **kwargs
 ):
     """function to run entire calibration process.
 
@@ -213,14 +213,14 @@ def _inject_calibration_tag(msg):
 
 
 def _collect_img(
-        exposure,
-        dark_sub_bool,
-        sample_md,
-        tag,
-        RE_instance,
-        *,
-        calibrant=None,
-        detector=None
+    exposure,
+    dark_sub_bool,
+    sample_md,
+    tag,
+    RE_instance,
+    *,
+    calibrant=None,
+    detector=None
 ):
     """helper function to collect image and return it"""
     # grab beamtime object linked to run_engine

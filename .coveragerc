@@ -11,6 +11,7 @@ omit =
     */examples
     */data/*
     */999-load.py
+    */999-load2.py
     */yamlclass.py
     */yamllist.py
 

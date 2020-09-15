@@ -500,7 +500,7 @@ def _nstep(start, stop, step_size):
 # FIXME: this scanplan is hot-fix for multi-sample scanplan. It serves as
 #       a prototype of the future scanplans but it's incomplete.
 def statTramp(
-        dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *, bt=None
+    dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *, bt=None
 ):
     """
     Parameters:
@@ -648,7 +648,7 @@ class Beamtime(ValidatedDictLike, YamlDict, ABC):
     _REQUIRED_FIELDS = ["bt_piLast", "bt_safN"]
 
     def __init__(
-            self, pi_last, saf_num, experimenters=None, *, wavelength=None, **kwargs
+        self, pi_last, saf_num, experimenters=None, *, wavelength=None, **kwargs
     ):
         if experimenters is None:
             experimenters = []
@@ -710,7 +710,7 @@ class Beamtime(ValidatedDictLike, YamlDict, ABC):
         self._referenced_by.append(scanplan)
         # save order
         with open(
-                os.path.join(glbl["config_base"], ".scanplan_order.yml"), "w+"
+            os.path.join(glbl["config_base"], ".scanplan_order.yml"), "w+"
         ) as f:
             scanplan_order = {}
             for i, name in enumerate(self.scanplans.keys()):
@@ -728,7 +728,7 @@ class Beamtime(ValidatedDictLike, YamlDict, ABC):
         self._referenced_by.append(sample)
         # save order
         with open(
-                os.path.join(glbl["config_base"], ".sample_order.yml"), "w+"
+            os.path.join(glbl["config_base"], ".sample_order.yml"), "w+"
         ) as f:
             sample_order = {}
             for i, name in enumerate(self.samples.keys()):

@@ -37,7 +37,7 @@ DATA_DIR = rs_fn("xpdacq", "data/")
 
 
 def _start_beamtime(
-        PI_last, saf_num, experimenters=[], wavelength=None, test=False
+    PI_last, saf_num, experimenters=[], wavelength=None, test=False
 ):
     """function for start a beamtime"""
     # check status first
@@ -168,7 +168,7 @@ def load_beamtime(directory=None):
         with open(scanplan_order_fn) as f:
             scanplan_order = yaml.unsafe_load(f)
         for fn in sorted(
-                scanplan_fns, key=list(scanplan_order.values()).index
+            scanplan_fns, key=list(scanplan_order.values()).index
         ):
             with open(os.path.join(directory, "scanplans", fn), "r") as f:
                 load_yaml(f, known_uids)
