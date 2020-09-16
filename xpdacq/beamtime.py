@@ -80,31 +80,39 @@ def _summarize(plan):
     return "\n".join(output)
 
 
-def _configure_area_det(exposure):
-    """private function to configure pe1c with continuous acquisition mode"""
-    det = xpd_configuration["area_det"]
-    # cs studio configuration doesn't propagate to python level
-
-    yield from bps.abs_set(det.cam.acquire_time, glbl["frame_acq_time"])
-    acq_time = det.cam.acquire_time.get()
+def configure_area_det(det, exposure, acq_time):
+    """Configure exposure time of a detector in continuous acquisition mode"""
     _check_mini_expo(exposure, acq_time)
+    yield from bps.mv(det.cam.acquire_time, acq_time)
+    res = yield from bps.read(det.cam.acquire_time)
+    real_acq_time = res[det.cam.acquire_time.name]["value"] if res else 1
     if hasattr(det, "images_per_set"):
         # compute number of frames
-        num_frame = np.ceil(exposure / acq_time)
-        yield from bps.abs_set(det.images_per_set, num_frame)
+        num_frame = np.ceil(exposure / real_acq_time)
+        yield from bps.mv(det.images_per_set, num_frame)
     else:
         # The dexela detector does not support `images_per_set` so we just
         # use whatever the user asks for as the thing
-        # TODO: maybe put in warnings if the exposure is too long?
         num_frame = 1
-    computed_exposure = num_frame * acq_time
+    computed_exposure = num_frame * real_acq_time
 
     # print exposure time
     print(
         "INFO: requested exposure time = {} - > computed exposure time"
         "= {}".format(exposure, computed_exposure)
     )
-    return num_frame, acq_time, computed_exposure
+    return num_frame, real_acq_time, computed_exposure
+
+
+def _configure_area_det(exposure):
+    """private function to configure pe1c
+
+    This binds the general public function to the xpdacq global state
+    """
+    det = xpd_configuration["area_det"]
+    # cs studio configuration doesn't propagate to python level
+    acq_time = glbl["frame_acq_time"]
+    return configure_area_det(det, exposure, acq_time)
 
 
 def _check_mini_expo(exposure, acq_time):
@@ -133,6 +141,8 @@ def _check_mini_expo(exposure, acq_time):
                 ">>> glbl['frame_acq_time'] = 0.5  #set" " to 0.5s",
             )
         )
+
+
 
 
 def shutter_step(detectors, motor, step):
