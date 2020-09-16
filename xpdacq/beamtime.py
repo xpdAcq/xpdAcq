@@ -80,40 +80,28 @@ def _summarize(plan):
     return "\n".join(output)
 
 
-def configure_area_det(det, exposure):
+def configure_area_det(det, exposure, acq_time):
     """Configure exposure time of a detector in continuous acquisition mode"""
-    # switch to using bps.rd when can depend on it
-    ret = yield from bps.read(det.cam.acquire_time)
-    if ret is None:
-        acq_time = 1
-    else:
-        acq_time = ret[det.cam.acquire_time.name]["value"]
-    if exposure < acq_time:
-        raise ValueError(
-            "WARNING: total exposure time: {}s is shorter "
-            "than frame acquisition time {}s\n"
-            "you have two choices:\n"
-            "1) increase your exposure time to be at least"
-            "larger than frame acquisition time\n"
-            "2) increase the frame rate, if possible\n"
-        )
+    _check_mini_expo(exposure, acq_time)
+    yield from bps.mv(det.cam.acquire_time, acq_time)
+    res = yield from bps.read(det.cam.acquire_time)
+    real_acq_time = res[det.cam.acquire_time.name]["value"] if res else 1
     if hasattr(det, "images_per_set"):
         # compute number of frames
-        num_frame = np.ceil(exposure / acq_time)
-        yield from bps.mov(det.images_per_set, num_frame)
+        num_frame = np.ceil(exposure / real_acq_time)
+        yield from bps.mv(det.images_per_set, num_frame)
     else:
         # The dexela detector does not support `images_per_set` so we just
         # use whatever the user asks for as the thing
-        # TODO: maybe put in warnings if the exposure is too long?
         num_frame = 1
-    computed_exposure = num_frame * acq_time
+    computed_exposure = num_frame * real_acq_time
 
     # print exposure time
     print(
         "INFO: requested exposure time = {} - > computed exposure time"
         "= {}".format(exposure, computed_exposure)
     )
-    return num_frame, acq_time, computed_exposure
+    return num_frame, real_acq_time, computed_exposure
 
 
 def _configure_area_det(exposure):
@@ -121,14 +109,10 @@ def _configure_area_det(exposure):
 
     This binds the general public function to the xpdacq global state
     """
-
     det = xpd_configuration["area_det"]
     # cs studio configuration doesn't propagate to python level
-
-    yield from bps.mv(det.cam.acquire_time, glbl["frame_acq_time"])
-    acq_time = det.cam.acquire_time.get()
-    _check_mini_expo(exposure, acq_time)
-    return configure_area_det(det, exposure)
+    acq_time = glbl["frame_acq_time"]
+    return configure_area_det(det, exposure, acq_time)
 
 
 def _check_mini_expo(exposure, acq_time):
