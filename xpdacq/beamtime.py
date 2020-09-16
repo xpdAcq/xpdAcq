@@ -143,8 +143,6 @@ def _check_mini_expo(exposure, acq_time):
         )
 
 
-
-
 def shutter_step(detectors, motor, step):
     """ customized step to ensure shutter is open before
     reading at each motor point and close shutter after reading
