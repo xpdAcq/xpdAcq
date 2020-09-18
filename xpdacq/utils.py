@@ -14,14 +14,13 @@
 #
 ##############################################################################
 import os
+import pandas as pd
 import shutil
 import tarfile as tar
+from IPython import get_ipython
 from itertools import takewhile
 from shutil import ReadError
 from time import strftime
-
-import pandas as pd
-from IPython import get_ipython
 
 from .beamtime import Beamtime, Sample
 from .glbl import glbl

@@ -1,8 +1,7 @@
 import os
+import pytest
 import shutil
 import uuid
-
-import pytest
 from pkg_resources import resource_filename as rs_fn
 from pyFAI.calibrant import Calibrant, CALIBRANT_FACTORY
 

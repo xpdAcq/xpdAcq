@@ -18,12 +18,11 @@ import shutil
 import subprocess
 import sys
 import typing as tp
-from pathlib import Path
-from time import strftime
-
 import yaml
 from IPython import get_ipython
+from pathlib import Path
 from pkg_resources import resource_filename as rs_fn
+from time import strftime
 
 from .beamtime import Beamtime, ScanPlan, Sample, ct
 from .glbl import glbl
