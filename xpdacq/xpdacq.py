@@ -242,8 +242,7 @@ class CustomizedRunEngine(RunEngine):
         # The CustomizedRunEngine knows about a Beamtime object, and it
         # interprets integers for 'sample' as indexes into the Beamtime's
         # lists of Samples from all its Experiments.
-        if not glbl["auto_dark"]:
-            dark_strategy = None
+        dark_strategy = dark_strategy if glbl["auto_dark"] else None
         shutter_control = (
             xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"]
         ) if glbl["shutter_control"] else None
@@ -279,8 +278,8 @@ def xpdacq_mutator(
     plan: typing.Union[int, Generator, typing.List[int], typing.Generator],
     *,
     robot: bool = False,
-    shutter_control: typing.Tuple[Device, typing.Any] = None,
-    dark_strategy: typing.Callable = None,
+    shutter_control: typing.Tuple[Device, typing.Any] = (xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"]),
+    dark_strategy: typing.Callable = periodic_dark,
     auto_load_calib: bool = True,
     verbose: int = 0
 ) -> typing.Generator:
