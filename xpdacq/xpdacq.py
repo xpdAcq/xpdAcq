@@ -280,9 +280,56 @@ def xpdacq_mutator(
     robot: bool = False,
     shutter_control: typing.Tuple[Device, typing.Any] = (xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"]),
     dark_strategy: typing.Callable = periodic_dark,
-    auto_load_calib: bool = True,
+    auto_load_calib: bool = glbl["auto_load_calib"],
     verbose: int = 0
 ) -> typing.Generator:
+    """Create the plan for a xpd experiment. Used in `~xrun.__call__`
+
+    Parameters
+    ----------
+    beamtime :
+
+        The beamtime object.
+
+    sample :
+
+        If a beamtime object is linked, an integer will be interpreted as the index appears in the ``bt.list()``
+        method, corresponding metadata will be passed. A customized dict can also be passed as the sample
+        metadata.
+
+    plan :
+
+        Scan plan. If a beamtime object is linked, an integer will be interpreted as the index appears in the
+        ``bt.list()`` method, corresponding scan plan will be A generator or that yields ``Msg`` objects (or an
+        iterable that returns such a generator) can also be passed.
+
+    robot :
+
+        If True, the plan is meant to be using robot.
+
+    shutter_control :
+
+        A tuple of the shutter device and its close state. The shutter will be closed after the whole scan.
+        If None, shutter won't be controlled and no dark will be taken.
+
+    dark_strategy :
+
+        The strategy how to take the dark frame.
+
+    auto_load_calib :
+
+        If True, the calibration meta-data will be injected into the run. Else, do nothing.
+
+    verbose :
+
+        0 means no print. 1 means printing the plan out.
+
+    Returns
+    -------
+    final_plan :
+
+        A blue sky plan. Used in `~bluesky.RunEngine`.
+    """
     sample, plan = _normalize_sample_plan(sample, plan)
     # Turn ints into actual samples
     sample = translate_to_sample(beamtime, sample)
@@ -322,6 +369,7 @@ def xpdacq_mutator(
 
 
 def close_shutter_at_last(plan: typing.Generator, shutter: Device, close_state: typing.Any) -> typing.Generator:
+    """Close the shutter at the end of the plan."""
     return bpp.finalize_wrapper(plan, bps.mv(shutter, close_state))
 
 
@@ -479,6 +527,7 @@ def _auto_load_calibration_file(in_scan=True):
 
 
 def _inject_filter_positions(msg):
+    """Inject the filter position in start."""
     if msg.command == "open_run":
         filter_bank = xpd_configuration["filter_bank"]
         filter_status = {
@@ -492,6 +541,7 @@ def _inject_filter_positions(msg):
 
 
 def _inject_qualified_dark_frame_uid(msg):
+    """Inject the dark frame uid in start."""
     if msg.command == "open_run" and msg.kwargs.get("dark_frame") is not True:
         dark_uid = _validate_dark(glbl["dk_window"])
         msg.kwargs["sc_dk_field_uid"] = dark_uid
@@ -499,6 +549,7 @@ def _inject_qualified_dark_frame_uid(msg):
 
 
 def _inject_calibration_md(msg):
+    """Inject the calibration data in start."""
     if msg.command == "open_run":
         exp_hash_uid = glbl.get("exp_hash_uid")
         # inject client uid to all runs
@@ -643,6 +694,7 @@ def set_beamdump_suspender(
 # For convenience, define short plans the use these custom commands.
 
 def load_sample(position, geometry=None):
+    """For robot."""
     # TODO: I think this can be simpler.
     return (
         yield from single_gen(
@@ -652,6 +704,7 @@ def load_sample(position, geometry=None):
 
 
 def unload_sample():
+    """For robot."""
     # TODO: I think this can be simpler.
     return (
         yield from single_gen(Msg("unload_sample", xpd_configuration["robot"]))
@@ -846,6 +899,7 @@ def print_plans(
     plan: typing.List[int],
     robot: bool = False
 ) -> None:
+    """Print the plan for each sample."""
     print("This is the current experimental plan:")
     print("Sample Name: Sample Position")
     for s, p in group_by_sample(sample, plan):
@@ -866,6 +920,7 @@ def print_plans(
 
 
 def gen_robot_plans(beamtime: Beamtime, sample: list, plan: list) -> typing.List[Generator]:
+    """Create plan for robot."""
     total_plan = []
     for s, p in zip(sample, plan):
         # If robot scan inject the needed md into the sample
@@ -875,11 +930,13 @@ def gen_robot_plans(beamtime: Beamtime, sample: list, plan: list) -> typing.List
 
 
 def group_by_sample(sample: list, plan: list) -> typing.Generator:
+    """Group the sample and plan by sample. Return sample, a list of plans."""
     for k, v in groupby(zip(sample, plan), key=lambda x: x[0]):
         yield k, [o[1] for o in v]
 
 
 def warn_wavelength(beamtime: Beamtime, key: str = "bt_wavelength") -> None:
+    """Warning if no wavelength in beamtime."""
     if beamtime and beamtime.get(key) is None:
         print(
             "WARNING: there is no wavelength information in current"
