@@ -70,7 +70,7 @@ def periodic_dark(plan):
         if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
         if need_dark and (not qualified_dark_uid) and msg.command == "open_run" and \
-            ("dark_frame" not in msg.kwargs):
+                ("dark_frame" not in msg.kwargs):
             # We are about to start a new 'run' (e.g., a count or a scan).
             # Insert a dark frame run first.
             need_dark = False
