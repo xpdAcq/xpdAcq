@@ -299,14 +299,12 @@ def xpdacq_mutator(
     # Make the complete plan by chaining the chained plans
     total_plan = gen_robot_plans(beamtime, sample, plan) if robot else plan
     plan = pchain(*total_plan)
-    # normalize subscribers
     # check wavelength
     warn_wavelength(beamtime)
     # shutter control and dark
     if shutter_control:
         shutter, close_state = shutter_control
         # Alter the plan to incorporate dark frames.
-        # only works if user allows shutter control
         if dark_strategy:
             plan = dark_strategy(plan)
             plan = bpp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
