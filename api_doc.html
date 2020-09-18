@@ -270,26 +270,22 @@ and contain the required keys.</p>
 </div>
 <dl class="py method">
 <dt id="xpdacq.xpdacq.CustomizedRunEngine.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">sample</em>, <em class="sig-param">plan</em>, <em class="sig-param">subs=None</em>, <em class="sig-param">*</em>, <em class="sig-param">verify_write=False</em>, <em class="sig-param">dark_strategy=&lt;function periodic_dark&gt;</em>, <em class="sig-param">robot=False</em>, <em class="sig-param">**metadata_kw</em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.xpdacq.CustomizedRunEngine.__call__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Execute a plan</p>
-<p>Any keyword arguments other than those listed below will
-be interpreted as metadata and recorded with the run.</p>
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">sample: Union[int, str, dict, list, tuple], plan: Union[int, str, Generator, xpdacq.beamtime.ScanPlan, list, tuple], subs: Union[Callable, list, dict] = None, *, verify_write: bool = False, dark_strategy: Callable = &lt;function periodic_dark&gt;, robot: bool = False, ask_before_run: bool = False, **metadata_kw</em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.xpdacq.CustomizedRunEngine.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute a plan.</p>
+<p>The call is basically the same as the RE. The only difference is that the plan will be mutated and
+preprocessed to incorpate sample meta-data, dark fram stragy and so on. Any keyword arguments other than
+those listed below will be interpreted as metadata and recorded with the run.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sample</strong> (<em>int</em><em> or </em><em>dict-like</em><em> or </em><em>list of int</em><em> or </em><em>dict-like</em>) – Sample metadata. If a beamtime object is linked,
-an integer will be interpreted as the index appears in the
-<code class="docutils literal notranslate"><span class="pre">bt.list()</span></code> method, corresponding metadata will be passed.
-A customized dict can also be passed as the sample
-metadata.</p></li>
-<li><p><strong>plan</strong> (<em>int</em><em> or </em><em>generator</em><em> or </em><em>list of int</em><em> or </em><em>generator</em>) – Scan plan. If a beamtime object is linked, an integer
-will be interpreted as the index appears in the
-<code class="docutils literal notranslate"><span class="pre">bt.list()</span></code> method, corresponding scan plan will be
-A generator or that yields <code class="docutils literal notranslate"><span class="pre">Msg</span></code> objects (or an iterable
-that returns such a generator) can also be passed.</p></li>
-<li><p><strong>subs</strong> (<em>callable</em><em>, </em><em>list</em><em>, or </em><em>dict</em><em>, </em><em>optional</em>) – <p>Temporary subscriptions (a.k.a. callbacks) to be used on
-this run. Default to None. For convenience, any of the
-following are accepted:</p>
+<li><p><strong>sample</strong> (<em>int</em><em> or </em><em>dict-like</em><em> or </em><em>list of int</em><em> or </em><em>dict-like Sample metadata</em>) – If a beamtime object is linked, an integer will be interpreted as the index appears
+in the <code class="docutils literal notranslate"><span class="pre">bt.list()</span></code> method, corresponding metadata will be
+passed. A customized dict can also be passed as the sample metadata.</p></li>
+<li><p><strong>plan</strong> (<em>int</em><em> or </em><em>generator</em><em> or </em><em>list of int</em><em> or </em><em>generator</em>) – Scan plan. If a beamtime object is linked, an integer will be interpreted as the index appears in
+the <code class="docutils literal notranslate"><span class="pre">bt.list()</span></code> method, corresponding scan plan will be A generator or that yields <code class="docutils literal notranslate"><span class="pre">Msg</span></code> objects
+(or an iterable that returns such a generator) can also be passed.</p></li>
+<li><p><strong>subs</strong> (<em>callable</em><em>, </em><em>list</em><em>, or </em><em>dict</em><em>, </em><em>optional</em>) – <p>Temporary subscriptions (a.k.a. callbacks) to be used on this run. Default to None. For convenience,
+any of the following are accepted:</p>
 <ul>
 <li><p>a callable, which will be subscribed to ‘all’</p></li>
 <li><p>a list of callables, which again will be subscribed to ‘all’</p></li>
@@ -298,17 +294,14 @@ lists of callables; valid keys are {‘all’, ‘start’, ‘stop’,
 ‘event’, ‘descriptor’}</p></li>
 </ul>
 </p></li>
-<li><p><strong>verify_write</strong> (<em>bool</em><em>, </em><em>optional</em>) – Double check if the data have been written into database.
-In general data is written in a lossless fashion at the
-NSLS-II. Therefore, False by default.</p></li>
-<li><p><strong>dark_strategy</strong> (<em>callable</em><em>, </em><em>optional.</em>) – Protocol of taking dark frame during experiment. Default
-to the logic of matching dark frame and light frame with
-the sample exposure time and frame rate. Details can be
-found at <code class="docutils literal notranslate"><span class="pre">http://xpdacq.github.io/xpdAcq/usb_Running.html#automated-dark-collection</span></code></p></li>
+<li><p><strong>verify_write</strong> (<em>bool</em><em>, </em><em>optional</em>) – Double check if the data have been written into database. In general data is written in a lossless
+fashion at the NSLS-II. Therefore, False by default.</p></li>
+<li><p><strong>dark_strategy</strong> (<em>callable</em><em>, </em><em>optional.</em>) – Protocol of taking dark frame during experiment. Default to the logic of matching dark frame and
+light frame with the sample exposure time and frame rate. Details can be found at
+<code class="docutils literal notranslate"><span class="pre">http://xpdacq.github.io/xpdAcq/usb_Running.html#automated-dark-collection</span></code></p></li>
 <li><p><strong>robot</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true run the scan as a robot scan, defaults to False</p></li>
-<li><p><strong>metadata_kw</strong> – Extra keyword arguments for specifying metadata in the
-run time. If the extra metdata has the same key as the
-<code class="docutils literal notranslate"><span class="pre">sample</span></code>, <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> will be raised.</p></li>
+<li><p><strong>metadata_kw</strong> – Extra keyword arguments for specifying metadata in the run time. If the extra metdata has the same
+key as the <code class="docutils literal notranslate"><span class="pre">sample</span></code>, <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> will be raised.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
