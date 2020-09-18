@@ -35,9 +35,6 @@ install:
 script:
   - set -e
   - source activate test
-  - python -c "from bluesky.utils import get_history; get_history()"
-  - python -c "from xpdsim import xpd_pe1c; xpd_pe1c.get()"
-  - python -c "from xpdacq.tests.conftest import *"
   - coverage run -m pytest xpdacq/tests --showlocals
   - coverage report -m
   - bash <(curl -s https://codecov.io/bash)
