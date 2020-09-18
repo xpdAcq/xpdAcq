@@ -13,17 +13,17 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-import inspect
-import os
-import uuid
-from abc import ABC
 from collections import ChainMap, OrderedDict
 
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 import bluesky.preprocessors as bpp
+import inspect
 import numpy as np
+import os
+import uuid
 import yaml
+from abc import ABC
 from bluesky.callbacks import LiveTable
 from xpdconf.conf import XPD_SHUTTER_CONF
 

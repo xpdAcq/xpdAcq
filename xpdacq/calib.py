@@ -13,11 +13,10 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
+import bluesky.preprocessors as bpp
 import os
 import time
 from hashlib import sha256
-
-import bluesky.preprocessors as bpp
 from pyFAI.gui.cli_calibration import Calibration
 
 from .beamtime import ScanPlan, ct

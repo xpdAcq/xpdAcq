@@ -1,7 +1,6 @@
 import os
 import shutil
 import unittest
-
 import yaml
 from pkg_resources import resource_filename as rs_fn
 

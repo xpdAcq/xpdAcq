@@ -1,17 +1,17 @@
 import copy
+
+import databroker
+import numpy as np
+import ophyd
 import os
 import shutil
 import time
 import unittest
 import uuid
 import warnings
-from pathlib import Path
-
-import databroker
-import numpy as np
-import ophyd
 import yaml
 from bluesky.callbacks import collector
+from pathlib import Path
 from pkg_resources import resource_filename as rs_fn
 from xpdsim import dexela
 

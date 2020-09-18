@@ -1,6 +1,5 @@
 """Set up the objects ipython profile."""
 import typing as tp
-
 from databroker import Broker
 from ophyd.sim import SynAxis, SynSignalWithRegistry, SynSignalRO
 from xpdsim.movers import SimFilterBank
