@@ -278,12 +278,12 @@ def xpdacq_mutator(
     plan: typing.Union[int, Generator, typing.List[int], typing.Generator],
     *,
     robot: bool = False,
-    shutter_control: typing.Tuple[Device, typing.Any] = (xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"]),
-    dark_strategy: typing.Callable = periodic_dark,
-    auto_load_calib: bool = glbl["auto_load_calib"],
+    shutter_control: typing.Tuple[Device, typing.Any] = None,
+    dark_strategy: typing.Callable = None,
+    auto_load_calib: bool = False,
     verbose: int = 0
 ) -> typing.Generator:
-    """Create the plan for a xpd experiment. Used in `~xrun.__call__`
+    """Create the plan for a xpd experiment. Used in `~xrun.__call__`.
 
     Parameters
     ----------
