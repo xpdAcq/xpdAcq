@@ -34,12 +34,15 @@ from pprint import pprint
 from textwrap import indent
 from typing import Generator
 from xpdconf.conf import XPD_SHUTTER_CONF
+from bluesky_darkframes import DarkFramePreprocessor, SnapshotDevice
 
+from xpdacq.plans.dark_plan import basic_dark_plan
 from xpdacq.beamtime import Beamtime, ScanPlan
 from xpdacq.beamtime import close_shutter_stub, open_shutter_stub
 from xpdacq.glbl import glbl
 from xpdacq.tools import xpdAcqException
 from xpdacq.xpdacq_conf import xpd_configuration, XPDACQ_MD_VERSION
+
 
 XPD_shutter = xpd_configuration.get("shutter")
 PAUSE_MSG = """
@@ -102,20 +105,15 @@ def periodic_dark(plan):
     return (yield from bpp.plan_mutator(plan, insert_take_dark))
 
 
-class CustomizedRunEngine(RunEngine):
+class CustomizedRunEngine(object):
     """A RunEngine customized for XPD workflows.
-
-    Parameters
-    ----------
-    beamtime : xpdacq.beamtime.Beamtime or None
-        beamtime object that will be linked to. This beamtime object
-        provide reference of sample and scanplan indicies. If no
-        beamtime object is linked, index-based syntax will not be allowed.
 
     Attributes
     ----------
-    beamtime
-        beamtime object currently associated with this RunEngine instance.
+    beamtime : xpdacq.beamtime.Beamtime or None
+
+        beamtime object that will be linked to. This beamtime object provide reference of sample and scanplan
+        indicies. If no beamtime object is linked, index-based syntax will not be allowed.
 
     Examples
     --------
@@ -137,10 +135,20 @@ class CustomizedRunEngine(RunEngine):
     >>> xrun(3, custom_plan, dark_strategy=some_custom_func)
     """
 
-    def __init__(self, beamtime, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, beamtime):
         self._beamtime = beamtime
         self.pause_msg = PAUSE_MSG
+        self._RE = RunEngine()
+        if glbl["auto_dark"]:
+            area_det = xpd_configuration["area_det"]
+            dark_frame_preprocessor = DarkFramePreprocessor(
+                dark_plan=dark_plan,
+                detector=area_det,
+                max_age=glbl["dk_window"],
+                locked_signals=[area_det.cam.acquire_time, area_det.images_per_set],
+                limit=1
+            )
+            self._RE.preprocessors.append(dark_frame_preprocessor)
 
     @property
     def beamtime(self):
@@ -156,10 +164,10 @@ class CustomizedRunEngine(RunEngine):
     @beamtime.setter
     def beamtime(self, bt_obj):
         self._beamtime = bt_obj
-        self.md.update(bt_obj.md)
+        self._RE.md.update(bt_obj.md)
         print("INFO: beamtime object has been linked\n")
         if not glbl["is_simulation"]:
-            set_beamdump_suspender(self)
+            set_beamdump_suspender(self._RE)
         # assign hash of experiment condition
         exp_hash_uid = str(uuid.uuid4())
         glbl["exp_hash_uid"] = exp_hash_uid
@@ -171,7 +179,6 @@ class CustomizedRunEngine(RunEngine):
         subs: typing.Union[typing.Callable, list, dict] = None,
         *,
         verify_write: bool = False,
-        dark_strategy: typing.Callable = periodic_dark,
         robot: bool = False,
         ask_before_run: bool = False,
         **metadata_kw
@@ -213,12 +220,6 @@ class CustomizedRunEngine(RunEngine):
             Double check if the data have been written into database. In general data is written in a lossless
             fashion at the NSLS-II. Therefore, False by default.
 
-        dark_strategy: callable, optional.
-
-            Protocol of taking dark frame during experiment. Default to the logic of matching dark frame and
-            light frame with the sample exposure time and frame rate. Details can be found at
-            ``http://xpdacq.github.io/xpdAcq/usb_Running.html#automated-dark-collection``
-
         robot: bool, optional
 
             If true run the scan as a robot scan, defaults to False
@@ -234,7 +235,7 @@ class CustomizedRunEngine(RunEngine):
 
             list of uids (i.e. RunStart Document uids) of run(s)
         """
-        if self.md.get("robot", None) is not None:
+        if self._RE.md.get("robot", None) is not None:
             raise RuntimeError(
                 "Robot must be specified at call time, not in"
                 "global metadata"
@@ -242,10 +243,12 @@ class CustomizedRunEngine(RunEngine):
         # The CustomizedRunEngine knows about a Beamtime object, and it
         # interprets integers for 'sample' as indexes into the Beamtime's
         # lists of Samples from all its Experiments.
-        dark_strategy = dark_strategy if glbl["auto_dark"] else None
-        shutter_control = (
-            xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"]
-        ) if glbl["shutter_control"] else None
+        if glbl["shutter_control"]:
+            shutter_control = (
+                xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"]
+            )
+        else:
+            shutter_control = None
         verbose = 1 if ask_before_run else 0
         plan = xpdacq_mutator(
             self._beamtime,
@@ -253,7 +256,6 @@ class CustomizedRunEngine(RunEngine):
             plan,
             robot=robot,
             shutter_control=shutter_control,
-            dark_strategy=dark_strategy,
             auto_load_calib=glbl["auto_load_calib"],
             verbose=verbose
         )
@@ -269,7 +271,7 @@ class CustomizedRunEngine(RunEngine):
             if ip.lower() == "n":
                 return
         # Execute
-        return super().__call__(plan, subs, **metadata_kw)
+        return self._RE.__call__(plan, subs, **metadata_kw)
 
 
 def xpdacq_mutator(
@@ -279,7 +281,6 @@ def xpdacq_mutator(
     *,
     robot: bool = False,
     shutter_control: typing.Tuple[Device, typing.Any] = None,
-    dark_strategy: typing.Callable = None,
     auto_load_calib: bool = False,
     verbose: int = 0
 ) -> typing.Generator:
@@ -312,10 +313,6 @@ def xpdacq_mutator(
         A tuple of the shutter device and its close state. The shutter will be closed after the whole scan.
         If None, shutter won't be controlled and no dark will be taken.
 
-    dark_strategy :
-
-        The strategy how to take the dark frame.
-
     auto_load_calib :
 
         If True, the calibration meta-data will be injected into the run. Else, do nothing.
@@ -347,13 +344,10 @@ def xpdacq_mutator(
     plan = pchain(*total_plan)
     # check wavelength
     warn_wavelength(beamtime)
-    # shutter control and dark
+    # shutter control
     if shutter_control:
         shutter, close_state = shutter_control
         # Alter the plan to incorporate dark frames.
-        if dark_strategy:
-            plan = dark_strategy(plan)
-            plan = bpp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
         # force to close shutter after scan
         plan = close_shutter_at_last(plan, shutter, close_state)
     # Load calibration file
@@ -371,6 +365,15 @@ def xpdacq_mutator(
 def close_shutter_at_last(plan: typing.Generator, shutter: Device, close_state: typing.Any) -> typing.Generator:
     """Close the shutter at the end of the plan."""
     return bpp.finalize_wrapper(plan, bps.mv(shutter, close_state))
+
+
+def dark_plan(detector: Device) -> SnapshotDevice:
+    return basic_dark_plan(
+        detector,
+        shutter=XPD_shutter,
+        close_state=XPD_SHUTTER_CONF["close"],
+        open_state=XPD_SHUTTER_CONF["open"]
+    )
 
 
 def _update_dark_dict_list(name, doc):

@@ -12,6 +12,7 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
+from pathlib import Path
 import databroker
 import os
 import pytest
@@ -32,58 +33,34 @@ from xpdacq.xpdacq import CustomizedRunEngine
 from xpdacq.xpdacq_conf import glbl_dict, configure_device
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def db():
-    db = databroker.v1.temp()
-    return db
+    return databroker.v2.temp()
 
 
-@pytest.fixture(scope="module")
-def bt(home_dir):
-    # start a beamtime
+@pytest.fixture
+def bt(flush_dir, beamline_config_file, sample_xlsx, glbl):
     pi = "Billinge "
     saf_num = 300000
     wavelength = xpd_wavelength
     experimenters = [["van der Banerjee", "S0ham", 1], ["Terban ", " Max", 2]]
-    # copying example longterm config file
-    os.makedirs(glbl_dict["xpdconfig"], exist_ok=True)
-    pytest_dir = rs_fn("xpdacq", "tests/")
-    config = "XPD_beamline_config.yml"
-    configsrc = os.path.join(pytest_dir, config)
-    shutil.copyfile(configsrc, glbl_dict["blconfig_path"])
-    assert os.path.isfile(glbl_dict["blconfig_path"])
+    shutil.copyfile(beamline_config_file, glbl["blconfig_path"])
     bt = _start_beamtime(
         pi, saf_num, experimenters, wavelength=wavelength, test=True
     )
-    # spreadsheet
-    xlf = "300000_sample.xlsx"
-    src = os.path.join(pytest_dir, xlf)
-    shutil.copyfile(src, os.path.join(glbl_dict["import_dir"], xlf))
+    shutil.copyfile(sample_xlsx, Path(glbl["import_dir"]) / sample_xlsx.name)
     import_sample_info(saf_num, bt)
-    yield bt
-    # when we are done with the glbl delete the folders.
-    shutil.rmtree(glbl_dict["home"])
+    return bt
 
 
-@pytest.fixture(scope="module")
-def glbl(bt):
+@pytest.fixture
+def glbl():
     from xpdacq.glbl import glbl
-
-    if not os.path.exists(glbl["home"]):
-        os.makedirs(glbl["home"])
     return glbl
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def fresh_xrun(bt, db):
-    xrun = CustomizedRunEngine(None)
-    xrun.md["beamline_id"] = glbl_dict["beamline_id"]
-    xrun.md["group"] = glbl_dict["group"]
-    xrun.md["facility"] = glbl_dict["facility"]
-    xrun.ignore_callback_exceptions = False
-    xrun.beamtime = bt
-    # link mds
-    xrun.subscribe(db.v1.insert, "all")
     # set simulation objects
     # alias
     pe1c = simple_pe1c
@@ -95,29 +72,57 @@ def fresh_xrun(bt, db):
         ring_current=ring_current,
         filter_bank=fb,
     )
+    xrun = CustomizedRunEngine(None)
+    xrun.md["beamline_id"] = glbl_dict["beamline_id"]
+    xrun.md["group"] = glbl_dict["group"]
+    xrun.md["facility"] = glbl_dict["facility"]
+    xrun.ignore_callback_exceptions = False
+    xrun.beamtime = bt
+    # link mds
+    xrun.subscribe(db.v1.insert, "all")
     return xrun
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def exp_hash_uid(bt, fresh_xrun, glbl):
     fresh_xrun.beamtime = bt
     exp_hash_uid = glbl["exp_hash_uid"]
     return exp_hash_uid
 
 
-@pytest.fixture(scope="module")
-def home_dir():
-    stem = glbl_dict["home"]
-    config_dir = glbl_dict["xpdconfig"]
-    archive_dir = glbl_dict["archive_dir"]
-    os.makedirs(stem, exist_ok=True)
-    yield glbl_dict
-    for el in [stem, config_dir, archive_dir]:
-        if os.path.isdir(el):
-            print("flush {}".format(el))
-            shutil.rmtree(el)
+@pytest.fixture
+def flush_dir(request, glbl):
+    """Create the necessary directory and delete after the test is finished."""
+    folders = list(
+        map(
+            Path,
+            [
+                glbl["base"],
+                glbl["home"],
+                glbl["xpdconfig"]
+            ]
+        )
+    )
+    for folder in folders:
+        if folder.is_dir():
+            shutil.rmtree(folder)
+    for folder in folders:
+        folder.mkdir()
+
+    def finish():
+        for folder1 in folders + [Path(glbl["archive_dir"])]:
+            if folder1.is_dir():
+                shutil.rmtree(folder1)
+
+    request.addfinalizer(finish)
+    return
 
 
 @pytest.fixture(scope="session")
 def beamline_config_file():
-    return rs_fn("xpdacq", "tests/XPD_beamline_config.yml")
+    return Path(rs_fn("xpdacq", "tests/XPD_beamline_config.yml"))
+
+
+@pytest.fixture(scope="session")
+def sample_xlsx():
+    return Path(rs_fn("xpdacq", "tests/300000_sample.xlsx"))
