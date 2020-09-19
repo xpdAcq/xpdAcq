@@ -105,7 +105,7 @@ def periodic_dark(plan):
     return (yield from bpp.plan_mutator(plan, insert_take_dark))
 
 
-class CustomizedRunEngine(object):
+class CustomizedRunEngine(RunEngine):
     """A RunEngine customized for XPD workflows.
 
     Attributes
@@ -135,20 +135,10 @@ class CustomizedRunEngine(object):
     >>> xrun(3, custom_plan, dark_strategy=some_custom_func)
     """
 
-    def __init__(self, beamtime):
+    def __init__(self, beamtime, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._beamtime = beamtime
         self.pause_msg = PAUSE_MSG
-        self._RE = RunEngine()
-        if glbl["auto_dark"]:
-            area_det = xpd_configuration["area_det"]
-            dark_frame_preprocessor = DarkFramePreprocessor(
-                dark_plan=dark_plan,
-                detector=area_det,
-                max_age=glbl["dk_window"],
-                locked_signals=[area_det.cam.acquire_time, area_det.images_per_set],
-                limit=1
-            )
-            self._RE.preprocessors.append(dark_frame_preprocessor)
 
     @property
     def beamtime(self):
@@ -164,10 +154,10 @@ class CustomizedRunEngine(object):
     @beamtime.setter
     def beamtime(self, bt_obj):
         self._beamtime = bt_obj
-        self._RE.md.update(bt_obj.md)
+        self.md.update(bt_obj.md)
         print("INFO: beamtime object has been linked\n")
         if not glbl["is_simulation"]:
-            set_beamdump_suspender(self._RE)
+            set_beamdump_suspender(self)
         # assign hash of experiment condition
         exp_hash_uid = str(uuid.uuid4())
         glbl["exp_hash_uid"] = exp_hash_uid
@@ -235,7 +225,7 @@ class CustomizedRunEngine(object):
 
             list of uids (i.e. RunStart Document uids) of run(s)
         """
-        if self._RE.md.get("robot", None) is not None:
+        if self.md.get("robot", None) is not None:
             raise RuntimeError(
                 "Robot must be specified at call time, not in"
                 "global metadata"
@@ -271,7 +261,7 @@ class CustomizedRunEngine(object):
             if ip.lower() == "n":
                 return
         # Execute
-        return self._RE.__call__(plan, subs, **metadata_kw)
+        return super().__call__(plan, subs, **metadata_kw)
 
 
 def xpdacq_mutator(
@@ -368,12 +358,13 @@ def close_shutter_at_last(plan: typing.Generator, shutter: Device, close_state: 
 
 
 def dark_plan(detector: Device) -> SnapshotDevice:
-    return basic_dark_plan(
+    snapshot_device = yield from basic_dark_plan(
         detector,
         shutter=XPD_shutter,
         close_state=XPD_SHUTTER_CONF["close"],
         open_state=XPD_SHUTTER_CONF["open"]
     )
+    return snapshot_device
 
 
 def _update_dark_dict_list(name, doc):

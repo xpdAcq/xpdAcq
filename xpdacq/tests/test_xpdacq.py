@@ -35,15 +35,19 @@ from xpdacq.xpdacq_conf import (
 )
 from xpdacq.xpdacq_conf import xpd_configuration
 from bluesky.plans import count
+from bluesky_darkframes import DarkFramePreprocessor
+from xpdacq.xpdacq import dark_plan
 
 
-@pytest.mark.parametrize(
-    "sample, plan",
-    [
-        (0, 0)
-    ]
-)
-def test_xrun(fresh_xrun, sample, plan):
-    xrun = fresh_xrun
-    xrun(sample, plan)
+def test_xrun(fresh_xrun):
+    area_det = xpd_configuration["area_det"]
+    dark_frame_preprocessor = DarkFramePreprocessor(
+        dark_plan=dark_plan,
+        detector=area_det,
+        max_age=glbl["dk_window"],
+        locked_signals=[area_det.cam.acquire_time, area_det.images_per_set],
+        limit=1
+    )
+    fresh_xrun.preprocessors.append(dark_frame_preprocessor)
+    fresh_xrun(0, 0)
 

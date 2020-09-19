@@ -72,11 +72,12 @@ def fresh_xrun(bt, db):
         ring_current=ring_current,
         filter_bank=fb,
     )
+    from bluesky import RunEngine
     xrun = CustomizedRunEngine(None)
     xrun.md["beamline_id"] = glbl_dict["beamline_id"]
     xrun.md["group"] = glbl_dict["group"]
     xrun.md["facility"] = glbl_dict["facility"]
-    xrun.ignore_callback_exceptions = False
+    xrun.ignore_callback_exceptions = True
     xrun.beamtime = bt
     # link mds
     xrun.subscribe(db.v1.insert, "all")
