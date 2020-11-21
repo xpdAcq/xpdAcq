@@ -13,14 +13,19 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-import bluesky.plan_stubs as bps
-import bluesky.plans as bp
-import bluesky.preprocessors as bpp
 import os
 import time
 import typing
 import uuid
 import warnings
+from itertools import groupby
+from pprint import pprint
+from textwrap import indent
+from typing import Generator
+
+import bluesky.plan_stubs as bps
+import bluesky.plans as bp
+import bluesky.preprocessors as bpp
 import yaml
 from bluesky import RunEngine
 from bluesky.callbacks.broker import verify_files_saved
@@ -28,21 +33,16 @@ from bluesky.preprocessors import msg_mutator
 from bluesky.preprocessors import pchain
 from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input, single_gen, Msg
-from itertools import groupby
+from bluesky_darkframes import SnapshotDevice
 from ophyd import Device
-from pprint import pprint
-from textwrap import indent
-from typing import Generator
 from xpdconf.conf import XPD_SHUTTER_CONF
-from bluesky_darkframes import DarkFramePreprocessor, SnapshotDevice
 
-from xpdacq.plans.dark_plan import basic_dark_plan
 from xpdacq.beamtime import Beamtime, ScanPlan
 from xpdacq.beamtime import close_shutter_stub, open_shutter_stub
 from xpdacq.glbl import glbl
+from xpdacq.plans.dark_plan import basic_dark_plan
 from xpdacq.tools import xpdAcqException
 from xpdacq.xpdacq_conf import xpd_configuration, XPDACQ_MD_VERSION
-
 
 XPD_shutter = xpd_configuration.get("shutter")
 PAUSE_MSG = """
@@ -338,6 +338,8 @@ def xpdacq_mutator(
     if shutter_control:
         shutter, close_state = shutter_control
         # Alter the plan to incorporate dark frames.
+        plan = periodic_dark(plan)
+        plan = bpp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
         # force to close shutter after scan
         plan = close_shutter_at_last(plan, shutter, close_state)
     # Load calibration file
