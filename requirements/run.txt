@@ -10,3 +10,4 @@ xpdsim
 databroker
 ophyd
 xpdconf
+bluesky-darkframes
