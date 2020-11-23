@@ -51,4 +51,4 @@ print(
     "documentation at http://xpdacq.github.io/xpdacq"
 )
 # delete useless names
-del os, Path, ipysetup, Publisher, databroker, temp, xpd_pe1c
+del os, Path, ipysetup, Publisher, temp, xpd_pe1c
