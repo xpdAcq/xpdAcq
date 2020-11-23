@@ -1,8 +1,9 @@
 import os
 from pathlib import Path
 
+import databroker.v2
 from bluesky.callbacks.zmq import Publisher
-from xpdsim import xpd_pe1c, shctl1, cs700, db, ring_current, fb
+from xpdsim import xpd_pe1c, shctl1, cs700, ring_current, fb
 
 from xpdacq.beamtime import ScanPlan, Sample, ct, Tramp, Tlist, tseries
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
@@ -13,6 +14,8 @@ from xpdacq.xpdacq_conf import xpd_configuration
 
 pe1c = xpd_pe1c
 del xpd_pe1c
+
+db = databroker.v2.temp()
 
 _start_beamtime = _start_beamtime
 _end_beamtime = _end_beamtime
