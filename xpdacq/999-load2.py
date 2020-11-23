@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
 
-import databroker.v2
 from bluesky.callbacks.zmq import Publisher
+from databroker.v2 import temp
 from xpdsim import xpd_pe1c, shctl1, cs700, ring_current, fb
 
 from xpdacq.beamtime import ScanPlan, Sample, ct, Tramp, Tlist, tseries
@@ -13,9 +13,7 @@ from xpdacq.utils import import_userScriptsEtc, import_sample_info
 from xpdacq.xpdacq_conf import xpd_configuration
 
 pe1c = xpd_pe1c
-del xpd_pe1c
-
-db = databroker.v2.temp()
+db = temp()
 
 _start_beamtime = _start_beamtime
 _end_beamtime = _end_beamtime
@@ -52,4 +50,4 @@ print(
     "documentation at http://xpdacq.github.io/xpdacq"
 )
 # delete useless names
-del os, Path, ipysetup, home
+del os, Path, ipysetup, home, Publisher, databroker, temp, xpd_pe1c
