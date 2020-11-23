@@ -13,17 +13,17 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
+import inspect
+import os
+import uuid
+from abc import ABC
 from collections import ChainMap, OrderedDict
 
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 import bluesky.preprocessors as bpp
-import inspect
 import numpy as np
-import os
-import uuid
 import yaml
-from abc import ABC
 from bluesky.callbacks import LiveTable
 from xpdconf.conf import XPD_SHUTTER_CONF
 
@@ -503,87 +503,6 @@ def _nstep(start, stop, step_size):
         )
     )
     return computed_nsteps, computed_step_size
-
-
-# FIXME: this scanplan is hot-fix for multi-sample scanplan. It serves as
-#       a prototype of the future scanplans but it's incomplete.
-def statTramp(
-    dets, exposure, Tstart, Tstop, Tstep, sample_mapping, *, bt=None
-):
-    """
-    Parameters:
-    -----------
-    sample_mapping : dict
-        {'sample_ind': croysta_motor_pos}
-    """
-    pe1c, = dets
-    # setting up area_detector
-    (num_frame, acq_time, computed_exposure) = yield from _configure_area_det(
-        exposure
-    )
-    area_det = xpd_configuration["area_det"]
-    temp_controller = xpd_configuration["temp_controller"]
-    stat_motor = xpd_configuration["stat_motor"]
-    ring_current = xpd_configuration["ring_current"]
-    # compute Nsteps
-    (Nsteps, computed_step_size) = _nstep(Tstart, Tstop, Tstep)
-    # stat_list
-    _sorted_mapping = sorted(sample_mapping.items(), key=lambda x: x[1])
-    sp_uid = str(uuid.uuid4())
-    xpdacq_md = {
-        "sp_time_per_frame": acq_time,
-        "sp_num_frames": num_frame,
-        "sp_requested_exposure": exposure,
-        "sp_computed_exposure": computed_exposure,
-        "sp_type": "statTramp",
-        "sp_startingT": Tstart,
-        "sp_endingT": Tstop,
-        "sp_requested_Tstep": Tstep,
-        "sp_computed_Tstep": computed_step_size,
-        "sp_Nsteps": Nsteps,
-        "sp_uid": sp_uid,
-        "sp_plan_name": "statTramp",
-    }
-    # plan
-    uids = {k: [] for k in sample_mapping.keys()}
-    yield from bp.mv(temp_controller, Tstart)
-    for t in np.linspace(Tstart, Tstop, Nsteps):
-        yield from bp.mv(temp_controller, t)
-        for s, pos in _sorted_mapping:  # sample ind
-            yield from bp.mv(stat_motor, pos)
-            # update md
-            md = list(bt.samples.values())[int(s)]
-            _md = ChainMap(md, xpdacq_md)
-            plan = bp.count(
-                [temp_controller, stat_motor, ring_current] + dets, md=_md
-            )
-            plan = bp.subs_wrapper(
-                plan,
-                LiveTable(
-                    [area_det, temp_controller, stat_motor, ring_current]
-                ),
-            )
-            # plan = bp.baseline_wrapper(plan, [temp_controller,
-            #                                  stat_motor,
-            #                                  ring_current])
-            uid = yield from plan
-            if uid is not None:
-                from xpdan.data_reduction import save_last_tiff
-
-                save_last_tiff()
-                uids[s].append(uid)
-    for s, uid_list in uids.items():
-        from databroker import db
-        import pandas as pd
-
-        hdrs = db[uid_list]
-        dfs = [db.get_table(h, stream_name="primary") for h in hdrs]
-        df = pd.concat(dfs)
-        fn_md = list(bt.samples.keys())[int(s)]
-        fn_md = "_".join([fn_md, sp_uid]) + ".csv"
-        fn = os.path.join(glbl["tiff_base"], fn_md)
-        df.to_csv(fn)
-    return uids
 
 
 # stream_name='primary'
