@@ -52,4 +52,4 @@ print(
     "documentation at http://xpdacq.github.io/xpdacq"
 )
 # delete useless names
-del os, Path, glbl_dict, ipysetup, home
+del os, Path, ipysetup, home
