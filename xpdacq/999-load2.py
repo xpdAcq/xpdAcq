@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from bluesky.callbacks.zmq import Publisher
 from xpdsim import xpd_pe1c, shctl1, cs700, db, ring_current, fb
 
 from xpdacq.beamtime import ScanPlan, Sample, ct, Tramp, Tlist, tseries
@@ -35,6 +36,8 @@ glbl, bt, xrun = ipysetup(
     db=db
 )
 print("INFO: Initialized glbl, bt, xrun.")
+xrun.subscribe(Publisher("localhost:5567", prefix=b'raw'))
+print("INFO: Publish data to localhost port 5567 with prefix 'raw'.")
 if Path(glbl["home"]).is_dir():
     os.chdir(glbl["home"])
     print("INFO: Changed home to {}".format(glbl["home"]))
