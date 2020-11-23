@@ -13,6 +13,7 @@ from xpdacq.utils import import_userScriptsEtc, import_sample_info
 from xpdacq.xpdacq_conf import xpd_configuration
 
 pe1c = xpd_pe1c
+
 db = temp()
 
 _start_beamtime = _start_beamtime
@@ -50,4 +51,4 @@ print(
     "documentation at http://xpdacq.github.io/xpdacq"
 )
 # delete useless names
-del os, Path, ipysetup, home, Publisher, databroker, temp, xpd_pe1c
+del os, Path, ipysetup, Publisher, databroker, temp, xpd_pe1c
