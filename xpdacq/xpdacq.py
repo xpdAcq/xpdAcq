@@ -13,14 +13,19 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-import bluesky.plan_stubs as bps
-import bluesky.plans as bp
-import bluesky.preprocessors as bpp
 import os
 import time
 import typing
 import uuid
 import warnings
+from itertools import groupby
+from pprint import pprint
+from textwrap import indent
+from typing import Generator
+
+import bluesky.plan_stubs as bps
+import bluesky.plans as bp
+import bluesky.preprocessors as bpp
 import yaml
 from bluesky import RunEngine
 from bluesky.callbacks.broker import verify_files_saved
@@ -28,11 +33,7 @@ from bluesky.preprocessors import msg_mutator
 from bluesky.preprocessors import pchain
 from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input, single_gen, Msg
-from itertools import groupby
 from ophyd import Device
-from pprint import pprint
-from textwrap import indent
-from typing import Generator
 from xpdconf.conf import XPD_SHUTTER_CONF
 
 from xpdacq.beamtime import Beamtime, ScanPlan
@@ -521,7 +522,7 @@ def _auto_load_calibration_file(in_scan=True):
         if in_scan:
             print(
                 "INFO: This scan will append calibration parameters "
-                "recorded in {}".format(calib_dict["poni_file_name"])
+                "recorded in {}".format(calib_yaml_name)
             )
         return calib_dict
 

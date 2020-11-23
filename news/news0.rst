@@ -1,4 +1,4 @@
-**Added:** None
+**Added:**
 
 * Add `xpdacq_mutator` as a plan mutator for the xpd experiments. `xrun` will use it in `__call___`
 
