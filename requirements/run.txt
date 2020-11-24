@@ -8,3 +8,4 @@ bluesky
 databroker
 ophyd
 xpdconf
+xpdsim
