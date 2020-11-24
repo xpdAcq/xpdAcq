@@ -5,7 +5,6 @@ xlrd
 pyfai
 ipython
 bluesky
-xpdsim
 databroker
 ophyd
 xpdconf
