@@ -3,6 +3,32 @@ xpdAcq Change Log
 
 .. current developments
 
+v0.11.0
+====================
+
+**Added:**
+
+* Add `xpdacq_mutator` as a plan mutator for the xpd experiments. `xrun` will use it in `__call___`
+
+**Changed:**
+
+* Optimized import
+
+* Clean up redundant code
+
+* Fix code style issues
+* No longer import from xpdan in 999-load2.py
+
+* Use temporary v2 databroker instread of v0 databroker in 999-load2.py
+
+**Fixed:**
+
+* Fix bugs in tests
+
+* Fix the filter_band warnings
+
+
+
 v0.10.4
 ====================
 
