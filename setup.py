@@ -52,7 +52,7 @@ setup(
     },
     author="Songsheng Tao",
     author_email='st3107@columbia.edu',
-    url="http:/github.com/xpdAcq/xpdacq",
+    url="https://github.com/xpdAcq/xpdacq",
     install_requires=[
         "numpy>=1.11",
         "matplotlib>=1.5.1",
