@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>xpdAcq Change Log &mdash; xpdAcq 0.10.4 documentation</title>
+  <title>xpdAcq Change Log &mdash; xpdAcq 0.11.0 documentation</title>
   
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.10
+                0.11
               </div>
             
           
@@ -100,6 +100,7 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">xpdAcq Change Log</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#v0-11-0">v0.11.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#v0-10-4">v0.10.4</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#v0-10-1">v0.10.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#v0-10-0">v0.10.0</a></li>
@@ -187,6 +188,26 @@
             
   <div class="section" id="xpdacq-change-log">
 <h1>xpdAcq Change Log<a class="headerlink" href="#xpdacq-change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="v0-11-0">
+<h2>v0.11.0<a class="headerlink" href="#v0-11-0" title="Permalink to this headline">¶</a></h2>
+<p><strong>Added:</strong></p>
+<ul class="simple">
+<li><p>Add <cite>xpdacq_mutator</cite> as a plan mutator for the xpd experiments. <cite>xrun</cite> will use it in <cite>__call___</cite></p></li>
+</ul>
+<p><strong>Changed:</strong></p>
+<ul class="simple">
+<li><p>Optimized import</p></li>
+<li><p>Clean up redundant code</p></li>
+<li><p>Fix code style issues</p></li>
+<li><p>No longer import from xpdan in 999-load2.py</p></li>
+<li><p>Use temporary v2 databroker instread of v0 databroker in 999-load2.py</p></li>
+</ul>
+<p><strong>Fixed:</strong></p>
+<ul class="simple">
+<li><p>Fix bugs in tests</p></li>
+<li><p>Fix the filter_band warnings</p></li>
+</ul>
+</div>
 <div class="section" id="v0-10-4">
 <h2>v0.10.4<a class="headerlink" href="#v0-10-4" title="Permalink to this headline">¶</a></h2>
 <p><strong>Fixed:</strong></p>
