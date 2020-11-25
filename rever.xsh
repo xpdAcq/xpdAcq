@@ -1,15 +1,18 @@
 $PROJECT = 'xpdAcq'
-$ACTIVITIES = ['version_bump',
-               'changelog',
-               'tag',
-               'push_tag',
-               'ghrelease',
-               'forge']
+$ACTIVITIES = [
+    'version_bump',
+    'changelog',
+    'tag',
+    'push_tag',
+#    'ghrelease',
+    'pypi',
+    'forge'
+]
 
 $VERSION_BUMP_PATTERNS = [
     ('xpdacq/__init__.py', '__version__\s*=.*', "__version__ = '$VERSION'"),
     ('setup.py', 'version\s*=.*,', "version='$VERSION',")
-    ]
+]
 $CHANGELOG_FILENAME = 'CHANGELOG.rst'
 $CHANGELOG_IGNORE = ['TEMPLATE.rst']
 $PUSH_TAG_REMOTE ='https://github.com/xpdAcq/xpdAcq.git'
