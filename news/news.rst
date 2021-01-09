@@ -2,6 +2,8 @@
 
 * A tool to inject metadata using the preprocessors.
 
+* Add dependency on the pyopenxl
+
 **Changed:**
 
 * Translation of scan plans no longer injects the sample metadata
@@ -12,7 +14,7 @@
 
 **Removed:**
 
-* <news item>
+* Remove dependency on the xlrd
 
 **Fixed:**
 
