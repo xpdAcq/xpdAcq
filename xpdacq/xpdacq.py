@@ -170,7 +170,7 @@ class CustomizedRunEngine(RunEngine):
         self,
         sample: typing.Union[int, str, dict, list, tuple],
         plan: typing.Union[int, str, typing.Generator, ScanPlan, list, tuple],
-        subs: typing.Union[typing.Callable, list, dict] = None,
+        subs: typing.Union[typing.Callable, dict, list] = None,
         *,
         verify_write: bool = False,
         dark_strategy: typing.Callable = periodic_dark,
@@ -241,40 +241,37 @@ class CustomizedRunEngine(RunEngine):
                 "Robot must be specified at call time, not in"
                 "global metadata"
             )
-        # The CustomizedRunEngine knows about a Beamtime object, and it
-        # interprets integers for 'sample' as indexes into the Beamtime's
-        # lists of Samples from all its Experiments.
         dark_strategy = dark_strategy if glbl["auto_dark"] else None
         shutter_control = (
             xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"]
         ) if glbl["shutter_control"] else None
-        verbose = 1 if ask_before_run else 0
-        plan = xpdacq_mutator(
-            self._beamtime,
+        # The CustomizedRunEngine knows about a Beamtime object, and it
+        # interprets integers for 'sample' as indexes into the Beamtime's
+        # lists of Samples from all its Experiments
+        grand_plan = xpdacq_composer(
+            self.beamtime,
             sample,
             plan,
             robot=robot,
             shutter_control=shutter_control,
             dark_strategy=dark_strategy,
-            auto_load_calib=glbl["auto_load_calib"],
-            verbose=verbose
+            auto_load_calib=glbl['auto_load_calib']
         )
-        if subs:
-            _subs = normalize_subs_input(subs)
-            # verify writing files
-            if verify_write:
-                _subs.update({"stop": verify_files_saved})
+        # normalize the subs
+        _subs = normalize_subs_input(subs) if subs else {}
+        # verify writing files
+        if verify_write:
+            _subs.update({"stop": verify_files_saved})
         if robot:
-            metadata_kw.update(robot=True)
+            metadata_kw.update({'robot': True})
         if ask_before_run:
             ip = input("Is this ok? [y]/n")
             if ip.lower() == "n":
                 return
-        # Execute
-        return super().__call__(plan, subs, **metadata_kw)
+        return super(CustomizedRunEngine, self).__call__(grand_plan, _subs, **metadata_kw)
 
 
-def xpdacq_mutator(
+def xpdacq_composer(
     beamtime: Beamtime,
     sample: typing.Union[int, dict, typing.List[int]],
     plan: typing.Union[int, Generator, typing.List[int], typing.Generator],
@@ -282,92 +279,75 @@ def xpdacq_mutator(
     robot: bool = False,
     shutter_control: typing.Tuple[Device, typing.Any] = None,
     dark_strategy: typing.Callable = None,
-    auto_load_calib: bool = False,
-    verbose: int = 0
+    auto_load_calib: bool = False
 ) -> typing.Generator:
-    """Create the plan for a xpd experiment. Used in `~xrun.__call__`.
+    """Create a list of plans for an xpd experiment. Used in `~xpdacq.xpdacq.CumstomeizedRunEngine.__call__`.
 
     Parameters
     ----------
     beamtime :
-
         The beamtime object.
 
     sample :
-
         If a beamtime object is linked, an integer will be interpreted as the index appears in the ``bt.list()``
         method, corresponding metadata will be passed. A customized dict can also be passed as the sample
         metadata.
 
     plan :
-
         Scan plan. If a beamtime object is linked, an integer will be interpreted as the index appears in the
         ``bt.list()`` method, corresponding scan plan will be A generator or that yields ``Msg`` objects (or an
         iterable that returns such a generator) can also be passed.
 
     robot :
-
         If True, the plan is meant to be using robot.
 
     shutter_control :
-
         A tuple of the shutter device and its close state. The shutter will be closed after the whole scan.
         If None, shutter won't be controlled and no dark will be taken.
 
     dark_strategy :
-
         The strategy how to take the dark frame.
 
     auto_load_calib :
-
         If True, the calibration meta-data will be injected into the run. Else, do nothing.
-
-    verbose :
-
-        0 means no print. 1 means printing the plan out.
 
     Returns
     -------
-    final_plan :
-
-        A blue sky plan. Used in `~bluesky.RunEngine`.
+    grand_plan :
+        The grand plan to be run by the RunEngine.
     """
-    sample, plan = _normalize_sample_plan(sample, plan)
-    # Turn ints into actual samples
-    sample = translate_to_sample(beamtime, sample)
-    # print out
-    if verbose == 1:
-        print_plans(beamtime, sample, plan, robot=robot)
-    # Turn ints into generators
-    plan = translate_to_plan(beamtime, plan, sample)
-    # Collect the plans by contiguous samples and chain them
-    sample, plan = zip(
-        *((s, pchain(*ps)) for s, ps in group_by_sample(sample, plan))
-    )
-    # Make the complete plan by chaining the chained plans
-    total_plan = gen_robot_plans(beamtime, sample, plan) if robot else plan
-    plan = pchain(*total_plan)
     # check wavelength
     warn_wavelength(beamtime)
+    # noramlize the sample and plan to two lists with the same length
+    lst_sample, lst_plan = _normalize_sample_plan(sample, plan)
+    # Turn ints into actual sample dictionary
+    lst_metadata = [translate_to_sample(beamtime, s) for s in lst_sample]
+    # Turn ints into bluesky generators
+    lst_bp_plan = [translate_to_plan(beamtime, p) for p in lst_plan]
+    # Make the complete plan by chaining the chained plans
+    if robot:
+        lst_bp_plan = gen_robot_plans(beamtime, lst_metadata, lst_bp_plan)
     # shutter control and dark
     if shutter_control:
         shutter, close_state = shutter_control
         # Alter the plan to incorporate dark frames.
         if dark_strategy:
-            plan = dark_strategy(plan)
-            plan = bpp.msg_mutator(plan, _inject_qualified_dark_frame_uid)
+            lst_bp_plan = [dark_strategy(p) for p in lst_bp_plan]
+            lst_bp_plan = [bpp.msg_mutator(p, _inject_qualified_dark_frame_uid) for p in lst_bp_plan]
         # force to close shutter after scan
-        plan = close_shutter_at_last(plan, shutter, close_state)
+        lst_bp_plan = [close_shutter_at_last(p, shutter, close_state) for p in lst_bp_plan]
     # Load calibration file
     if auto_load_calib:
-        plan = bpp.msg_mutator(plan, _inject_calibration_md)
+        lst_bp_plan = [bpp.msg_mutator(p, _inject_calibration_md) for p in lst_bp_plan]
     # Insert xpdacq md version
-    plan = bpp.msg_mutator(plan, _inject_xpdacq_md_version)
+    lst_bp_plan = [bpp.msg_mutator(p, _inject_xpdacq_md_version) for p in lst_bp_plan]
     # Insert analysis stage tag
-    plan = bpp.msg_mutator(plan, _inject_analysis_stage)
+    lst_bp_plan = [bpp.msg_mutator(p, _inject_analysis_stage) for p in lst_bp_plan]
     # Insert filter metadata
-    plan = bpp.msg_mutator(plan, _inject_filter_positions)
-    return plan
+    lst_bp_plan = [bpp.msg_mutator(p, _inject_filter_positions) for p in lst_bp_plan]
+    # Inject the sample metadata
+    lst_bp_plan = [inject_metadata(p, s) for p, s in zip(lst_bp_plan, lst_metadata)]
+    return pchain(*lst_bp_plan)
 
 
 def close_shutter_at_last(plan: typing.Generator, shutter: Device, close_state: typing.Any) -> typing.Generator:
@@ -528,6 +508,19 @@ def _auto_load_calibration_file(in_scan=True):
         return calib_dict
 
 
+def inject_metadata(plan: typing.Generator, metadata: dict) -> typing.Generator:
+    """Inject the metadata into a plan."""
+
+    def _inject_metadata(msg: Msg):
+        """Inject metadata in the start of the run."""
+        if msg.command == "open_run":
+            msg.kwargs.update(**metadata)
+        return msg
+
+    plan1 = bpp.msg_mutator(plan, _inject_metadata)
+    return plan1
+
+
 def _inject_filter_positions(msg):
     """Inject the filter position in start."""
     if msg.command == "open_run":
@@ -551,6 +544,27 @@ def _inject_qualified_dark_frame_uid(msg):
 
 
 def _inject_calibration_md(msg):
+    """Inject the calibration data in start."""
+    if msg.command == "open_run":
+        exp_hash_uid = glbl.get("exp_hash_uid")
+        # inject client uid to all runs
+        msg.kwargs.update({"detector_calibration_client_uid": exp_hash_uid})
+        if "is_calibration" in msg.kwargs:
+            # inject server uid if it's calibration run
+            msg.kwargs.update(
+                {"detector_calibration_server_uid": exp_hash_uid}
+            )
+        else:
+            # load calibration param if exists
+            calibration_md = _auto_load_calibration_file()
+            if calibration_md:
+                injected_calib_dict = dict(calibration_md)
+                # inject calibration md
+                msg.kwargs["calibration_md"] = injected_calib_dict
+    return msg
+
+
+def get_calibration_md():
     """Inject the calibration data in start."""
     if msg.command == "open_run":
         exp_hash_uid = glbl.get("exp_hash_uid")
@@ -763,7 +777,7 @@ def translate_to_sample(
     """
     if isinstance(sample, int):
         try:
-            return beamtime.samples.sel(sample)
+            return dict(beamtime.samples.sel(sample))
         except IndexError:
             raise xpdAcqError(
                 "ERROR: hmm, there is no sample with index `{}`"
@@ -773,7 +787,7 @@ def translate_to_sample(
             )
     elif isinstance(sample, str):
         try:
-            return beamtime.samples[sample]
+            return dict(beamtime.samples[sample])
         except KeyError:
             raise xpdAcqError(
                 "ERROR: hmm, there is no sample with key `{}`"
@@ -812,7 +826,8 @@ def translate_to_plan(beamtime: Beamtime, plan: typing.Union[int, str, ScanPlan]
     # If a plan is given as a int, look in up in the global registry.
     if isinstance(plan, int):
         try:
-            return beamtime.scanplans.sel(plan)
+            scanplan = beamtime.scanplans.sel(plan)
+            return scanplan.factory()
         except IndexError:
             raise xpdAcqError(
                 "ERROR: hmm, there is no scanplan with index `{}`"
@@ -823,7 +838,8 @@ def translate_to_plan(beamtime: Beamtime, plan: typing.Union[int, str, ScanPlan]
     # If the plan is an xpdAcq 'ScanPlan', make the actual plan.
     elif isinstance(plan, str):
         try:
-            plan = beamtime.scanplans[plan]
+            scanplan = beamtime.scanplans[plan]
+            return scanplan.factory()
         except KeyError:
             raise xpdAcqError(
                 "ERROR: hmm, there is no scanplan with key `{}`"
@@ -881,7 +897,7 @@ def _normalize_sample_plan(sample, plan) -> typing.Tuple[list, list]:
 def print_plans(
     beamtime: Beamtime,
     sample: typing.List[dict],
-    plan: typing.List[int],
+    plan: typing.List[typing.Generator],
     robot: bool = False
 ) -> None:
     """Print the plan for each sample."""
