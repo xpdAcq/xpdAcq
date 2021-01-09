@@ -789,7 +789,7 @@ def translate_to_sample(
     return sample_md
 
 
-def translate_to_plan(beamtime: Beamtime, plan: typing.Union[int, str, ScanPlan, list], sample_md):
+def translate_to_plan(beamtime: Beamtime, plan: typing.Union[int, str, ScanPlan, list], sample_md: dict):
     """Translate a plan input into a generator
 
     Parameters

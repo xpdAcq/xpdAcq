@@ -1,16 +1,16 @@
 import os
-import pytest
 import shutil
 import uuid
+
+import pytest
 from pkg_resources import resource_filename as rs_fn
-from pyFAI.calibrant import Calibrant, CALIBRANT_FACTORY
+from pyFAI.calibrant import Calibrant, ALL_CALIBRANTS
 
 from xpdacq.calib import (
     _collect_img,
     xpdAcqException,
     _sample_name_phase_info_configuration,
-    run_calibration,
-    Calibration
+    run_calibration
 )
 from xpdacq.xpdacq import update_experiment_hash_uid
 
@@ -121,7 +121,7 @@ def test_load_calibrant(fresh_xrun, bt):
     xrun = fresh_xrun
     xrun.beamtime = bt
     # pyfai factory
-    for k, calibrant_obj in CALIBRANT_FACTORY.items():
+    for k, calibrant_obj in ALL_CALIBRANTS.items():
         # light weight callback
         def check_eq(name, doc):
             assert calibrant_obj.dSpacing == doc["dSpacing"]
@@ -147,10 +147,10 @@ def test_load_calibrant(fresh_xrun, bt):
     fn = str(uuid.uuid4())
     dst = os.path.join(dst_base, fn + ".D")
     shutil.copy(src, dst)
-    c = Calibration(calibrant=dst)
+    c = Calibrant(filename=dst)
 
     def check_eq(name, doc):
-        assert c.calibrant.dSpacing == doc["dSpacing"]
+        assert c.dSpacing == doc["dSpacing"]
         assert dst == doc["sample_name"]
 
     t = xrun.subscribe(check_eq, "start")
