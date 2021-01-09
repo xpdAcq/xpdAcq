@@ -1,7 +1,7 @@
 numpy
 pyyaml
 pandas
-xlrd
+openpyxl
 pyfai
 ipython
 bluesky
