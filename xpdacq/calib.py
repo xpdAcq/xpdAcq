@@ -13,11 +13,14 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-import bluesky.preprocessors as bpp
 import os
 import time
+import typing
 from hashlib import sha256
-from pyFAI.gui.cli_calibration import Calibration
+from pathlib import Path
+
+import bluesky.preprocessors as bpp
+import pyFAI.calibrant
 
 from .beamtime import ScanPlan, ct
 from .glbl import glbl
@@ -144,7 +147,6 @@ def run_calibration(
         exposure,
         dark_sub_bool,
         sample_md,
-        "calib",
         RE_instance,
         detector=detector,
         calibrant=calibrant,
@@ -215,7 +217,6 @@ def _collect_img(
     exposure,
     dark_sub_bool,
     sample_md,
-    tag,
     RE_instance,
     *,
     calibrant=None,
@@ -226,35 +227,25 @@ def _collect_img(
     bto = RE_instance.beamtime
     plan = ScanPlan(bto, ct, exposure).factory()
     sample_md.update(bto)
-
-    if tag == "calib":
-        # instantiate Calibrant class
-        calibrant_obj = Calibration(calibrant=calibrant).calibrant
-        if calibrant_obj is None:
-            raise xpdAcqException("Invalid calibrant")
-        dSpacing = calibrant_obj.dSpacing
-        if not dSpacing:
-            raise xpdAcqException("empty dSpacing from calibrant")
-        sample_md.update({"dSpacing": dSpacing, "detector": detector})
-        plan = bpp.msg_mutator(plan, _inject_calibration_tag)
+    dSpacing = find_dspacing(calibrant)
+    sample_md.update({"dSpacing": dSpacing, "detector": detector})
+    plan = bpp.msg_mutator(plan, _inject_calibration_tag)
 
     # collect image
     RE_instance(sample_md, plan)
-    """
-    # last one must be light
-    db = xpd_configuration["db"]
-    light_header = db[uid[-1]]
-    dark_uid = light_header["start"].get("sc_dk_field_uid")
-    dark_header = db[dark_uid]
-    dark_img = dark_header.data(glbl["image_field"])
-    dark_img = np.asarray(next(dark_img)).squeeze()
-    img = light_header.data(glbl["image_field"])
-    img = np.asarray(next(img)).squeeze()
 
-    if dark_sub_bool:
-        img -= dark_img
-    # FIXME: filename template from xpdAn
-    fn_template = "from_calib_func_{}.poni".format(_timestampstr(time.time()))
 
-    return img, fn_template
-    """
+def find_dspacing(calibrant: str) -> typing.List[float]:
+    """Find the d-spacing of a calibrant using pyFAI."""
+    calib_fac = pyFAI.calibrant.ALL_CALIBRANTS
+    # if the calibrant is the name of a chemical
+    if calibrant in calib_fac:
+        calib_obj = calib_fac(calibrant)
+        return calib_obj.get_dSpacing()
+    # if the calibrant is a file name
+    elif Path(calibrant).is_file():
+        calib_obj = pyFAI.calibrant.Calibrant(filename=calibrant)
+        return calib_obj.get_dSpacing()
+    # something wrong
+    else:
+        raise xpdAcqException("Invalid calibrant")

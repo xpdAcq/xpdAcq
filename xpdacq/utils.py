@@ -14,13 +14,14 @@
 #
 ##############################################################################
 import os
-import pandas as pd
 import shutil
 import tarfile as tar
-from IPython import get_ipython
 from itertools import takewhile
 from shutil import ReadError
 from time import strftime
+
+import pandas as pd
+from IPython import get_ipython
 
 from .beamtime import Beamtime, Sample
 from .glbl import glbl
@@ -239,6 +240,8 @@ class ExceltoYaml:
     def __init__(self, src_dir):
         self.pd_dict = None
         self.src_dir = src_dir
+        self.pd_df = None
+        self.parsed_sa_md_list = []
 
     def load(self, saf_num):
         xl_f = [
@@ -255,7 +258,8 @@ class ExceltoYaml:
             )
 
         self.pd_df = pd.read_excel(
-            os.path.join(self.src_dir, xl_f.pop()), skiprows=[1]
+            os.path.join(self.src_dir, xl_f.pop()), skiprows=[1],
+            engine="openpyxl"
         )
 
     def parse_sample_md(self):
