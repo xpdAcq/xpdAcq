@@ -526,7 +526,16 @@ def _clean_info(obj):
 
 
 class MDOrderedDict(OrderedDict):
-    def get_md(self, ind):
+    """The augmented ordered dictionary."""
+
+    def sel(self, ind: int):
+        """Select the value by the index."""
+        try:
+            return list(self.values())[ind]
+        except IndexError:
+            raise IndexError("Index out of range.")
+
+    def get_md(self, ind: int):
         """special method to get metadata of sample object based on
         bt.list index
         """
@@ -593,6 +602,8 @@ class Beamtime(ValidatedDictLike, YamlDict, ABC):
         # used by YamlDict when reload
         self.setdefault("bt_uid", new_short_uid())
         self.robot_info = {}
+        self._scanplan_order = {}
+        self._sample_order = {}
 
     @property
     def wavelength(self):
@@ -611,7 +622,7 @@ class Beamtime(ValidatedDictLike, YamlDict, ABC):
         return dict(self)
 
     @property
-    def all_sample_in_magzine(self):
+    def all_sample_in_magazine(self):
         """All samples in the robot magazine"""
         return [
             i
@@ -833,7 +844,7 @@ class Sample(ValidatedDictLike, YamlChainMap, ABC):
         return cls(beamtime, map1)
 
 
-class ScanPlan(ValidatedDictLike, YamlChainMap):
+class ScanPlan(ValidatedDictLike, YamlChainMap, ABC):
     """
     class that carries scan plan with corresponding experimental arguements
 

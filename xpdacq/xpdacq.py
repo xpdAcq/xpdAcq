@@ -18,6 +18,7 @@ import time
 import typing
 import uuid
 import warnings
+from collections import OrderedDict
 from itertools import groupby
 from pprint import pprint
 from textwrap import indent
@@ -29,7 +30,6 @@ import bluesky.preprocessors as bpp
 import yaml
 from bluesky import RunEngine
 from bluesky.callbacks.broker import verify_files_saved
-from bluesky.preprocessors import msg_mutator
 from bluesky.preprocessors import pchain
 from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input, single_gen, Msg
@@ -39,6 +39,7 @@ from xpdconf.conf import XPD_SHUTTER_CONF
 from xpdacq.beamtime import Beamtime, ScanPlan
 from xpdacq.beamtime import close_shutter_stub, open_shutter_stub
 from xpdacq.glbl import glbl
+from xpdacq.tools import xpdAcqError
 from xpdacq.tools import xpdAcqException
 from xpdacq.xpdacq_conf import xpd_configuration, XPDACQ_MD_VERSION
 
@@ -739,9 +740,9 @@ def robot_wrapper(plan, sample):
 
 def translate_to_sample(
     beamtime: Beamtime,
-    sample: typing.Union[int, str, dict, list, tuple]
+    sample: typing.Union[int, str, dict]
 ) -> typing.Union[dict, typing.List[dict]]:
-    """Translate a sample into a list of dict
+    """Translate a sample into a dictionary.
 
     Parameters
     ----------
@@ -760,51 +761,43 @@ def translate_to_sample(
     sample_md :
         The sample info loaded
     """
-    if isinstance(sample, (list, tuple)):
-        sample_md = [translate_to_sample(beamtime, s) for s in sample]
-    elif isinstance(sample, int):
+    if isinstance(sample, int):
         try:
-            sample_md = list(beamtime.samples.values())[sample]
+            return beamtime.samples.sel(sample)
         except IndexError:
-            print(
-                "WARNING: hmm, there is no sample with index `{}`"
+            raise xpdAcqError(
+                "ERROR: hmm, there is no sample with index `{}`"
                 ", please do `bt.list()` to check if it exists yet".format(
                     sample
                 )
             )
-            sample_md = dict()
     elif isinstance(sample, str):
         try:
-            sample_md = beamtime.samples[sample]
+            return beamtime.samples[sample]
         except KeyError:
-            print(
-                "WARNING: hmm, there is no sample with key `{}`"
+            raise xpdAcqError(
+                "ERROR: hmm, there is no sample with key `{}`"
                 ", please do `bt.list()` to check if it exists yet".format(
                     sample
                 )
             )
-            sample_md = dict()
+    elif isinstance(sample, OrderedDict):
+        return dict(sample)
+    elif isinstance(sample, dict):
+        return sample
     else:
-        sample_md = sample
-    return sample_md
+        raise TypeError(f"The type of sample is {type(sample)}. Expect int, str, dict.")
 
 
-def translate_to_plan(beamtime: Beamtime, plan: typing.Union[int, str, ScanPlan, list], sample_md: dict):
-    """Translate a plan input into a generator
+def translate_to_plan(beamtime: Beamtime, plan: typing.Union[int, str, ScanPlan]) -> typing.Generator:
+    """Translate a plan input into a generator.
 
     Parameters
     ----------
     beamtime : Beamtime
         The BeamTime instance.
 
-    sample_md : list of dict-like
-        Sample metadata. If a beamtime object is linked,
-        an integer will be interpreted as the index appears in the
-        ``bt.list()`` method, corresponding metadata will be passed.
-        A customized dict can also be passed as the sample
-        metadata.
-
-    plan : list, int, str, or dict-like
+    plan : int, str, or dict-like
         Scan plan. If a beamtime object is linked, an integer
         will be interpreted as the index appears in the
         ``bt.list()`` method, corresponding scan plan will be
@@ -814,45 +807,36 @@ def translate_to_plan(beamtime: Beamtime, plan: typing.Union[int, str, ScanPlan,
     Returns
     -------
     plan : generator
-        The generator of messages for the plan
-
+        The generator of messages for the plan。
     """
-    if isinstance(plan, list):
-        plan = [translate_to_plan(beamtime, p, s) for p, s in zip(plan, sample_md)]
     # If a plan is given as a int, look in up in the global registry.
+    if isinstance(plan, int):
+        try:
+            return beamtime.scanplans.sel(plan)
+        except IndexError:
+            raise xpdAcqError(
+                "ERROR: hmm, there is no scanplan with index `{}`"
+                ", please do `bt.list()` to check if it exists yet".format(
+                    plan
+                )
+            )
+    # If the plan is an xpdAcq 'ScanPlan', make the actual plan.
+    elif isinstance(plan, str):
+        try:
+            plan = beamtime.scanplans[plan]
+        except KeyError:
+            raise xpdAcqError(
+                "ERROR: hmm, there is no scanplan with key `{}`"
+                ", please do `bt.list()` to check if it exists yet".format(
+                    plan
+                )
+            )
+    elif isinstance(plan, ScanPlan):
+        return plan.factory()
+    elif isinstance(plan, Generator):
+        return plan
     else:
-        if isinstance(plan, int):
-            try:
-                plan = list(beamtime.scanplans.values())[plan]
-            except IndexError:
-                print(
-                    "WARNING: hmm, there is no scanplan with index `{}`"
-                    ", please do `bt.list()` to check if it exists yet".format(
-                        plan
-                    )
-                )
-                return
-        # If the plan is an xpdAcq 'ScanPlan', make the actual plan.
-        elif isinstance(plan, str):
-            try:
-                plan = beamtime.scanplans[plan]
-            except KeyError:
-                print(
-                    "WARNING: hmm, there is no scanplan with key `{}`"
-                    ", please do `bt.list()` to check if it exists yet".format(
-                        plan
-                    )
-                )
-                return
-        elif isinstance(plan, (Generator, ScanPlan)):
-            pass
-        else:
-            raise TypeError(f"The type of plan is {type(plan)}. Expect list, int, str, or dict-like.")
-        if isinstance(plan, ScanPlan):
-            plan = plan.factory()
-        mm = _sample_injector_factory(sample_md)
-        plan = msg_mutator(plan, mm)
-    return plan
+        raise TypeError(f"The type of plan is {type(plan)}. Expect int, str, ScanPlan or generator.")
 
 
 def _normalize_sample_plan(sample, plan) -> typing.Tuple[list, list]:
