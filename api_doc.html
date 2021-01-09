@@ -24,7 +24,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -270,7 +269,7 @@ and contain the required keys.</p>
 </div>
 <dl class="py method">
 <dt id="xpdacq.xpdacq.CustomizedRunEngine.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">sample: Union[int, str, dict, list, tuple], plan: Union[int, str, Generator, xpdacq.beamtime.ScanPlan, list, tuple], subs: Union[Callable, list, dict] = None, *, verify_write: bool = False, dark_strategy: Callable = &lt;function periodic_dark&gt;, robot: bool = False, ask_before_run: bool = False, **metadata_kw</em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.xpdacq.CustomizedRunEngine.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">sample: Union[int, str, dict, list, tuple], plan: Union[int, str, Generator, xpdacq.beamtime.ScanPlan, list, tuple], subs: Optional[Union[Callable, dict, list]] = None, *, verify_write: bool = False, dark_strategy: Callable = &lt;function periodic_dark&gt;, robot: bool = False, ask_before_run: bool = False, **metadata_kw</em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.xpdacq.CustomizedRunEngine.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute a plan.</p>
 <p>The call is basically the same as the RE. The only difference is that the plan will be mutated and
 preprocessed to incorpate sample meta-data, dark fram stragy and so on. Any keyword arguments other than
