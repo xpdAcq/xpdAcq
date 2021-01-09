@@ -564,27 +564,6 @@ def _inject_calibration_md(msg):
     return msg
 
 
-def get_calibration_md():
-    """Inject the calibration data in start."""
-    if msg.command == "open_run":
-        exp_hash_uid = glbl.get("exp_hash_uid")
-        # inject client uid to all runs
-        msg.kwargs.update({"detector_calibration_client_uid": exp_hash_uid})
-        if "is_calibration" in msg.kwargs:
-            # inject server uid if it's calibration run
-            msg.kwargs.update(
-                {"detector_calibration_server_uid": exp_hash_uid}
-            )
-        else:
-            # load calibration param if exists
-            calibration_md = _auto_load_calibration_file()
-            if calibration_md:
-                injected_calib_dict = dict(calibration_md)
-                # inject calibration md
-                msg.kwargs["calibration_md"] = injected_calib_dict
-    return msg
-
-
 def _inject_xpdacq_md_version(msg):
     """simply insert xpdAcq md version"""
     if msg.command == "open_run":
