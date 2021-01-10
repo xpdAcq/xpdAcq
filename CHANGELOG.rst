@@ -6,6 +6,27 @@ xpdAcq Change Log
 v0.12.0
 ====================
 
+**Added:**
+
+* A tool to inject metadata using the preprocessors.
+
+* Add dependency on the pyopenxl
+
+**Changed:**
+
+* Translation of scan plans no longer injects the sample metadata
+
+**Removed:**
+
+* Remove dependency on the xlrd
+
+**Fixed:**
+
+* Fix the bug that bsui cannot start because of the importing from pyFAI.gui
+
+* Fix the bug that translation of samples and plans can give None or a list unexpectedly
+
+* Fix the bug that the sample metadata is not injected in the start documents.
 
 
 v0.11.0
@@ -87,8 +108,8 @@ v0.9.0
 **Changed:**
 
 * `endbeamtime` process renames the local `xpdUser` to
-  `xpdUser_<archive_name>` first before archiving and transferring 
-  file to remote location. This is to make sure the next beamtime 
+  `xpdUser_<archive_name>` first before archiving and transferring
+  file to remote location. This is to make sure the next beamtime
   will not be blocked by the backup process of last beamtime.
 
 **Fixed:**
@@ -132,7 +153,7 @@ v0.8.2
 
 **Changed:**
 
-* ``Beamtime.robot_location_number`` takes in a geometry to specify the sample 
+* ``Beamtime.robot_location_number`` takes in a geometry to specify the sample
   geometry
 * Reduce summary field of callable argument in ``ScanPlan`` with only
   its ``__name__``. Before it use ``__repr__`` which includes hash and
@@ -199,7 +220,7 @@ v0.7.2
 
 **Added:**
 
-* Changelogs are now displayed in the docs homepage and 
+* Changelogs are now displayed in the docs homepage and
   as their own page.
 * xrun now can take a list of scans and run them in order
 * Preliminary robot functionality, requiring location information
@@ -209,7 +230,7 @@ v0.7.2
 
 * Moved to configuration file driven ``xpdacq_conf.py`` for greater flexability
 * All doc ``rst`` files are passed through a jinja2 renderer
-  before being built into docs. This will allow for greater 
+  before being built into docs. This will allow for greater
   flexability while writing the docs.
 
 
