@@ -190,6 +190,25 @@
 <h1>xpdAcq Change Log<a class="headerlink" href="#xpdacq-change-log" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="v0-12-0">
 <h2>v0.12.0<a class="headerlink" href="#v0-12-0" title="Permalink to this headline">¶</a></h2>
+<p><strong>Added:</strong></p>
+<ul class="simple">
+<li><p>A tool to inject metadata using the preprocessors.</p></li>
+<li><p>Add dependency on the pyopenxl</p></li>
+</ul>
+<p><strong>Changed:</strong></p>
+<ul class="simple">
+<li><p>Translation of scan plans no longer injects the sample metadata</p></li>
+</ul>
+<p><strong>Removed:</strong></p>
+<ul class="simple">
+<li><p>Remove dependency on the xlrd</p></li>
+</ul>
+<p><strong>Fixed:</strong></p>
+<ul class="simple">
+<li><p>Fix the bug that bsui cannot start because of the importing from pyFAI.gui</p></li>
+<li><p>Fix the bug that translation of samples and plans can give None or a list unexpectedly</p></li>
+<li><p>Fix the bug that the sample metadata is not injected in the start documents.</p></li>
+</ul>
 </div>
 <div class="section" id="v0-11-0">
 <h2>v0.11.0<a class="headerlink" href="#v0-11-0" title="Permalink to this headline">¶</a></h2>
