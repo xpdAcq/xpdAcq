@@ -914,8 +914,8 @@ class ScanPlan(ValidatedDictLike, YamlChainMap, ABC):
         )
         # bound_arguments.apply_defaults() # only valid in py 3.5
         complete_kwargs = bound_arguments.arguments
-        # remove place holder for [pe1c]
-        complete_kwargs.popitem(False)
+        # remove place holder for "dets"
+        complete_kwargs.pop("dets")
         # replace callable objects, with its func name
         for k, v in complete_kwargs.items():
             if callable(v):
