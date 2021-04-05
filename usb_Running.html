@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Running scans &mdash; xpdAcq 0.12.0 documentation</title>
@@ -210,7 +211,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="running-scans">
+  <section id="running-scans">
 <span id="usb-running"></span><h1>Running scans<a class="headerlink" href="#running-scans" title="Permalink to this headline">¶</a></h1>
 <p>The hard work of the experimental setup is now done.  It involved creating all the
 rich metadata container and ScanPlan objects, but with this in the past it makes
@@ -316,7 +317,7 @@ to get the first data-set.</p>
 <span class="go">generator count [&#39;0beaaf&#39;] (scan num: 8)</span>
 </pre></div>
 </div>
-<div class="section" id="automated-dark-collection">
+<section id="automated-dark-collection">
 <span id="auto-dark"></span><h2>Automated dark collection<a class="headerlink" href="#automated-dark-collection" title="Permalink to this headline">¶</a></h2>
 <p>You might have found something weird when you ran the <code class="docutils literal notranslate"><span class="pre">xrun</span></code> command:</p>
 <p><em>I only requested one ``xrun`` but the program runs two scans</em></p>
@@ -325,7 +326,7 @@ to get the first data-set.</p>
 When you are running your experiment, <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> checks if you have
 collected a <strong>fresh and appropriate</strong> dark frame every time it collects a scan.
 The definition of <strong>fresh and appropriate</strong> is:</p>
-<div class="section" id="nice-and-fresh">
+<section id="nice-and-fresh">
 <h3><strong>Nice and fresh</strong><a class="headerlink" href="#nice-and-fresh" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Given a certain period T (``dark window``), there exists a dark frame
@@ -358,16 +359,16 @@ This can take values between 0.1s to 5s.</p></li>
 <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> to do automated dark frame subtraction when you pull out data from the
 centralized <strong>NSLS-II</strong> server.</p>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="automated-calibration-capture">
+</section>
+</section>
+<section id="automated-calibration-capture">
 <span id="auto-calib"></span><h2>Automated calibration capture<a class="headerlink" href="#automated-calibration-capture" title="Permalink to this headline">¶</a></h2>
 <p>Often times, keeping track of which calibration file is associated with a specific scan is very tiring. <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> makes this easier or you. Before every
 scan is being collected, the program goes to grab the most recent calibration
 parameters in <code class="docutils literal notranslate"><span class="pre">xpdUser/config_base</span></code> and load them as part of the
 metadata so that you can reference them whenever you want, and make in-situ data
 reduction possible!</p>
-<div class="section" id="quick-guide-of-calibration-steps-with-pyfai">
+<section id="quick-guide-of-calibration-steps-with-pyfai">
 <span id="calib-manual"></span><h3>Quick guide of calibration steps with pyFAI<a class="headerlink" href="#quick-guide-of-calibration-steps-with-pyfai" title="Permalink to this headline">¶</a></h3>
 <p>1. We assume that you have run <code class="docutils literal notranslate"><span class="pre">run_calibration()</span></code> in the <code class="docutils literal notranslate"><span class="pre">collection</span></code> window
 with Ni as your calibrant.  This will automatically expose the Ni, and after a
@@ -432,9 +433,9 @@ Return to the <code class="docutils literal notranslate"><span class="pre">Quick
 <blockquote>
 <div><a class="reference internal image-reference" href="_images/calib_09.png"><img alt="_images/calib_09.png" class="align-center" src="_images/calib_09.png" style="width: 400px; height: 300px;" /></a>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="sample-metadata-imported-from-spreadsheet">
+</section>
+</section>
+<section id="sample-metadata-imported-from-spreadsheet">
 <span id="import-sample"></span><h2>Sample metadata imported from spreadsheet<a class="headerlink" href="#sample-metadata-imported-from-spreadsheet" title="Permalink to this headline">¶</a></h2>
 <p>In order to facilitate retrospective operation on data, we suggest you to enter
 as much information as you can and that is the main philosophy behind <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code>.</p>
@@ -450,7 +451,7 @@ directory. Then the import process is simply:</p>
 <p><code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> will grab the <code class="docutils literal notranslate"><span class="pre">saf_number</span></code> and <code class="docutils literal notranslate"><span class="pre">bt</span></code> for current beamtime, so make sure you have your spreadsheet named with proper format. For example, if your SAF number is <code class="docutils literal notranslate"><span class="pre">300179</span></code>, then you should have your pre-populated spreadsheet with the name as <code class="docutils literal notranslate"><span class="pre">300179_sample.xls</span></code>, sit inside <code class="docutils literal notranslate"><span class="pre">xpdUser/import</span></code> directory.</p>
 <p>To parse the information filled inside your spreadsheet, we have designed
 several rules and here are the explanation to each of the rules.</p>
-<div class="section" id="comma-separated-fields">
+<section id="comma-separated-fields">
 <h3>comma separated fields<a class="headerlink" href="#comma-separated-fields" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Files with information entities are separated by a comma <code class="docutils literal notranslate"><span class="pre">,</span></code>.</p>
@@ -477,8 +478,8 @@ several rules and here are the explanation to each of the rules.</p>
 <p>And a search on either <code class="docutils literal notranslate"><span class="pre">background</span></code> or``standard`` later on will include
 this header.</p>
 </div></blockquote>
-</div>
-<div class="section" id="name-fields">
+</section>
+<section id="name-fields">
 <h3>name fields<a class="headerlink" href="#name-fields" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Fields that are used to store a person’s name in <code class="docutils literal notranslate"><span class="pre">first</span> <span class="pre">name</span> <span class="pre">last</span> <span class="pre">name</span></code> format.</p>
@@ -508,8 +509,8 @@ this header.</p>
 <p>A search on either <code class="docutils literal notranslate"><span class="pre">Maxwell</span></code> or <code class="docutils literal notranslate"><span class="pre">Terban</span></code> or <code class="docutils literal notranslate"><span class="pre">Benjamin</span></code> or <code class="docutils literal notranslate"><span class="pre">Frandsen</span></code>
 later will include this header.</p>
 </div></blockquote>
-</div>
-<div class="section" id="phase-string">
+</section>
+<section id="phase-string">
 <h3>phase string<a class="headerlink" href="#phase-string" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Field used to specify the phase information and chemical composition of your
@@ -546,8 +547,8 @@ used. Under <code class="docutils literal notranslate"><span class="pre">xpdAcq<
 <p>As before, a search on <code class="docutils literal notranslate"><span class="pre">Na</span></code> or <code class="docutils literal notranslate"><span class="pre">Cl</span></code> or <code class="docutils literal notranslate"><span class="pre">H</span></code> or <code class="docutils literal notranslate"><span class="pre">O</span></code> will include this
 header. Also a search on <code class="docutils literal notranslate"><span class="pre">Nacl=0.09</span></code> will include this header as well.</p>
 </div></blockquote>
-</div>
-<div class="section" id="dictionary-like-fields">
+</section>
+<section id="dictionary-like-fields">
 <h3>dictionary-like fields<a class="headerlink" href="#dictionary-like-fields" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Fields that are utilized to store information as <code class="docutils literal notranslate"><span class="pre">key-value</span> <span class="pre">pair</span></code> format.
@@ -570,8 +571,8 @@ sample phases</p></td>
 </pre></div>
 </div>
 </div></blockquote>
-</div>
-<div class="section" id="sample-objects">
+</section>
+<section id="sample-objects">
 <h3>Sample Objects<a class="headerlink" href="#sample-objects" title="Permalink to this headline">¶</a></h3>
 <ul>
 <li><p><strong>Sample</strong>:</p>
@@ -649,9 +650,9 @@ linked with background <code class="docutils literal notranslate"><span class="p
 the automated data-reduction workflow that we will have in the future!</p>
 </li>
 </ul>
-</div>
-</div>
-<div class="section" id="auto-masking">
+</section>
+</section>
+<section id="auto-masking">
 <span id="auto-mask"></span><h2>Auto-masking<a class="headerlink" href="#auto-masking" title="Permalink to this headline">¶</a></h2>
 <p>Masking can be a tedious process, requiring long hours judging which pixels
 are good and which need to be removed. The our automated masking software aims
@@ -662,7 +663,7 @@ created for a low scattering sample (usually kapton). Then this mask is reused
 for each subsequent image taken with the same detector position. The second
 modality is that each image gets is own bespoke mask, potentially derived from
 the low scattering mask.</p>
-<div class="section" id="applied-masks">
+<section id="applied-masks">
 <h3>Applied masks<a class="headerlink" href="#applied-masks" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple" start="0">
 <li><dl class="simple">
@@ -710,11 +711,11 @@ alpha is 3 standard deviations.</p>
 </dl>
 </li>
 </ol>
-</div>
-</div>
-<div class="section" id="client-server-metadata-schema">
+</section>
+</section>
+<section id="client-server-metadata-schema">
 <span id="client-server-md"></span><h2>client/server metadata schema<a class="headerlink" href="#client-server-metadata-schema" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="overview-with-an-example">
+<section id="overview-with-an-example">
 <h3>Overview with an example<a class="headerlink" href="#overview-with-an-example" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">client/server</span></code> schema associate different data with a centralized
 mapping, which would allow a more flexible way to link data. Let’s take
@@ -738,8 +739,8 @@ to defining experimental geometry, such as wavelength, was known to be in accura
 <p>The <code class="docutils literal notranslate"><span class="pre">client/server</span></code> logic can be extended to other kinds of mapping as well.
 Currently, <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> utilizes this logic in associating calibration runs with
 production runs.</p>
-</div>
-<div class="section" id="when-and-how-to-change-exp-hash-uid">
+</section>
+<section id="when-and-how-to-change-exp-hash-uid">
 <h3>when and how to change <code class="docutils literal notranslate"><span class="pre">exp_hash_uid</span></code>?<a class="headerlink" href="#when-and-how-to-change-exp-hash-uid" title="Permalink to this headline">¶</a></h3>
 <p>It’s strongly suggested to update the <code class="docutils literal notranslate"><span class="pre">exp_hash_uid</span></code> whenever there is
 a sensible change to your experimental setup, for example, different detectors,
@@ -766,9 +767,9 @@ and outside the hutch, synchrotron beam current to ambient temperature, as a
 unique identifier, <code class="docutils literal notranslate"><span class="pre">uid</span></code>. Therefore, this identifier could be use for mapping
 data that shares common experiment related factors.</p>
 </div>
-</div>
-</div>
-<div class="section" id="user-defined-folder-tag">
+</section>
+</section>
+<section id="user-defined-folder-tag">
 <span id="folder-tag"></span><h2>User defined folder tag<a class="headerlink" href="#user-defined-folder-tag" title="Permalink to this headline">¶</a></h2>
 <p>You can also add metadata to the run by adding key word arguments to the run eg
 <code class="docutils literal notranslate"><span class="pre">xrun(0,</span> <span class="pre">8,</span> <span class="pre">my_scan_tag='hello</span> <span class="pre">world')</span></code>. Some pieces of metadata are special,
@@ -779,8 +780,8 @@ the list
 (eg <code class="docutils literal notranslate"><span class="pre">&lt;.../tiff_base/after_saxs/Ni/billinge/mask/file_name&gt;</span></code> for an experiment
 on Nickel run by the Billinge group).</p>
 <p>Let’s <a class="reference internal" href="usb_QuickAssess.html#usb-quickassess"><span class="std std-ref">take a quick look at our data</span></a></p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

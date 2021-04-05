@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Initial assessment of your data &mdash; xpdAcq 0.12.0 documentation</title>
@@ -187,9 +188,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="initial-assessment-of-your-data">
+  <section id="initial-assessment-of-your-data">
 <span id="usb-quickassess"></span><h1>Initial assessment of your data<a class="headerlink" href="#initial-assessment-of-your-data" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="saving-tiff-files">
+<section id="saving-tiff-files">
 <h2>Saving tiff files<a class="headerlink" href="#saving-tiff-files" title="Permalink to this headline">¶</a></h2>
 <p>The most obvious way of accessing your data is to pull them from centralized
 server and save them into your working directory. As we have mentioned in
@@ -216,8 +217,8 @@ for basic information.</p>
 <p><code class="docutils literal notranslate"><span class="pre">db</span></code> stands for <code class="docutils literal notranslate"><span class="pre">databroker</span></code> which is another
 <em>awesome</em> software package developed by NSLS-II software team. For more information, please see
 <a class="reference external" href="https://nsls-ii.github.io/databroker/">here</a></p>
-</div>
-<div class="section" id="automated-dark-subtraction">
+</section>
+<section id="automated-dark-subtraction">
 <h2>Automated dark subtraction<a class="headerlink" href="#automated-dark-subtraction" title="Permalink to this headline">¶</a></h2>
 <p>Like we have mentioned at <a class="reference internal" href="usb_Running.html#auto-dark"><span class="std std-ref">Automated dark collection</span></a>, <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code>
 helps you keep track of appropriate dark frames. With <code class="docutils literal notranslate"><span class="pre">auto_dark</span></code> set to True,
@@ -228,8 +229,8 @@ frames when you save your tiffs.</p>
 <span class="n">save_tiff</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dark_sub_bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="save-images-and-also-integrate-images-to-a-1d-patterns">
+</section>
+<section id="save-images-and-also-integrate-images-to-a-1d-patterns">
 <h2>Save images and also integrate images to a 1D patterns<a class="headerlink" href="#save-images-and-also-integrate-images-to-a-1d-patterns" title="Permalink to this headline">¶</a></h2>
 <p><strong>save your images and also integrate to a 1D pattern:</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">integrate_and_save_last</span><span class="p">()</span>   <span class="c1"># the most recent scan</span>
@@ -252,8 +253,8 @@ The metadata associated with the image will be saved to a <code class="docutils 
 text file and can be opened with a text editor.  Masking and calibration behavior
 can be modified by overriding the default function arguments.  Type, for example, <code class="docutils literal notranslate"><span class="pre">integrate_and_save_last?</span></code>
 to see the allowed values.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
