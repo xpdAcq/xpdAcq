@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Using the Robot &mdash; xpdAcq 0.12.0 documentation</title>
@@ -189,14 +188,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="using-the-robot">
+  <div class="section" id="using-the-robot">
 <span id="robot"></span><h1>Using the Robot<a class="headerlink" href="#using-the-robot" title="Permalink to this headline">¶</a></h1>
 <p>XPD is equipped with a sample loading robot, which requires special syntax to use properly.</p>
-<section id="load-data-into-bt-as-usual">
+<div class="section" id="load-data-into-bt-as-usual">
 <h2>0. Load data into <code class="docutils literal notranslate"><span class="pre">bt</span></code> as usual<a class="headerlink" href="#load-data-into-bt-as-usual" title="Permalink to this headline">¶</a></h2>
 <p>Follow the normal routine for loading data from the sample spreadsheet from <a href="#id1"><span class="problematic" id="id2">import_sample_</span></a>.</p>
-</section>
-<section id="tell-bt-about-where-the-samples-are-loaded-in-the-robot-magazine">
+</div>
+<div class="section" id="tell-bt-about-where-the-samples-are-loaded-in-the-robot-magazine">
 <h2>1. Tell <code class="docutils literal notranslate"><span class="pre">bt</span></code> about where the samples are loaded in the robot magazine<a class="headerlink" href="#tell-bt-about-where-the-samples-are-loaded-in-the-robot-magazine" title="Permalink to this headline">¶</a></h2>
 <p>To use the robot properly <code class="docutils literal notranslate"><span class="pre">bt</span></code> needs to know where the samples are loaded.
 This is achieved by running <code class="docutils literal notranslate"><span class="pre">bt.robot_location_number()</span></code>.
@@ -206,8 +205,8 @@ If the sample is not in the magazine that’s ok just leave the prompt</p>
 <blockquote>
 <div><p>blank and hit <code class="docutils literal notranslate"><span class="pre">&lt;enter&gt;</span></code>.</p>
 </div></blockquote>
-</section>
-<section id="run-xrun-with-the-robot-flag">
+</div>
+<div class="section" id="run-xrun-with-the-robot-flag">
 <h2>2. Run <code class="docutils literal notranslate"><span class="pre">xrun</span></code> with the robot flag<a class="headerlink" href="#run-xrun-with-the-robot-flag" title="Permalink to this headline">¶</a></h2>
 <p>To run the scans run
 <code class="docutils literal notranslate"><span class="pre">run(&lt;list</span> <span class="pre">of</span> <span class="pre">sample</span> <span class="pre">numbers&gt;,</span> <span class="pre">&lt;scan</span> <span class="pre">number&gt;,</span> <span class="pre">robot=True)</span></code>.
@@ -219,8 +218,8 @@ executing.</p>
 </pre></div>
 </div>
 </div></blockquote>
-</section>
-<section id="advanced-usage">
+</div>
+<div class="section" id="advanced-usage">
 <h2>Advanced usage<a class="headerlink" href="#advanced-usage" title="Permalink to this headline">¶</a></h2>
 <p>The robot and <code class="docutils literal notranslate"><span class="pre">xrun</span></code> are more flexible than just running one scan.
 Multiple scans can be run per sample.</p>
@@ -237,8 +236,8 @@ Don’t worry about listing a sample multiple times in a row,
 we won’t unload and reload the same sample.
 If samples not in a row, eg. <code class="docutils literal notranslate"><span class="pre">[3,</span> <span class="pre">4,</span> <span class="pre">5,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5]</span></code> we <em>will</em> uload and reload
 the samples.</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>ScanPlan objects &mdash; xpdAcq 0.12.0 documentation</title>
@@ -187,7 +186,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="scanplan-objects">
+  <div class="section" id="scanplan-objects">
 <span id="usb-scan"></span><h1>ScanPlan objects<a class="headerlink" href="#scanplan-objects" title="Permalink to this headline">¶</a></h1>
 <p>Firstly, what is a scanplan?  A scanplan is a grouped set of detector exposures.  The set may
 contain just one exposure (we call that a count scan, <code class="docutils literal notranslate"><span class="pre">'ct'</span></code> ).  Or it may be a series of exposures
@@ -214,7 +213,7 @@ in the metadata for each exposure.</p>
 What we do is that we <strong>create a new ScanPlan object</strong>,
 every time we want to do a different, <em>even slightly different</em>, scan. These are all
 saved for reload and will be sent home with you at the end of the experiment.</p>
-<section id="setting-up-scanplans">
+<div class="section" id="setting-up-scanplans">
 <h2>Setting up ScanPlans<a class="headerlink" href="#setting-up-scanplans" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ScanPlan</span></code> takes <code class="docutils literal notranslate"><span class="pre">Beamtime</span></code>, scanplan and corresponding arguments. Let’s type <code class="docutils literal notranslate"><span class="pre">ScanPlan?</span></code> and hit return to find out more:</p>
 <dl class="py function">
@@ -268,8 +267,8 @@ controller equilibrates at each of the temperatures.</p></li>
 </ul>
 </dd>
 </dl>
-</section>
-<section id="summary-table-on-scanplan">
+</div>
+<div class="section" id="summary-table-on-scanplan">
 <h2>Summary table on ScanPlan:<a class="headerlink" href="#summary-table-on-scanplan" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><table class="docutils align-default">
@@ -305,8 +304,8 @@ controller equilibrates at each of the temperatures.</p></li>
 </table>
 </div></blockquote>
 <p>OK, it is time to <a class="reference internal" href="usb_Running.html#usb-running"><span class="std std-ref">run our scans</span></a></p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

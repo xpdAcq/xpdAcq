@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Databroker Export &mdash; xpdAcq 0.12.0 documentation</title>
@@ -188,11 +187,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="databroker-export">
+  <div class="section" id="databroker-export">
 <h1>Databroker Export<a class="headerlink" href="#databroker-export" title="Permalink to this headline">¶</a></h1>
 <p>Exporting a databroker is a good way to take your raw data home so it can be
 analyzed after the fact.</p>
-<section id="the-easy-way">
+<div class="section" id="the-easy-way">
 <h2>The easy way<a class="headerlink" href="#the-easy-way" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li><p>Mount your drive which you are going to store the data on</p></li>
@@ -215,8 +214,8 @@ analyzed after the fact.</p>
 <li><p>Shut down the server once it is done copying files (use <code class="docutils literal notranslate"><span class="pre">Ctrl+C</span></code>)</p></li>
 <li><p>Unmount your drive</p></li>
 </ol>
-</section>
-<section id="the-hard-way">
+</div>
+<div class="section" id="the-hard-way">
 <h2>The hard way<a class="headerlink" href="#the-hard-way" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li><p>Mount your drive which you are going to store the data on</p></li>
@@ -256,8 +255,8 @@ analyzed after the fact.</p>
 <ol class="arabic simple" start="7">
 <li><p>Once finished unmount your drive</p></li>
 </ol>
-</section>
-<section id="finding-the-headers">
+</div>
+<div class="section" id="finding-the-headers">
 <h2>Finding the headers<a class="headerlink" href="#finding-the-headers" title="Permalink to this headline">¶</a></h2>
 <p>Make certain that you have all the headers you want otherwise you may need to
 do this all over again.
@@ -279,8 +278,8 @@ Here is an example</p>
 <span class="n">hdrs</span> <span class="o">+=</span> <span class="p">[</span><span class="n">db</span><span class="p">[</span><span class="n">hdr</span><span class="o">.</span><span class="n">start</span><span class="p">[</span><span class="s1">&#39;sc_dk_field_uid&#39;</span><span class="p">]]</span> <span class="k">for</span> <span class="n">hdr</span> <span class="ow">in</span> <span class="n">hdrs</span> <span class="k">if</span> <span class="s1">&#39;sc_dk_field_uid&#39;</span> <span class="ow">in</span> <span class="n">hdr</span><span class="o">.</span><span class="n">start</span><span class="p">]</span>
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
