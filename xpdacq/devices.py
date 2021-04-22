@@ -4,6 +4,7 @@ from ophyd.device import Component as Cpt
 
 
 class CalibrationData(Device):
+    """A device to hold pyFAI calibration data."""
     dist = Cpt(Signal, value=1., kind='config')
     poni1 = Cpt(Signal, value=0., kind='config')
     poni2 = Cpt(Signal, value=0., kind='config')
