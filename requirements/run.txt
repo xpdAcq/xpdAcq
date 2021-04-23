@@ -9,3 +9,6 @@ databroker
 ophyd
 xpdconf
 xpdsim
+bluesky-darkframes
+scikit-image
+pyopencl
