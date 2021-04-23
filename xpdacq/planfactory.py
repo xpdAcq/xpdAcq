@@ -44,9 +44,8 @@ def config_calib_by_ai(cb: CalibrationData, ai: pyFAI.AzimuthalIntegrator) -> tp
         The bluesky message.
     """
     sts = yield from bps.mv(cb.dist, ai.dist, cb.poni1, ai.poni1, cb.poni2, ai.poni2, cb.rot1, ai.rot1, cb.rot2,
-                            ai.rot2,
-                            cb.rot3, ai.rot3, cb.detector, ai.detector, cb.wavelength, ai.wavelength, cb.pixel1,
-                            ai.pixel1, cb.pixel2, ai.pixel2)
+                            ai.rot2, cb.rot3, ai.rot3, cb.detector, ai.detector.name, cb.wavelength, ai.wavelength,
+                            cb.pixel1, ai.pixel1, cb.pixel2, ai.pixel2)
     return sts
 
 
@@ -239,7 +238,7 @@ class BasicPlans:
             md = {}
         if not pyfai_kwargs:
             pyfai_kwargs = {}
-        pyfai_kwargs.setdefault("detector", "perkin_elmer")
+        pyfai_kwargs.setdefault("detector", "Perkin detector")
         pyfai_kwargs.setdefault("calibrant", resource_filename("xpdacq", "data/Ni24.D"))
         _md = {
             "is_calibration": True,
