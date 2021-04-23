@@ -146,6 +146,26 @@ class BasicPlans:
         self.rel_spiral_fermat = kwargs_wrapper(bp.rel_spiral_fermat, per_step=self.one_nd_step)
         self.rel_spiral_square = kwargs_wrapper(bp.rel_spiral_square, per_step=self.one_nd_step)
 
+    @staticmethod
+    def config_calib_by_poni(calib_cpt: CalibrationData, poni_file: str):
+        """Configure the CalibrationData using the info in a poni file.
+
+        Parameters
+        ----------
+        calib_cpt : CalibrationData
+            The CalibrationData component to be configured.
+        poni_file : str
+            The path to the poni file.
+
+        Yields
+        ------
+        Msg : Msg
+            The plan message.
+        """
+        ai = pyFAI.load(poni_file)
+        sts = yield from config_calib_by_ai(calib_cpt, ai)
+        return sts
+
     def trigger_and_read(self, devices: tp.Iterable[ophyd.Device], name="primary"):
         """
         Trigger and read a list of detectors and bundle readings into one Event, like

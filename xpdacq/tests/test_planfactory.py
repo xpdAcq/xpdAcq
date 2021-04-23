@@ -1,13 +1,15 @@
 import pyFAI
 from bluesky.simulators import summarize_plan
+from pkg_resources import resource_filename
 
 from xpdacq.planfactory import BasicPlans, MultiDistPlans
 
 
-def test_BasicPlans(fake_devices, db):
+def test_BasicPlans(fake_devices, db, calib_data):
     xbp = BasicPlans(fake_devices.motor1, 0, 1, db)
     summarize_plan(xbp.count([fake_devices.det1], 2))
     summarize_plan(xbp.grid_scan([fake_devices.det1], fake_devices.motor2, 2, 3, 2))
+    summarize_plan(xbp.config_calib_by_poni(calib_data, resource_filename("xpdacq", "tests/Ni_poni_file.poni")))
 
 
 def test_MultiDistPlans(fake_devices, calib_data, db):
