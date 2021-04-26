@@ -27,7 +27,7 @@ def kwargs_wrapper(func: tp.Callable, **kwargs) -> tp.Callable:
     return _func
 
 
-def config_calib_by_ai(cb: CalibrationData, ai: pyFAI.AzimuthalIntegrator) -> tp.Generator:
+def config_by_ai(cb: CalibrationData, ai: pyFAI.AzimuthalIntegrator) -> tp.Generator:
     """Configure the calibration data in an area detector using the AzimuthalIntegrator.
 
     Parameters
@@ -43,10 +43,11 @@ def config_calib_by_ai(cb: CalibrationData, ai: pyFAI.AzimuthalIntegrator) -> tp
     Msg : Msg
         The bluesky message.
     """
-    sts = yield from bps.mv(cb.dist, ai.dist, cb.poni1, ai.poni1, cb.poni2, ai.poni2, cb.rot1, ai.rot1, cb.rot2,
-                            ai.rot2, cb.rot3, ai.rot3, cb.detector, ai.detector.name, cb.wavelength, ai.wavelength,
-                            cb.pixel1, ai.pixel1, cb.pixel2, ai.pixel2)
-    return sts
+    return (
+        yield from bps.configure(cb, {"dist": ai.dist, "poni1": ai.poni1, "poni2": ai.poni2, "rot1": ai.rot1,
+                                      "rot2": ai.rot2, "rot3": ai.rot3, "detector": ai.detector.name,
+                                      "wavelength": ai.wavelength, "pixel1": ai.pixel1, "pixel2": ai.pixel2})
+    )
 
 
 def _mean(lst: tp.Iterable) -> tp.Any:
@@ -146,7 +147,7 @@ class BasicPlans:
         self.rel_spiral_square = kwargs_wrapper(bp.rel_spiral_square, per_step=self.one_nd_step)
 
     @staticmethod
-    def config_calib_by_poni(calib_cpt: CalibrationData, poni_file: str):
+    def config_by_poni(calib_cpt: CalibrationData, poni_file: str):
         """Configure the CalibrationData using the info in a poni file.
 
         Parameters
@@ -162,8 +163,7 @@ class BasicPlans:
             The plan message.
         """
         ai = pyFAI.load(poni_file)
-        sts = yield from config_calib_by_ai(calib_cpt, ai)
-        return sts
+        return (yield from config_by_ai(calib_cpt, ai))
 
     def trigger_and_read(self, devices: tp.Iterable[ophyd.Device], name="primary"):
         """
@@ -254,7 +254,7 @@ class BasicPlans:
             geometries.append(ai)
         if config_det:
             for cb, ai in zip(calib_cpts, geometries):
-                yield from config_calib_by_ai(cb, ai)
+                yield from config_by_ai(cb, ai)
         return geometries
 
 
@@ -324,5 +324,5 @@ class MultiDistPlans(BasicPlans):
         """Take reading of devices."""
         for position, stream, geometry in zip(self.positions, self.streams, self.geometries):
             yield from bps.mv(self.motor, position)
-            yield from config_calib_by_ai(self.calib_cpt, geometry)
+            yield from config_by_ai(self.calib_cpt, geometry)
             yield from self.trigger_and_read(devices, name=stream)
