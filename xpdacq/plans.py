@@ -7,6 +7,7 @@ import ophyd
 import pyFAI
 import subprocess
 import typing as tp
+from bluesky_darkframes import DarkFramePreprocessor, SnapshotDevice
 from databroker import Header, Broker
 from pathlib import Path
 from pkg_resources import resource_filename
@@ -99,7 +100,7 @@ def run_pyfai_calib2(run: Header, data_key: str, output_dir: str = "xpdacq_calib
     return ai
 
 
-class BasicPlans:
+class XrayBasicPlans:
     """The basic plans for measurements."""
 
     def __init__(self, shutter: ophyd.Device, shutter_open: tp.Any, shutter_close: tp.Any, db: Broker):
@@ -165,6 +166,13 @@ class BasicPlans:
         ai = pyFAI.load(poni_file)
         return (yield from config_by_ai(calib_cpt, ai))
 
+    def shutter_wrapper(self, plan: tp.Generator):
+        """Open the shutter at the start and close the shutter at the end."""
+        yield from bps.mv(self.shutter, self.shutter_open)
+        sts = (yield from plan)
+        yield from bps.mv(self.shutter, self.shutter_close)
+        return sts
+
     def trigger_and_read(self, devices: tp.Iterable[ophyd.Device], name="primary"):
         """
         Trigger and read a list of detectors and bundle readings into one Event, like
@@ -186,9 +194,7 @@ class BasicPlans:
         msg : Msg
             messages to 'trigger', 'wait' and 'read'
         """
-        yield from bps.mv(self.shutter, self.shutter_open)
-        yield from bps.trigger_and_read(devices, name=name)
-        yield from bps.mv(self.shutter, self.shutter_close)
+        return (yield from self.shutter_wrapper(bps.trigger_and_read(devices, name=name)))
 
     def take_reading(self, devices: tp.Iterable[ophyd.Device]) -> tp.Generator:
         """
@@ -208,7 +214,7 @@ class BasicPlans:
         msg : Msg
             messages to 'trigger', 'wait' and 'read'
         """
-        yield from self.trigger_and_read(devices)
+        return (yield from self.trigger_and_read(devices))
 
     def calibrate(self, detectors: tp.List[ophyd.Device], calib_cpts: tp.List[CalibrationData], *,
                   output_dir: str = "xpdacq_calib", config_det: bool = True, pyfai_kwargs=None, md=None):
@@ -257,8 +263,53 @@ class BasicPlans:
                 yield from config_by_ai(cb, ai)
         return geometries
 
+    def dark_plan(self, detector):
+        """The plan to take dark."""
+        # Restage to ensure that dark frames goes into a separate file.
+        yield from bps.unstage(detector)
+        yield from bps.stage(detector)
+        yield from bps.mv(self.shutter, self.shutter_close)
+        # The `group` parameter passed to trigger MUST start with
+        # bluesky-darkframes-trigger.
+        yield from bps.trigger(detector, group='bluesky-darkframes-trigger')
+        yield from bps.wait('bluesky-darkframes-trigger')
+        snapshot = SnapshotDevice(detector)
+        yield from bps.mv(self.shutter, self.shutter_open)
+        # Restage.
+        yield from bps.unstage(detector)
+        yield from bps.stage(detector)
+        return snapshot
 
-class MultiDistPlans(BasicPlans):
+    def create_dark_frame_preprocessor(self, *, detector: ophyd.Device, max_age: float,
+                                       locked_signals: tp.List[ophyd.Signal] = None, limit: int = None,
+                                       stream_name: str = "dark"):
+        """Create a dark frame preprocessor. Used in a way `dark_frame_preprocessor(plan)`.
+
+        Specifically this adds a new Event stream, named 'dark' by default. It
+        inserts one Event with a reading that contains a 'dark' frame. The same
+        reading may be used across multiple runs, depending on the rules for when a
+        dark frame is taken.
+
+        Parameters
+        ----------
+        detector: Device
+            The detector used to take dark image.
+        max_age: float
+            Time after which a fresh dark frame should be acquired
+        locked_signals: Iterable, optional
+            Any changes to these signals invalidate the current dark frame and
+            prompt us to take a new one. Typical examples would be exposure time or
+            gain, anything that changes the expected dark frame.
+        limit: integer or None, optional
+            Number of dark frames to cache. If None, do not limit.
+        stream_name: string, optional
+            Event stream name for dark frames. Default is 'dark'.
+        """
+        return DarkFramePreprocessor(dark_plan=self.dark_plan, detector=detector, max_age=max_age,
+                                     locked_signals=locked_signals, limit=limit, stream_name=stream_name)
+
+
+class MultiDistPlans(XrayBasicPlans):
     """The wrappers of bluesky plans for a measurement where the detector moves."""
 
     def __init__(self, shutter: ophyd.Device, shutter_open: tp.Any, shutter_close: tp.Any, db: Broker,
