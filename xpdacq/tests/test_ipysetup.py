@@ -11,7 +11,7 @@ from xpdacq.ipysetup import ipysetup
 def test_ipysetup(glbl_yaml, capfd, beamline_config_file):
     with capfd.disabled():
         db = Broker.named("temp")
-        glbl, bt, xrun = ipysetup(
+        glbl, bt, xrun, xbp = ipysetup(
             area_det=xpd_pe1c,
             shutter=shctl1,
             temp_controller=cs700,
@@ -25,3 +25,4 @@ def test_ipysetup(glbl_yaml, capfd, beamline_config_file):
     assert glbl
     assert not bt
     assert xrun
+    assert xbp

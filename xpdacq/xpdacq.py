@@ -13,27 +13,28 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
+from collections import OrderedDict
+
+import bluesky.plan_stubs as bps
+import bluesky.plans as bp
+import bluesky.preprocessors as bpp
 import os
 import time
 import typing
 import uuid
 import warnings
-from collections import OrderedDict
-from itertools import groupby
-from pprint import pprint
-from textwrap import indent
-from typing import Generator
-
-import bluesky.plan_stubs as bps
-import bluesky.plans as bp
-import bluesky.preprocessors as bpp
 import yaml
 from bluesky import RunEngine
 from bluesky.callbacks.broker import verify_files_saved
 from bluesky.preprocessors import pchain
+from bluesky.simulators import summarize_plan
 from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input, single_gen, Msg
+from itertools import groupby, tee
 from ophyd import Device
+from pprint import pprint
+from textwrap import indent
+from typing import Generator
 from xpdconf.conf import XPD_SHUTTER_CONF
 
 from xpdacq.beamtime import Beamtime, ScanPlan
@@ -173,7 +174,7 @@ class CustomizedRunEngine(RunEngine):
         subs: typing.Union[typing.Callable, dict, list] = None,
         *,
         verify_write: bool = False,
-        dark_strategy: typing.Callable = periodic_dark,
+        dark_strategy: typing.Callable = None,
         robot: bool = False,
         ask_before_run: bool = False,
         **metadata_kw
@@ -215,11 +216,9 @@ class CustomizedRunEngine(RunEngine):
             Double check if the data have been written into database. In general data is written in a lossless
             fashion at the NSLS-II. Therefore, False by default.
 
-        dark_strategy: callable, optional.
+        dark_strategy: callable, optional. (deprecated)
 
-            Protocol of taking dark frame during experiment. Default to the logic of matching dark frame and
-            light frame with the sample exposure time and frame rate. Details can be found at
-            ``http://xpdacq.github.io/xpdAcq/usb_Running.html#automated-dark-collection``
+            Protocol of taking dark frame during experiment.
 
         robot: bool, optional
 
@@ -241,7 +240,6 @@ class CustomizedRunEngine(RunEngine):
                 "Robot must be specified at call time, not in"
                 "global metadata"
             )
-        dark_strategy = dark_strategy if glbl["auto_dark"] else None
         shutter_control = (
             xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"]
         ) if glbl["shutter_control"] else None
@@ -255,7 +253,7 @@ class CustomizedRunEngine(RunEngine):
             robot=robot,
             shutter_control=shutter_control,
             dark_strategy=dark_strategy,
-            auto_load_calib=glbl['auto_load_calib']
+            auto_load_calib=False
         )
         # normalize the subs
         _subs = normalize_subs_input(subs) if subs else {}
@@ -265,6 +263,8 @@ class CustomizedRunEngine(RunEngine):
         if robot:
             metadata_kw.update({'robot': True})
         if ask_before_run:
+            duplicated_plan, = tee(grand_plan)
+            summarize_plan(duplicated_plan)
             ip = input("Is this ok? [y]/n")
             if ip.lower() == "n":
                 return
