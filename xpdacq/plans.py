@@ -397,10 +397,8 @@ class BeamtimeHelper:
         The key for the position of samples. Default is the global variable POS_KEYS
     """
 
-    def __init__(self, bt: Beamtime, positioners: Tuple[Any, Any], pos_key: Tuple[str, str] = (
-        "sample_x",
-        "sample_y"
-    )):
+    def __init__(self, bt: Beamtime, positioners: Tuple[Any, Any],
+                 pos_key: Tuple[str, str] = ("sample_x", "sample_y")):
         """
         Initiate the class instance.
         Parameters
