@@ -3,17 +3,23 @@ import functools
 import subprocess
 import typing as tp
 from pathlib import Path
+from pprint import pprint
+from typing import Union, Tuple, Generator, Any
 
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
+import bluesky.preprocessors as bpp
 import numpy as np
 import ophyd
 import pyFAI
+from bluesky.plan_stubs import mv, null
+from bluesky.simulators import summarize_plan
 from bluesky_darkframes import DarkFramePreprocessor, SnapshotDevice
 from databroker import Header, Broker
 from pkg_resources import resource_filename
 from tifffile import TiffWriter
 
+from xpdacq.beamtime import Beamtime, ScanPlan
 from xpdacq.devices import CalibrationData
 
 
@@ -380,23 +386,6 @@ class MultiDistPlans(XrayBasicPlans):
             yield from self.trigger_and_read(devices, name=stream)
 
 
-import bluesky.preprocessors as bpp
-from bluesky.plan_stubs import mv, null
-from bluesky.simulators import summarize_plan
-from pprint import pprint
-from typing import Union, Tuple, Generator, Any
-
-from xpdacq.beamtime import Beamtime, ScanPlan
-
-__all__ = [
-    "BeamtimeHelper"
-]
-POS_KEYS = (
-    "sample_x",
-    "sample_y"
-)
-
-
 class BeamtimeHelper:
     """
     A class helping to tackle with tasks related to samples on a rack during the beam time.
@@ -408,7 +397,10 @@ class BeamtimeHelper:
         The key for the position of samples. Default is the global variable POS_KEYS
     """
 
-    def __init__(self, bt: Beamtime, positioners: Tuple[Any, Any], pos_key: Tuple[str, str] = POS_KEYS):
+    def __init__(self, bt: Beamtime, positioners: Tuple[Any, Any], pos_key: Tuple[str, str] = (
+        "sample_x",
+        "sample_y"
+    )):
         """
         Initiate the class instance.
         Parameters
