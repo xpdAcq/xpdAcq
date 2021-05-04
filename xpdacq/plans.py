@@ -516,10 +516,26 @@ class BeamtimeHelper:
             yield from mv(posy_controller, float(pos_y))
         yield from null()
 
-    def do(self, sample, plan):
-        """Generate a measurement plan for a sample. The steps are
+    def do(self, sample: tp.Union[int, str], plan: tp.Generator) -> tp.Generator:
+        """Generate a measurement plan for a sample.
+
+        The steps are
+
             aim the beam at the sample
             conduct the plan with the sample metadata injected
+
+        Parameters
+        ----------
+        sample :
+            The index or name of the sample.
+
+        plan :
+            The generator of the bluesky plan.
+
+        Yields
+        ------
+        Msg :
+            The plan messages.
         """
         yield from self.aim_at_sample(sample)
         yield from bpp.inject_md_wrapper(plan, md=self.get_sample(sample))
