@@ -1,13 +1,11 @@
 """Set up the objects ipython profile."""
-import databroker
 import typing as tp
+from databroker import Broker
 from ophyd.sim import SynAxis, SynSignalWithRegistry, SynSignalRO
-from xpdconf.conf import XPD_SHUTTER_CONF
 from xpdsim.movers import SimFilterBank
 
 from .beamtime import Beamtime
 from .beamtimeSetup import start_xpdacq
-from .plans import XrayBasicPlans
 from .xpdacq import CustomizedRunEngine
 from .xpdacq_conf import GlblYamlDict
 from .xpdacq_conf import _load_beamline_config
@@ -15,17 +13,16 @@ from .xpdacq_conf import configure_device, _reload_glbl, _set_glbl
 
 
 def ipysetup(
-    *,
     area_det: SynSignalWithRegistry,
     shutter: SynAxis,
     temp_controller: SynAxis,
     filter_bank: SimFilterBank,
     ring_current: SynSignalRO,
-    db: databroker.v1.Broker,
+    db: Broker,
     glbl_yaml: str = None,
     blconfig_yaml: str = None,
     test: bool = False
-) -> tp.Tuple[GlblYamlDict, Beamtime, CustomizedRunEngine, XrayBasicPlans]:
+) -> tp.Tuple[GlblYamlDict, Beamtime, CustomizedRunEngine]:
     """Set up the beamtime, run engine and global configuration.
 
     Parameters
@@ -61,17 +58,14 @@ def ipysetup(
 
     Returns
     -------
-    glbl : dict
+    glbl :
         A dictionary of the global configuration for this beam time. The variable is `~xpdacq.glbl.glbl`.
 
-    bt : Beamtime
+    bt :
         An interface to create, read and update the plans, samples and beam time information.
 
-    xrun : CustomizedRunEngine
+    xrun :
         A customized bluesky run engine to run the plans.
-
-    xbp : XrayBasicPlans
-        The XrayBasicPlans object.
     """
     # configure devices
     configure_device(
@@ -94,13 +88,15 @@ def ipysetup(
     else:
         print("INFO: No Beamtime object.")
     # instantiate xrun without beamtime, like bluesky setup
-    xrun = CustomizedRunEngine(bt)
-    xrun.md["beamline_id"] = glbl.get("beamline_id", "")
-    xrun.md["group"] = glbl.get("group", "")
-    xrun.md["facility"] = glbl.get("facility", "")
-    if blconfig_yaml:
-        xrun.md["beamline_config"] = _load_beamline_config(blconfig_yaml, test=test)
-    # create the xray basic plans
-    xbp = XrayBasicPlans(shutter=shutter, shutter_open=XPD_SHUTTER_CONF["open"],
-                         shutter_close=XPD_SHUTTER_CONF["close"], db=db)
-    return glbl, bt, xrun, xbp
+    xrun = CustomizedRunEngine(None)
+    xrun.md["beamline_id"] = glbl["beamline_id"]
+    xrun.md["group"] = glbl["group"]
+    xrun.md["facility"] = glbl["facility"]
+    if not blconfig_yaml:
+        blconfig_yaml = glbl["blconfig_path"]
+    xrun.md["beamline_config"] = _load_beamline_config(blconfig_yaml, test=test)
+    # insert header to db, either simulated or real
+    xrun.subscribe(db.v1.insert)
+    if bt:
+        xrun.beamtime = bt
+    return glbl, bt, xrun

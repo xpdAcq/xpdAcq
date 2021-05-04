@@ -11,6 +11,10 @@ from xpdacq.ipysetup import ipysetup
 from xpdacq.utils import import_userScriptsEtc, import_sample_info
 from xpdacq.xpdacq_conf import xpd_configuration
 
+pe1c = xpd_pe1c
+
+db = temp()
+
 _start_beamtime = _start_beamtime
 _end_beamtime = _end_beamtime
 import_userScriptsEtc = import_userScriptsEtc
@@ -23,11 +27,8 @@ Tlist = Tlist
 tseries = tseries
 run_calibration = run_calibration
 xpd_configuration = xpd_configuration
-
 print("INFO: Initializing the XPD data acquisition environment ...")
-db = temp()
-pe1c = xpd_pe1c
-glbl, bt, xrun, xbp = ipysetup(
+glbl, bt, xrun = ipysetup(
     area_det=pe1c,
     shutter=shctl1,
     temp_controller=cs700,
@@ -35,20 +36,9 @@ glbl, bt, xrun, xbp = ipysetup(
     ring_current=ring_current,
     db=db
 )
-print("INFO: Initialized glbl, bt, xrun, xbp.")
-
-xrun.subscribe(db.v1.insert)
-print("INFO: subscribe databroker db")
-
+print("INFO: Initialized glbl, bt, xrun.")
 xrun.subscribe(Publisher("localhost:5567", prefix=b'raw'))
 print("INFO: Publish data to localhost port 5567 with prefix 'raw'.")
-
-dark_frame_preprocessor = xbp.create_dark_frame_preprocessor(detector=xpd_pe1c, max_age=3600. * 24,
-                                                             locked_signals=[pe1c.cam.acquire_time,
-                                                                             pe1c.images_per_set])
-xrun.preprocessors.append(dark_frame_preprocessor)
-print("INFO: Append dark_frame_preprocessor")
-
 if Path(glbl["home"]).is_dir():
     os.chdir(glbl["home"])
     print("INFO: Changed home to {}".format(glbl["home"]))
