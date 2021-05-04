@@ -27,10 +27,9 @@ import yaml
 from bluesky import RunEngine
 from bluesky.callbacks.broker import verify_files_saved
 from bluesky.preprocessors import pchain
-from bluesky.simulators import summarize_plan
 from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input, single_gen, Msg
-from itertools import groupby, tee
+from itertools import groupby
 from ophyd import Device
 from pprint import pprint
 from textwrap import indent
@@ -174,7 +173,7 @@ class CustomizedRunEngine(RunEngine):
         subs: typing.Union[typing.Callable, dict, list] = None,
         *,
         verify_write: bool = False,
-        dark_strategy: typing.Callable = None,
+        dark_strategy: typing.Callable = periodic_dark,
         robot: bool = False,
         ask_before_run: bool = False,
         **metadata_kw
@@ -216,9 +215,11 @@ class CustomizedRunEngine(RunEngine):
             Double check if the data have been written into database. In general data is written in a lossless
             fashion at the NSLS-II. Therefore, False by default.
 
-        dark_strategy: callable, optional. (deprecated)
+        dark_strategy: callable, optional.
 
-            Protocol of taking dark frame during experiment.
+            Protocol of taking dark frame during experiment. Default to the logic of matching dark frame and
+            light frame with the sample exposure time and frame rate. Details can be found at
+            ``http://xpdacq.github.io/xpdAcq/usb_Running.html#automated-dark-collection``
 
         robot: bool, optional
 
@@ -240,6 +241,7 @@ class CustomizedRunEngine(RunEngine):
                 "Robot must be specified at call time, not in"
                 "global metadata"
             )
+        dark_strategy = dark_strategy if glbl["auto_dark"] else None
         shutter_control = (
             xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"]
         ) if glbl["shutter_control"] else None
@@ -253,7 +255,7 @@ class CustomizedRunEngine(RunEngine):
             robot=robot,
             shutter_control=shutter_control,
             dark_strategy=dark_strategy,
-            auto_load_calib=False
+            auto_load_calib=glbl['auto_load_calib']
         )
         # normalize the subs
         _subs = normalize_subs_input(subs) if subs else {}
@@ -263,8 +265,6 @@ class CustomizedRunEngine(RunEngine):
         if robot:
             metadata_kw.update({'robot': True})
         if ask_before_run:
-            duplicated_plan, = tee(grand_plan)
-            summarize_plan(duplicated_plan)
             ip = input("Is this ok? [y]/n")
             if ip.lower() == "n":
                 return
