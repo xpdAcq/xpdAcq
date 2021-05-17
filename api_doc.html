@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>API Documentation &mdash; xpdAcq 0.12.0 documentation</title>
@@ -21,6 +22,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
@@ -32,6 +34,8 @@
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="For Beamline Staff" href="beamlinestaff.html" />
@@ -169,13 +173,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="api-documentation">
+  <section id="api-documentation">
 <h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="run-calibration-api-documentation">
+<section id="run-calibration-api-documentation">
 <span id="calib-api"></span><h2>run_calibration API Documentation<a class="headerlink" href="#run-calibration-api-documentation" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt id="xpdacq.calib.run_calibration">
-<code class="sig-prename descclassname"><span class="pre">xpdacq.calib.</span></code><code class="sig-name descname"><span class="pre">run_calibration</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exposure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dark_sub_bool</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibrant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">RE_instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait_for_cal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.calib.run_calibration" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="xpdacq.calib.run_calibration">
+<span class="sig-prename descclassname"><span class="pre">xpdacq.calib.</span></span><span class="sig-name descname"><span class="pre">run_calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exposure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dark_sub_bool</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibrant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">RE_instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait_for_cal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.calib.run_calibration" title="Permalink to this definition">¶</a></dt>
 <dd><p>function to run entire calibration process.</p>
 <p>Entire process includes:</p>
 <ol class="arabic simple">
@@ -229,12 +233,12 @@ pyFAI documentation for all options.</p></li>
 </div>
 </dd></dl>
 
-</div>
-<div class="section" id="xrun-api-documentation">
+</section>
+<section id="xrun-api-documentation">
 <span id="xrun-api"></span><h2>xrun API Documentation<a class="headerlink" href="#xrun-api-documentation" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="xpdacq.xpdacq.CustomizedRunEngine">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">xpdacq.xpdacq.</span></code><code class="sig-name descname"><span class="pre">CustomizedRunEngine</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beamtime</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.xpdacq.CustomizedRunEngine" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="xpdacq.xpdacq.CustomizedRunEngine">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">xpdacq.xpdacq.</span></span><span class="sig-name descname"><span class="pre">CustomizedRunEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beamtime</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.xpdacq.CustomizedRunEngine" title="Permalink to this definition">¶</a></dt>
 <dd><p>A RunEngine customized for XPD workflows.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -244,8 +248,8 @@ beamtime object is linked, index-based syntax will not be allowed.</p>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="xpdacq.xpdacq.CustomizedRunEngine.beamtime">
-<code class="sig-name descname"><span class="pre">beamtime</span></code><a class="headerlink" href="#xpdacq.xpdacq.CustomizedRunEngine.beamtime" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="xpdacq.xpdacq.CustomizedRunEngine.beamtime">
+<span class="sig-name descname"><span class="pre">beamtime</span></span><a class="headerlink" href="#xpdacq.xpdacq.CustomizedRunEngine.beamtime" title="Permalink to this definition">¶</a></dt>
 <dd><p>beamtime object currently associated with this RunEngine instance.</p>
 </dd></dl>
 
@@ -268,8 +272,8 @@ and contain the required keys.</p>
 </pre></div>
 </div>
 <dl class="py method">
-<dt id="xpdacq.xpdacq.CustomizedRunEngine.__call__">
-<code class="sig-name descname"><span class="pre">__call__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">sample:</span> <span class="pre">Union[int,</span> <span class="pre">str,</span> <span class="pre">dict,</span> <span class="pre">list,</span> <span class="pre">tuple],</span> <span class="pre">plan:</span> <span class="pre">Union[int,</span> <span class="pre">str,</span> <span class="pre">Generator,</span> <span class="pre">xpdacq.beamtime.ScanPlan,</span> <span class="pre">list,</span> <span class="pre">tuple],</span> <span class="pre">subs:</span> <span class="pre">Optional[Union[Callable,</span> <span class="pre">dict,</span> <span class="pre">list]]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">*,</span> <span class="pre">verify_write:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">dark_strategy:</span> <span class="pre">Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">periodic_dark&gt;,</span> <span class="pre">robot:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">ask_before_run:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">**metadata_kw</span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.xpdacq.CustomizedRunEngine.__call__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="xpdacq.xpdacq.CustomizedRunEngine.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">sample:</span> <span class="pre">Union[int,</span> <span class="pre">str,</span> <span class="pre">dict,</span> <span class="pre">list,</span> <span class="pre">tuple],</span> <span class="pre">plan:</span> <span class="pre">Union[int,</span> <span class="pre">str,</span> <span class="pre">Generator,</span> <span class="pre">xpdacq.beamtime.ScanPlan,</span> <span class="pre">list,</span> <span class="pre">tuple],</span> <span class="pre">subs:</span> <span class="pre">Optional[Union[Callable,</span> <span class="pre">dict,</span> <span class="pre">list]]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">*,</span> <span class="pre">verify_write:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">dark_strategy:</span> <span class="pre">Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">periodic_dark&gt;,</span> <span class="pre">robot:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">ask_before_run:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">**metadata_kw</span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.xpdacq.CustomizedRunEngine.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute a plan.</p>
 <p>The call is basically the same as the RE. The only difference is that the plan will be mutated and
 preprocessed to incorpate sample meta-data, dark fram stragy and so on. Any keyword arguments other than
@@ -314,12 +318,12 @@ key as the <code class="docutils literal notranslate"><span class="pre">sample</
 
 </dd></dl>
 
-</div>
-<div class="section" id="scanplan-api-documentation">
+</section>
+<section id="scanplan-api-documentation">
 <span id="scanplan-api"></span><h2>ScanPlan API Documentation<a class="headerlink" href="#scanplan-api-documentation" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt id="xpdacq.beamtime.ct">
-<code class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></code><code class="sig-name descname"><span class="pre">ct</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.ct" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="xpdacq.beamtime.ct">
+<span class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></span><span class="sig-name descname"><span class="pre">ct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.ct" title="Permalink to this definition">¶</a></dt>
 <dd><p>Take one reading from area detector with given exposure time</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -341,8 +345,8 @@ following commands:</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="xpdacq.beamtime.Tramp">
-<code class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></code><code class="sig-name descname"><span class="pre">Tramp</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dets</span></em>, <em class="sig-param"><span class="pre">exposure</span></em>, <em class="sig-param"><span class="pre">Tstart</span></em>, <em class="sig-param"><span class="pre">Tstop</span></em>, <em class="sig-param"><span class="pre">Tstep</span></em>, <em class="sig-param"><span class="pre">*</span></em>, <em class="sig-param"><span class="pre">per_step=&lt;function</span> <span class="pre">shutter_step&gt;</span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.Tramp" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="xpdacq.beamtime.Tramp">
+<span class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></span><span class="sig-name descname"><span class="pre">Tramp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dets</span></em>, <em class="sig-param"><span class="pre">exposure</span></em>, <em class="sig-param"><span class="pre">Tstart</span></em>, <em class="sig-param"><span class="pre">Tstop</span></em>, <em class="sig-param"><span class="pre">Tstep</span></em>, <em class="sig-param"><span class="pre">*</span></em>, <em class="sig-param"><span class="pre">per_step=&lt;function</span> <span class="pre">shutter_step&gt;</span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.Tramp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collect data over a range of temperatures</p>
 <p>This plan sets the sample temperature using a temp_controller device
 and exposes a detector for a set time at each temperature.
@@ -389,8 +393,8 @@ open during the ramping.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="xpdacq.beamtime.Tlist">
-<code class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></code><code class="sig-name descname"><span class="pre">Tlist</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dets</span></em>, <em class="sig-param"><span class="pre">exposure</span></em>, <em class="sig-param"><span class="pre">T_list</span></em>, <em class="sig-param"><span class="pre">*</span></em>, <em class="sig-param"><span class="pre">per_step=&lt;function</span> <span class="pre">shutter_step&gt;</span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.Tlist" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="xpdacq.beamtime.Tlist">
+<span class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></span><span class="sig-name descname"><span class="pre">Tlist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dets</span></em>, <em class="sig-param"><span class="pre">exposure</span></em>, <em class="sig-param"><span class="pre">T_list</span></em>, <em class="sig-param"><span class="pre">*</span></em>, <em class="sig-param"><span class="pre">per_step=&lt;function</span> <span class="pre">shutter_step&gt;</span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.Tlist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collect data over a list of user-specific temperatures</p>
 <p>This plan sets the sample temperature using a temp_controller device
 and exposes a detector for a set time at each temperature.
@@ -435,8 +439,8 @@ open during the ramping.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="xpdacq.beamtime.tseries">
-<code class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></code><code class="sig-name descname"><span class="pre">tseries</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_shutter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.tseries" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="xpdacq.beamtime.tseries">
+<span class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></span><span class="sig-name descname"><span class="pre">tseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_shutter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.tseries" title="Permalink to this definition">¶</a></dt>
 <dd><p>time series scan with area detector.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -470,8 +474,8 @@ scan , create ScanPlan with following syntax:</p>
 </div>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

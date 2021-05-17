@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>ScanPlan objects &mdash; xpdAcq 0.12.0 documentation</title>
@@ -21,6 +22,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
@@ -32,6 +34,8 @@
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Where did all my Sample and Scan objects go?????" href="usb_Where.html" />
@@ -186,7 +190,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="scanplan-objects">
+  <section id="scanplan-objects">
 <span id="usb-scan"></span><h1>ScanPlan objects<a class="headerlink" href="#scanplan-objects" title="Permalink to this headline">¶</a></h1>
 <p>Firstly, what is a scanplan?  A scanplan is a grouped set of detector exposures.  The set may
 contain just one exposure (we call that a count scan, <code class="docutils literal notranslate"><span class="pre">'ct'</span></code> ).  Or it may be a series of exposures
@@ -213,12 +217,12 @@ in the metadata for each exposure.</p>
 What we do is that we <strong>create a new ScanPlan object</strong>,
 every time we want to do a different, <em>even slightly different</em>, scan. These are all
 saved for reload and will be sent home with you at the end of the experiment.</p>
-<div class="section" id="setting-up-scanplans">
+<section id="setting-up-scanplans">
 <h2>Setting up ScanPlans<a class="headerlink" href="#setting-up-scanplans" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ScanPlan</span></code> takes <code class="docutils literal notranslate"><span class="pre">Beamtime</span></code>, scanplan and corresponding arguments. Let’s type <code class="docutils literal notranslate"><span class="pre">ScanPlan?</span></code> and hit return to find out more:</p>
 <dl class="py function">
-<dt id="xpdacq.beamtime.ScanPlan">
-<code class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></code><code class="sig-name descname"><span class="pre">ScanPlan</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beamtime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plan_func</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.ScanPlan" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="xpdacq.beamtime.ScanPlan">
+<span class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></span><span class="sig-name descname"><span class="pre">ScanPlan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beamtime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plan_func</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.ScanPlan" title="Permalink to this definition">¶</a></dt>
 <dd><p>class that carries scan plan with corresponding experimental arguements</p>
 <p>after creation, this Sample object will be related to Beamtime
 object given as argument and will be available in bt.list()</p>
@@ -267,8 +271,8 @@ controller equilibrates at each of the temperatures.</p></li>
 </ul>
 </dd>
 </dl>
-</div>
-<div class="section" id="summary-table-on-scanplan">
+</section>
+<section id="summary-table-on-scanplan">
 <h2>Summary table on ScanPlan:<a class="headerlink" href="#summary-table-on-scanplan" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><table class="docutils align-default">
@@ -304,8 +308,8 @@ controller equilibrates at each of the temperatures.</p></li>
 </table>
 </div></blockquote>
 <p>OK, it is time to <a class="reference internal" href="usb_Running.html#usb-running"><span class="std std-ref">run our scans</span></a></p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
