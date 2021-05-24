@@ -210,7 +210,7 @@ analyzed after the fact.</p>
     <span class="k">for</span> <span class="n">nd</span> <span class="ow">in</span> <span class="n">hdr</span><span class="o">.</span><span class="n">documents</span><span class="p">():</span>
         <span class="n">pub</span><span class="p">(</span><span class="o">*</span><span class="n">nd</span><span class="p">)</span>
         <span class="c1"># this is to make certain we don&#39;t overrun the server</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="o">.</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">.1</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This will send data to the portable db server which will then write the associated files into the folder</p>
