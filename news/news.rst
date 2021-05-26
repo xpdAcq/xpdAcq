@@ -6,6 +6,10 @@
 
 * Add `xpdacq.devices.CalibrationData`, a class to store the calibration data of a detector in configuration attributes.
 
+* Add `xpdacq.beamtime.load_calibration_md`, a helper function to load calibration data
+
+* Add `xpdacq.beamtime.count_with_calib`, a helper function to build multiple-calibration plan
+
 **Changed:**
 
 * <news item>
