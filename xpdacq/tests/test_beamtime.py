@@ -3,6 +3,7 @@ import shutil
 import unittest
 import yaml
 from pkg_resources import resource_filename as rs_fn
+from bluesky.simulators import summarize_plan
 
 from xpdacq.beamtime import (
     ScanPlan,
@@ -10,10 +11,12 @@ from xpdacq.beamtime import (
     Beamtime,
     Sample,
 )
+import xpdacq.beamtime as xbt
 from xpdacq.beamtimeSetup import _start_beamtime, load_beamtime
 from xpdacq.glbl import glbl
 from xpdacq.simulation import pe1c, db, shctl1, cs700, fb
 from xpdacq.xpdacq import CustomizedRunEngine
+from xpdacq.xpdacq_conf import xpd_configuration
 from xpdacq.xpdacq_conf import configure_device
 
 
@@ -273,3 +276,13 @@ class BeamtimeObjTest(unittest.TestCase):
         glbl["frame_acq_time"] = 0.5
         self.assertRaises(ValueError, lambda: xrun({}, ScanPlan(bt, ct, 0.2)))
         glbl["frame_acq_time"] = 0.1  # reset after test
+
+
+def test_count_with_calib():
+    if "shutter" not in xpd_configuration:
+        xpd_configuration["shutter"] = shctl1
+    poni_file = rs_fn("xpdacq", "tests/Ni_poni_file.poni")
+    md = xbt.load_calibration_md(poni_file)
+    print(md)
+    plan = xbt.count_with_calib([pe1c], num=2, delay=3, calibration_md=md)
+    summarize_plan(plan)
