@@ -120,6 +120,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#interrupt-your-scan">Interrupt your scan</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#interactively-interrupt-execution">Interactively Interrupt Execution</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#recovering-from-the-paused-state-caused-by-an-interrupt">Recovering from the paused state caused by an interrupt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#write-multiple-calibration-plan">Write multiple-calibration plan</a></li>
 </ul>
 </li>
 </ul>
@@ -831,6 +832,56 @@ into the <code class="docutils literal notranslate"><span class="pre">collection
 </tbody>
 </table>
 <p>For more info: <a class="reference external" href="http://nsls-ii.github.io/bluesky/state-machine.html#interactive-pause-summary">here</a></p>
+</div>
+<div class="section" id="write-multiple-calibration-plan">
+<h3>Write multiple-calibration plan<a class="headerlink" href="#write-multiple-calibration-plan" title="Permalink to this headline">¶</a></h3>
+<p>The multiple-calibration plan is a plan that uses multiple geometries of setups so it needs more than one set of
+calibration data. Here, we use an example that we would like to collect a SAXS and a WAXS at each step of a
+temperature ramping. We already have two poni files for each setup: <cite>saxs.poni</cite> and <cite>waxs.poni</cite> and they are in
+the <cite>calib</cite> folder.</p>
+<p>We use the <cite>load_calibration_md</cite> to the calibration data from the files.</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">saxs_calib</span> <span class="o">=</span> <span class="n">load_calibration_md</span><span class="p">(</span><span class="s2">&quot;calib/saxs.poni&quot;</span><span class="p">)</span>
+<span class="n">waxs_calib</span> <span class="o">=</span> <span class="n">load_calibration_md</span><span class="p">(</span><span class="s2">&quot;calib/waxs.poni&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Then, we use the <cite>count_with_calib</cite> to build the plan for each step. Here, at each step, we move the <cite>detector</cite> to
+far field using the <cite>motor</cite>, count for 5 images, move it to near field and count for another 5 images. The
+arguments <cite>dets</cite> is for the other detectors that we want to read other than the area detectors like the
+thermometer.</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">bluesky.plan_stubs</span> <span class="k">as</span> <span class="nn">bps</span>
+
+<span class="k">def</span> <span class="nf">my_per_step</span><span class="p">(</span><span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">mv</span><span class="p">(</span><span class="n">motor</span><span class="p">,</span> <span class="mf">1000.</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">count_with_calib</span><span class="p">([</span><span class="n">detector</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">dets</span><span class="p">),</span> <span class="mi">5</span><span class="p">,</span> <span class="n">calibration_md</span><span class="o">=</span><span class="n">waxs_calib</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">mv</span><span class="p">(</span><span class="n">motor</span><span class="p">,</span> <span class="mf">100.</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">count_with_calib</span><span class="p">([</span><span class="n">detector</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">dets</span><span class="p">),</span> <span class="mi">5</span><span class="p">,</span> <span class="n">calibration_md</span><span class="o">=</span><span class="n">saxs_calib</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>If we are using two detectors <cite>far_field_det</cite> and <cite>near_field_det</cite> instead of moving one detector, we can write
+our step like below.</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_per_step</span><span class="p">(</span><span class="n">dets</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="k">yield from</span> <span class="n">count_with_calib</span><span class="p">([</span><span class="n">far_field_det</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">dets</span><span class="p">),</span> <span class="mi">5</span><span class="p">,</span> <span class="n">calibration_md</span><span class="o">=</span><span class="n">waxs_calib</span><span class="p">)</span>
+    <span class="k">yield from</span> <span class="n">count_with_calib</span><span class="p">([</span><span class="n">near_field_det</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">dets</span><span class="p">),</span> <span class="mi">5</span><span class="p">,</span> <span class="n">calibration_md</span><span class="o">=</span><span class="n">saxs_calib</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now, we can use the <cite>per_step</cite> to build our temperature ramping plan. In the example here, we will do a temperature
+ramping at a list of temperature. At each temperature, we collect both the near field and far field data. How
+we will collect the data is already defined in <cite>my_per_step</cite> functions. Here, we use <cite>[t_motor]</cite> as the argument
+because we need to record the temperature reading from the <cite>t_motor</cite>.</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_t_ramp</span><span class="p">(</span><span class="n">t_motor</span><span class="p">:</span> <span class="n">Positioner</span><span class="p">,</span> <span class="n">t_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">t_list</span><span class="p">:</span>
+        <span class="k">yield from</span> <span class="n">bps</span><span class="o">.</span><span class="n">mv</span><span class="p">(</span><span class="n">t_motor</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+        <span class="k">yield from</span> <span class="n">my_per_step</span><span class="p">([</span><span class="n">t_motor</span><span class="p">])</span>
+</pre></div>
+</div>
+</div></blockquote>
 </div>
 </div>
 </div>

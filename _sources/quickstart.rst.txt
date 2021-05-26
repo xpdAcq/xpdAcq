@@ -29,7 +29,7 @@ Carry out the steps in this order to ensure a successful experiment.
   4. Run setup scans on your sample to assess data quality and required exposure time by running ``xrun(0, <a_count_ScanPlan>)``.
 
   5. Your data will be automatically saved and visualized via the analysis pipleine.
-  
+
     * The data will be saved in ``.../xpdUser/tiff_base/<Sample_name_from_spreadsheet>``.
 
     * The pipeline will save:
@@ -175,7 +175,7 @@ e.g., ``xrun(5,7)`` (more on this later).
 This is standard Python syntax.
 
 If you don't know what functions are available to you (and you don't)
-you can discover them by typing a few letters and then hitting the 'Tab' key.  All 
+you can discover them by typing a few letters and then hitting the 'Tab' key.  All
 functions that the xpd software knows about that start with that sequence of letters
 will be revealed. Try typing ``s`` then Tab.  Too many in the list?  Then add another
 letter (e.g., type ``h`` so you have ``sh``) then ``Tab``.  Can you find ``show_env()``?
@@ -703,3 +703,56 @@ xrun.state       Check if 'paused' or 'idle'.
 ============== ===========
 
 For more info: `here <http://nsls-ii.github.io/bluesky/state-machine.html#interactive-pause-summary>`_
+
+
+Write multiple-calibration plan
+"""""""""""""""""""""""""""""""
+
+The multiple-calibration plan is a plan that uses multiple geometries of setups so it needs more than one set of
+calibration data. Here, we use an example that we would like to collect a SAXS and a WAXS at each step of a
+temperature ramping. We already have two poni files for each setup: `saxs.poni` and `waxs.poni` and they are in
+the `calib` folder.
+
+We use the `load_calibration_md` to the calibration data from the files.
+
+  .. code-block:: python
+
+    saxs_calib = load_calibration_md("calib/saxs.poni")
+    waxs_calib = load_calibration_md("calib/waxs.poni")
+
+Then, we use the `count_with_calib` to build the plan for each step. Here, at each step, we move the `detector` to
+far field using the `motor`, count for 5 images, move it to near field and count for another 5 images. The
+arguments `dets` is for the other detectors that we want to read other than the area detectors like the
+thermometer.
+
+  .. code-block:: python
+
+    import bluesky.plan_stubs as bps
+
+    def my_per_step(dets: list):
+        yield from bps.mv(motor, 1000.)
+        yield from count_with_calib([detector] + list(dets), 5, calibration_md=waxs_calib)
+        yield from bps.mv(motor, 100.)
+        yield from count_with_calib([detector] + list(dets), 5, calibration_md=saxs_calib)
+
+If we are using two detectors `far_field_det` and `near_field_det` instead of moving one detector, we can write
+our step like below.
+
+  .. code-block:: python
+
+    def my_per_step(dets: list):
+        yield from count_with_calib([far_field_det] + list(dets), 5, calibration_md=waxs_calib)
+        yield from count_with_calib([near_field_det] + list(dets), 5, calibration_md=saxs_calib)
+
+
+Now, we can use the `per_step` to build our temperature ramping plan. In the example here, we will do a temperature
+ramping at a list of temperature. At each temperature, we collect both the near field and far field data. How
+we will collect the data is already defined in `my_per_step` functions. Here, we use `[t_motor]` as the argument
+because we need to record the temperature reading from the `t_motor`.
+
+  .. code-block:: python
+
+    def my_t_ramp(t_motor: Positioner, t_list: list):
+        for t in t_list:
+            yield from bps.mv(t_motor, t)
+            yield from my_per_step([t_motor])
