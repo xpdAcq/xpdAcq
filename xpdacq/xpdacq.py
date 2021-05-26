@@ -13,27 +13,27 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-from collections import OrderedDict
-
-import bluesky.plan_stubs as bps
-import bluesky.plans as bp
-import bluesky.preprocessors as bpp
 import os
 import time
 import typing
 import uuid
 import warnings
+from collections import OrderedDict
+from itertools import groupby
+from pprint import pprint
+from textwrap import indent
+from typing import Generator
+
+import bluesky.plan_stubs as bps
+import bluesky.plans as bp
+import bluesky.preprocessors as bpp
 import yaml
 from bluesky import RunEngine
 from bluesky.callbacks.broker import verify_files_saved
 from bluesky.preprocessors import pchain
 from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input, single_gen, Msg
-from itertools import groupby
 from ophyd import Device
-from pprint import pprint
-from textwrap import indent
-from typing import Generator
 from xpdconf.conf import XPD_SHUTTER_CONF
 
 from xpdacq.beamtime import Beamtime, ScanPlan
@@ -71,8 +71,9 @@ def periodic_dark(plan):
 
         if (not need_dark) and (not qualified_dark_uid):
             need_dark = True
-        if need_dark and (not qualified_dark_uid) and msg.command == "open_run" and \
-                ("dark_frame" not in msg.kwargs):
+        if need_dark and (not qualified_dark_uid) and msg.command == "open_run" and (
+            "dark_frame" not in msg.kwargs
+        ):
             # We are about to start a new 'run' (e.g., a count or a scan).
             # Insert a dark frame run first.
             need_dark = False
