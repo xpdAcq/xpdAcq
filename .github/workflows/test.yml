@@ -1,0 +1,59 @@
+name: test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      DISPLAY: ":99.0"
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: test
+          auto-update-conda: true
+
+      - name: configure conda
+        run: |
+          conda config --append channels nsls2forge
+          conda config --append channels conda-forge
+
+      - name: install requirements
+        run: >-
+          conda install --file requirements/build.txt --file requirements/run.txt --file requirements/test.txt --quiet --yes
+
+      - name: install pip requirements
+        run: python -m pip install -r requirements/pip.txt
+
+      - uses: actions/checkout@v2
+        with:
+          repository: st3107/diffpy.pdfgetx-whl
+          token: ${{ secrets.ACCESS_TOKEN }}
+
+      - name: install diffpy.pdfgetx
+        run: python -m pip install *.whl
+
+      - uses: actions/checkout@v2
+
+      - name: install the package
+        run: python -m pip install . --no-deps
+
+      - name: run the tests and check for test coverage
+        run: coverage run -m pytest tests --showlocals
+
+      - name: generate test coverage report and upload to codecov
+        run: |
+          coverage report -m
+          bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
+
+      - name: check code style
+        run: flake8
