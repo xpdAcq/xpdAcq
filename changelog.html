@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>xpdAcq Change Log &mdash; xpdAcq 0.12.0 documentation</title>
+  <title>xpdAcq Change Log &mdash; xpdAcq 1.0.0 documentation</title>
   
 
   
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                0.12
+                1.0
               </div>
             
           
@@ -107,6 +107,7 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">xpdAcq Change Log</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#v1-0-0">v1.0.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#v0-12-0">v0.12.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#v0-11-0">v0.11.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#v0-10-4">v0.10.4</a></li>
@@ -199,6 +200,22 @@
             
   <div class="section" id="xpdacq-change-log">
 <h1>xpdAcq Change Log<a class="headerlink" href="#xpdacq-change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="v1-0-0">
+<h2>v1.0.0<a class="headerlink" href="#v1-0-0" title="Permalink to this headline">¶</a></h2>
+<p><strong>Added:</strong></p>
+<ul class="simple">
+<li><p>Add <cite>xpdacq.factory.BasicPlans</cite> for the multi-detector plan for both XRD and PDF data collection in one run.</p></li>
+<li><p>Add <cite>xpdacq.factory.MultiDistPlans</cite> for the moving detector measurement for both XRD and PDF data collection in one run.</p></li>
+<li><p>Add <cite>xpdacq.devices.CalibrationData</cite>, a class to store the calibration data of a detector in configuration attributes.</p></li>
+<li><p>Add <cite>xpdacq.beamtime.load_calibration_md</cite>, a helper function to load calibration data</p></li>
+<li><p>Add <cite>xpdacq.beamtime.count_with_calib</cite>, a helper function to build multiple-calibration plan</p></li>
+</ul>
+<p><strong>Fixed:</strong></p>
+<ul class="simple">
+<li><p>Fix the bugs for python 3.9 <code class="docutils literal notranslate"><span class="pre">TypeError:</span> <span class="pre">dict.popitem()</span> <span class="pre">takes</span> <span class="pre">no</span> <span class="pre">arguments</span> <span class="pre">(1</span> <span class="pre">given)</span></code>.</p></li>
+<li><p>Fix the bugs for xpdconf 0.4.5 that the default calibration metadata file is poni file instead of yaml file.</p></li>
+</ul>
+</div>
 <div class="section" id="v0-12-0">
 <h2>v0.12.0<a class="headerlink" href="#v0-12-0" title="Permalink to this headline">¶</a></h2>
 <p><strong>Added:</strong></p>
