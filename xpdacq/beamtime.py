@@ -13,6 +13,9 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
+import pyFAI
+import typing
+
 import inspect
 import os
 import uuid
@@ -969,3 +972,67 @@ class ScanPlan(ValidatedDictLike, YamlChainMap, ABC):
         arg_value_str = map(str, self.bound_arguments.values())
         fn = "_".join([self["sp_plan_name"]] + list(arg_value_str))
         return os.path.join(glbl["yaml_dir"], "scanplans", "%s.yml" % fn)
+
+
+def load_calibration_md(poni_file: str) -> dict:
+    """Load the calibration metadata in a dictionary from a .poni file.
+
+    Parameters
+    ----------
+    poni_file :
+        The path to the .poni file.
+
+    Returns
+    -------
+    calibration_md :
+        The metadata in a dictionary.
+    """
+    ai = pyFAI.load(poni_file)
+    return dict(ai.getPyFAI())
+
+
+def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, calibration_md: dict = None, md: dict = None) -> typing.Generator:
+    """
+    Take one or more readings from detectors with shutter control and calibration metadata injection.
+
+    Parameters
+    ----------
+    detectors : list
+        list of 'readable' objects
+
+    num : integer, optional
+        number of readings to take; default is 1
+
+        If None, capture data until canceled
+
+    delay : iterable or scalar, optional
+        Time delay in seconds between successive readings; default is 0.
+
+    per_shot : callable, optional
+        hook for customizing action of inner loop (messages per step)
+        Expected signature ::
+
+           def f(detectors: Iterable[OphydObj]) -> Generator[Msg]:
+               ...
+
+    calibration_md :
+        The calibration data in a dictionary. If not applied, the function is a normal `bluesky.plans.count`.
+
+    md : dict, optional
+        metadata
+
+    Notes
+    -----
+    If ``delay`` is an iterable, it must have at least ``num - 1`` entries or
+    the plan will raise a ``ValueError`` during iteration.
+    """
+    if md is None:
+        md = dict()
+    if calibration_md is not None:
+        md["calibration_md"] = calibration_md
+    yield from open_shutter_stub()
+    plan = bp.count(detectors, num, delay, md=md)
+    bpp.subs_wrapper(plan, LiveTable(detectors))
+    sts = yield from plan
+    yield from close_shutter_stub()
+    return sts
