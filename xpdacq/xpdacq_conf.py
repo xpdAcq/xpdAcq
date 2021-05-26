@@ -15,14 +15,14 @@
 #
 ##############################################################################
 import contextlib
-import platform
-
 import datetime
 import os
+import platform
 import pprint
 import subprocess
 import time
 import warnings
+
 import yaml
 from xpdconf.conf import glbl_dict, GLBL_YAML_PATH
 

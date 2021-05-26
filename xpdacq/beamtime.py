@@ -13,11 +13,9 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-import pyFAI
-import typing
-
 import inspect
 import os
+import typing
 import uuid
 from abc import ABC
 from collections import ChainMap, OrderedDict
@@ -26,6 +24,7 @@ import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 import bluesky.preprocessors as bpp
 import numpy as np
+import pyFAI
 import yaml
 from bluesky.callbacks import LiveTable
 from xpdconf.conf import XPD_SHUTTER_CONF
@@ -991,7 +990,8 @@ def load_calibration_md(poni_file: str) -> dict:
     return dict(ai.getPyFAI())
 
 
-def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, calibration_md: dict = None, md: dict = None) -> typing.Generator:
+def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, calibration_md: dict = None,
+                     md: dict = None) -> typing.Generator:
     """
     Take one or more readings from detectors with shutter control and calibration metadata injection.
 

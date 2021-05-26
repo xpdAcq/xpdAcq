@@ -12,11 +12,12 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
+import os
+import shutil
+
 import databroker
 import ophyd.sim as sim
-import os
 import pytest
-import shutil
 from pkg_resources import resource_filename as rs_fn
 from xpdsim import (
     cs700,

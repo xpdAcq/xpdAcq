@@ -13,7 +13,6 @@
 # See LICENSE.txt for license information.
 #
 ##############################################################################
-import os
 from xpdacq.xpdacq_conf import (
     glbl_dict,
     configure_device,
@@ -42,7 +41,7 @@ reload_glbl_dict = _reload_glbl()
 from xpdacq.glbl import glbl
 
 # reload beamtime
-from xpdacq.beamtimeSetup import start_xpdacq, _start_beamtime, _end_beamtime
+from xpdacq.beamtimeSetup import start_xpdacq
 
 bt = start_xpdacq()
 if bt is not None:
@@ -53,7 +52,6 @@ if reload_glbl_dict is not None:
 # import necessary modules
 from xpdacq.xpdacq import *
 from xpdacq.beamtime import *
-from xpdacq.utils import import_sample_info
 
 # instantiate xrun without beamtime, like bluesky setup
 xrun = CustomizedRunEngine(None)
@@ -77,8 +75,6 @@ if os.path.isdir(HOME_DIR):
     os.chdir(HOME_DIR)
 else:
     os.chdir(BASE_DIR)
-
-from xpdacq.calib import *
 
 # analysis functions, only at beamline
 from xpdan.data_reduction import *

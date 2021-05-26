@@ -1,10 +1,10 @@
 import glob
-
 import os
 import shutil
 import unittest
-from pkg_resources import resource_filename as rs_fn
 from time import strftime
+
+from pkg_resources import resource_filename as rs_fn
 
 from xpdacq.beamtime import Beamtime, ScanPlan
 from xpdacq.beamtimeSetup import (_start_beamtime, _end_beamtime,

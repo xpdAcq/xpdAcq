@@ -12,11 +12,11 @@ from __future__ import (
     unicode_literals,
 )
 
-from collections import ChainMap
-
 import abc
 import os
 import tempfile
+from collections import ChainMap
+
 import yaml
 
 
