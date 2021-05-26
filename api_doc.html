@@ -1,33 +1,24 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
-  <meta charset="utf-8" />
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>API Documentation &mdash; xpdAcq 0.12.0 documentation</title>
   
 
   
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-
+  
   
   
 
   
-  
-
-  
-
-  
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,6 +30,12 @@
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="For Beamline Staff" href="beamlinestaff.html" />
@@ -83,7 +80,6 @@
           
         </div>
 
-        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -118,7 +114,6 @@
             
           
         </div>
-        
       </div>
     </nav>
 
@@ -153,20 +148,18 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><a href="index.html">Docs</a> &raquo;</li>
         
       <li>API Documentation</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/api_doc.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -180,47 +173,338 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="api-documentation">
+  <section id="api-documentation">
 <h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="run-calibration-api-documentation">
+<section id="run-calibration-api-documentation">
 <span id="calib-api"></span><h2>run_calibration API Documentation<a class="headerlink" href="#run-calibration-api-documentation" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="xpdacq.calib.run_calibration">
+<span class="sig-prename descclassname"><span class="pre">xpdacq.calib.</span></span><span class="sig-name descname"><span class="pre">run_calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exposure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dark_sub_bool</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibrant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">RE_instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait_for_cal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.calib.run_calibration" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to run entire calibration process.</p>
+<p>Entire process includes:</p>
+<ol class="arabic simple">
+<li><p>collect calibration image,</p></li>
+<li><p>trigger pyFAI interactive calibration process,</p></li>
+<li><p>store calibration parameters as a yaml file</p></li>
+</ol>
+<p>calibration parameters will be saved under xpdUser/config_base/
+and this set of parameters will be injected as metadata to
+subsequent scans until you perform this process again</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exposure</strong> (<em>int</em><em>, </em><em>optional</em>) – total exposure time in sec. default is 5s</p></li>
+<li><p><strong>dark_sub_bool</strong> (<em>bool</em><em>, </em><em>optional</em>) – option of turn on/off dark subtraction on this calibration
+image. default is True.</p></li>
+<li><p><strong>calibrant</strong> (<em>str</em><em>, </em><em>optional</em>) – calibrant being used, default is ‘Ni’.
+input could be full file path to customized d-spacing file with
+“.D” extension or one of pre-defined calibrant names.
+List of pre-defined calibrant names is:
+[‘NaCl’, ‘AgBh’, ‘quartz’, ‘Si_SRM640’, ‘Ni’, ‘Si_SRM640d’,
+‘Si_SRM640a’, ‘alpha_Al2O3’, ‘LaB6_SRM660b’, ‘TiO2’, ‘CrOx’,
+‘LaB6_SRM660c’, ‘CeO2’, ‘Si_SRM640c’, ‘CuO’, ‘Si_SRM640e’,
+‘PBBA’, ‘ZnO’, ‘Si’, ‘C14H30O’, ‘cristobaltite’, ‘LaB6_SRM660a’,
+‘Au’, ‘Cr2O3’, ‘Si_SRM640b’, ‘LaB6’, ‘Al’, ‘mock’]</p></li>
+<li><p><strong>phase_info</strong> (<em>str</em><em>, </em><em>optional</em>) – phase infomation of calibrant, which is required to data
+reduction process. This field will be parsed with the same logic
+as the one used in parsing spreadsheet information. For detailed
+information, please visit:
+<a class="reference external" href="http://xpdacq.github.io/usb_Running.html#phase-string">http://xpdacq.github.io/usb_Running.html#phase-string</a>
+If both <code class="docutils literal notranslate"><span class="pre">calibrant</span></code> and <code class="docutils literal notranslate"><span class="pre">phase_info</span></code> arguments are not provided,
+this field will be defaulted to <code class="docutils literal notranslate"><span class="pre">Ni</span></code>.</p></li>
+<li><p><strong>detector</strong> (<em>str</em><em> or </em><em>pyFAI.detector.Detector instance</em><em>, </em><em>optional.</em>) – detector used to collect data. default value is ‘perkin-elmer’.
+other allowed values are in pyFAI documentation.</p></li>
+<li><p><strong>RE_instance</strong> (<em>bluesky.run_engine.RunEngine instance</em><em>, </em><em>optional</em>) – instance of run engine. Default is xrun. Do not change under
+normal circumstances.</p></li>
+<li><p><strong>wait_for_cal</strong> (<em>bool</em>) – If True wait for the new calibration to be produced before giving up
+xrun control, otherwise give up control at the end of the scan.
+Defaults to True</p></li>
+<li><p><strong>kwargs</strong> – Additional keyword argument for calibration. please refer to
+pyFAI documentation for all options.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Details about peak-picking gui from pyFAI documentaion</p>
+<blockquote>
+<div><p><a class="reference external" href="http://pyfai.readthedocs.io/en/latest/usage/cookbook/calibrate.html#start-pyfai-calibration_md">http://pyfai.readthedocs.io/en/latest/usage/cookbook/calibrate.html#start-pyfai-calibration_md</a></p>
+</div></blockquote>
 </div>
-<div class="section" id="xrun-api-documentation">
+</dd></dl>
+
+</section>
+<section id="xrun-api-documentation">
 <span id="xrun-api"></span><h2>xrun API Documentation<a class="headerlink" href="#xrun-api-documentation" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="xpdacq.xpdacq.CustomizedRunEngine">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">xpdacq.xpdacq.</span></span><span class="sig-name descname"><span class="pre">CustomizedRunEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beamtime</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.xpdacq.CustomizedRunEngine" title="Permalink to this definition">¶</a></dt>
+<dd><p>A RunEngine customized for XPD workflows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>beamtime</strong> (<em>xpdacq.beamtime.Beamtime</em><em> or </em><em>None</em>) – beamtime object that will be linked to. This beamtime object
+provide reference of sample and scanplan indicies. If no
+beamtime object is linked, index-based syntax will not be allowed.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="xpdacq.xpdacq.CustomizedRunEngine.beamtime">
+<span class="sig-name descname"><span class="pre">beamtime</span></span><a class="headerlink" href="#xpdacq.xpdacq.CustomizedRunEngine.beamtime" title="Permalink to this definition">¶</a></dt>
+<dd><p>beamtime object currently associated with this RunEngine instance.</p>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<p>Basic usage: run samples and plans by number</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">xrun</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</pre></div>
 </div>
-<div class="section" id="scanplan-api-documentation">
+<p>Advanced usage: use custom plan which is compatible with bluesky</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">xrun</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">custom_plan</span><span class="p">)</span>  <span class="c1"># sample 3, an arbitrary bluesky plan</span>
+</pre></div>
+</div>
+<p>Or custom sample info. sample just has to be dict-like
+and contain the required keys.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">xrun</span><span class="p">(</span><span class="n">custom_sample_dict</span><span class="p">,</span> <span class="n">custom_plan</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Or use completely custom dark frame logic</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">xrun</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">custom_plan</span><span class="p">,</span> <span class="n">dark_strategy</span><span class="o">=</span><span class="n">some_custom_func</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="xpdacq.xpdacq.CustomizedRunEngine.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">sample:</span> <span class="pre">Union[int,</span> <span class="pre">str,</span> <span class="pre">dict,</span> <span class="pre">list,</span> <span class="pre">tuple],</span> <span class="pre">plan:</span> <span class="pre">Union[int,</span> <span class="pre">str,</span> <span class="pre">Generator,</span> <span class="pre">xpdacq.beamtime.ScanPlan,</span> <span class="pre">list,</span> <span class="pre">tuple],</span> <span class="pre">subs:</span> <span class="pre">Optional[Union[Callable,</span> <span class="pre">dict,</span> <span class="pre">list]]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">*,</span> <span class="pre">verify_write:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">dark_strategy:</span> <span class="pre">Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">periodic_dark&gt;,</span> <span class="pre">robot:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">ask_before_run:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">**metadata_kw</span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.xpdacq.CustomizedRunEngine.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute a plan.</p>
+<p>The call is basically the same as the RE. The only difference is that the plan will be mutated and
+preprocessed to incorpate sample meta-data, dark fram stragy and so on. Any keyword arguments other than
+those listed below will be interpreted as metadata and recorded with the run.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample</strong> (<em>int</em><em> or </em><em>dict-like</em><em> or </em><em>list of int</em><em> or </em><em>dict-like Sample metadata</em>) – If a beamtime object is linked, an integer will be interpreted as the index appears
+in the <code class="docutils literal notranslate"><span class="pre">bt.list()</span></code> method, corresponding metadata will be
+passed. A customized dict can also be passed as the sample metadata.</p></li>
+<li><p><strong>plan</strong> (<em>int</em><em> or </em><em>generator</em><em> or </em><em>list of int</em><em> or </em><em>generator</em>) – Scan plan. If a beamtime object is linked, an integer will be interpreted as the index appears in
+the <code class="docutils literal notranslate"><span class="pre">bt.list()</span></code> method, corresponding scan plan will be A generator or that yields <code class="docutils literal notranslate"><span class="pre">Msg</span></code> objects
+(or an iterable that returns such a generator) can also be passed.</p></li>
+<li><p><strong>subs</strong> (<em>callable</em><em>, </em><em>list</em><em>, or </em><em>dict</em><em>, </em><em>optional</em>) – <p>Temporary subscriptions (a.k.a. callbacks) to be used on this run. Default to None. For convenience,
+any of the following are accepted:</p>
+<ul>
+<li><p>a callable, which will be subscribed to ‘all’</p></li>
+<li><p>a list of callables, which again will be subscribed to ‘all’</p></li>
+<li><p>a dictionary, mapping specific subscriptions to callables or
+lists of callables; valid keys are {‘all’, ‘start’, ‘stop’,
+‘event’, ‘descriptor’}</p></li>
+</ul>
+</p></li>
+<li><p><strong>verify_write</strong> (<em>bool</em><em>, </em><em>optional</em>) – Double check if the data have been written into database. In general data is written in a lossless
+fashion at the NSLS-II. Therefore, False by default.</p></li>
+<li><p><strong>dark_strategy</strong> (<em>callable</em><em>, </em><em>optional.</em>) – Protocol of taking dark frame during experiment. Default to the logic of matching dark frame and
+light frame with the sample exposure time and frame rate. Details can be found at
+<code class="docutils literal notranslate"><span class="pre">http://xpdacq.github.io/xpdAcq/usb_Running.html#automated-dark-collection</span></code></p></li>
+<li><p><strong>robot</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true run the scan as a robot scan, defaults to False</p></li>
+<li><p><strong>metadata_kw</strong> – Extra keyword arguments for specifying metadata in the run time. If the extra metdata has the same
+key as the <code class="docutils literal notranslate"><span class="pre">sample</span></code>, <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> will be raised.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>uids</strong> – list of uids (i.e. RunStart Document uids) of run(s)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="scanplan-api-documentation">
 <span id="scanplan-api"></span><h2>ScanPlan API Documentation<a class="headerlink" href="#scanplan-api-documentation" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="xpdacq.beamtime.ct">
+<span class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></span><span class="sig-name descname"><span class="pre">ct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.ct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take one reading from area detector with given exposure time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dets</strong> (<em>list</em>) – list of ‘readable’ objects. default to area detector
+linked to xpdAcq.</p></li>
+<li><p><strong>exposure</strong> (<em>float</em>) – total time of exposrue in seconds</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>area detector being triggered will  always be the one configured
+in global state. To find out which these are, please using
+following commands:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">xpd_configuration</span><span class="p">[</span><span class="s1">&#39;area_det&#39;</span><span class="p">]</span>
+</pre></div>
 </div>
+<p>to see which device is being linked</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="xpdacq.beamtime.Tramp">
+<span class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></span><span class="sig-name descname"><span class="pre">Tramp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dets</span></em>, <em class="sig-param"><span class="pre">exposure</span></em>, <em class="sig-param"><span class="pre">Tstart</span></em>, <em class="sig-param"><span class="pre">Tstop</span></em>, <em class="sig-param"><span class="pre">Tstep</span></em>, <em class="sig-param"><span class="pre">*</span></em>, <em class="sig-param"><span class="pre">per_step=&lt;function</span> <span class="pre">shutter_step&gt;</span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.Tramp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect data over a range of temperatures</p>
+<p>This plan sets the sample temperature using a temp_controller device
+and exposes a detector for a set time at each temperature.
+It also has logic for equilibrating the temperature before each
+acquisition. By default it closes the fast shutter at XPD in between
+exposures. This behavior may be overridden, leaving the fast shutter
+open for the entire scan. Please see below.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dets</strong> (<em>list</em>) – list of ‘readable’ objects. default to the temperature
+controller and area detector linked to xpdAcq.</p></li>
+<li><p><strong>exposure</strong> (<em>float</em>) – exposure time at each temperature step in seconds.</p></li>
+<li><p><strong>Tstart</strong> (<em>float</em>) – starting point of temperature sequence.</p></li>
+<li><p><strong>Tstop</strong> (<em>float</em>) – stoping point of temperature sequence.</p></li>
+<li><p><strong>Tstep</strong> (<em>float</em>) – step size between Tstart and Tstop of this sequence.</p></li>
+<li><p><strong>per_step</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>hook for customizing action at each temperature point.
+Tramp uses this for opening and closing the shutter at each
+temperature acquisition.</p>
+<p>Default behavior:
+`` open shutter - collect data - close shutter ``</p>
+<p>To make shutter always open during the temperature ramp,
+pass <code class="docutils literal notranslate"><span class="pre">None</span></code> to this argument. See <code class="docutils literal notranslate"><span class="pre">Notes</span></code> below for more
+detailed information.</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>1. To see which area detector and temperature controller
+will be used, type the following commands:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">xpd_configuration</span><span class="p">[</span><span class="s1">&#39;area_det&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xpd_configuration</span><span class="p">[</span><span class="s1">&#39;temp_controller&#39;</span><span class="p">]</span>
+</pre></div>
 </div>
+<p>2. To change the default behavior to shutter-always-open,
+please pass the argument for <code class="docutils literal notranslate"><span class="pre">per_step</span></code> in the <code class="docutils literal notranslate"><span class="pre">ScanPlan</span></code>
+definition, as follows:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ScanPlan</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="n">Tramp</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">per_step</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will create a <code class="docutils literal notranslate"><span class="pre">Tramp</span></code> ScanPlan, with shutter always
+open during the ramping.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="xpdacq.beamtime.Tlist">
+<span class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></span><span class="sig-name descname"><span class="pre">Tlist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dets</span></em>, <em class="sig-param"><span class="pre">exposure</span></em>, <em class="sig-param"><span class="pre">T_list</span></em>, <em class="sig-param"><span class="pre">*</span></em>, <em class="sig-param"><span class="pre">per_step=&lt;function</span> <span class="pre">shutter_step&gt;</span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.Tlist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect data over a list of user-specific temperatures</p>
+<p>This plan sets the sample temperature using a temp_controller device
+and exposes a detector for a set time at each temperature.
+It also has logic for equilibrating the temperature before each
+acquisition. By default it closes the fast shutter at XPD in between
+exposures. This behavior may be overridden, leaving the fast shutter
+open for the entire scan. Please see below.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dets</strong> (<em>list</em>) – list of ‘readable’ objects. default to the temperature
+controller and area detector linked to xpdAcq.</p></li>
+<li><p><strong>exposure</strong> (<em>float</em>) – total time of exposure in seconds</p></li>
+<li><p><strong>T_list</strong> (<em>list</em>) – a list of temperatures where a scan will be run</p></li>
+<li><p><strong>per_step</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>hook for customizing action at each temperature point.
+Tramp uses this for opening and closing the shutter at each
+temperature acquisition.</p>
+<p>Default behavior:
+`` open shutter - collect data - close shutter ``</p>
+<p>To make shutter always open during the temperature ramp,
+pass <code class="docutils literal notranslate"><span class="pre">None</span></code> to this argument. See <code class="docutils literal notranslate"><span class="pre">Notes</span></code> below for more
+detailed information.</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>1. To see which area detector and temperature controller
+will be used, type the following commands:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">xpd_configuration</span><span class="p">[</span><span class="s1">&#39;area_det&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xpd_configuration</span><span class="p">[</span><span class="s1">&#39;temp_controller&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>2. To change the default behavior to shutter-always-open,
+please pass the argument for <code class="docutils literal notranslate"><span class="pre">per_step</span></code> in the <code class="docutils literal notranslate"><span class="pre">ScanPlan</span></code>
+definition, as follows:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ScanPlan</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="n">Tlist</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">198</span><span class="p">],</span> <span class="n">per_step</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will create a <code class="docutils literal notranslate"><span class="pre">Tlist</span></code> ScanPlan, with shutter always
+open during the ramping.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="xpdacq.beamtime.tseries">
+<span class="sig-prename descclassname"><span class="pre">xpdacq.beamtime.</span></span><span class="sig-name descname"><span class="pre">tseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exposure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_shutter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xpdacq.beamtime.tseries" title="Permalink to this definition">¶</a></dt>
+<dd><p>time series scan with area detector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dets</strong> (<em>list</em>) – list of ‘readable’ objects. default to area detector
+linked to xpdAcq.</p></li>
+<li><p><strong>exposure</strong> (<em>float</em>) – exposure time at each reading from area detector in seconds</p></li>
+<li><p><strong>delay</strong> (<em>float</em>) – delay between two consecutive readings from area detector in seconds</p></li>
+<li><p><strong>num</strong> (<em>int</em>) – total number of readings</p></li>
+<li><p><strong>auto_shutter</strong> (<em>bool</em><em>, </em><em>optional</em>) – <p>Option on whether delegates shutter control to <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code>. If True,
+following behavior will take place:</p>
+<p>`` open shutter - collect data - close shutter ``</p>
+<p>To make shutter stay open during <code class="docutils literal notranslate"><span class="pre">tseries</span></code> scan,
+pass <code class="docutils literal notranslate"><span class="pre">False</span></code> to this argument. See <code class="docutils literal notranslate"><span class="pre">Notes</span></code> below for more
+detailed information.</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>To see which area detector and shutter will be used, type the
+following commands:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">xpd_configuration</span><span class="p">[</span><span class="s1">&#39;area_det&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xpd_configuration</span><span class="p">[</span><span class="s1">&#39;shutter&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>To override default behavior and keep the shutter open throughout
+scan , create ScanPlan with following syntax:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ScanPlan</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="n">tseries</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+</section>
 
 
            </div>
            
           </div>
           <footer>
+  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="beamlinestaff.html" class="btn btn-neutral float-right" title="For Beamline Staff" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="tomo.html" class="btn btn-neutral float-left" title="Running Tomography" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+        <a href="beamlinestaff.html" class="btn btn-neutral float-right" title="For Beamline Staff" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tomo.html" class="btn btn-neutral float-left" title="Running Tomography" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
     </div>
+  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &#169; Copyright (c) 2016 trustees of Columbia University in the City of New York.
+        &copy; Copyright (c) 2016 trustees of Columbia University in the City of New York
 
     </p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
+
         </div>
       </div>
 
@@ -228,6 +512,7 @@
 
   </div>
   
+
 
   <script type="text/javascript">
       jQuery(function () {
