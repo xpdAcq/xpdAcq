@@ -13,6 +13,7 @@
 #
 ##############################################################################
 import databroker
+import ophyd.sim as sim
 import os
 import pytest
 import shutil
@@ -26,6 +27,7 @@ from xpdsim import (
     fb
 )
 
+import xpdacq.devices as devices
 from xpdacq.beamtimeSetup import _start_beamtime
 from xpdacq.utils import import_sample_info
 from xpdacq.xpdacq import CustomizedRunEngine
@@ -75,7 +77,7 @@ def glbl(bt):
 
 
 @pytest.fixture(scope="function")
-def fresh_xrun(bt, db):
+def fresh_xrun(bt, db, set_xpd_configuration):
     xrun = CustomizedRunEngine(None)
     xrun.md["beamline_id"] = glbl_dict["beamline_id"]
     xrun.md["group"] = glbl_dict["group"]
@@ -84,18 +86,19 @@ def fresh_xrun(bt, db):
     xrun.beamtime = bt
     # link mds
     xrun.subscribe(db.v1.insert, "all")
-    # set simulation objects
-    # alias
-    pe1c = simple_pe1c
+    return xrun
+
+
+@pytest.fixture(scope="session")
+def set_xpd_configuration():
     configure_device(
         db=db,
         shutter=shctl1,
-        area_det=pe1c,
+        area_det=simple_pe1c,
         temp_controller=cs700,
         ring_current=ring_current,
         filter_bank=fb,
     )
-    return xrun
 
 
 @pytest.fixture(scope="function")
@@ -121,3 +124,13 @@ def home_dir():
 @pytest.fixture(scope="session")
 def beamline_config_file():
     return rs_fn("xpdacq", "tests/XPD_beamline_config.yml")
+
+
+@pytest.fixture(scope="function")
+def calib_data():
+    return devices.CalibrationData(name="calib")
+
+
+@pytest.fixture(scope="function")
+def fake_devices():
+    return sim.hw()
