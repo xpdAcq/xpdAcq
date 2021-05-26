@@ -1,0 +1,279 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Code for Example Experiment &mdash; xpdAcq 0.12.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.12
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="xpdusers.html">For XPD Users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Code for Example Experiment</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/cheat_sheet.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="code-for-example-experiment">
+<span id="cheat-sheet"></span><h1>Code for Example Experiment<a class="headerlink" href="#code-for-example-experiment" title="Permalink to this headline">¶</a></h1>
+<p>Here is a sample code covering the entire process from defining <code class="docutils literal notranslate"><span class="pre">Sample</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ScanPlan</span></code> objects to running different kinds of runs.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># bt list method to see all objects we have available for data collection</span>
+<span class="n">bt</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
+
+
+<span class="c1"># Ideally, Sample information should be filled before you come.</span>
+<span class="c1"># you can fill out the spreadsheet and then use ``import_sample`` function.</span>
+<span class="c1"># Let&#39;s still have an example here of how to do it explicitly</span>
+<span class="n">Sample</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="s1">&#39;sample_name&#39;</span><span class="p">:</span><span class="s1">&#39;NaCl&#39;</span><span class="p">,</span>
+       <span class="p">{</span><span class="s1">&#39;sample_composition&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Na&#39;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;Cl&#39;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">},</span>
+        <span class="s1">&#39;sample_phase&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NaCl&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span>
+        <span class="s1">&#39;composition_string&#39;</span><span class="p">:</span> <span class="s1">&#39;Na0.09Cl0.09H1.82O0.91&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;holder&#39;</span><span class="p">:{</span><span class="s1">&#39;shape&#39;</span><span class="p">:</span><span class="s1">&#39;capillary&#39;</span><span class="p">,</span><span class="s1">&#39;ID&#39;</span><span class="p">:</span><span class="s1">&#39;1 mm&#39;</span><span class="p">,</span><span class="s1">&#39;madeOf&#39;</span><span class="p">:</span><span class="s1">&#39;kapton&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;tags&#39;</span><span class="p">:[</span><span class="s1">&#39;looked kinda green&#39;</span><span class="p">,</span><span class="s1">&#39;dropped on the floor during loading&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;&lt;anythingElseIwant&gt;&#39;</span><span class="p">:</span><span class="s1">&#39;&lt;description&gt;&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;&lt;andSoOn&gt;&#39;</span><span class="p">:</span><span class="s1">&#39;&lt;etc&gt;&#39;</span>
+       <span class="p">}</span>  <span class="c1"># rich metadata will save a lot of time later!</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define &quot;ct&quot; scanplan with exp = 0.5</span>
+<span class="n">ScanPlan</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="n">ct</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+
+<span class="c1"># define &quot;Tramp&quot; scanplan with exp = 0.5, startingT = 300, endingT = 310, Tstep = 2</span>
+<span class="n">ScanPlan</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="n">Tramp</span> <span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">310</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="c1"># define &quot;Tramp&quot; scanplan with exp = 0.5, startingT = 310, endingT = 250, Tstep = 5</span>
+<span class="n">ScanPlan</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="n">Tramp</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">310</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># define a &quot;time series&quot; scanplan with exp = 0.5, num=10, delay = 2</span>
+<span class="n">ScanPlan</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="n">tseries</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># Then let&#39;s do a calibration run with Ni, exposure time = 60s, and perform calibration in calibration software</span>
+<span class="n">run_calibration</span><span class="p">()</span>
+
+<span class="n">bt</span><span class="o">.</span><span class="n">list</span><span class="p">()</span> <span class="c1"># returns the &#39;NaCl&#39; sample object at position 17 and the &#39;ct_0.5&#39; ScanPlan object at position 20</span>
+<span class="n">xrun</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span><span class="mi">20</span><span class="p">)</span>
+
+<span class="c1"># the data are saved into the NSLS-II database (don&#39;t worry) but we want to get the image so</span>
+<span class="c1"># type:</span>
+<span class="n">save_last_tiff</span><span class="p">()</span> <span class="c1"># save tiffs from last scan</span>
+
+<span class="c1"># now we have everything set up, it is super-easy to sequence lots of interesting scans</span>
+<span class="c1"># this does a series of different scans on the same sample</span>
+<span class="n">xrun</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span><span class="mi">21</span><span class="p">)</span>   <span class="c1"># assume &#39;Tramp_0.5_300_310_2&#39; ScanPlan object at position 21</span>
+<span class="n">xrun</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span><span class="mi">22</span><span class="p">)</span>   <span class="c1"># assume &#39;Tramp_0.5_310_250_5&#39; ScanPlan object at position 23</span>
+<span class="n">save_tiff</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span> <span class="c1"># save tiffs from last three scans</span>
+
+<span class="c1"># this does the same scan on a series of samples</span>
+<span class="n">xrun</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span><span class="mi">21</span><span class="p">)</span>   <span class="c1"># running sample at index 17 with &#39;Tramp_0.5_300_310_2&#39; ScanPlan</span>
+<span class="n">xrun</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="mi">21</span><span class="p">)</span>   <span class="c1"># running sample at index 18 with &#39;Tramp_0.5_300_310_2&#39; ScanPlan</span>
+<span class="n">xrun</span><span class="p">(</span><span class="mi">19</span><span class="p">,</span><span class="mi">21</span><span class="p">)</span>   <span class="c1"># running sample at index 19 with &#39;Tramp_0.5_300_310_2&#39; ScanPlan</span>
+<span class="n">save_tiff</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span> <span class="c1"># save tiffs from last three scans</span>
+</pre></div>
+</div>
+<p>FIXME: if we have a <code class="docutils literal notranslate"><span class="pre">view_last_image()</span></code> function, document this one too.</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright (c) 2016 trustees of Columbia University in the City of New York.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

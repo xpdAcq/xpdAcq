@@ -1,0 +1,308 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Running Tomography &mdash; xpdAcq 0.12.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Documentation" href="api_doc.html" />
+    <link rel="prev" title="Using the Robot" href="robot.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.12
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="xpdusers.html">For XPD Users</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sb_overview.html">Overview of xpd acquisition environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_icollection.html">Overview of the bsui+xpdAcq environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Beamtime.html">Setting up your Beamtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Experiment.html">Setting up your XPD acquisition objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Scan.html">ScanPlan objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html">Where did all my Sample and Scan objects go?????</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-is-your-friends">bt.list() is your friends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-gotchas">bt.list() Gotchas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Running.html">Running scans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_QuickAssess.html">Initial assessment of your data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_GlobalOptions.html">xpdAcq Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_export.html">Databroker Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot.html">Using the Robot</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Running Tomography</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#running-a-tomographic-scan">Running a tomographic scan</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="xpdusers.html">For XPD Users</a> &raquo;</li>
+        
+      <li>Running Tomography</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/tomo.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="running-tomography">
+<span id="tomo"></span><h1>Running Tomography<a class="headerlink" href="#running-tomography" title="Permalink to this headline">¶</a></h1>
+<p>The XPD acquisition and analysis stack supports the acquisition and processing
+of tomographic data in both full field and pencil beam geometries.</p>
+<div class="section" id="running-a-tomographic-scan">
+<h2>Running a tomographic scan<a class="headerlink" href="#running-a-tomographic-scan" title="Permalink to this headline">¶</a></h2>
+<p>There are three scans currently supported. Each scan is delineated by
+different metadata added at the beginning of the scan:</p>
+<ol class="arabic simple">
+<li><p>Full Field</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;tomo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;full_field&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;rotation&#39;</span><span class="p">:</span> <span class="s1">&#39;motor1&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;center&#39;</span><span class="p">:</span> <span class="mf">123.3</span><span class="p">}}</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>2D Pencil Beam</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;tomo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;pencil&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;rotation&#39;</span><span class="p">:</span> <span class="s1">&#39;motor1&#39;</span><span class="p">,</span>
+          <span class="s2">&quot;translation&quot;</span><span class="p">:</span> <span class="s2">&quot;motor2&quot;</span><span class="p">,</span>
+          <span class="s1">&#39;center&#39;</span><span class="p">:</span> <span class="mf">123.3</span><span class="p">}}</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>3D Pencil Beam</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;tomo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;pencil&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;rotation&#39;</span><span class="p">:</span> <span class="s1">&#39;motor1&#39;</span><span class="p">,</span>
+          <span class="s2">&quot;translation&quot;</span><span class="p">:</span> <span class="s2">&quot;motor2&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;stack&quot;</span><span class="p">:</span> <span class="s2">&quot;motor3&quot;</span>
+          <span class="s1">&#39;center&#39;</span><span class="p">:</span> <span class="mf">123.3</span><span class="p">}}</span>
+</pre></div>
+</div>
+<p>You will need to fill in the <code class="docutils literal notranslate"><span class="pre">center</span></code> field with the correct rotation axis location (found via a line scan of the sample).
+You will also need to fill in the various motor names associated with the sample rotation, translation, and stack translation (z direction).</p>
+<p>Here is an example call to <code class="docutils literal notranslate"><span class="pre">xrun</span></code> running a tomographic scan</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">xrun</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">bp</span><span class="o">.</span><span class="n">grid_scan</span><span class="p">([</span><span class="n">pe1c</span><span class="p">],</span>
+     <span class="n">z_motor</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span>  <span class="c1"># This is the out of plane translation</span>
+     <span class="n">theta_motor</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">181</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># The theta rotation</span>
+     <span class="n">x_motor</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">401</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># The translation</span>
+        <span class="n">md</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;tomo&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;pencil&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;rotation&quot;</span><span class="p">:</span> <span class="s2">&quot;theta_motor&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;translation&quot;</span><span class="p">:</span> <span class="s2">&quot;x_motor&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;stack&quot;</span><span class="p">:</span> <span class="s2">&quot;z_motor&quot;</span><span class="p">,</span>
+                <span class="c1"># we subtract 200 because we are starting at 200</span>
+                <span class="c1"># (and the center is measured in pixels)</span>
+                <span class="s2">&quot;center&quot;</span><span class="p">:</span> <span class="mi">300</span> <span class="o">-</span> <span class="mi">200</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Once this scan starts the automated data processing software will kick in to create reconstructions of the data for each quantity of interest.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="api_doc.html" class="btn btn-neutral float-right" title="API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="robot.html" class="btn btn-neutral float-left" title="Using the Robot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright (c) 2016 trustees of Columbia University in the City of New York.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

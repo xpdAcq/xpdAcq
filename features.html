@@ -1,0 +1,339 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>xpdAcq features &mdash; xpdAcq 0.12.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.12
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="xpdusers.html">For XPD Users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> features</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/features.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="xpdacq-features">
+<span id="feature"></span><h1><code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> features<a class="headerlink" href="#xpdacq-features" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="automated-dark-collection">
+<span id="auto-dark"></span><h2>Automated dark collection<a class="headerlink" href="#automated-dark-collection" title="Permalink to this headline">¶</a></h2>
+<p>you might have found something weird when you running a <code class="docutils literal notranslate"><span class="pre">xrun</span></code> command:</p>
+<p><em>I only requested one ``xrun`` but program runs two scans</em></p>
+<p>So what happen?</p>
+<p>That is actually a feature called auto-dark subtraction of <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code>.
+When you are running your experiment, <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> actually checks if you have
+collected a <strong>fresh and appropriate</strong> dark frame every time it collects a scan.
+The definition of <strong>fresh and appropriate</strong> is:</p>
+<div class="section" id="nice-and-fresh">
+<h3><strong>Nice and fresh</strong><a class="headerlink" href="#nice-and-fresh" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Given a certain period T (``dark window``), there exists a dark frame
+with the same **total exposure time** and exactly the same **acquisition time**
+as the light frame we are about collect.
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>At <strong>XPD</strong>, area detector is running in <code class="docutils literal notranslate"><span class="pre">continuous</span> <span class="pre">acquisition</span></code> mode,
+which means detector keeps <strong>reading</strong> but only <strong>saves</strong> image when <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code>
+tells it to with desired exposure time. In short,</p>
+<ul class="simple">
+<li><p>acquisition time defines how fast is detector reading time,
+ranged from 0.1s to 5s.</p></li>
+<li><p>exposure time means total exposure time, which user defined.</p></li>
+</ul>
+</div>
+<p>Automated dark collection is enabled by default and it can be turned off by:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">glbl</span><span class="o">.</span><span class="n">auto_dark</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">glbl</span><span class="o">.</span><span class="n">shutter_control</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+</div>
+<p>And period of dark window can be modified by:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">glbl</span><span class="o">.</span><span class="n">dk_window</span> <span class="o">=</span> <span class="mi">200</span> <span class="c1"># in minutes. default is 3000 minutes</span>
+</pre></div>
+</div>
+<p>Having <code class="docutils literal notranslate"><span class="pre">auto_dark</span></code> set to <code class="docutils literal notranslate"><span class="pre">True</span></code> is strongly recommended as this enables
+<code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> to do automated dark frame subtraction when you pull out data from
+centralized <strong>NSLS-II</strong> server.</p>
+</div>
+</div>
+<div class="section" id="automated-calibration-capture">
+<span id="auto-calib"></span><h2>Automated calibration capture<a class="headerlink" href="#automated-calibration-capture" title="Permalink to this headline">¶</a></h2>
+<p>Often times, keeping track with which calibration file is associated with
+certain scan is very tiring. <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> makes this easier for you. Before every
+scan is being collected, program goes to grab the most recent calibration
+parameters in <code class="docutils literal notranslate"><span class="pre">/home/xf28id1/xpdUser/config_base</span></code> and load them as part of
+metadata so that you can reference them whenever you want and make in-situ data
+reduction possible!</p>
+<div class="section" id="quick-guide-of-calibration-steps-with-pyfai">
+<span id="calib-manual"></span><h3>Quick guide of calibration steps with pyFAI<a class="headerlink" href="#quick-guide-of-calibration-steps-with-pyfai" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><p>First you will see an image window like this:</p></li>
+</ol>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/calib_05.png"><img alt="_images/calib_05.png" class="align-center" src="_images/calib_05.png" style="width: 400px; height: 300px;" /></a>
+<p>That is the image we want to perform azimuthal calibration with. Use magnify
+tool at the tool bar to zoom in and <strong>right click</strong> rings. Starting from
+the first, inner ring and to outer rings. Usually a few rings (~5) should be
+enough.</p>
+<a class="reference internal image-reference" href="_images/calib_07.png"><img alt="_images/calib_07.png" class="align-center" src="_images/calib_07.png" style="width: 400px; height: 300px;" /></a>
+</div></blockquote>
+<p>2. After selecting rings, click on the <em>original</em> terminal and hit <code class="docutils literal notranslate"><span class="pre">&lt;enter&gt;</span></code>.
+Then you will be requested to supply indices of rings you just selected.
+Remember index <strong>starts from 0</strong> as we are using <code class="docutils literal notranslate"><span class="pre">python</span></code>.
+After supplying all indices, you should have a window to show your calibration:</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/calib_08.png"><img alt="_images/calib_08.png" class="align-center" src="_images/calib_08.png" style="width: 400px; height: 300px;" /></a>
+<p>Program will ask you if you want to modify parameters, in most of case, you
+don’t have to. So just hit <code class="docutils literal notranslate"><span class="pre">&lt;enter&gt;</span></code> in the terminal and integration will be
+done.</p>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li><p>Finally 1D integration and 2D regrouping results will pop out:</p></li>
+</ol>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/calib_09.png"><img alt="_images/calib_09.png" class="align-center" src="_images/calib_09.png" style="width: 400px; height: 300px;" /></a>
+<p>You can qualitatively interrogate your calibration by looking if lines in
+2D regrouping are straight or not.</p>
+<p>After this step, a calibration file with name <code class="docutils literal notranslate"><span class="pre">pyFAI_calib.yml</span></code> will be
+saved under <code class="docutils literal notranslate"><span class="pre">/home/xf28id1/xpdUser/config_base</span></code></p>
+</div></blockquote>
+<p>Alright, you are done then! With <code class="docutils literal notranslate"><span class="pre">`automated</span> <span class="pre">calibration</span> <span class="pre">capture</span></code> feature, <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code>
+will load calibration parameters from the most recent config file.</p>
+</div>
+</div>
+<div class="section" id="metadata-imported-from-spreadsheet">
+<span id="import-sample"></span><h2>metadata imported from spreadsheet<a class="headerlink" href="#metadata-imported-from-spreadsheet" title="Permalink to this headline">¶</a></h2>
+<p>In order to facilitate , we suggest you to enter
+as much information as you can and that is the main philosophy behind <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code>.</p>
+<p>Typing in sample metadata during beamtime is always less efficient and it wastes
+your time so a pre-populated excel sheet with all metadata entered beforehand
+turns out to be the solution.</p>
+<div class="section" id="parsing-rules">
+<h3>parsing rules<a class="headerlink" href="#parsing-rules" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p><strong>comma separated fields</strong>: information entities are separated by a comma.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cif</span> <span class="pre">name</span></code>: pointer of potential structures for your sample, if any.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Tags</span></code>: any comment you want to put on for this measurement.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>name fields</strong>:</p></li>
+<li><p><strong>phase string</strong>:</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="auto-masking">
+<span id="auto-mask"></span><h2>Auto-masking<a class="headerlink" href="#auto-masking" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>auto-masking with user defined beamstop mask</p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright (c) 2016 trustees of Columbia University in the City of New York.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

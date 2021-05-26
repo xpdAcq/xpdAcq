@@ -1,0 +1,351 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Troubleshooting &mdash; xpdAcq 0.12.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="xpdAcq Change Log" href="changelog.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.12
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="xpdusers.html">For XPD Users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#how-do-i-start-the-collection-ipython-environment-so-i-can-collect-some-data">How do I start the <code class="docutils literal notranslate"><span class="pre">collection</span></code> ipython environment so I can collect some data?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-do-i-check-if-my-beamtime-is-properly-set-up">How do I check if my beamtime is properly set up?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#why-does-my-scan-halt-for-no-reason">Why does my scan halt for no reason?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#where-did-all-my-sample-and-scan-objects-go">Where did all my Sample and Scan objects go?????</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Troubleshooting</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/troubleshooting.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="troubleshooting">
+<span id="id1"></span><h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="how-do-i-start-the-collection-ipython-environment-so-i-can-collect-some-data">
+<h2>How do I start the <code class="docutils literal notranslate"><span class="pre">collection</span></code> ipython environment so I can collect some data?<a class="headerlink" href="#how-do-i-start-the-collection-ipython-environment-so-i-can-collect-some-data" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Activate the XPD data acquisition environment:</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p>In a terminal look to see if it is already activated.  If it is, you should see <code class="docutils literal notranslate"><span class="pre">(collection)</span></code> at the beginning of the line.</p></li>
+</ul>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(collection)xf28id1@xf28id1-ws2:~$
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>If you don’t see it, type <code class="docutils literal notranslate"><span class="pre">icollection</span></code> at the command prompt then check again.</p></li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Activate the XPD data analysis environment:</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p>In a terminal look to see if it is already activated.  If it is, you should see <code class="docutils literal notranslate"><span class="pre">(analysis-dev)</span></code> at the beginning of the line.</p></li>
+</ul>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(analysis-dev)xf28id1@xf28id1-ws2:~$
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>If you don’t see it, type <code class="docutils literal notranslate"><span class="pre">ianalysis</span></code> at the command prompt then check again.</p></li>
+</ul>
+</div></blockquote>
+<p><strong>Pro Tip</strong> to avoid overhead that slows down the data acquisition computer, it is
+a good idea to run the analysis environment on a different computer.  Normally <code class="docutils literal notranslate"><span class="pre">(analysis)</span></code>
+will be run on the central computer at XPD, and <code class="docutils literal notranslate"><span class="pre">(collection)</span></code> on the right-hand computer.</p>
+</div>
+<div class="section" id="how-do-i-check-if-my-beamtime-is-properly-set-up">
+<h2>How do I check if my beamtime is properly set up?<a class="headerlink" href="#how-do-i-check-if-my-beamtime-is-properly-set-up" title="Permalink to this headline">¶</a></h2>
+<p>The instrument scientist (IS) should have set up your beamtime hardware and software
+for you.  Let’s check if it is the case.</p>
+<ol class="arabic simple">
+<li><p>Type <code class="docutils literal notranslate"><span class="pre">bt.md</span></code> and hit return, you should see similar output as following:</p></li>
+</ol>
+<blockquote>
+<div><blockquote>
+<div><div class="highlight-python: notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; bt.md
+{&#39;bt_experimenters&#39;: [&#39;Tim&#39;, &#39;Liu&#39;],
+&#39;bt_piLast&#39;: &#39;Billinge&#39;,
+&#39;bt_safN&#39;: &#39;300564&#39;,
+&#39;bt_uid&#39;: &#39;fbb381c3&#39;,
+&#39;bt_wavelength&#39;: 0.1832}
+</pre></div>
+</div>
+</div></blockquote>
+<p>You should see the beamtime (<code class="docutils literal notranslate"><span class="pre">bt</span></code>) metadata (<code class="docutils literal notranslate"><span class="pre">md</span></code>) that has been pre-stored by the IS, and it should contain things like the last name of the PI on the proposal and the SAF number for the beamtime.  If not, please seek out the IS to get your session initialized.</p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Check that the wavelength has been set.  Does the correct x-ray wavelength appear inside <code class="docutils literal notranslate"><span class="pre">bt_wavelength</span></code> field, or does it say <code class="docutils literal notranslate"><span class="pre">None</span></code>.  If the latter, you can still collect scans but automated data reduction may not work, so best to grab the IS again.</p></li>
+<li><p>Check that the Perkin Elmer detector is correctly set up.</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p>Look at the Perkin Elmer screen on the CSS and make sure that <code class="docutils literal notranslate"><span class="pre">Acquire</span></code> mode has been enabled. If Acquire mode is enabled, it should show system information <code class="docutils literal notranslate"><span class="pre">Collecting</span></code> in yellow color. If it hasn’t been activated, please click ‘start’ button.</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/cropped_pe1c_ioc.png"><img alt="_images/cropped_pe1c_ioc.png" class="align-center" src="_images/cropped_pe1c_ioc.png" style="width: 300px; height: 200px;" /></a>
+<ul class="simple">
+<li><p>Type <code class="docutils literal notranslate"><span class="pre">glbl.area_det</span></code> and return.  It should return:</p></li>
+</ul>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">glbl</span><span class="o">.</span><span class="n">area_det</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">PerkinElmerContinuous</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;XF:28IDC-ES:1{Det:PE1}&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;pe1&#39;</span><span class="p">,</span> <span class="n">read_attrs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;tiff&#39;</span><span class="p">,</span> <span class="s1">&#39;stats1&#39;</span><span class="p">],</span> <span class="n">configuration_attrs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;images_per_set&#39;</span><span class="p">,</span> <span class="s1">&#39;number_of_sets&#39;</span><span class="p">],</span> <span class="n">monitor_attrs</span><span class="o">=</span><span class="p">[])</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+<p>There are other setups that you can do to make your experiment run smoothly.
+For example, by carrying out a calibration before you start collecting it greatly facilitates data reduction later.
+Please follow the workflow in the <a class="reference internal" href="cheat_sheet.html#cheat-sheet"><span class="std std-ref">Code for Example Experiment</span></a> or talk to the IS if you don’t know how to do this.</p>
+</div>
+<div class="section" id="why-does-my-scan-halt-for-no-reason">
+<h2>Why does my scan halt for no reason?<a class="headerlink" href="#why-does-my-scan-halt-for-no-reason" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes you might find your scans halt for no reason, not even an error message.
+That most likely come from confusion at machine level.
+Don’t worry, just make sure <strong>there is only one XPD control running on this computer.</strong>.
+<code class="docutils literal notranslate"><span class="pre">XPD</span> <span class="pre">control</span></code> can be launched by double-clicking on shortcut in desktop:</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/xpd_control.png"><img alt="_images/xpd_control.png" class="align-center" src="_images/xpd_control.png" style="width: 60px; height: 80px;" /></a>
+</div></blockquote>
+<p>After launched, a window similar to this should pop out:</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/pe1c_ioc.png"><img alt="_images/pe1c_ioc.png" class="align-center" src="_images/pe1c_ioc.png" style="width: 400px; height: 300px;" /></a>
+</div></blockquote>
+<p>Each <code class="docutils literal notranslate"><span class="pre">XPD</span> <span class="pre">control</span></code> means a control panel between XPD computer and experiment apparatuses, such as area detector or motor.
+Therefore we should avoid having multiple <code class="docutils literal notranslate"><span class="pre">XPD</span> <span class="pre">control</span></code> running at the same time.
+To make sure there is only one <code class="docutils literal notranslate"><span class="pre">XPD</span> <span class="pre">control</span></code> running, move to top left corner and click <code class="docutils literal notranslate"><span class="pre">Activities</span></code>.
+Then you should see all currently active windows. Close duplicated control panels (if any) then it should work.</p>
+<p>If scan still halts, please contact beamline scientist immediately for bug report.</p>
+</div>
+<div class="section" id="where-did-all-my-sample-and-scan-objects-go">
+<h2>Where did all my Sample and Scan objects go?????<a class="headerlink" href="#where-did-all-my-sample-and-scan-objects-go" title="Permalink to this headline">¶</a></h2>
+<p>You just spent hours typing in metadata and creating
+<a class="reference internal" href="usb_Experiment.html#usb-experiment"><span class="std std-ref">sample</span></a> and <a class="reference internal" href="usb_Scan.html#usb-scan"><span class="std std-ref">scan</span></a>
+objects, and now they have suddenly disappeared!  This
+is a disaster!</p>
+<p>As Douglas Adams taught us <cite>DON’T PANIC</cite> .  This is actually
+<cite>normal</cite> (or at least <cite>expected</cite> ) behavior in xpdAcq.  Remember that
+one of the design goals of the software project was to minimize
+users’ typing.  The design had to take into account that the
+collection ipython environment is not so stable
+(e.g., see <a class="reference internal" href="#troubleshooting"><span class="std std-ref">Troubleshooting</span></a> ) and we should expect periodic
+restarts of it.  How bad if we had to retype our metadata every
+time?  So every time you create an xpdAcq acquisition object,
+the details are saved to a file on the local hard-drive.  When
+<code class="docutils literal notranslate"><span class="pre">icollection</span></code> is run, the main <code class="docutils literal notranslate"><span class="pre">bt</span></code> object (if it exists) is
+automatically reloaded, but not the other acquisition objects.
+But don’t worry, they are all safe and sound.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="changelog.html" class="btn btn-neutral float-right" title="xpdAcq Change Log" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="configuration.html" class="btn btn-neutral float-left" title="Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright (c) 2016 trustees of Columbia University in the City of New York.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

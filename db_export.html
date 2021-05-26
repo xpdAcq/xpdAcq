@@ -1,0 +1,343 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Databroker Export &mdash; xpdAcq 0.12.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Using the Robot" href="robot.html" />
+    <link rel="prev" title="xpdAcq Configuration" href="usb_GlobalOptions.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.12
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="xpdusers.html">For XPD Users</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sb_overview.html">Overview of xpd acquisition environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_icollection.html">Overview of the bsui+xpdAcq environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Beamtime.html">Setting up your Beamtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Experiment.html">Setting up your XPD acquisition objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Scan.html">ScanPlan objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html">Where did all my Sample and Scan objects go?????</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-is-your-friends">bt.list() is your friends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-gotchas">bt.list() Gotchas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Running.html">Running scans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_QuickAssess.html">Initial assessment of your data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_GlobalOptions.html">xpdAcq Configuration</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Databroker Export</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-easy-way">The easy way</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-hard-way">The hard way</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#finding-the-headers">Finding the headers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="robot.html">Using the Robot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tomo.html">Running Tomography</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="xpdusers.html">For XPD Users</a> &raquo;</li>
+        
+      <li>Databroker Export</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/db_export.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="databroker-export">
+<h1>Databroker Export<a class="headerlink" href="#databroker-export" title="Permalink to this headline">¶</a></h1>
+<p>Exporting a databroker is a good way to take your raw data home so it can be
+analyzed after the fact.</p>
+<div class="section" id="the-easy-way">
+<h2>The easy way<a class="headerlink" href="#the-easy-way" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Mount your drive which you are going to store the data on</p></li>
+<li><p>Create a folder on your drive for putting the portable databroker into</p></li>
+<li><p>In a terminal start up <code class="docutils literal notranslate"><span class="pre">bsui</span></code></p></li>
+<li><p>In a different terminal run <code class="docutils literal notranslate"><span class="pre">portable_db_server</span> <span class="pre">&lt;path/to/folder/on/mounted/drive</span></code></p></li>
+<li><p>Find all the headers you want copied (make sure that these headers include the darks and backgrounds, see below for more details)</p></li>
+<li><p>In the <code class="docutils literal notranslate"><span class="pre">bsui</span></code> ipython session run</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
+<span class="k">for</span> <span class="n">hdr</span> <span class="ow">in</span> <span class="n">hdrs</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">nd</span> <span class="ow">in</span> <span class="n">hdr</span><span class="o">.</span><span class="n">documents</span><span class="p">():</span>
+        <span class="n">pub</span><span class="p">(</span><span class="o">*</span><span class="n">nd</span><span class="p">)</span>
+        <span class="c1"># this is to make certain we don&#39;t overrun the server</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">.1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will send data to the portable db server which will then write the associated files into the folder</p>
+<ol class="arabic simple" start="7">
+<li><p>Shut down the server once it is done copying files (use <code class="docutils literal notranslate"><span class="pre">Ctrl+C</span></code>)</p></li>
+<li><p>Unmount your drive</p></li>
+</ol>
+</div>
+<div class="section" id="the-hard-way">
+<h2>The hard way<a class="headerlink" href="#the-hard-way" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Mount your drive which you are going to store the data on</p></li>
+<li><p>Create a folder on your drive for putting the portable databroker into</p></li>
+<li><p>In a terminal start up <code class="docutils literal notranslate"><span class="pre">bsui</span></code></p></li>
+<li><p>Find all the headers you want copied (make sure that these headers include the darks and backgrounds, see below for more details)</p></li>
+<li><p>In the <code class="docutils literal notranslate"><span class="pre">bsui</span></code> ipython session run</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="n">p</span> <span class="o">=</span> <span class="s1">&#39;path/to/mounted/disk/folder&#39;</span>
+<span class="n">portable_template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;description: &#39;raw database&#39;</span>
+<span class="s2">    metadatastore:</span>
+<span class="s2">        module: &#39;databroker.headersource.sqlite&#39;</span>
+<span class="s2">        class: &#39;MDS&#39;</span>
+<span class="s2">        config:</span>
+<span class="s2">            directory: &#39;raw&#39;</span>
+<span class="s2">            timezone: &#39;US/Eastern&#39;</span>
+<span class="s2">    assets:</span>
+<span class="s2">        module: &#39;databroker.assets.sqlite&#39;</span>
+<span class="s2">        class: &#39;Registry&#39;</span>
+<span class="s2">        config:</span>
+<span class="s2">            dbpath: &#39;raw/assets.sqlite&#39;</span>
+<span class="s2">    handlers:</span>
+<span class="s2">        NPY_SEQ:</span>
+<span class="s2">            module: &#39;ophyd.sim&#39;</span>
+<span class="s2">            class: &#39;NumpySeqHandler&#39;</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;raw.yml&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">portable_template</span><span class="p">)</span>
+<span class="n">pdb</span> <span class="o">=</span> <span class="n">Broker</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">unsafe_load</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">portable_template</span><span class="p">)))</span>
+<span class="c1"># hdrs is the headers that you want to export</span>
+<span class="n">db</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">hdrs</span><span class="p">,</span> <span class="n">pdb</span><span class="p">,</span> <span class="n">new_root</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;raw&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="7">
+<li><p>Once finished unmount your drive</p></li>
+</ol>
+</div>
+<div class="section" id="finding-the-headers">
+<h2>Finding the headers<a class="headerlink" href="#finding-the-headers" title="Permalink to this headline">¶</a></h2>
+<p>Make certain that you have all the headers you want otherwise you may need to
+do this all over again.
+Please see the <a class="reference external" href="https://blueskyproject.io/databroker/">databroker documentation</a> for general searching queries.
+Here is an example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">xpdan.db_utils</span> <span class="kn">import</span> <span class="n">query_background</span>
+<span class="c1"># search for a bunch of sample uids</span>
+<span class="n">hdrs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">uid</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;thing1&#39;</span><span class="p">,</span> <span class="s1">&#39;thing2&#39;</span><span class="p">]:</span>
+    <span class="n">hdrs</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="p">(</span><span class="n">sa_uid</span><span class="o">=</span><span class="n">uid</span><span class="p">))</span>
+
+<span class="c1"># don&#39;t forget the backgrounds</span>
+<span class="n">bg_hdrs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">hdr</span> <span class="ow">in</span> <span class="n">hdrs</span><span class="p">:</span>
+    <span class="n">bg_hdrs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">query_background</span><span class="p">(</span><span class="n">hdr</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">db</span><span class="p">))</span>
+<span class="n">hdrs</span> <span class="o">+=</span> <span class="n">bg_hdrs</span>
+
+<span class="c1"># and the darks</span>
+<span class="n">hdrs</span> <span class="o">+=</span> <span class="p">[</span><span class="n">db</span><span class="p">[</span><span class="n">hdr</span><span class="o">.</span><span class="n">start</span><span class="p">[</span><span class="s1">&#39;sc_dk_field_uid&#39;</span><span class="p">]]</span> <span class="k">for</span> <span class="n">hdr</span> <span class="ow">in</span> <span class="n">hdrs</span> <span class="k">if</span> <span class="s1">&#39;sc_dk_field_uid&#39;</span> <span class="ow">in</span> <span class="n">hdr</span><span class="o">.</span><span class="n">start</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="robot.html" class="btn btn-neutral float-right" title="Using the Robot" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="usb_GlobalOptions.html" class="btn btn-neutral float-left" title="xpdAcq Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright (c) 2016 trustees of Columbia University in the City of New York.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
