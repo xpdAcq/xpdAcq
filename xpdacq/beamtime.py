@@ -1008,13 +1008,6 @@ def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, cali
     delay : iterable or scalar, optional
         Time delay in seconds between successive readings; default is 0.
 
-    per_shot : callable, optional
-        hook for customizing action of inner loop (messages per step)
-        Expected signature ::
-
-           def f(detectors: Iterable[OphydObj]) -> Generator[Msg]:
-               ...
-
     calibration_md :
         The calibration data in a dictionary. If not applied, the function is a normal `bluesky.plans.count`.
 
@@ -1030,9 +1023,14 @@ def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, cali
         md = dict()
     if calibration_md is not None:
         md["calibration_md"] = calibration_md
-    yield from open_shutter_stub()
-    plan = bp.count(detectors, num, delay, md=md)
+
+    def _per_shot(_detectors):
+        yield from open_shutter_stub()
+        yield from bps.one_shot(_detectors)
+        yield from close_shutter_stub()
+        return
+
+    plan = bp.count(detectors, num, delay, md=md, per_shot=_per_shot)
     bpp.subs_wrapper(plan, LiveTable(detectors))
     sts = yield from plan
-    yield from close_shutter_stub()
     return sts
