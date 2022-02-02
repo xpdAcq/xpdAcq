@@ -40,6 +40,10 @@ from .yamldict import YamlDict, YamlChainMap
 _PLAN_REGISTRY = {}
 
 
+class PlanError(Exception):
+    pass
+
+
 def register_plan(plan_name, plan_func, overwrite=False):
     """
     Map between a plan_name (string) and a plan_func (generator function).
@@ -991,7 +995,7 @@ def load_calibration_md(poni_file: str) -> dict:
 
 
 def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, calibration_md: dict = None,
-                     md: dict = None) -> typing.Generator:
+                     md: dict = None, test_mod: bool = False) -> typing.Generator:
     """
     Take one or more readings from detectors with shutter control and calibration metadata injection.
 
@@ -1008,31 +1012,36 @@ def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, cali
     delay : iterable or scalar, optional
         Time delay in seconds between successive readings; default is 0.
 
-    per_shot : callable, optional
-        hook for customizing action of inner loop (messages per step)
-        Expected signature ::
-
-           def f(detectors: Iterable[OphydObj]) -> Generator[Msg]:
-               ...
-
     calibration_md :
         The calibration data in a dictionary. If not applied, the function is a normal `bluesky.plans.count`.
 
     md : dict, optional
         metadata
 
+    test_mod : bool
+        Whether this is a run for the test functions.
+
     Notes
     -----
     If ``delay`` is an iterable, it must have at least ``num - 1`` entries or
     the plan will raise a ``ValueError`` during iteration.
     """
+    if not test_mod and glbl["auto_load_calib"]:
+        raise PlanError(
+            "Please set `glbl['auto_load_calib'] = False` before running this plan."
+        )
     if md is None:
         md = dict()
     if calibration_md is not None:
         md["calibration_md"] = calibration_md
-    yield from open_shutter_stub()
-    plan = bp.count(detectors, num, delay, md=md)
+
+    def _per_shot(_detectors):
+        yield from open_shutter_stub()
+        yield from bps.one_shot(_detectors)
+        yield from close_shutter_stub()
+        return
+
+    plan = bp.count(detectors, num, delay, md=md, per_shot=_per_shot)
     bpp.subs_wrapper(plan, LiveTable(detectors))
     sts = yield from plan
-    yield from close_shutter_stub()
     return sts
