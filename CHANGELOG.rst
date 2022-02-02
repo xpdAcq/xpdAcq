@@ -3,6 +3,19 @@ xpdAcq Change Log
 
 .. current developments
 
+v1.0.1
+====================
+
+**Added:**
+
+* Remind users to tune the `glbl['auto_load_calib']` before using the `count_with_calib`.
+
+**Fixed:**
+
+* Fix the issue that the shutter will open before the dark run when using `count_with_calib`.
+
+
+
 v1.0.0
 ====================
 
