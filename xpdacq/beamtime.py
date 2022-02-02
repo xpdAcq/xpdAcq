@@ -40,6 +40,10 @@ from .yamldict import YamlDict, YamlChainMap
 _PLAN_REGISTRY = {}
 
 
+class PlanError(Exception):
+    pass
+
+
 def register_plan(plan_name, plan_func, overwrite=False):
     """
     Map between a plan_name (string) and a plan_func (generator function).
@@ -1019,6 +1023,10 @@ def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, cali
     If ``delay`` is an iterable, it must have at least ``num - 1`` entries or
     the plan will raise a ``ValueError`` during iteration.
     """
+    if glbl["auto_load_calib"]:
+        raise PlanError(
+            "Please set `glbl['auto_load_calib'] = False` before running this plan."
+        )
     if md is None:
         md = dict()
     if calibration_md is not None:
