@@ -995,7 +995,7 @@ def load_calibration_md(poni_file: str) -> dict:
 
 
 def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, calibration_md: dict = None,
-                     md: dict = None) -> typing.Generator:
+                     md: dict = None, test_mod: bool = False) -> typing.Generator:
     """
     Take one or more readings from detectors with shutter control and calibration metadata injection.
 
@@ -1018,12 +1018,15 @@ def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, cali
     md : dict, optional
         metadata
 
+    test_mod : bool
+        Whether this is a run for the test functions.
+
     Notes
     -----
     If ``delay`` is an iterable, it must have at least ``num - 1`` entries or
     the plan will raise a ``ValueError`` during iteration.
     """
-    if glbl["auto_load_calib"]:
+    if not test_mod and glbl["auto_load_calib"]:
         raise PlanError(
             "Please set `glbl['auto_load_calib'] = False` before running this plan."
         )

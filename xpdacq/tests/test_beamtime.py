@@ -285,5 +285,5 @@ def test_count_with_calib():
     poni_file = rs_fn("xpdacq", "tests/Ni_poni_file.poni")
     md = xbt.load_calibration_md(poni_file)
     print(md)
-    plan = xbt.count_with_calib([pe1c], num=2, delay=3, calibration_md=md)
+    plan = xbt.count_with_calib([pe1c], num=2, delay=3, calibration_md=md, test_mod=True)
     summarize_plan(plan)
