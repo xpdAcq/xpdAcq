@@ -706,7 +706,7 @@ For more info: `here <http://nsls-ii.github.io/bluesky/state-machine.html#intera
 
 
 Write multiple-calibration plan
-"""""""""""""""""""""""""""""""
+-------------------------------
 
 The multiple-calibration plan is a plan that uses multiple geometries of setups so it needs more than one set of
 calibration data. Here, we use an example that we would like to collect a SAXS and a WAXS at each step of a
@@ -723,7 +723,7 @@ We use the `load_calibration_md` to the calibration data from the files.
 Then, we use the `count_with_calib` to build the plan for each step. Here, at each step, we move the `detector` to
 far field using the `motor`, count for 5 images, move it to near field and count for another 5 images. The
 arguments `dets` is for the other detectors that we want to read other than the area detectors like the
-thermometer.
+thermometer. You can not input the `5` and it will only take one image in this case.
 
   .. code-block:: python
 
@@ -756,3 +756,24 @@ because we need to record the temperature reading from the `t_motor`.
         for t in t_list:
             yield from bps.mv(t_motor, t)
             yield from my_per_step([t_motor])
+
+
+Before run your plan, we need to turn off the automatic calibration metadata loading in the global setting.
+
+  .. code-block:: python
+
+    glbl['auto_load_calib'] = False
+
+
+Then, we can run the plan in the xrun. For example, we would like to run the `my_t_ramp` plan for sample `0`.
+
+  .. code-block:: python
+
+    xrun(0, my_t_ramp(cryostream, [300., 320., 340.])))
+
+This will run the temperature ramping using the device named `cryostream` at temperature 300.0, 320.0 and 340.0.
+The detectors and calibration metdata to use have been defined in the `my_per_step` so we don't need to worry
+about it when you run the xrun.
+
+After the plan finsihes, we need to turn the automatic calibration metadata loading on if we would like to change
+to normal measurements.

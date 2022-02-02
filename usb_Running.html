@@ -1,77 +1,37 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Running scans &mdash; xpdAcq 1.0.0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Initial assessment of your data" href="usb_QuickAssess.html" />
     <link rel="prev" title="Where did all my Sample and Scan objects go?????" href="usb_Where.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> xpdAcq
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 1.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -79,18 +39,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
 </ul>
@@ -154,75 +103,33 @@
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">xpdAcq</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="xpdusers.html">For XPD Users</a> &raquo;</li>
-        
       <li>Running scans</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/usb_Running.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="running-scans">
-<span id="usb-running"></span><h1>Running scans<a class="headerlink" href="#running-scans" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="running-scans">
+<span id="usb-running"></span><h1>Running scans<a class="headerlink" href="#running-scans" title="Permalink to this headline"></a></h1>
 <p>The hard work of the experimental setup is now done.  It involved creating all the
 rich metadata container and ScanPlan objects, but with this in the past it makes
 it easy and low overhead to run the scans, allowing the experimenter to concentrate
@@ -327,8 +234,8 @@ to get the first data-set.</p>
 <span class="go">generator count [&#39;0beaaf&#39;] (scan num: 8)</span>
 </pre></div>
 </div>
-<div class="section" id="automated-dark-collection">
-<span id="auto-dark"></span><h2>Automated dark collection<a class="headerlink" href="#automated-dark-collection" title="Permalink to this headline">¶</a></h2>
+<section id="automated-dark-collection">
+<span id="auto-dark"></span><h2>Automated dark collection<a class="headerlink" href="#automated-dark-collection" title="Permalink to this headline"></a></h2>
 <p>You might have found something weird when you ran the <code class="docutils literal notranslate"><span class="pre">xrun</span></code> command:</p>
 <p><em>I only requested one ``xrun`` but the program runs two scans</em></p>
 <p>So what happened?</p>
@@ -336,8 +243,8 @@ to get the first data-set.</p>
 When you are running your experiment, <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> checks if you have
 collected a <strong>fresh and appropriate</strong> dark frame every time it collects a scan.
 The definition of <strong>fresh and appropriate</strong> is:</p>
-<div class="section" id="nice-and-fresh">
-<h3><strong>Nice and fresh</strong><a class="headerlink" href="#nice-and-fresh" title="Permalink to this headline">¶</a></h3>
+<section id="nice-and-fresh">
+<h3><strong>Nice and fresh</strong><a class="headerlink" href="#nice-and-fresh" title="Permalink to this headline"></a></h3>
 <blockquote>
 <div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Given a certain period T (``dark window``), there exists a dark frame
 with the same **total exposure time** and exactly the same **acquisition time**
@@ -369,17 +276,17 @@ This can take values between 0.1s to 5s.</p></li>
 <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> to do automated dark frame subtraction when you pull out data from the
 centralized <strong>NSLS-II</strong> server.</p>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="automated-calibration-capture">
-<span id="auto-calib"></span><h2>Automated calibration capture<a class="headerlink" href="#automated-calibration-capture" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="automated-calibration-capture">
+<span id="auto-calib"></span><h2>Automated calibration capture<a class="headerlink" href="#automated-calibration-capture" title="Permalink to this headline"></a></h2>
 <p>Often times, keeping track of which calibration file is associated with a specific scan is very tiring. <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> makes this easier or you. Before every
 scan is being collected, the program goes to grab the most recent calibration
 parameters in <code class="docutils literal notranslate"><span class="pre">xpdUser/config_base</span></code> and load them as part of the
 metadata so that you can reference them whenever you want, and make in-situ data
 reduction possible!</p>
-<div class="section" id="quick-guide-of-calibration-steps-with-pyfai">
-<span id="calib-manual"></span><h3>Quick guide of calibration steps with pyFAI<a class="headerlink" href="#quick-guide-of-calibration-steps-with-pyfai" title="Permalink to this headline">¶</a></h3>
+<section id="quick-guide-of-calibration-steps-with-pyfai">
+<span id="calib-manual"></span><h3>Quick guide of calibration steps with pyFAI<a class="headerlink" href="#quick-guide-of-calibration-steps-with-pyfai" title="Permalink to this headline"></a></h3>
 <p>1. We assume that you have run <code class="docutils literal notranslate"><span class="pre">run_calibration()</span></code> in the <code class="docutils literal notranslate"><span class="pre">collection</span></code> window
 with Ni as your calibrant.  This will automatically expose the Ni, and after a
 pause a 2D plot window should pop up on the acquisition computer, looking
@@ -443,10 +350,10 @@ Return to the <code class="docutils literal notranslate"><span class="pre">Quick
 <blockquote>
 <div><a class="reference internal image-reference" href="_images/calib_09.png"><img alt="_images/calib_09.png" class="align-center" src="_images/calib_09.png" style="width: 400px; height: 300px;" /></a>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="sample-metadata-imported-from-spreadsheet">
-<span id="import-sample"></span><h2>Sample metadata imported from spreadsheet<a class="headerlink" href="#sample-metadata-imported-from-spreadsheet" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="sample-metadata-imported-from-spreadsheet">
+<span id="import-sample"></span><h2>Sample metadata imported from spreadsheet<a class="headerlink" href="#sample-metadata-imported-from-spreadsheet" title="Permalink to this headline"></a></h2>
 <p>In order to facilitate retrospective operation on data, we suggest you to enter
 as much information as you can and that is the main philosophy behind <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code>.</p>
 <p>Typing in sample metadata during beamtime is always less efficient and it wastes
@@ -461,8 +368,8 @@ directory. Then the import process is simply:</p>
 <p><code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> will grab the <code class="docutils literal notranslate"><span class="pre">saf_number</span></code> and <code class="docutils literal notranslate"><span class="pre">bt</span></code> for current beamtime, so make sure you have your spreadsheet named with proper format. For example, if your SAF number is <code class="docutils literal notranslate"><span class="pre">300179</span></code>, then you should have your pre-populated spreadsheet with the name as <code class="docutils literal notranslate"><span class="pre">300179_sample.xls</span></code>, sit inside <code class="docutils literal notranslate"><span class="pre">xpdUser/import</span></code> directory.</p>
 <p>To parse the information filled inside your spreadsheet, we have designed
 several rules and here are the explanation to each of the rules.</p>
-<div class="section" id="comma-separated-fields">
-<h3>comma separated fields<a class="headerlink" href="#comma-separated-fields" title="Permalink to this headline">¶</a></h3>
+<section id="comma-separated-fields">
+<h3>comma separated fields<a class="headerlink" href="#comma-separated-fields" title="Permalink to this headline"></a></h3>
 <blockquote>
 <div><p>Files with information entities are separated by a comma <code class="docutils literal notranslate"><span class="pre">,</span></code>.</p>
 <p>Each separated by <code class="docutils literal notranslate"><span class="pre">,</span></code> will be individually searchable later.</p>
@@ -488,9 +395,9 @@ several rules and here are the explanation to each of the rules.</p>
 <p>And a search on either <code class="docutils literal notranslate"><span class="pre">background</span></code> or``standard`` later on will include
 this header.</p>
 </div></blockquote>
-</div>
-<div class="section" id="name-fields">
-<h3>name fields<a class="headerlink" href="#name-fields" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="name-fields">
+<h3>name fields<a class="headerlink" href="#name-fields" title="Permalink to this headline"></a></h3>
 <blockquote>
 <div><p>Fields that are used to store a person’s name in <code class="docutils literal notranslate"><span class="pre">first</span> <span class="pre">name</span> <span class="pre">last</span> <span class="pre">name</span></code> format.</p>
 <p>Each person’s first and last name will be searchable later on.</p>
@@ -519,9 +426,9 @@ this header.</p>
 <p>A search on either <code class="docutils literal notranslate"><span class="pre">Maxwell</span></code> or <code class="docutils literal notranslate"><span class="pre">Terban</span></code> or <code class="docutils literal notranslate"><span class="pre">Benjamin</span></code> or <code class="docutils literal notranslate"><span class="pre">Frandsen</span></code>
 later will include this header.</p>
 </div></blockquote>
-</div>
-<div class="section" id="phase-string">
-<h3>phase string<a class="headerlink" href="#phase-string" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="phase-string">
+<h3>phase string<a class="headerlink" href="#phase-string" title="Permalink to this headline"></a></h3>
 <blockquote>
 <div><p>Field used to specify the phase information and chemical composition of your
 sample. It’s important to enter this field correctly so that we can have
@@ -557,9 +464,9 @@ used. Under <code class="docutils literal notranslate"><span class="pre">xpdAcq<
 <p>As before, a search on <code class="docutils literal notranslate"><span class="pre">Na</span></code> or <code class="docutils literal notranslate"><span class="pre">Cl</span></code> or <code class="docutils literal notranslate"><span class="pre">H</span></code> or <code class="docutils literal notranslate"><span class="pre">O</span></code> will include this
 header. Also a search on <code class="docutils literal notranslate"><span class="pre">Nacl=0.09</span></code> will include this header as well.</p>
 </div></blockquote>
-</div>
-<div class="section" id="dictionary-like-fields">
-<h3>dictionary-like fields<a class="headerlink" href="#dictionary-like-fields" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="dictionary-like-fields">
+<h3>dictionary-like fields<a class="headerlink" href="#dictionary-like-fields" title="Permalink to this headline"></a></h3>
 <blockquote>
 <div><p>Fields that are utilized to store information as <code class="docutils literal notranslate"><span class="pre">key-value</span> <span class="pre">pair</span></code> format.
 Standard format of it is <code class="docutils literal notranslate"><span class="pre">key:</span> <span class="pre">value</span></code> and it also follows the comma-separate rule</p>
@@ -581,9 +488,9 @@ sample phases</p></td>
 </pre></div>
 </div>
 </div></blockquote>
-</div>
-<div class="section" id="sample-objects">
-<h3>Sample Objects<a class="headerlink" href="#sample-objects" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="sample-objects">
+<h3>Sample Objects<a class="headerlink" href="#sample-objects" title="Permalink to this headline"></a></h3>
 <ul>
 <li><p><strong>Sample</strong>:</p>
 <p>Each row in your spreadsheet will be taken as one valid Sample and metadata
@@ -660,10 +567,10 @@ linked with background <code class="docutils literal notranslate"><span class="p
 the automated data-reduction workflow that we will have in the future!</p>
 </li>
 </ul>
-</div>
-</div>
-<div class="section" id="auto-masking">
-<span id="auto-mask"></span><h2>Auto-masking<a class="headerlink" href="#auto-masking" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="auto-masking">
+<span id="auto-mask"></span><h2>Auto-masking<a class="headerlink" href="#auto-masking" title="Permalink to this headline"></a></h2>
 <p>Masking can be a tedious process, requiring long hours judging which pixels
 are good and which need to be removed. The our automated masking software aims
 to alleviate this by applying a set of masks in sequence to return better
@@ -673,8 +580,8 @@ created for a low scattering sample (usually kapton). Then this mask is reused
 for each subsequent image taken with the same detector position. The second
 modality is that each image gets is own bespoke mask, potentially derived from
 the low scattering mask.</p>
-<div class="section" id="applied-masks">
-<h3>Applied masks<a class="headerlink" href="#applied-masks" title="Permalink to this headline">¶</a></h3>
+<section id="applied-masks">
+<h3>Applied masks<a class="headerlink" href="#applied-masks" title="Permalink to this headline"></a></h3>
 <ol class="arabic simple" start="0">
 <li><dl class="simple">
 <dt>Any mask passed in to the software:</dt><dd><p>If you have any preexisting masks, we will use those as a starting position
@@ -721,12 +628,12 @@ alpha is 3 standard deviations.</p>
 </dl>
 </li>
 </ol>
-</div>
-</div>
-<div class="section" id="client-server-metadata-schema">
-<span id="client-server-md"></span><h2>client/server metadata schema<a class="headerlink" href="#client-server-metadata-schema" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="overview-with-an-example">
-<h3>Overview with an example<a class="headerlink" href="#overview-with-an-example" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="client-server-metadata-schema">
+<span id="client-server-md"></span><h2>client/server metadata schema<a class="headerlink" href="#client-server-metadata-schema" title="Permalink to this headline"></a></h2>
+<section id="overview-with-an-example">
+<h3>Overview with an example<a class="headerlink" href="#overview-with-an-example" title="Permalink to this headline"></a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">client/server</span></code> schema associate different data with a centralized
 mapping, which would allow a more flexible way to link data. Let’s take
 calibration as an example. Ideally one will perform a calibration run
@@ -749,9 +656,9 @@ to defining experimental geometry, such as wavelength, was known to be in accura
 <p>The <code class="docutils literal notranslate"><span class="pre">client/server</span></code> logic can be extended to other kinds of mapping as well.
 Currently, <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> utilizes this logic in associating calibration runs with
 production runs.</p>
-</div>
-<div class="section" id="when-and-how-to-change-exp-hash-uid">
-<h3>when and how to change <code class="docutils literal notranslate"><span class="pre">exp_hash_uid</span></code>?<a class="headerlink" href="#when-and-how-to-change-exp-hash-uid" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="when-and-how-to-change-exp-hash-uid">
+<h3>when and how to change <code class="docutils literal notranslate"><span class="pre">exp_hash_uid</span></code>?<a class="headerlink" href="#when-and-how-to-change-exp-hash-uid" title="Permalink to this headline"></a></h3>
 <p>It’s strongly suggested to update the <code class="docutils literal notranslate"><span class="pre">exp_hash_uid</span></code> whenever there is
 a sensible change to your experimental setup, for example, different detectors,
 changes in sample stages, fluctuation of ring current and so on. In this way,
@@ -777,10 +684,10 @@ and outside the hutch, synchrotron beam current to ambient temperature, as a
 unique identifier, <code class="docutils literal notranslate"><span class="pre">uid</span></code>. Therefore, this identifier could be use for mapping
 data that shares common experiment related factors.</p>
 </div>
-</div>
-</div>
-<div class="section" id="user-defined-folder-tag">
-<span id="folder-tag"></span><h2>User defined folder tag<a class="headerlink" href="#user-defined-folder-tag" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="user-defined-folder-tag">
+<span id="folder-tag"></span><h2>User defined folder tag<a class="headerlink" href="#user-defined-folder-tag" title="Permalink to this headline"></a></h2>
 <p>You can also add metadata to the run by adding key word arguments to the run eg
 <code class="docutils literal notranslate"><span class="pre">xrun(0,</span> <span class="pre">8,</span> <span class="pre">my_scan_tag='hello</span> <span class="pre">world')</span></code>. Some pieces of metadata are special,
 like <code class="docutils literal notranslate"><span class="pre">folder_tag_list</span></code>. When <code class="docutils literal notranslate"><span class="pre">folder_tag_list</span></code> is added
@@ -790,55 +697,38 @@ the list
 (eg <code class="docutils literal notranslate"><span class="pre">&lt;.../tiff_base/after_saxs/Ni/billinge/mask/file_name&gt;</span></code> for an experiment
 on Nickel run by the Billinge group).</p>
 <p>Let’s <a class="reference internal" href="usb_QuickAssess.html#usb-quickassess"><span class="std std-ref">take a quick look at our data</span></a></p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="usb_QuickAssess.html" class="btn btn-neutral float-right" title="Initial assessment of your data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="usb_Where.html" class="btn btn-neutral float-left" title="Where did all my Sample and Scan objects go?????" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="usb_QuickAssess.html" class="btn btn-neutral float-right" title="Initial assessment of your data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright (c) 2016 trustees of Columbia University in the City of New York.
-
-    </p>
+    <p>&#169; Copyright (c) 2016 trustees of Columbia University in the City of New York.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
