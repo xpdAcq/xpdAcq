@@ -995,7 +995,7 @@ def load_calibration_md(poni_file: str) -> dict:
 
 
 def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, calibration_md: dict = None,
-                     md: dict = None, test_mod: bool = False) -> typing.Generator:
+                     md: dict = None) -> typing.Generator:
     """
     Take one or more readings from detectors with shutter control and calibration metadata injection.
 
@@ -1018,18 +1018,11 @@ def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, cali
     md : dict, optional
         metadata
 
-    test_mod : bool
-        Whether this is a run for the test functions.
-
     Notes
     -----
     If ``delay`` is an iterable, it must have at least ``num - 1`` entries or
     the plan will raise a ``ValueError`` during iteration.
     """
-    if not test_mod and glbl["auto_load_calib"]:
-        raise PlanError(
-            "Please set `glbl['auto_load_calib'] = False` before running this plan."
-        )
     if md is None:
         md = dict()
     if calibration_md is not None:
@@ -1041,7 +1034,14 @@ def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, cali
         yield from close_shutter_stub()
         return
 
-    plan = bp.count(detectors, num, delay, md=md, per_shot=_per_shot)
-    bpp.subs_wrapper(plan, LiveTable(detectors))
-    sts = yield from plan
+    prev_state = glbl["auto_load_calib"]
+    glbl["auto_load_calib"] = False
+    try:
+        plan = bp.count(detectors, num, delay, md=md, per_shot=_per_shot)
+        bpp.subs_wrapper(plan, LiveTable(detectors))
+        sts = yield from plan
+    except Exception as error:
+        glbl["auto_load_calib"] = prev_state
+        raise error
+    glbl["auto_load_calib"] = prev_state
     return sts

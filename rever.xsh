@@ -4,9 +4,8 @@ $ACTIVITIES = [
     'changelog',
     'tag',
     'push_tag',
-#    'ghrelease',
-    'pypi',
-#    'forge'
+    'ghrelease',
+    'pypi'
 ]
 
 $VERSION_BUMP_PATTERNS = [
@@ -15,7 +14,7 @@ $VERSION_BUMP_PATTERNS = [
 ]
 $CHANGELOG_FILENAME = 'CHANGELOG.rst'
 $CHANGELOG_IGNORE = ['TEMPLATE.rst']
-$PUSH_TAG_REMOTE ='https://github.com/xpdAcq/xpdAcq.git'
+$PUSH_TAG_REMOTE ='git@github.com:xpdAcq/xpdAcq.git'
 
 $GITHUB_REPO = 'xpdAcq'
 $GITHUB_ORG = 'xpdAcq'
