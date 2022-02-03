@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quick Start &mdash; xpdAcq 1.0.0 documentation</title>
+  <title>Quick Start &mdash; xpdAcq 1.0.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -758,7 +758,7 @@ the <cite>calib</cite> folder.</p>
 <p>Then, we use the <cite>count_with_calib</cite> to build the plan for each step. Here, at each step, we move the <cite>detector</cite> to
 far field using the <cite>motor</cite>, count for 5 images, move it to near field and count for another 5 images. The
 arguments <cite>dets</cite> is for the other detectors that we want to read other than the area detectors like the
-thermometer. You can not input the <cite>5</cite> and it will only take one image in this case.</p>
+thermometer. If we delete input the <cite>5</cite>, it will only take one image in this case.</p>
 <blockquote>
 <div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">bluesky.plan_stubs</span> <span class="k">as</span> <span class="nn">bps</span>
 
@@ -770,6 +770,9 @@ thermometer. You can not input the <cite>5</cite> and it will only take one imag
 </pre></div>
 </div>
 </div></blockquote>
+<p>We need to be caution here when we use this function. The <cite>glbl[‘auto_load_calib’]</cite> will be turned to <cite>False</cite>
+when the plan is running and then turned back to the former value. If there are other plans using the <cite>glbl</cite>,
+it will cause unexpected behavior.</p>
 <p>If we are using two detectors <cite>far_field_det</cite> and <cite>near_field_det</cite> instead of moving one detector, we can write
 our step like below.</p>
 <blockquote>
@@ -791,12 +794,6 @@ because we need to record the temperature reading from the <cite>t_motor</cite>.
 </pre></div>
 </div>
 </div></blockquote>
-<p>Before run your plan, we need to turn off the automatic calibration metadata loading in the global setting.</p>
-<blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">glbl</span><span class="p">[</span><span class="s1">&#39;auto_load_calib&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-</pre></div>
-</div>
-</div></blockquote>
 <p>Then, we can run the plan in the xrun. For example, we would like to run the <cite>my_t_ramp</cite> plan for sample <cite>0</cite>.</p>
 <blockquote>
 <div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">xrun</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">my_t_ramp</span><span class="p">(</span><span class="n">cryostream</span><span class="p">,</span> <span class="p">[</span><span class="mf">300.</span><span class="p">,</span> <span class="mf">320.</span><span class="p">,</span> <span class="mf">340.</span><span class="p">])))</span>
@@ -806,8 +803,6 @@ because we need to record the temperature reading from the <cite>t_motor</cite>.
 <p>This will run the temperature ramping using the device named <cite>cryostream</cite> at temperature 300.0, 320.0 and 340.0.
 The detectors and calibration metdata to use have been defined in the <cite>my_per_step</cite> so we don’t need to worry
 about it when you run the xrun.</p>
-<p>After the plan finsihes, we need to turn the automatic calibration metadata loading on if we would like to change
-to normal measurements.</p>
 </section>
 </section>
 
