@@ -1,16 +1,15 @@
 import typing as T
 
 import bluesky.plan_stubs as bps
-from bluesky_darkframes import SnapshotDevice
-from bluesky_darkframes import DarkFramePreprocessor
+from bluesky_darkframes import DarkFramePreprocessor, SnapshotDevice
 from ophyd import Device
-from ophyd.signal import Signal
 from ophyd.ophydobj import OphydObject
+from ophyd.signal import Signal
 
 
 class DarkPreprocessor(DarkFramePreprocessor):
     """A plan preprocessor that ensures each Run records a dark frame.
-        
+
     Specifically this adds a new Event stream, named ‘dark’ by default. It inserts one Event with a reading that contains a ‘dark’ frame. The same reading may be used across multiple runs, depending on the rules for when a dark frame is taken.
 
     Parameters

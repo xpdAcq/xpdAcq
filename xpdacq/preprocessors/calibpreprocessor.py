@@ -1,11 +1,11 @@
 import typing as T
 
-from ophyd import Device, Signal
-from ophyd import Component as Cpt
-from bluesky import Msg
-from pyFAI.geometry import Geometry
 import bluesky.plan_stubs as bps
 import bluesky.preprocessors as bpp
+from bluesky import Msg
+from ophyd import Component as Cpt
+from ophyd import Device, Signal
+from pyFAI.geometry import Geometry
 
 
 class CalibInfo(Device):
@@ -51,7 +51,7 @@ class CalibPreprocessor:
         self._calib_info.detector.set(geo.detector.name)
         self._calib_info.calibrated.set(True)
         return
-    
+
     def read(self, poni_file: str) -> None:
         """Read the calibration information from the poni file."""
         geo = Geometry()
@@ -73,7 +73,7 @@ class CalibPreprocessor:
         """Mutate the plan. Read the calibration information data every time after the detector is read."""
         if self._disabled:
             return plan
-        
+
         def _mutate(msg: Msg):
             if msg.command == "read" and msg.obj is self._detector:
                 return None, bps.read(self._calib_info)
