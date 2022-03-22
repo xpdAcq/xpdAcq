@@ -9,6 +9,8 @@ import bluesky.preprocessors as bpp
 
 
 class CalibInfo(Device):
+    """The information of calibration from pyFAI.
+    """
 
     wavelength = Cpt(Signal, name="wavelength", value=1.)
     dist = Cpt(Signal, name="dist", value=1.)
@@ -22,14 +24,21 @@ class CalibInfo(Device):
 
 
 class CalibPreprocessor:
-
+    """The preprocessor to inject calibration data.
+    """
 
     def __init__(self, detector: Device) -> None:
+        """The preprocessor to inject calibration data.
+
+        Args:
+            detector (Device): The detector to associate the calibration data with.
+        """
         self._detector: Device = detector
         self._calib_info: CalibInfo = CalibInfo(name=detector.name)
         self._disabled: bool = False
 
     def set(self, geo: Geometry) -> None:
+        """Set the calibration information using the geometry object."""
         self._calib_info.wavelength.set(geo.wavelength)
         self._calib_info.dist.set(geo.dist)
         self._calib_info.poni1.set(geo.poni1)
@@ -42,20 +51,24 @@ class CalibPreprocessor:
         return
     
     def read(self, poni_file: str) -> None:
+        """Read the calibration information from the poni file."""
         geo = Geometry()
         geo.load(poni_file)
         self.set(geo)
         return
 
     def disable(self) -> None:
+        """Disable the preprocessing. Do nothing to the plan when called."""
         self._disabled = True
         return
 
     def enable(self) -> None:
+        """Enable the preprocessing. Mutate the plan when called."""
         self._disabled = False
         return
 
     def __call__(self, plan: T.Generator[Msg, T.Any, T.Any]) -> T.Generator[Msg, T.Any, T.Any]:
+        """Mutate the plan. Read the calibration information data every time after the detector is read."""
         if self._disabled:
             return plan
         
