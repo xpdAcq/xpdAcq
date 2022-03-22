@@ -25,15 +25,15 @@ def test_set():
         )
     cp.set(geo)
     # check loading
-    assert cp._calib_info.wavelength.value == 1.
-    assert cp._calib_info.dist.value == 1.
-    assert cp._calib_info.poni1.value == 0.
-    assert cp._calib_info.poni2.value == 0.
-    assert cp._calib_info.rot1.value == 0.
-    assert cp._calib_info.rot2.value == 0.
+    assert cp._calib_info.wavelength.get() == 1.
+    assert cp._calib_info.dist.get() == 1.
+    assert cp._calib_info.poni1.get() == 0.
+    assert cp._calib_info.poni2.get() == 0.
+    assert cp._calib_info.rot1.get() == 0.
+    assert cp._calib_info.rot2.get() == 0.
     assert cp._calib_info.rot3.value == 0.
-    assert cp._calib_info.detector.value == "Perkin detector"
-    assert cp._calib_info.calibrated.value == True
+    assert cp._calib_info.detector.get() == "Perkin detector"
+    assert cp._calib_info.calibrated.get() == True
 
 
 def test_load():
@@ -62,7 +62,7 @@ def test_call():
         signal = getattr(cp._calib_info, attr)
         key = "{}_{}".format(det_name, attr)
         value = data[0].get(key)
-        assert value == signal.value
+        assert value == signal.get()
 
 
 def test_disable_and_enable():
