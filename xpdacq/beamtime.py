@@ -1034,14 +1034,7 @@ def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, cali
         yield from close_shutter_stub()
         return
 
-    prev_state = glbl["auto_load_calib"]
-    glbl["auto_load_calib"] = False
-    try:
-        plan = bp.count(detectors, num, delay, md=md, per_shot=_per_shot)
-        bpp.subs_wrapper(plan, LiveTable(detectors))
-        sts = yield from plan
-    except Exception as error:
-        glbl["auto_load_calib"] = prev_state
-        raise error
-    glbl["auto_load_calib"] = prev_state
+    plan = bp.count(detectors, num, delay, md=md, per_shot=_per_shot)
+    bpp.subs_wrapper(plan, LiveTable(detectors))
+    sts = yield from plan
     return sts
