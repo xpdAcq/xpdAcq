@@ -1,5 +1,5 @@
 from numpy import asscalar
-from xpdacq.callbacks.calibpreprocessor import CalibPreprocessor
+from xpdacq.preprocessors.calibpreprocessor import CalibPreprocessor
 from bluesky_darkframes.sim import DiffractionDetector
 from pkg_resources import resource_filename
 from pyFAI.geometry import Geometry
