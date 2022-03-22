@@ -25,14 +25,16 @@ class CalibInfo(Device):
 
 class CalibPreprocessor:
     """The preprocessor to inject calibration data.
+
+    The calibration data of the detector will be stored in the ophyd device `CalibInfo`. This device will be read after the detector is read. The calibration data will be in the same stream as the image of the detector. Be aware that this preprocessor should be used before the DarkPreprocessor to make sure the calibration data will not be injected into the dark stream.
+
+    Parameters
+    ----------
+    detector : Device
+        The detector to associate the calibration data with.
     """
 
     def __init__(self, detector: Device) -> None:
-        """The preprocessor to inject calibration data.
-
-        Args:
-            detector (Device): The detector to associate the calibration data with.
-        """
         self._detector: Device = detector
         self._calib_info: CalibInfo = CalibInfo(name=detector.name)
         self._disabled: bool = False
