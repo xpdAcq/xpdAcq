@@ -180,6 +180,12 @@ def close_shutter_stub():
     yield from bps.checkpoint()
 
 
+def xpdacq_per_shot(detectors):
+    yield from open_shutter_stub()
+    yield from bps.trigger_and_read(detectors)
+    yield from close_shutter_stub()
+
+
 def ct(dets, exposure):
     """
     Take one reading from area detector with given exposure time
@@ -223,7 +229,7 @@ def ct(dets, exposure):
             "sp_plan_name": "ct",
         },
     )
-    plan = bp.count([area_det], md=_md)
+    plan = bp.count([area_det], md=_md, per_shot=xpdacq_per_shot)
     plan = bpp.subs_wrapper(plan, LiveTable([]))
     yield from plan
 
