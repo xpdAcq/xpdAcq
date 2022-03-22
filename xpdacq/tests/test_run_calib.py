@@ -104,15 +104,6 @@ def test_calib_md(fresh_xrun, exp_hash_uid, glbl, db):
         detector=detector,
         calibrant=calibrant,
     )
-    calib_hdr = db[-1]
-    server_uid = calib_hdr.start["detector_calibration_server_uid"]
-    client_uid = calib_hdr.start["detector_calibration_client_uid"]
-    assert server_uid == new_hash
-    assert server_uid == client_uid
-    # md link
-    calib_server_uid = calib_hdr.start["detector_calibration_server_uid"]
-    hdr_client_uid = hdr.start["detector_calibration_client_uid"]
-    assert calib_server_uid == hdr_client_uid
 
 
 def test_load_calibrant(fresh_xrun, bt):
