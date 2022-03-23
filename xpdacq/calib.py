@@ -26,6 +26,8 @@ from .beamtime import ScanPlan, ct
 from .glbl import glbl
 from .tools import _check_obj, xpdAcqException
 from .utils import ExceltoYaml
+from xpdacq.preprocessors.calibpreprocessor import CalibPreprocessor
+
 
 _REQUIRED_OBJ_LIST = ["xrun"]
 
@@ -53,158 +55,168 @@ def _sample_name_phase_info_configuration(sample_name, phase_info, tag):
     return sample_md
 
 
-def run_calibration(
-    exposure=5,
-    dark_sub_bool=True,
-    calibrant=None,
-    phase_info=None,
-    detector=None,
-    *,
-    RE_instance=None,
-    wait_for_cal=True,
-    **kwargs
-):
-    """function to run entire calibration process.
+class RunCalibration:
 
-    Entire process includes:
+    def __init__(self, calib_preprocessor: CalibPreprocessor) -> None:
+        self._calib_preprocessor = calib_preprocessor
 
-    1. collect calibration image,
+    def __call__(
+        self,
+        exposure=5,
+        dark_sub_bool=True,
+        calibrant=None,
+        phase_info=None,
+        detector=None,
+        *,
+        RE_instance=None,
+        wait_for_cal=True,
+        calib_preprocessor: CalibPreprocessor=None,
+        **kwargs
+    ):
+        """function to run entire calibration process.
 
-    2. trigger pyFAI interactive calibration process,
+        Entire process includes:
 
-    3. store calibration parameters as a yaml file
+        1. collect calibration image,
 
-    calibration parameters will be saved under xpdUser/config_base/
-    and this set of parameters will be injected as metadata to
-    subsequent scans until you perform this process again
+        2. trigger pyFAI interactive calibration process,
 
-    Parameters
-    ----------
-    exposure : int, optional
-        total exposure time in sec. default is 5s
-    dark_sub_bool : bool, optional
-        option of turn on/off dark subtraction on this calibration
-        image. default is True.
-    calibrant : str, optional
-        calibrant being used, default is 'Ni'.
-        input could be full file path to customized d-spacing file with
-        ".D" extension or one of pre-defined calibrant names.
-        List of pre-defined calibrant names is:
-        ['NaCl', 'AgBh', 'quartz', 'Si_SRM640', 'Ni', 'Si_SRM640d',
-        'Si_SRM640a', 'alpha_Al2O3', 'LaB6_SRM660b', 'TiO2', 'CrOx',
-        'LaB6_SRM660c', 'CeO2', 'Si_SRM640c', 'CuO', 'Si_SRM640e',
-        'PBBA', 'ZnO', 'Si', 'C14H30O', 'cristobaltite', 'LaB6_SRM660a',
-        'Au', 'Cr2O3', 'Si_SRM640b', 'LaB6', 'Al', 'mock']
-    phase_info : str, optional
-        phase infomation of calibrant, which is required to data
-        reduction process. This field will be parsed with the same logic
-        as the one used in parsing spreadsheet information. For detailed
-        information, please visit:
-        http://xpdacq.github.io/usb_Running.html#phase-string
-        If both ``calibrant`` and ``phase_info`` arguments are not provided,
-        this field will be defaulted to ``Ni``.
-    detector : str or pyFAI.detector.Detector instance, optional.
-        detector used to collect data. default value is 'perkin-elmer'.
-        other allowed values are in pyFAI documentation.
-    RE_instance : bluesky.run_engine.RunEngine instance, optional
-        instance of run engine. Default is xrun. Do not change under
-        normal circumstances.
-    wait_for_cal : bool
-        If True wait for the new calibration to be produced before giving up
-        xrun control, otherwise give up control at the end of the scan.
-        Defaults to True
-    kwargs:
-        Additional keyword argument for calibration. please refer to
-        pyFAI documentation for all options.
+        3. store calibration parameters as a yaml file
 
-    Note
-    ----
-    Details about peak-picking gui from pyFAI documentaion
+        calibration parameters will be saved under xpdUser/config_base/
+        and this set of parameters will be injected as metadata to
+        subsequent scans until you perform this process again
 
-      http://pyfai.readthedocs.io/en/latest/usage/cookbook/calibrate.html#start-pyfai-calibration_md
-    """
-    # default information
-    if detector is None:
-        detector = "perkin_elmer"
-    sample_md = _sample_name_phase_info_configuration(
-        calibrant, phase_info, "calib"
-    )
-    if calibrant is None:
-        calibrant = os.path.join(glbl["usrAnalysis_dir"], "Ni24.D")
+        Parameters
+        ----------
+        exposure : int, optional
+            total exposure time in sec. default is 5s
+        dark_sub_bool : bool, optional
+            option of turn on/off dark subtraction on this calibration
+            image. default is True.
+        calibrant : str, optional
+            calibrant being used, default is 'Ni'.
+            input could be full file path to customized d-spacing file with
+            ".D" extension or one of pre-defined calibrant names.
+            List of pre-defined calibrant names is:
+            ['NaCl', 'AgBh', 'quartz', 'Si_SRM640', 'Ni', 'Si_SRM640d',
+            'Si_SRM640a', 'alpha_Al2O3', 'LaB6_SRM660b', 'TiO2', 'CrOx',
+            'LaB6_SRM660c', 'CeO2', 'Si_SRM640c', 'CuO', 'Si_SRM640e',
+            'PBBA', 'ZnO', 'Si', 'C14H30O', 'cristobaltite', 'LaB6_SRM660a',
+            'Au', 'Cr2O3', 'Si_SRM640b', 'LaB6', 'Al', 'mock']
+        phase_info : str, optional
+            phase infomation of calibrant, which is required to data
+            reduction process. This field will be parsed with the same logic
+            as the one used in parsing spreadsheet information. For detailed
+            information, please visit:
+            http://xpdacq.github.io/usb_Running.html#phase-string
+            If both ``calibrant`` and ``phase_info`` arguments are not provided,
+            this field will be defaulted to ``Ni``.
+        detector : str or pyFAI.detector.Detector instance, optional.
+            detector used to collect data. default value is 'perkin-elmer'.
+            other allowed values are in pyFAI documentation.
+        RE_instance : bluesky.run_engine.RunEngine instance, optional
+            instance of run engine. Default is xrun. Do not change under
+            normal circumstances.
+        wait_for_cal : bool
+            If True wait for the new calibration to be produced before giving up
+            xrun control, otherwise give up control at the end of the scan.
+            Defaults to True
+        kwargs:
+            Additional keyword argument for calibration. please refer to
+            pyFAI documentation for all options.
 
-    # collect & pull subtracted image
-    if RE_instance is None:
-        xrun_name = _REQUIRED_OBJ_LIST[0]
-        RE_instance = _check_obj(xrun_name)  # will raise error if not exists
+        Note
+        ----
+        Details about peak-picking gui from pyFAI documentaion
 
-    calib_file = os.path.join(glbl["config_base"], glbl["calib_config_name"])
-    calib_file_hash = '1'
-    if os.path.exists(calib_file):
-        with open(calib_file, 'r') as f:
-            calib_file_hash = sha256(f.read().encode('utf-8')).hexdigest()
-
-    _collect_img(
-        exposure,
-        dark_sub_bool,
-        sample_md,
-        RE_instance,
-        detector=detector,
-        calibrant=calibrant,
-    )
-    print(
-        "INFO: Please navigate to the analysis terminal to complete "
-        "the interactive calibration process.\nYou may find the "
-        "the analysis terminal similar to data acquisition terminal"
-        "(current terminal) except there is information about the "
-        "analysis pipeline printed"
-    )
-    print(
-        "INFO: For a quick guide on the interactive calibration "
-        "process, please visit our web-doc at:\n"
-        "https://xpdacq.github.io/xpdAcq/usb_Running.html#calib-manual\n"
-    )
-    if wait_for_cal:  # pragma: no cover
-        print('Waiting for calibration to finish\n\n'
-              'If calibration has failed please press Ctrl+C in this '
-              'terminal and run ``run_calibration`` again!\n\n')
-        while True:
-            if os.path.exists(calib_file):
-                with open(calib_file, 'r') as f:
-                    new_calib_file_hash = sha256(f.read().encode('utf-8')).hexdigest()
-            else:
-                new_calib_file_hash = '1'
-            if new_calib_file_hash != calib_file_hash:
-                break
-            else:
-                time.sleep(1)
-    """
-    if not parallel:  # backup when pipeline fails
-        # get wavelength from bt
-        if wavelength is None:
-            bt_fp = os.path.join(glbl["yaml_dir"], "bt_bt.yml")
-            if not os.path.isfile(bt_fp):
-                raise FileNotFoundError(
-                    "Can't find your Beamtime yaml file.\n"
-                    "Did you accidentally delete it? "
-                    "Please contact beamline staff "
-                    "ASAP"
-                )
-            bto = Beamtime.from_yaml(open(bt_fp))
-            wavelength = float(bto.wavelength) * 10 ** (-10)
-        # configure calibration instance
-        c = Calibration(
-            calibrant=calibrant, detector=detector, wavelength=wavelength
+        http://pyfai.readthedocs.io/en/latest/usage/cookbook/calibrate.html#start-pyfai-calibration_md
+        """
+        if calib_preprocessor is None:
+            calib_preprocessor = self._calib_preprocessor
+        # default information
+        if detector is None:
+            detector = "perkin_elmer"
+        sample_md = _sample_name_phase_info_configuration(
+            calibrant, phase_info, "calib"
         )
-        # pyFAI calibration
-        calib_c, timestr = _calibration(img, c, fn_template, **kwargs)
-        assert calib_c.calibrant.wavelength == wavelength
-        # save param for xpdAcq
-        yaml_name = glbl["calib_config_name"]
-        calib_yml_fp = os.path.join(
-            glbl["config_base"], glbl["calib_config_name"]
+        if calibrant is None:
+            calibrant = os.path.join(glbl["usrAnalysis_dir"], "Ni24.D")
+
+        # collect & pull subtracted image
+        if RE_instance is None:
+            xrun_name = _REQUIRED_OBJ_LIST[0]
+            RE_instance = _check_obj(xrun_name)  # will raise error if not exists
+
+        calib_file = os.path.join(glbl["config_base"], glbl["calib_config_name"])
+        calib_file_hash = '1'
+        if os.path.exists(calib_file):
+            with open(calib_file, 'r') as f:
+                calib_file_hash = sha256(f.read().encode('utf-8')).hexdigest()
+
+        _collect_img(
+            exposure,
+            dark_sub_bool,
+            sample_md,
+            RE_instance,
+            detector=detector,
+            calibrant=calibrant,
         )
-        _save_calib_param(calib_c, timestr, calib_yml_fp)
-    """
+        print(
+            "INFO: Please navigate to the analysis terminal to complete "
+            "the interactive calibration process.\nYou may find the "
+            "the analysis terminal similar to data acquisition terminal"
+            "(current terminal) except there is information about the "
+            "analysis pipeline printed"
+        )
+        print(
+            "INFO: For a quick guide on the interactive calibration "
+            "process, please visit our web-doc at:\n"
+            "https://xpdacq.github.io/xpdAcq/usb_Running.html#calib-manual\n"
+        )
+        if wait_for_cal:  # pragma: no cover
+            print('Waiting for calibration to finish\n\n'
+                'If calibration has failed please press Ctrl+C in this '
+                'terminal and run ``run_calibration`` again!\n\n')
+            while True:
+                if os.path.exists(calib_file):
+                    with open(calib_file, 'r') as f:
+                        new_calib_file_hash = sha256(f.read().encode('utf-8')).hexdigest()
+                else:
+                    new_calib_file_hash = '1'
+                if new_calib_file_hash != calib_file_hash:
+                    calib_preprocessor.read(calib_file)
+                    break
+                else:
+                    time.sleep(1)
+        """
+        if not parallel:  # backup when pipeline fails
+            # get wavelength from bt
+            if wavelength is None:
+                bt_fp = os.path.join(glbl["yaml_dir"], "bt_bt.yml")
+                if not os.path.isfile(bt_fp):
+                    raise FileNotFoundError(
+                        "Can't find your Beamtime yaml file.\n"
+                        "Did you accidentally delete it? "
+                        "Please contact beamline staff "
+                        "ASAP"
+                    )
+                bto = Beamtime.from_yaml(open(bt_fp))
+                wavelength = float(bto.wavelength) * 10 ** (-10)
+            # configure calibration instance
+            c = Calibration(
+                calibrant=calibrant, detector=detector, wavelength=wavelength
+            )
+            # pyFAI calibration
+            calib_c, timestr = _calibration(img, c, fn_template, **kwargs)
+            assert calib_c.calibrant.wavelength == wavelength
+            # save param for xpdAcq
+            yaml_name = glbl["calib_config_name"]
+            calib_yml_fp = os.path.join(
+                glbl["config_base"], glbl["calib_config_name"]
+            )
+            _save_calib_param(calib_c, timestr, calib_yml_fp)
+        """
 
 
 def _inject_calibration_tag(msg):
