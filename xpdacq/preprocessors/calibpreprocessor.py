@@ -52,6 +52,11 @@ class CalibPreprocessor:
         self._calib_info.calibrated.set(True)
         return
 
+    @property
+    def calib_info(self) -> CalibInfo:
+        """The ophyd device that holds the calibration information."""
+        return self._calib_info
+
     def read(self, poni_file: str) -> None:
         """Read the calibration information from the poni file."""
         geo = Geometry()
