@@ -122,6 +122,9 @@ class RunCalibration:
             If True wait for the new calibration to be produced before giving up
             xrun control, otherwise give up control at the end of the scan.
             Defaults to True
+        calib_preprocessor : CalibPreprocessor
+            The calibration preprocessor to configure after the calibration.
+            The default one is set up during the init.
         kwargs:
             Additional keyword argument for calibration. please refer to
             pyFAI documentation for all options.
