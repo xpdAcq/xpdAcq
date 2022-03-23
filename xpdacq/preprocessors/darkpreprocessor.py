@@ -13,12 +13,6 @@ class DarkPreprocessor(DarkFramePreprocessor):
 
     Parameters
     ----------
-    shutter : OphydObject
-        The fast shutter. It is usually a positionor.
-    open_state : Any
-        The position of the shutter when it is open.
-    close_state : Any
-        The position of the shutter when it is close.
     detector: Device
         The detector to take dark frame of.
     max_age: float
@@ -31,6 +25,27 @@ class DarkPreprocessor(DarkFramePreprocessor):
         Number of dark frames to cache. If None, do not limit.
     stream_name: string, optional
         Event stream name for dark frames. Default is 'dark'.
+    delay : float
+        The time to wait between the moment that the shutter is closed and the moment to trigger the detector
+        to take dark. Used to wait for the saturation to be cleaned.
+    open_shutter : Any
+        The function used by run engine to open the shutter. The syntax should be like
+
+        ```
+        def open_shutter() -> Any:
+            return (yield from bps.mv(shutter, 'open')
+        ```
+
+        Default is the `xpdacq.beamtime.open_shutter_stub`.
+    close_shutter : Any
+        The function used by run engine to close the shutter. The syntax should be like
+
+        ```
+        def open_shutter() -> Any:
+            return (yield from bps.mv(shutter, 'closed')
+        ```
+
+        Default is the `xpdacq.beamtime.close_shutter_stub`
     """
 
     def __init__(
