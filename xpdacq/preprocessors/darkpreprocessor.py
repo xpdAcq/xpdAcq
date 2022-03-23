@@ -3,7 +3,6 @@ import typing as T
 import bluesky.plan_stubs as bps
 from bluesky_darkframes import DarkFramePreprocessor, SnapshotDevice
 from ophyd import Device
-from ophyd.ophydobj import OphydObject
 from ophyd.signal import Signal
 
 
@@ -37,26 +36,33 @@ class DarkPreprocessor(DarkFramePreprocessor):
     def __init__(
         self,
         *,
-        shutter: OphydObject,
-        open_state: T.Any,
-        close_state: T.Any,
         detector: Device,
         max_age: float = 0.,
         locked_signals: T.Optional[T.Iterable[Signal]] = None,
         limit: T.Optional[int] = None,
-        stream_name='dark'
+        stream_name='dark',
+        delay: float = 0.,
+        open_shutter: T.Optional[T.Callable] = None,
+        close_shutter: T.Optional[T.Callable] = None
     ):
+        if open_shutter is None:
+            from xpdacq.beamtime import open_shutter_stub
+            open_shutter = open_shutter_stub
+        if close_shutter is None:
+            from xpdacq.beamtime import close_shutter_stub
+            close_shutter = close_shutter_stub
 
         def _dark_plan(_detector):
+            yield from close_shutter()
+            yield from bps.sleep(delay)
             yield from bps.unstage(_detector)
             yield from bps.stage(_detector)
-            yield from bps.abs_set(shutter, open_state, wait=True)
             yield from bps.trigger(_detector, group='bluesky-darkframes-trigger')
             yield from bps.wait('bluesky-darkframes-trigger')
-            yield from bps.abs_set(shutter, close_state)
             snapshot = SnapshotDevice(_detector)
             yield from bps.unstage(_detector)
             yield from bps.stage(_detector)
+            yield from open_shutter()
             return snapshot
 
         super().__init__(
