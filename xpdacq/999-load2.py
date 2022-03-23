@@ -3,11 +3,13 @@ from pathlib import Path
 
 from bluesky.callbacks.zmq import Publisher
 from databroker.v2 import temp
+from  xpdacq.calib import RunCalibration
+from xpdacq.preprocessors.calibpreprocessor import CalibPreprocessor
+from xpdacq.preprocessors.darkpreprocessor import DarkPreprocessor
 from xpdsim import xpd_pe1c, shctl1, cs700, ring_current, fb
 
 from xpdacq.beamtime import ScanPlan, Sample, ct, Tramp, Tlist, tseries
 from xpdacq.beamtimeSetup import _start_beamtime, _end_beamtime
-from xpdacq.calib import run_calibration
 from xpdacq.ipysetup import ipysetup
 from xpdacq.utils import import_userScriptsEtc, import_sample_info
 from xpdacq.xpdacq_conf import xpd_configuration
@@ -26,7 +28,9 @@ ct = ct
 Tramp = Tramp
 Tlist = Tlist
 tseries = tseries
-run_calibration = run_calibration
+dark_preprocessor = DarkPreprocessor(detector=pe1c, max_age=6., locked_signals=[pe1c.cam.acq_time, pe1c.frame_rate])
+calib_preprocessor = CalibPreprocessor(pe1c)
+run_calibration = RunCalibration(calib_preprocessor)
 xpd_configuration = xpd_configuration
 print("INFO: Initializing the XPD data acquisition environment ...")
 glbl, bt, xrun = ipysetup(
@@ -39,6 +43,8 @@ glbl, bt, xrun = ipysetup(
 )
 print("INFO: Initialized glbl, bt, xrun.")
 xrun.subscribe(Publisher("localhost:5567", prefix=b'raw'))
+xrun.preprocessors.append(calib_preprocessor)
+xrun.preprocessors.append(dark_preprocessor)
 print("INFO: Publish data to localhost port 5567 with prefix 'raw'.")
 if Path(glbl["home"]).is_dir():
     os.chdir(glbl["home"])
