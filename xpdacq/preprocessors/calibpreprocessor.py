@@ -85,3 +85,17 @@ class CalibPreprocessor:
             return None, None
 
         return bpp.plan_mutator(plan, _mutate)
+
+
+def set_calib_info(calib_info: CalibInfo, geo: Geometry) -> T.Generator[Msg, None, None]:
+    return bpp.pchain(
+        bps.abs_set(calib_info.wavelength, geo.wavelength),
+        bps.abs_set(calib_info.dist, geo.dist),
+        bps.abs_set(calib_info.poni1, geo.poni1),
+        bps.abs_set(calib_info.poni2, geo.poni2),
+        bps.abs_set(calib_info.rot1, geo.rot1),
+        bps.abs_set(calib_info.rot2, geo.rot2),
+        bps.abs_set(calib_info.rot3, geo.rot3),
+        bps.abs_set(calib_info.detector, geo.detector.name),
+        bps.abs_set(calib_info.calibrated, True)
+    )
