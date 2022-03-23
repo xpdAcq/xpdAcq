@@ -5,12 +5,14 @@ import uuid
 import pytest
 from pkg_resources import resource_filename as rs_fn
 from pyFAI.calibrant import Calibrant, ALL_CALIBRANTS
+from xpdacq.preprocessors.calibpreprocessor import CalibPreprocessor
+from xpdacq.xpdacq_conf import xpd_configuration
 
 from xpdacq.calib import (
     _collect_img,
     xpdAcqException,
     _sample_name_phase_info_configuration,
-    run_calibration
+    RunCalibration
 )
 from xpdacq.xpdacq import update_experiment_hash_uid
 
@@ -109,6 +111,8 @@ def test_calib_md(fresh_xrun, exp_hash_uid, glbl, db):
 def test_load_calibrant(fresh_xrun, bt):
     xrun = fresh_xrun
     xrun.beamtime = bt
+    calib_preprocessor = CalibPreprocessor(xpd_configuration["area_det"])
+    run_calibration = RunCalibration(calib_preprocessor)
     # pyfai factory
     for k, calibrant_obj in ALL_CALIBRANTS.items():
         # light weight callback
