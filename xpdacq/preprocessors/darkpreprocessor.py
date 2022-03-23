@@ -1,9 +1,13 @@
 import typing as T
 
 import bluesky.plan_stubs as bps
+from bluesky import Msg
 from bluesky_darkframes import DarkFramePreprocessor, SnapshotDevice
 from ophyd import Device
 from ophyd.signal import Signal
+
+Plan = T.Generator[Msg, T.Any, T.Any]
+ShutterControl = T.Callable[[], Plan]
 
 
 class DarkPreprocessor(DarkFramePreprocessor):
@@ -57,15 +61,17 @@ class DarkPreprocessor(DarkFramePreprocessor):
         limit: T.Optional[int] = None,
         stream_name='dark',
         delay: float = 0.,
-        open_shutter: T.Optional[T.Callable] = None,
-        close_shutter: T.Optional[T.Callable] = None
+        open_shutter: T.Optional[ShutterControl] = None,
+        close_shutter: T.Optional[ShutterControl] = None
     ):
         if open_shutter is None:
             from xpdacq.beamtime import open_shutter_stub
             open_shutter = open_shutter_stub
+            del open_shutter_stub
         if close_shutter is None:
             from xpdacq.beamtime import close_shutter_stub
             close_shutter = close_shutter_stub
+            del close_shutter_stub
 
         def _dark_plan(_detector):
             yield from close_shutter()
