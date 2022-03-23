@@ -1,5 +1,4 @@
-from numpy import asscalar
-from xpdacq.preprocessors.calibpreprocessor import CalibPreprocessor
+from xpdacq.preprocessors.calibpreprocessor import CalibInfo, CalibPreprocessor, set_calib_info
 from bluesky_darkframes.sim import DiffractionDetector
 from pkg_resources import resource_filename
 from pyFAI.geometry import Geometry
@@ -81,3 +80,28 @@ def test_disable_and_enable():
     msgs2 = list(cp(bps.read(det)))
     assert len(msgs1) == (len(msgs2) - 1)
     assert msgs1 == msgs2[:-1]
+
+
+def test_set_calib_info_using_RE():
+    RE = RunEngine()
+    geo = Geometry(
+        wavelength=0.16,
+        dist=200., 
+        poni1=1000., 
+        poni2=1000., 
+        rot1=0.1, 
+        rot2=-0.2, 
+        rot3=0.3, 
+        detector="Perkin detector"
+    )
+    calib_info = CalibInfo(name="calib_data")
+    RE(set_calib_info(calib_info, geo))
+    assert calib_info.wavelength.get() == geo.wavelength
+    assert calib_info.dist.get() == geo.dist
+    assert calib_info.poni1.get() == geo.poni1
+    assert calib_info.poni2.get() == geo.poni2
+    assert calib_info.rot1.get() == geo.rot1
+    assert calib_info.rot2.get() == geo.rot2
+    assert calib_info.rot3.value == geo.rot3
+    assert calib_info.detector.get() == geo.detector.name
+    assert calib_info.calibrated.get() == True
