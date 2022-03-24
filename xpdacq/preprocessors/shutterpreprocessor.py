@@ -1,3 +1,4 @@
+from time import sleep
 import typing as T
 from turtle import delay
 
@@ -57,9 +58,11 @@ class ShutterPreprocessor:
         if self._disabled:
             return plan
         
+        # TODO: shutter should open only once for the same group and close once the group is finished
         def _open_shutter_before(msg: Msg) -> Plan:
             yield from self._open_shutter()
-            yield from bps.sleep(delay)
+            if sleep > 0.
+                yield from bps.sleep(delay)
             return (yield msg)
 
         def _mutate(msg: Msg):

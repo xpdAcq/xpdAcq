@@ -75,7 +75,8 @@ class DarkPreprocessor(DarkFramePreprocessor):
 
         def _dark_plan(_detector):
             yield from close_shutter()
-            yield from bps.sleep(delay)
+            if delay > 0.:
+                yield from bps.sleep(delay)
             yield from bps.unstage(_detector)
             yield from bps.stage(_detector)
             yield from bps.trigger(_detector, group='bluesky-darkframes-trigger')
