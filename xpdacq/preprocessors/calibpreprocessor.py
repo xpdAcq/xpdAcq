@@ -8,7 +8,6 @@ from ophyd import Component as Cpt
 from ophyd import Device, Signal
 from pyFAI.geometry import Geometry
 
-
 Plan = T.Generator[Msg, None, None]
 
 
@@ -46,8 +45,8 @@ class CalibPreprocessor:
     """
 
     def __init__(
-        self, 
-        detector: Device, 
+        self,
+        detector: Device,
         stream_name: str = "calib",
         dark_group_prefix: str = "bluesky-darkframes-trigger"
     ) -> None:
@@ -108,11 +107,11 @@ class CalibPreprocessor:
             group = msg.kwargs["group"] if ("group" in msg.kwargs) and msg.kwargs["group"] else ""
             if (
                 msg.command == "trigger"
-                ) and (
+            ) and (
                     msg.obj is self._detector
-                    ) and (
-                        not group.startswith(self._dark_group_prefix)
-                        ):
+                ) and (
+                not group.startswith(self._dark_group_prefix)
+            ):
                 return _read_calib_info(msg), None
             return None, None
 
