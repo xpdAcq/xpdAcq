@@ -14,6 +14,7 @@
 #
 ##############################################################################
 import os
+from pathlib import Path
 import time
 import typing
 import uuid
@@ -42,7 +43,10 @@ from xpdacq.glbl import glbl
 from xpdacq.tools import xpdAcqError
 from xpdacq.tools import xpdAcqException
 from xpdacq.xpdacq_conf import xpd_configuration, XPDACQ_MD_VERSION
+from xpdacq.preprocessors import DarkPreprocessor, CalibPreprocessor, ShutterPreprocessor
 
+
+Plan = typing.Generator[Msg, typing.Any, typing.Any]
 XPD_shutter = xpd_configuration.get("shutter")
 PAUSE_MSG = """
 Your RunEngine (xrun) is entering a paused state.
@@ -144,7 +148,9 @@ class CustomizedRunEngine(RunEngine):
         super().__init__(*args, **kwargs)
         self._beamtime = beamtime
         self.pause_msg = PAUSE_MSG
-        self._darkpreprocessor: typing.Optional[] = None
+        self.dark_preprocessor: typing.Optional[DarkPreprocessor] = None
+        self.calib_preprocessor: typing.Optional[CalibPreprocessor] = None
+        self.shutter_preprocessor: typing.Optional[ShutterPreprocessor] = None
 
     @property
     def beamtime(self):
@@ -157,11 +163,6 @@ class CustomizedRunEngine(RunEngine):
             )
         return self._beamtime
 
-    #TODO: add methods to add preprocessor.
-
-    @property
-
-
     @beamtime.setter
     def beamtime(self, bt_obj):
         self._beamtime = bt_obj
@@ -172,6 +173,53 @@ class CustomizedRunEngine(RunEngine):
         # assign hash of experiment condition
         exp_hash_uid = str(uuid.uuid4())
         glbl["exp_hash_uid"] = exp_hash_uid
+
+    def gen_plan(
+        self,
+        sample: typing.Union[int, str, dict, list, tuple],
+        plan: typing.Union[int, str, typing.Generator, ScanPlan, list, tuple],
+        dark_strategy: typing.Callable,
+        robot: bool,
+    ) -> Plan:
+        """_summary_
+
+        Parameters
+        ----------
+        sample : typing.Union[int, str, dict, list, tuple]
+            _description_
+        plan : typing.Union[int, str, typing.Generator, ScanPlan, list, tuple]
+            _description_
+        dark_strategy : typing.Callable
+            _description_
+        robot : bool
+            _description_
+
+        Returns
+        -------
+        Plan
+            _description_
+        """
+        # Translate the index of sample and plan to bluesky plan with metadata
+        grand_plan = xpdacq_composer(
+            self.beamtime,
+            sample,
+            plan,
+            robot=robot,
+            shutter_control=None,
+            dark_strategy=None,
+            auto_load_calib=False
+        )
+        # Use new preprocessors if they are there and the global setting enables them
+        if (self.calib_preprocessor is not None) and glbl["auto_load_calib"]:
+            poni_file = Path(glbl["config_base"]).joinpath(glbl["calib_config_name"])
+            self.calib_preprocessor.read(str(poni_file))
+            grand_plan = self.calib_preprocessor(grand_plan)
+        if (self.dark_preprocessor is not None) and glbl["auto_dark"]:
+            self.dark_preprocessor.max_age = glbl["dk_window"] * 60.
+            grand_plan = self.dark_preprocessor(grand_plan)
+        if (self.shutter_preprocessor is not None) and glbl["shutter_control"]:
+            grand_plan = self.shutter_preprocessor(grand_plan)
+        return grand_plan
 
     def __call__(
         self,
@@ -248,22 +296,8 @@ class CustomizedRunEngine(RunEngine):
                 "Robot must be specified at call time, not in"
                 "global metadata"
             )
-        dark_strategy = dark_strategy if glbl["auto_dark"] else None
-        shutter_control = (
-            xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"]
-        ) if glbl["shutter_control"] else None
-        # The CustomizedRunEngine knows about a Beamtime object, and it
-        # interprets integers for 'sample' as indexes into the Beamtime's
-        # lists of Samples from all its Experiments
-        grand_plan = xpdacq_composer(
-            self.beamtime,
-            sample,
-            plan,
-            robot=robot,
-            shutter_control=shutter_control,
-            dark_strategy=dark_strategy,
-            auto_load_calib=glbl['auto_load_calib']
-        )
+        # compose the plan
+        final_plan = self.gen_plan(sample, plan, dark_strategy=dark_strategy, robot=robot)
         # normalize the subs
         _subs = normalize_subs_input(subs) if subs else {}
         # verify writing files
@@ -275,7 +309,7 @@ class CustomizedRunEngine(RunEngine):
             ip = input("Is this ok? [y]/n")
             if ip.lower() == "n":
                 return
-        return super(CustomizedRunEngine, self).__call__(grand_plan, _subs, **metadata_kw)
+        return super(CustomizedRunEngine, self).__call__(final_plan, _subs, **metadata_kw)
 
 
 def xpdacq_composer(
