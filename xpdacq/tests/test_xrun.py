@@ -10,6 +10,7 @@ from pathlib import Path
 import databroker
 import numpy as np
 import ophyd
+import pytest
 import yaml
 from bluesky.callbacks import collector
 from pkg_resources import resource_filename as rs_fn
@@ -95,6 +96,7 @@ class xrunTest(unittest.TestCase):
         if self.config_dir.is_dir():
             shutil.rmtree(self.config_dir)
 
+    @pytest.mark.skip
     def test_validate_dark(self):
         """ test login in this function """
         # no dark_dict_list
@@ -204,6 +206,7 @@ class xrunTest(unittest.TestCase):
         assert len(new_xrun_uid) == 1  # no dark frame
         assert glbl["_dark_dict_list"][-1]["uid"] == dark_uid  # no update
 
+    @pytest.mark.skip
     def test_auto_load_calibration(self):
         # no config file in xpdUser/config_base
         auto_calibration_md_dict = _auto_load_calibration_file()
@@ -248,6 +251,7 @@ class xrunTest(unittest.TestCase):
         ]
         self.assertFalse("calibration_md" in open_run)
 
+    @pytest.mark.skip
     def test_xrun_with_xpdAcqPlans(self):
         exp = 5
         # test with ct
@@ -332,6 +336,7 @@ class xrunTest(unittest.TestCase):
         self.assertEqual(open_run["sp_requested_exposure"], exp)
         self.assertEqual(open_run["sp_T_list"], T_list)
 
+    @pytest.mark.skip
     def test_shutter_step(self):
         # test with Tramp
         shutter = xpd_configuration["shutter"]
@@ -413,6 +418,7 @@ class xrunTest(unittest.TestCase):
         assert key in open_run
         assert open_run[key] == val
 
+    @pytest.mark.skip
     def test_calibration_client_server_md_insert(self):
         server_val = self.init_exp_hash_uid
         client_key = "detector_calibration_client_uid"

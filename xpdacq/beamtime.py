@@ -229,12 +229,11 @@ def ct(dets, exposure):
             "sp_plan_name": "ct",
         },
     )
-    plan = bp.count([area_det], md=_md, per_shot=xpdacq_per_shot)
-    plan = bpp.subs_wrapper(plan, LiveTable([]))
+    plan = bp.count([area_det], md=_md)
     yield from plan
 
 
-def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=shutter_step):
+def Tramp(dets, exposure, Tstart, Tstop, Tstep):
     """
     Collect data over a range of temperatures
 
@@ -258,17 +257,6 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=shutter_step):
         stoping point of temperature sequence.
     Tstep : float
         step size between Tstart and Tstop of this sequence.
-    per_step : callable, optional
-        hook for customizing action at each temperature point.
-        Tramp uses this for opening and closing the shutter at each
-        temperature acquisition.
-
-        Default behavior:
-        `` open shutter - collect data - close shutter ``
-
-        To make shutter always open during the temperature ramp,
-        pass ``None`` to this argument. See ``Notes`` below for more
-        detailed information.
 
     Notes
     -----
@@ -322,14 +310,12 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep, *, per_step=shutter_step):
         Tstart,
         Tstop,
         Nsteps,
-        per_step=per_step,
         md=_md,
     )
-    plan = bpp.subs_wrapper(plan, LiveTable([temp_controller]))
     yield from plan
 
 
-def Tlist(dets, exposure, T_list, *, per_step=shutter_step):
+def Tlist(dets, exposure, T_list):
     """
     Collect data over a list of user-specific temperatures
 
@@ -349,17 +335,6 @@ def Tlist(dets, exposure, T_list, *, per_step=shutter_step):
         total time of exposure in seconds
     T_list : list
         a list of temperatures where a scan will be run
-    per_step : callable, optional
-        hook for customizing action at each temperature point.
-        Tramp uses this for opening and closing the shutter at each
-        temperature acquisition.
-
-        Default behavior:
-        `` open shutter - collect data - close shutter ``
-
-        To make shutter always open during the temperature ramp,
-        pass ``None`` to this argument. See ``Notes`` below for more
-        detailed information.
 
     Notes
     -----
@@ -398,7 +373,7 @@ def Tlist(dets, exposure, T_list, *, per_step=shutter_step):
     }
     # pass xpdacq_md to as additional md to bluesky plan
     plan = bp.list_scan(
-        [area_det], T_controller, T_list, per_step=per_step, md=xpdacq_md
+        [area_det], T_controller, T_list, md=xpdacq_md
     )
     plan = bpp.subs_wrapper(plan, LiveTable([T_controller]))
     yield from plan
