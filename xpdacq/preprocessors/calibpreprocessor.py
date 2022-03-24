@@ -8,7 +8,7 @@ from ophyd import Component as Cpt
 from ophyd import Device, Signal
 from pyFAI.geometry import Geometry
 
-# add the calib data in calib stream
+
 Plan = T.Generator[Msg, None, None]
 
 
