@@ -1,4 +1,5 @@
 import typing as T
+from pathlib import Path
 
 import bluesky.plan_stubs as bps
 import bluesky.preprocessors as bpp
@@ -8,6 +9,11 @@ from ophyd import Device, Signal
 from pyFAI.geometry import Geometry
 
 Plan = T.Generator[Msg, None, None]
+
+
+class CalibPreprocessorError(Exception):
+
+    pass
 
 
 class CalibInfo(Device):
@@ -61,8 +67,11 @@ class CalibPreprocessor:
 
     def read(self, poni_file: str) -> None:
         """Read the calibration information from the poni file."""
+        poni_path = Path(poni_file)
+        if not poni_path.is_file():
+            raise CalibPreprocessorError("'{}' doesn't exits.".format(poni_file))
         geo = Geometry()
-        geo.load(poni_file)
+        geo.load(str(poni_path))
         self.set(geo)
         return
 
