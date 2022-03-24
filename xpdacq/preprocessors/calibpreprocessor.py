@@ -7,6 +7,8 @@ from ophyd import Component as Cpt
 from ophyd import Device, Signal
 from pyFAI.geometry import Geometry
 
+Plan = T.Generator[Msg, None, None]
+
 
 class CalibInfo(Device):
     """The information of calibration from pyFAI.
@@ -86,16 +88,29 @@ class CalibPreprocessor:
 
         return bpp.plan_mutator(plan, _mutate)
 
+    def set_calib_info(self, geo: Geometry) -> Plan:
+        """Set the cailbration information device by the calibrated geometry.
 
-def set_calib_info(calib_info: CalibInfo, geo: Geometry) -> T.Generator[Msg, None, None]:
-    return bpp.pchain(
-        bps.abs_set(calib_info.wavelength, geo.wavelength),
-        bps.abs_set(calib_info.dist, geo.dist),
-        bps.abs_set(calib_info.poni1, geo.poni1),
-        bps.abs_set(calib_info.poni2, geo.poni2),
-        bps.abs_set(calib_info.rot1, geo.rot1),
-        bps.abs_set(calib_info.rot2, geo.rot2),
-        bps.abs_set(calib_info.rot3, geo.rot3),
-        bps.abs_set(calib_info.detector, geo.detector.name),
-        bps.abs_set(calib_info.calibrated, True)
-    )
+        Parameters
+        ----------
+        calib_info : CalibInfo
+            The device to hold calibration data.
+        geo : Geometry
+            The geometry obtained from calibration.
+
+        Returns
+        -------
+        Plan
+            A blueksy plan (generator).
+        """
+        return bpp.pchain(
+            bps.abs_set(self._calib_info.wavelength, geo.wavelength),
+            bps.abs_set(self._calib_info.dist, geo.dist),
+            bps.abs_set(self._calib_info.poni1, geo.poni1),
+            bps.abs_set(self._calib_info.poni2, geo.poni2),
+            bps.abs_set(self._calib_info.rot1, geo.rot1),
+            bps.abs_set(self._calib_info.rot2, geo.rot2),
+            bps.abs_set(self._calib_info.rot3, geo.rot3),
+            bps.abs_set(self._calib_info.detector, geo.detector.name),
+            bps.abs_set(self._calib_info.calibrated, True)
+        )
