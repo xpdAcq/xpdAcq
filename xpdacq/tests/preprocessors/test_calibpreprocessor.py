@@ -5,6 +5,7 @@ from bluesky_darkframes.sim import DiffractionDetector
 from pkg_resources import resource_filename
 from pyFAI.geometry import Geometry
 from xpdacq.preprocessors.calibpreprocessor import CalibPreprocessor
+from databroker import Broker
 
 PONI_FILE = str(resource_filename("xpdacq", "tests/Ni_poni_file.poni"))
 
@@ -46,22 +47,20 @@ def test_call():
     det = DiffractionDetector(name=det_name)
     cp = CalibPreprocessor(det)
     plan = cp(bp.count([det]))
+    db = Broker.named("temp")
     RE = RunEngine()
-    data = []
-    RE.subscribe(
-        lambda name, doc: data.append(doc["data"]),
-        name="event"
-    )
+    RE.subscribe(db.insert)
     RE(plan)
     del RE, plan, det
-    # check data
-    assert len(data) == 1
+    # should find all the calibration data in the output
+    run = db[-1]
     attrs = ("wavelength", "dist", "poni1", "poni2", "rot1", "rot2", "rot3", "detector", "calibrated")
     for attr in attrs:
         signal = getattr(cp._calib_info, attr)
         key = "{}_{}".format(det_name, attr)
-        value = data[0].get(key)
-        assert value == signal.get()
+        data = list(run.data(key, stream_name="calib"))
+        assert len(data) == 1
+        assert data[0] == signal.get()
 
 
 def test_disable_and_enable():
@@ -70,16 +69,16 @@ def test_disable_and_enable():
     cp = CalibPreprocessor(det)
     # test disable
     cp.disable()
-    msgs1 = list(bps.read(det))
-    msgs2 = list(cp(bps.read(det)))
-    assert msgs1 == msgs2
-    del msgs1, msgs2
+    msgs1 = list(cp(bps.trigger(det)))
+    assert len(msgs1) == 1
+    assert msgs1[0].command == "trigger"
+    assert msgs1[0].obj is det
     # test enable
     cp.enable()
-    msgs1 = list(bps.read(det))
-    msgs2 = list(cp(bps.read(det)))
-    assert len(msgs1) == (len(msgs2) - 1)
-    assert msgs1 == msgs2[:-1]
+    msgs2 = list(cp(bps.trigger(det)))
+    assert len(msgs2) > 1
+    assert msgs2[-1].command == "trigger"
+    assert msgs2[-1].obj is det
 
 
 def test_set_calib_info_using_RE():

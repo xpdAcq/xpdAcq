@@ -8,6 +8,7 @@ from ophyd import Component as Cpt
 from ophyd import Device, Signal
 from pyFAI.geometry import Geometry
 
+# add the calib data in calib stream
 Plan = T.Generator[Msg, None, None]
 
 
@@ -40,12 +41,21 @@ class CalibPreprocessor:
     ----------
     detector : Device
         The detector to associate the calibration data with.
+    stream_name: str
+        The name of the stream to add calibratino data, default `calib`.
     """
 
-    def __init__(self, detector: Device) -> None:
+    def __init__(
+        self, 
+        detector: Device, 
+        stream_name: str = "calib",
+        dark_group_prefix: str = "bluesky-darkframes-trigger"
+    ) -> None:
         self._detector: Device = detector
         self._calib_info: CalibInfo = CalibInfo(name=detector.name)
         self._disabled: bool = False
+        self._stream_name = stream_name
+        self._dark_group_prefix: str = dark_group_prefix
 
     def set(self, geo: Geometry) -> None:
         """Set the calibration information using the geometry object."""
@@ -90,9 +100,20 @@ class CalibPreprocessor:
         if self._disabled:
             return plan
 
+        def _read_calib_info(msg: Msg):
+            yield from bps.trigger_and_read([self._calib_info], name=self._stream_name)
+            return (yield msg)
+
         def _mutate(msg: Msg):
-            if msg.command == "read" and msg.obj is self._detector:
-                return None, bps.read(self._calib_info)
+            group = msg.kwargs["group"] if ("group" in msg.kwargs) and msg.kwargs["group"] else ""
+            if (
+                msg.command == "trigger"
+                ) and (
+                    msg.obj is self._detector
+                    ) and (
+                        not group.startswith(self._dark_group_prefix)
+                        ):
+                return _read_calib_info(msg), None
             return None, None
 
         return bpp.plan_mutator(plan, _mutate)
