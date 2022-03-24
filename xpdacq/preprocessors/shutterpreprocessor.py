@@ -61,7 +61,7 @@ class ShutterPreprocessor:
         # TODO: shutter should open only once for the same group and close once the group is finished
         def _open_shutter_before(msg: Msg) -> Plan:
             yield from self._open_shutter()
-            if sleep > 0.
+            if sleep > 0.:
                 yield from bps.sleep(delay)
             return (yield msg)
 
