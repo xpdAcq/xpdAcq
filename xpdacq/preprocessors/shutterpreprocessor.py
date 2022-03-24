@@ -53,21 +53,28 @@ class ShutterPreprocessor:
         self._close_shutter = close_shutter
         self._dark_group_prefix = dark_group_prefix
         self._disabled = False
+        self._group = None
 
     def __call__(self, plan: Plan) -> Plan:
         if self._disabled:
             return plan
-        
-        # TODO: shutter should open only once for the same group and close once the group is finished
+
         def _open_shutter_before(msg: Msg) -> Plan:
             yield from self._open_shutter()
-            if sleep > 0.:
+            if self._delay > 0.:
                 yield from bps.sleep(delay)
             return (yield msg)
 
         def _mutate(msg: Msg):
-            if (msg.command == "trigger") and (msg.obj is self._detector) and (not msg.kwargs.get("group", "").startswith(self._dark_group_prefix)):
-                return _open_shutter_before(msg), self._close_shutter()
+            # open the shutter before a non dark trigger
+            group = msg.kwargs.get("group")
+            not_dark = (group is not None) and (not group.startswith(self._dark_group_prefix))
+            if (msg.command == "trigger") and (msg.obj is self._detector) and not_dark:
+                # remember the group
+                self._group = group
+                return _open_shutter_before(msg), None
+            if (msg.command == "wait") and (msg.kwargs.get("group") == self._group):
+                return None, self._close_shutter()
             return None, None
 
         return bpp.plan_mutator(plan, _mutate)
