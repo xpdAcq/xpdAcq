@@ -70,10 +70,14 @@ class ShutterPreprocessor:
         return bpp.plan_mutator(plan, _mutate)
 
     def disable(self) -> None:
+        """Enable the shutter control.
+        """
         self._disabled = True
         return
 
     def enable(self) -> None:
+        """Disable the shutter control.
+        """
         self._disabled = False
         return
     

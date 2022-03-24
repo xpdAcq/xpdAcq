@@ -144,6 +144,7 @@ class CustomizedRunEngine(RunEngine):
         super().__init__(*args, **kwargs)
         self._beamtime = beamtime
         self.pause_msg = PAUSE_MSG
+        self._darkpreprocessor: typing.Optional[] = None
 
     @property
     def beamtime(self):
@@ -155,6 +156,11 @@ class CustomizedRunEngine(RunEngine):
                 "then retry"
             )
         return self._beamtime
+
+    #TODO: add methods to add preprocessor.
+
+    @property
+
 
     @beamtime.setter
     def beamtime(self, bt_obj):
