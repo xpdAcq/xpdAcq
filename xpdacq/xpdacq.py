@@ -149,15 +149,14 @@ class CustomizedRunEngine(RunEngine):
         super().__init__(*args, **kwargs)
         self._beamtime = beamtime
         self.pause_msg = PAUSE_MSG
-        self.dark_preprocessor: typing.Optional[DarkPreprocessor] = None
-        self.calib_preprocessor: typing.Optional[CalibPreprocessor] = None
-        self.shutter_preprocessor: typing.Optional[ShutterPreprocessor] = None
-        bec = BestEffortCallback()
-        bec.disable_baseline()
-        bec.disable_plots()
-        bec.enable_heading()
-        bec.enable_table()
-        self.subscribe(bec)
+        self.dark_preprocessors: typing.List[DarkPreprocessor] = []
+        self.calib_preprocessors: typing.List[CalibPreprocessor] = []
+        self.shutter_preprocessors: typing.List[ShutterPreprocessor] = []
+        self.bec = BestEffortCallback()
+        self.bec.disable_baseline()
+        self.bec.disable_plots()
+        self.bec.enable_heading()
+        self.bec.enable_table()
 
     @property
     def beamtime(self):
@@ -185,7 +184,6 @@ class CustomizedRunEngine(RunEngine):
         self,
         sample: typing.Union[int, str, dict, list, tuple],
         plan: typing.Union[int, str, typing.Generator, ScanPlan, list, tuple],
-        dark_strategy: typing.Callable,
         robot: bool,
     ) -> Plan:
         """_summary_
@@ -195,8 +193,6 @@ class CustomizedRunEngine(RunEngine):
         sample : typing.Union[int, str, dict, list, tuple]
             _description_
         plan : typing.Union[int, str, typing.Generator, ScanPlan, list, tuple]
-            _description_
-        dark_strategy : typing.Callable
             _description_
         robot : bool
             _description_
@@ -216,16 +212,13 @@ class CustomizedRunEngine(RunEngine):
             dark_strategy=None,
             auto_load_calib=False
         )
-        # Use new preprocessors if they are there and the global setting enables them
-        if (self.calib_preprocessor is not None) and glbl["auto_load_calib"]:
-            poni_file = Path(glbl["config_base"]).joinpath(glbl["calib_config_name"])
-            self.calib_preprocessor.read(str(poni_file))
-            grand_plan = self.calib_preprocessor(grand_plan)
-        if (self.dark_preprocessor is not None) and glbl["auto_dark"]:
-            self.dark_preprocessor.max_age = glbl["dk_window"] * 60.
-            grand_plan = self.dark_preprocessor(grand_plan)
-        if (self.shutter_preprocessor is not None) and glbl["shutter_control"]:
-            grand_plan = self.shutter_preprocessor(grand_plan)
+        for cpp in self.calib_preprocessors:
+            grand_plan = cpp(grand_plan)
+        for dpp in self.dark_preprocessors:
+            grand_plan = dpp(grand_plan)
+        for spp in self.shutter_preprocessors:
+            grand_plan = spp(grand_plan)
+        grand_plan = bpp.subs_wrapper(grand_plan, self.bec)
         return grand_plan
 
     def __call__(
@@ -235,7 +228,7 @@ class CustomizedRunEngine(RunEngine):
         subs: typing.Union[typing.Callable, dict, list] = None,
         *,
         verify_write: bool = False,
-        dark_strategy: typing.Callable = periodic_dark,
+        dark_strategy: typing.Callable = None,
         robot: bool = False,
         ask_before_run: bool = False,
         **metadata_kw
@@ -277,7 +270,7 @@ class CustomizedRunEngine(RunEngine):
             Double check if the data have been written into database. In general data is written in a lossless
             fashion at the NSLS-II. Therefore, False by default.
 
-        dark_strategy: callable, optional.
+        dark_strategy: callable, optional. (deprecated)
 
             Protocol of taking dark frame during experiment. Default to the logic of matching dark frame and
             light frame with the sample exposure time and frame rate. Details can be found at
@@ -298,13 +291,15 @@ class CustomizedRunEngine(RunEngine):
 
             list of uids (i.e. RunStart Document uids) of run(s)
         """
+        if dark_strategy is not None:
+            raise Warning("dark_strategy is deprecated.")
         if self.md.get("robot", None) is not None:
             raise RuntimeError(
                 "Robot must be specified at call time, not in"
                 "global metadata"
             )
         # compose the plan
-        final_plan = self.gen_plan(sample, plan, dark_strategy=dark_strategy, robot=robot)
+        final_plan = self.gen_plan(sample, plan, robot=robot)
         # normalize the subs
         _subs = normalize_subs_input(subs) if subs else {}
         # verify writing files
@@ -375,27 +370,28 @@ def xpdacq_composer(
     # Make the complete plan by chaining the chained plans
     if robot:
         lst_bp_plan = gen_robot_plans(beamtime, lst_metadata, lst_bp_plan)
-    # shutter control and dark
-    if shutter_control:
-        shutter, close_state = shutter_control
-        # Alter the plan to incorporate dark frames.
-        if dark_strategy:
-            lst_bp_plan = [dark_strategy(p) for p in lst_bp_plan]
-            lst_bp_plan = [bpp.msg_mutator(p, _inject_qualified_dark_frame_uid) for p in lst_bp_plan]
-        # force to close shutter after scan
-        lst_bp_plan = [close_shutter_at_last(p, shutter, close_state) for p in lst_bp_plan]
-    # Load calibration file
-    if auto_load_calib:
-        lst_bp_plan = [bpp.msg_mutator(p, _inject_calibration_md) for p in lst_bp_plan]
-    # Insert xpdacq md version
-    lst_bp_plan = [bpp.msg_mutator(p, _inject_xpdacq_md_version) for p in lst_bp_plan]
-    # Insert analysis stage tag
-    lst_bp_plan = [bpp.msg_mutator(p, _inject_analysis_stage) for p in lst_bp_plan]
-    # Insert filter metadata
-    lst_bp_plan = [bpp.msg_mutator(p, _inject_filter_positions) for p in lst_bp_plan]
     # Inject the sample metadata
     lst_bp_plan = [inject_metadata(p, s) for p, s in zip(lst_bp_plan, lst_metadata)]
-    return pchain(*lst_bp_plan)
+    # chain the plans
+    grand_plan = pchain(*lst_bp_plan)
+    # shutter control and dark
+    if shutter_control and dark_strategy:
+        grand_plan = dark_strategy(grand_plan)
+        grand_plan = bpp.msg_mutator(grand_plan, _inject_qualified_dark_frame_uid)
+    # Load calibration file
+    if auto_load_calib:
+        grand_plan = bpp.msg_mutator(grand_plan, _inject_calibration_md)
+    # Insert xpdacq md version
+    grand_plan = bpp.msg_mutator(grand_plan, _inject_xpdacq_md_version)
+    # Insert analysis stage tag
+    grand_plan = bpp.msg_mutator(grand_plan, _inject_analysis_stage)
+    # Insert filter metadata
+    grand_plan = bpp.msg_mutator(grand_plan, _inject_filter_positions)
+    # close shutter
+    if shutter_control:
+        shutter, close_state = shutter_control
+        grand_plan = bpp.finalize_wrapper(grand_plan, close_shutter_at_last(shutter, close_state))
+    return grand_plan
 
 
 def close_shutter_at_last(plan: typing.Generator, shutter: Device, close_state: typing.Any) -> typing.Generator:
