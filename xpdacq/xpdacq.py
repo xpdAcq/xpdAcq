@@ -35,6 +35,7 @@ from bluesky.preprocessors import pchain
 from bluesky.suspenders import SuspendFloor
 from bluesky.utils import normalize_subs_input, single_gen, Msg
 from ophyd import Device
+from bluesky.callbacks.best_effort import BestEffortCallback
 from xpdconf.conf import XPD_SHUTTER_CONF
 
 from xpdacq.beamtime import Beamtime, ScanPlan
@@ -151,6 +152,12 @@ class CustomizedRunEngine(RunEngine):
         self.dark_preprocessor: typing.Optional[DarkPreprocessor] = None
         self.calib_preprocessor: typing.Optional[CalibPreprocessor] = None
         self.shutter_preprocessor: typing.Optional[ShutterPreprocessor] = None
+        bec = BestEffortCallback()
+        bec.disable_baseline()
+        bec.disable_plots()
+        bec.enable_heading()
+        bec.enable_table()
+        self.subscribe(bec)
 
     @property
     def beamtime(self):
@@ -423,7 +430,6 @@ def _update_dark_dict_list(name, doc):
         dark_dict_list.append(dark_dict)
         glbl["_dark_dict_list"] = dark_dict_list  # update glbl._dark_dict_list
     else:
-        # FIXME: replace with logging and detailed warning next PR
         print(
             "INFO: dark scan was not successfully executed.\n"
             "gobal dark frame information will not be updated!"
@@ -455,7 +461,6 @@ def take_dark():
     }
     c = bp.count([area_det], md=_md)
     yield from bpp.subs_wrapper(c, {"stop": [_update_dark_dict_list]})
-    # TODO: remove this, since it kinda depends on what happens next?
     print("opening shutter...")
 
 
@@ -731,7 +736,6 @@ def set_beamdump_suspender(
 
 def load_sample(position, geometry=None):
     """For robot."""
-    # TODO: I think this can be simpler.
     return (
         yield from single_gen(
             Msg("load_sample", xpd_configuration["robot"], position, geometry)
@@ -741,7 +745,6 @@ def load_sample(position, geometry=None):
 
 def unload_sample():
     """For robot."""
-    # TODO: I think this can be simpler.
     return (
         yield from single_gen(Msg("unload_sample", xpd_configuration["robot"]))
     )

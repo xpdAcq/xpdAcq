@@ -29,8 +29,6 @@ from xpdconf.conf import glbl_dict, GLBL_YAML_PATH
 from .tools import xpdAcqException
 from .yamldict import YamlDict
 
-#TODO: change default setting of shutter control and auto load calibration in the glbl
-
 glbl_dict.pop("exp_db")
 XPDACQ_MD_VERSION = 0.1
 
