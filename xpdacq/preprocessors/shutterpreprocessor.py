@@ -29,10 +29,8 @@ class ShutterPreprocessor:
         The detector to take light images.
     dark_group_prefix : str, optional
         The group of trigger for dark frame, by default 'bluesky-darkframes-trigger'
-    open_shutter : ShutterControl, optional
-        The plan function to open the shutter, by default, using `xpdacq.beamtime.open_shutter_stub`.
-    close_shutter : ShutterControl, optional
-        The plan function to close the shutter, by default, using `xpdacq.beamtime.close_shutter_stub`.
+    shutter_config : ShutterConfig
+        The configuration of the shutter states, by default, read `xpd_configuration` and `XPD_SHUTTER_CONF`.
     delay : float, optional
         The time to wait between the open of the shutter and the trigger of the detector, by default 0.
     """
