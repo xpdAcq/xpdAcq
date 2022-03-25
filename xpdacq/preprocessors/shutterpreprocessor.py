@@ -1,22 +1,14 @@
 import typing as T
-from dataclasses import dataclass
 from turtle import delay
 
 import bluesky.plan_stubs as bps
 import bluesky.preprocessors as bpp
 from bluesky import Msg
-from ophyd import Device, Signal
+from ophyd import Device
+
+from .shutterconfig import ShutterConfig
 
 Plan = T.Generator[Msg, T.Any, T.Any]
-
-
-@dataclass
-class ShutterConfig:
-    
-    shutter: Signal
-    open_state: T.Any
-    close_state: T.Any
-
 
 class ShutterPreprocessor:
     """The preprocessor to mutate the plan so that the shutter will be open before every non dark trigger of the detector and closed after the trigger finishes.
