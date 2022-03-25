@@ -5,6 +5,7 @@ from bluesky import Msg
 from bluesky_darkframes import DarkFramePreprocessor, SnapshotDevice
 from ophyd import Device
 from ophyd.signal import Signal
+from xpdacq.preprocessors.shutterconfig import ShutterConfig
 
 Plan = T.Generator[Msg, T.Any, T.Any]
 ShutterControl = T.Callable[[], Plan]
@@ -60,21 +61,18 @@ class DarkPreprocessor(DarkFramePreprocessor):
         locked_signals: T.Optional[T.Iterable[Signal]] = None,
         limit: T.Optional[int] = None,
         stream_name='dark',
-        delay: float = 0.,
-        open_shutter: T.Optional[ShutterControl] = None,
-        close_shutter: T.Optional[ShutterControl] = None
+        shutter_config: ShutterConfig = None
     ):
-        if open_shutter is None:
-            from xpdacq.beamtime import open_shutter_stub
-            open_shutter = open_shutter_stub
-            del open_shutter_stub
-        if close_shutter is None:
-            from xpdacq.beamtime import close_shutter_stub
-            close_shutter = close_shutter_stub
-            del close_shutter_stub
+        if shutter_config is None:
+            shutter_config = ShutterConfig.from_xpdacq()
+        self._shutter_config = shutter_config
 
         def _dark_plan(_detector):
-            yield from close_shutter()
+            shutter = self._shutter_config.shutter
+            open_state = self._shutter_config.open_state
+            close_state = self._shutter_config.close_state
+            delay = self._shutter_config.delay
+            yield from bps.mv(shutter, close_state)
             if delay > 0.:
                 yield from bps.sleep(delay)
             yield from bps.unstage(_detector)
@@ -84,7 +82,7 @@ class DarkPreprocessor(DarkFramePreprocessor):
             snapshot = SnapshotDevice(_detector)
             yield from bps.unstage(_detector)
             yield from bps.stage(_detector)
-            yield from open_shutter()
+            yield from bps.mv(shutter, open_state)
             return snapshot
 
         super().__init__(

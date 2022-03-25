@@ -1,11 +1,10 @@
-import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 import numpy as np
 from bluesky import RunEngine
 from bluesky_darkframes.sim import DiffractionDetector, Shutter
 from databroker import Broker
 from ophyd.sim import NumpySeqHandler
-from xpdacq.preprocessors.darkpreprocessor import DarkPreprocessor
+from xpdacq.preprocessors import DarkPreprocessor, ShutterConfig
 
 
 def test_in_a_run():
@@ -15,18 +14,10 @@ def test_in_a_run():
     db.reg.register_handler('NPY_SEQ', NumpySeqHandler)
     RE = RunEngine()
     RE.subscribe(db.insert)
-
-    def open_shutter():
-        return (yield from bps.mv(shutter, "open"))
-
-    def close_shutter():
-        return (yield from bps.mv(shutter, "closed"))
-
     # test dark preprocessor
     dp = DarkPreprocessor(
         detector=detector,
-        open_shutter=open_shutter,
-        close_shutter=close_shutter
+        shutter_config=ShutterConfig(shutter, "open", "closed")
     )
     plan = dp(bp.count([detector]))
     RE(plan)
