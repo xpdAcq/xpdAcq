@@ -55,6 +55,7 @@ def test_configure_sample_info_md(sample_name, phase_info, tag, sample_md):
     assert parsed_sample_md == sample_md
 
 
+@pytest.mark.skip
 def test_calib_md(fresh_xrun, exp_hash_uid, glbl, db):
     xrun = fresh_xrun
     # calib run
