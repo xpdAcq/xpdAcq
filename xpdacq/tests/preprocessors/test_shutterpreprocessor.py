@@ -4,7 +4,7 @@ from xpdacq.preprocessors.shutterpreprocessor import (ShutterConfig,
 from xpdacq.simulators import get_detector, get_shutter
 
 
-def test_call(capsys):
+def test_call():
     shutter = get_shutter()
     detector = get_detector()
     spp = ShutterPreprocessor(
