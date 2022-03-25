@@ -1,6 +1,5 @@
 import typing as T
 from dataclasses import dataclass
-from typing_extensions import Self
 
 from ophyd import Signal
 
@@ -11,7 +10,7 @@ class ShutterConfig:
     shutter: Signal
     open_state: T.Any
     close_state: T.Any
-    delay: float
+    delay: float = 0.
 
     @classmethod
     def from_xpdacq(cls):
