@@ -23,8 +23,6 @@ class ShutterPreprocessor:
         The group of trigger for dark frame, by default 'bluesky-darkframes-trigger'
     shutter_config : ShutterConfig
         The configuration of the shutter states, by default, read `xpd_configuration` and `XPD_SHUTTER_CONF`.
-    delay : float, optional
-        The time to wait between the open of the shutter and the trigger of the detector, by default 0.
     """
 
     def __init__(
@@ -38,7 +36,6 @@ class ShutterPreprocessor:
         if shutter_config is None:
             shutter_config = ShutterConfig.from_xpdacq()
         self._detector = detector
-        self._delay = delay
         self._dark_group_prefix = dark_group_prefix
         self._shutter_config = shutter_config
         self._disabled = False
@@ -50,12 +47,13 @@ class ShutterPreprocessor:
         shutter = self._shutter_config.shutter
         open_state = self._shutter_config.open_state
         close_state = self._shutter_config.close_state
+        delay = self._shutter_config.delay
 
         def _open_shutter_before(msg: Msg) -> Plan:
             curr_state = (yield from bps.rd(shutter))
             if curr_state != open_state:
                 yield from bps.mv(shutter, open_state)
-            if self._delay > 0.:
+            if delay > 0.:
                 yield from bps.sleep(delay)
             return (yield msg)
 

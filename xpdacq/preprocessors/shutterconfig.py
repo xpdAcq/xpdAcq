@@ -11,6 +11,7 @@ class ShutterConfig:
     shutter: Signal
     open_state: T.Any
     close_state: T.Any
+    delay: float
 
     @classmethod
     def from_xpdacq(cls):
@@ -19,5 +20,6 @@ class ShutterConfig:
         return cls(
             xpd_configuration["shutter"],
             XPD_SHUTTER_CONF["open"],
-            XPD_SHUTTER_CONF["close"]
+            XPD_SHUTTER_CONF["close"],
+            0.
         )
