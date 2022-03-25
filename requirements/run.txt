@@ -12,3 +12,4 @@ xpdsim
 bluesky-darkframes
 scikit-image
 pyopencl
+frozendict
