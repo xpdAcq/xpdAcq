@@ -31,9 +31,8 @@ def test_set():
     assert cp._calib_info.poni2.get() == 0.
     assert cp._calib_info.rot1.get() == 0.
     assert cp._calib_info.rot2.get() == 0.
-    assert cp._calib_info.rot3.value == 0.
+    assert cp._calib_info.rot3.get() == 0.
     assert cp._calib_info.detector.get() == "Perkin detector"
-    assert cp._calib_info.calibrated.get() == True
 
 
 def test_load():
@@ -102,6 +101,5 @@ def test_set_calib_info_using_RE():
     assert cp.calib_info.poni2.get() == geo.poni2
     assert cp.calib_info.rot1.get() == geo.rot1
     assert cp.calib_info.rot2.get() == geo.rot2
-    assert cp.calib_info.rot3.value == geo.rot3
+    assert cp.calib_info.rot3.get() == geo.rot3
     assert cp.calib_info.detector.get() == geo.detector.name
-    assert cp.calib_info.calibrated.get() == True

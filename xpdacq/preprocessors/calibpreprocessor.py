@@ -12,7 +12,6 @@ Plan = T.Generator[Msg, None, None]
 
 
 class CalibPreprocessorError(Exception):
-
     pass
 
 
@@ -28,7 +27,6 @@ class CalibInfo(Device):
     rot2 = Cpt(Signal, name="rot2", value=0.)
     rot3 = Cpt(Signal, name="rot3", value=0.)
     detector = Cpt(Signal, name="detector", value="Perkin")
-    calibrated = Cpt(Signal, name="calibrated", value=False)
 
 
 class CalibPreprocessor:
@@ -66,7 +64,6 @@ class CalibPreprocessor:
         self._calib_info.rot2.set(geo.rot2)
         self._calib_info.rot3.set(geo.rot3)
         self._calib_info.detector.set(geo.detector.name)
-        self._calib_info.calibrated.set(True)
         return
 
     @property
@@ -74,6 +71,7 @@ class CalibPreprocessor:
         """The ophyd device that holds the calibration information."""
         return self._calib_info
 
+    # a read that return a device tuple
     def read(self, poni_file: str) -> None:
         """Read the calibration information from the poni file."""
         poni_path = Path(poni_file)
@@ -96,6 +94,10 @@ class CalibPreprocessor:
 
     def __call__(self, plan: T.Generator[Msg, T.Any, T.Any]) -> T.Generator[Msg, T.Any, T.Any]:
         """Mutate the plan. Read the calibration information data every time after the detector is read."""
+        #TODO: record calib info in a cache (state tuple -> device tuple for the calibration info)
+        #TODO: if cache is empty, do not anything
+        #TODO: elif record in the cache, use that to set the calib info.
+        #TODO: else use the lastest one
         if self._disabled:
             return plan
 
@@ -140,6 +142,5 @@ class CalibPreprocessor:
             bps.abs_set(self._calib_info.rot1, geo.rot1),
             bps.abs_set(self._calib_info.rot2, geo.rot2),
             bps.abs_set(self._calib_info.rot3, geo.rot3),
-            bps.abs_set(self._calib_info.detector, geo.detector.name),
-            bps.abs_set(self._calib_info.calibrated, True)
+            bps.abs_set(self._calib_info.detector, geo.detector.name)
         )
