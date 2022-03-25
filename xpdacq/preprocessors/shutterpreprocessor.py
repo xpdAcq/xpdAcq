@@ -36,23 +36,13 @@ class ShutterPreprocessor:
         delay: float = 0.
         ) -> None:
         if shutter_config is None:
-            shutter_config = self._get_default_shutter_control()
+            shutter_config = ShutterConfig.from_xpdacq()
         self._detector = detector
         self._delay = delay
         self._dark_group_prefix = dark_group_prefix
         self._shutter_config = shutter_config
         self._disabled = False
         self._group = None
-            
-    @staticmethod
-    def _get_default_shutter_control() -> ShutterConfig:
-        from xpdacq.xpdacq_conf import xpd_configuration
-        from xpdconf.conf import XPD_SHUTTER_CONF
-        return ShutterConfig(
-            xpd_configuration["shutter"],
-            XPD_SHUTTER_CONF["open"],
-            XPD_SHUTTER_CONF["close"]
-        )
 
     def __call__(self, plan: Plan) -> Plan:
         if self._disabled:
