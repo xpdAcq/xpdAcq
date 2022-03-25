@@ -1,14 +1,21 @@
-from time import sleep
 import typing as T
+from dataclasses import dataclass
 from turtle import delay
 
 import bluesky.plan_stubs as bps
 import bluesky.preprocessors as bpp
 from bluesky import Msg
-from ophyd import Device
+from ophyd import Device, Signal
 
 Plan = T.Generator[Msg, T.Any, T.Any]
-ShutterControl = T.Callable[[], Plan]
+
+
+@dataclass
+class ShutterConfig:
+    
+    shutter: Signal
+    open_state: T.Any
+    close_state: T.Any
 
 
 class ShutterPreprocessor:
@@ -35,35 +42,49 @@ class ShutterPreprocessor:
         *,
         detector: Device,
         dark_group_prefix: str = 'bluesky-darkframes-trigger',
-        open_shutter: ShutterControl = None,
-        close_shutter: ShutterControl = None,
+        shutter_config: T.Optional[ShutterConfig] = None,
         delay: float = 0.
         ) -> None:
-        if open_shutter is None:
-            from xpdacq.beamtime import open_shutter_stub
-            open_shutter = open_shutter_stub
-            del open_shutter_stub
-        if close_shutter is None:
-            from xpdacq.beamtime import close_shutter_stub
-            close_shutter = close_shutter_stub
-            del close_shutter_stub
+        if shutter_config is None:
+            shutter_config = self._get_default_shutter_control()
         self._detector = detector
         self._delay = delay
-        self._open_shutter = open_shutter
-        self._close_shutter = close_shutter
         self._dark_group_prefix = dark_group_prefix
+        self._shutter_config = shutter_config
         self._disabled = False
         self._group = None
+            
+    @staticmethod
+    def _get_default_shutter_control() -> ShutterConfig:
+        from xpdacq.xpdacq_conf import xpd_configuration
+        from xpdconf.conf import XPD_SHUTTER_CONF
+        return ShutterConfig(
+            xpd_configuration["shutter"],
+            XPD_SHUTTER_CONF["open"],
+            XPD_SHUTTER_CONF["close"]
+        )
 
     def __call__(self, plan: Plan) -> Plan:
         if self._disabled:
             return plan
+        shutter = self._shutter_config.shutter
+        open_state = self._shutter_config.open_state
+        close_state = self._shutter_config.close_state
 
         def _open_shutter_before(msg: Msg) -> Plan:
-            yield from self._open_shutter()
+            curr_state = (yield from bps.rd(shutter))
+            if curr_state != open_state:
+                yield from bps.mv(shutter, open_state)
             if self._delay > 0.:
                 yield from bps.sleep(delay)
             return (yield msg)
+
+        def _close_shutter() -> Plan:
+            curr_state = (yield from bps.rd(shutter))
+            if curr_state != close_state:
+                yield from bps.mv(shutter, close_state)
+            return
+
 
         def _mutate(msg: Msg):
             # open the shutter before a non dark trigger
@@ -74,7 +95,7 @@ class ShutterPreprocessor:
                 self._group = group
                 return _open_shutter_before(msg), None
             if (msg.command == "wait") and (msg.kwargs.get("group") == self._group):
-                return None, self._close_shutter()
+                return None, _close_shutter()
             return None, None
 
         return bpp.plan_mutator(plan, _mutate)
