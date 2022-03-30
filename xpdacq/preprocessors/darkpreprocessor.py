@@ -72,8 +72,10 @@ class DarkPreprocessor(DarkFramePreprocessor):
             close_state = self._shutter_config.close_state
             delay = self._shutter_config.delay
             curr_state = (yield from bps.rd(shutter))
+            shutter_moved = False
             if curr_state != close_state:
                 yield from bps.mv(shutter, close_state)
+                shutter_moved = True
             if delay > 0.:
                 yield from bps.sleep(delay)
             yield from bps.unstage(_detector)
@@ -83,7 +85,8 @@ class DarkPreprocessor(DarkFramePreprocessor):
             snapshot = SnapshotDevice(_detector)
             yield from bps.unstage(_detector)
             yield from bps.stage(_detector)
-            yield from bps.mv(shutter, curr_state)
+            if shutter_moved:
+                yield from bps.mv(shutter, curr_state)
             return snapshot
 
         super().__init__(
