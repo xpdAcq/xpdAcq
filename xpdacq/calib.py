@@ -22,12 +22,12 @@ from pathlib import Path
 import bluesky.preprocessors as bpp
 import pyFAI.calibrant
 
+from xpdacq.preprocessors.calibpreprocessor import CalibPreprocessor
+
 from .beamtime import ScanPlan, ct
 from .glbl import glbl
 from .tools import _check_obj, xpdAcqException
 from .utils import ExceltoYaml
-from xpdacq.preprocessors.calibpreprocessor import CalibPreprocessor
-
 
 _REQUIRED_OBJ_LIST = ["xrun"]
 
@@ -70,7 +70,7 @@ class RunCalibration:
         *,
         RE_instance=None,
         wait_for_cal=True,
-        calib_preprocessor: CalibPreprocessor=None,
+        calib_preprocessor: CalibPreprocessor = None,
         **kwargs
     ):
         """function to run entire calibration process.
@@ -179,8 +179,8 @@ class RunCalibration:
         )
         if wait_for_cal:  # pragma: no cover
             print('Waiting for calibration to finish\n\n'
-                'If calibration has failed please press Ctrl+C in this '
-                'terminal and run ``run_calibration`` again!\n\n')
+                  'If calibration has failed please press Ctrl+C in this '
+                  'terminal and run ``run_calibration`` again!\n\n')
             while True:
                 if os.path.exists(calib_file):
                     with open(calib_file, 'r') as f:
@@ -188,7 +188,8 @@ class RunCalibration:
                 else:
                     new_calib_file_hash = '1'
                 if new_calib_file_hash != calib_file_hash:
-                    break
+                    calib_result = calib_preprocessor.read(calib_file)
+                    RE_instance({}, calib_preprocessor.record(calib_result))
                 else:
                     time.sleep(1)
         """

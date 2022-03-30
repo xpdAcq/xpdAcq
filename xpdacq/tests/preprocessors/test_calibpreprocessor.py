@@ -1,11 +1,11 @@
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
+import bluesky.preprocessors as bpp
 from bluesky.run_engine import RunEngine
+from databroker import Broker
 from ophyd.sim import hw
 from pkg_resources import resource_filename
-import bluesky.preprocessors as bpp
-from xpdacq.preprocessors.calibpreprocessor import CalibPreprocessor, CalibInfo
-from databroker import Broker
+from xpdacq.preprocessors.calibpreprocessor import CalibInfo, CalibPreprocessor
 
 PONI_FILE = str(resource_filename("xpdacq", "tests/Ni_poni_file.poni"))
 
@@ -34,10 +34,10 @@ def test_preprocessor_usage():
     db = Broker.named("temp")
     RE = RunEngine()
     RE.subscribe(db.insert)
-    
+
     def simple_count():
         return cp(bp.count([det]))
-    
+
     # case 1: no cache, no calib
     plan1 = simple_count()
     RE(plan1)
@@ -69,6 +69,39 @@ def test_preprocessor_usage():
         assert data == calib_result2[i]
 
 
-# TODO: simply test if the plan is changed or not
+def test_read_and_record():
+    devices = hw()
+    det = devices.det
+    det_z = devices.motor
+    cp = CalibPreprocessor(det, locked_signals=[det_z])
+    calib_result = cp.read(PONI_FILE)
+    RE = RunEngine()
+    pos = 1.
+    plan = bpp.pchain(bps.mv(det_z, pos), cp.record(calib_result))
+    RE(plan)
+    assert cp._cache[(pos,)] == calib_result
+
+
 def test_disable_and_enable():
-    pass
+    devices = hw()
+    det = devices.det
+    cp = CalibPreprocessor(det)
+    calib_result = (1., 1., 0., 0., 0., 0., 0., "Perkin detector")
+    cp.add_calib_result(tuple(), calib_result)
+
+    def plan1():
+        return bps.trigger_and_read([det])
+
+    def plan2():
+        return cp(plan1())
+
+    def get_steps(plan):
+        count = 0
+        for _ in plan:
+            count += 1
+        return count
+
+    cp.disable()
+    assert get_steps(plan1()) == get_steps(plan2())
+    cp.enable()
+    assert get_steps(plan1()) < get_steps(plan2())

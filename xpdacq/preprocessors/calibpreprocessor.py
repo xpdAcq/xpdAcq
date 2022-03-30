@@ -88,7 +88,7 @@ class CalibPreprocessor:
         return self._locked_signals
 
     @staticmethod
-    def _read(poni_file: str) -> CalibResult:
+    def read(poni_file: str) -> CalibResult:
         """Read the calibration information from the poni file."""
         poni_path = Path(poni_file)
         if not poni_path.is_file():
@@ -104,7 +104,7 @@ class CalibPreprocessor:
         return
 
     def load_calib_result(self, state: State, poni_file: str) -> None:
-        calib_result = self._read(poni_file)
+        calib_result = self.read(poni_file)
         self.add_calib_result(state, calib_result)
         return
 
@@ -164,3 +164,10 @@ class CalibPreprocessor:
     def clear(self) -> None:
         self._cache.clear()
         return
+
+    def record(self, calib_result: CalibResult) -> Plan:
+        plist = (bps.rd(s) for s in self._locked_signals)
+        state = (yield from bpp.pchain(*plist))
+        self.add_calib_result(state, calib_result)
+        return
+    
