@@ -4,41 +4,32 @@ from bluesky.run_engine import RunEngine
 from bluesky_darkframes.sim import DiffractionDetector
 from pkg_resources import resource_filename
 from pyFAI.geometry import Geometry
-from xpdacq.preprocessors.calibpreprocessor import CalibPreprocessor
+from xpdacq.preprocessors.calibpreprocessor import CalibPreprocessor, CalibInfo
 from databroker import Broker
 
 PONI_FILE = str(resource_filename("xpdacq", "tests/Ni_poni_file.poni"))
 
 
 def test_set():
-    det = DiffractionDetector(name="pe1c")
-    cp = CalibPreprocessor(det)
-    geo = Geometry(
-        wavelength=1.,
-        dist=1.,
-        poni1=0.,
-        poni2=0.,
-        rot1=0.,
-        rot2=0.,
-        rot3=0.,
-        detector="Perkin detector"
-    )
-    cp.set(geo)
-    # check loading
-    assert cp._calib_info.wavelength.get() == 1.
-    assert cp._calib_info.dist.get() == 1.
-    assert cp._calib_info.poni1.get() == 0.
-    assert cp._calib_info.poni2.get() == 0.
-    assert cp._calib_info.rot1.get() == 0.
-    assert cp._calib_info.rot2.get() == 0.
-    assert cp._calib_info.rot3.get() == 0.
-    assert cp._calib_info.detector.get() == "Perkin detector"
+    ci = CalibInfo(name="calib_info")
+    calib_result = (1., 200., 1000., 1500., 0.1, 0.2, 0.3, "Perkin detector")
+    sts = ci.set(calib_result)
+    assert sts is not None
+    # check if the signals are set correctly
+    assert ci.wavelength.get() == calib_result[0]
+    assert ci.dist.get() == calib_result[1]
+    assert ci.poni1.get() == calib_result[2]
+    assert ci.poni2.get() == calib_result[3]
+    assert ci.rot1.get() == calib_result[4]
+    assert ci.rot2.get() == calib_result[5]
+    assert ci.rot3.get() == calib_result[6]
+    assert ci.detector.get() == calib_result[7]
 
 
 def test_load():
     det = DiffractionDetector(name="pe1c")
     cp = CalibPreprocessor(det)
-    assert cp.read(PONI_FILE) is None
+    assert cp._read(PONI_FILE) is None
 
 
 def test_call():
