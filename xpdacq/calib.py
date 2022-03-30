@@ -188,7 +188,6 @@ class RunCalibration:
                 else:
                     new_calib_file_hash = '1'
                 if new_calib_file_hash != calib_file_hash:
-                    calib_preprocessor.read(calib_file)
                     break
                 else:
                     time.sleep(1)
