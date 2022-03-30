@@ -1,8 +1,12 @@
 import typing as T
-from collections import namedtuple
 
 import bluesky.plan_stubs as bps
+from bluesky import RunEngine
 from bluesky_darkframes.sim import DiffractionDetector, Shutter
+from databroker import Broker
+from ophyd import Component, Device, Kind, Signal, SoftPositioner
+
+from xpdacq.simulators import Eurotherm, FastShutter, PerkinElmerDetector
 
 
 def get_shutter(name="shutter") -> Shutter:
@@ -27,3 +31,37 @@ def get_close_shutter(shutter: Shutter) -> T.Callable:
 
 def get_detector(name="detector") -> DiffractionDetector:
     return DiffractionDetector(name=name)
+
+
+class Camera(Device):
+
+    acquire_time = Component(Signal, name="acquire_time", kind=Kind.config, value=0.1)
+
+
+class PerkinElmerDetector(DiffractionDetector):
+
+    cam = Component(Camera, name="cam")
+    images_per_set = Component(Signal, name="images_per_set", kind=Kind.config, value=1)
+
+
+class FastShutter(Shutter):
+
+    pass
+
+
+class Eurotherm(SoftPositioner):
+
+    def __init__(self, *, egu='K', limits=None, source='computed', init_pos=300., **kwargs):
+        super().__init__(egu=egu, limits=limits, source=source, init_pos=init_pos, **kwargs)
+
+
+class WorkSpace:
+
+    def __init__(self) -> None:
+
+        self.RE: RunEngine = RunEngine()
+        self.db: Broker = Broker.named("temp")
+        self.RE.subscribe(self.db.insert)
+        self.det: PerkinElmerDetector = PerkinElmerDetector(name="pe1")
+        self.eurotherm: Eurotherm = Eurotherm(name="temperature")
+        self.shutter: FastShutter = FastShutter(name="shutter")
