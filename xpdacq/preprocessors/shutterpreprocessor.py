@@ -1,5 +1,4 @@
 import typing as T
-from turtle import delay
 
 import bluesky.plan_stubs as bps
 import bluesky.preprocessors as bpp
@@ -9,6 +8,7 @@ from ophyd import Device
 from .shutterconfig import ShutterConfig
 
 Plan = T.Generator[Msg, T.Any, T.Any]
+
 
 class ShutterPreprocessor:
     """The preprocessor to mutate the plan so that the shutter will be open before every non dark trigger of the detector and closed after the trigger finishes.
@@ -31,7 +31,6 @@ class ShutterPreprocessor:
         detector: Device,
         dark_group_prefix: str = 'bluesky-darkframes-trigger',
         shutter_config: T.Optional[ShutterConfig] = None,
-        delay: float = 0.
         ) -> None:
         if shutter_config is None:
             shutter_config = ShutterConfig.from_xpdacq()
