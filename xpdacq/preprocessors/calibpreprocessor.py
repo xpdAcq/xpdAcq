@@ -1,8 +1,6 @@
-from ast import Or
 import typing as T
-from pathlib import Path
 from collections import OrderedDict
-from frozendict import frozendict
+from pathlib import Path
 
 import bluesky.plan_stubs as bps
 import bluesky.preprocessors as bpp
@@ -12,10 +10,10 @@ from ophyd import Device, Signal
 from ophyd.status import Status
 from pyFAI.geometry import Geometry
 
-Plan = T.Generator[Msg, None, None]
+Plan = T.Generator[Msg, T.Any, T.Any]
 SignalList = T.List[Signal]
 CalibResult = T.Tuple[float, float, float, float, float, float, float, str]
-State = T.Dict[str, T.Hashable]
+State = T.Iterable[T.Hashable]
 
 
 class CalibPreprocessorError(Exception):
@@ -42,7 +40,7 @@ class CalibInfo(Device):
         # try to put the tuple and return the status
         sts = Status(self, timeout=60.)
         try:
-            self.put(calib_result)
+            super().put(calib_result)
         except Exception as error:
             sts.set_exception(error)
         else:
@@ -62,6 +60,7 @@ class CalibPreprocessor:
     stream_name: str
         The name of the stream to add calibratino data, default `calib`.
     """
+
     def __init__(
         self,
         detector: Device,
@@ -100,10 +99,8 @@ class CalibPreprocessor:
                         geo.rot1, geo.rot2, geo.rot3, geo.detector.name)
         return calib_result
 
-    # TODO: add method to add cache
     def add_calib_result(self, state: State, calib_result: CalibResult) -> None:
-        key = frozendict(state)
-        self._cache[key] = calib_result
+        self._cache[tuple(state)] = calib_result
         return
 
     def load_calib_result(self, state: State, poni_file: str) -> None:
@@ -123,15 +120,31 @@ class CalibPreprocessor:
 
     def __call__(self, plan: T.Generator[Msg, T.Any, T.Any]) -> T.Generator[Msg, T.Any, T.Any]:
         """Mutate the plan. Read the calibration information data every time after the detector is read."""
-        # TODO: record calib info in a cache (state tuple -> device tuple for the calibration info)
-        # TODO: if cache is empty, do not anything
-        # TODO: elif record in the cache, use that to set the calib info.
-        # TODO: else use the lastest one
-        if self._disabled:
+        if self._disabled or not self._cache:
             return plan
 
-        def _read_calib_info(msg: Msg):
-            yield from bps.trigger_and_read([self._calib_info], name=self._stream_name)
+        def _read_locked_signals() -> Plan:
+            plist = (bps.rd(s) for s in self._locked_signals)
+            return bpp.pchain(*plist)
+
+        def _get_calib(state: State) -> CalibResult:
+            if state in self._cache:
+                return self._cache[state]
+            return next(reversed(self._cache.values()))
+
+        def _set_calib(calib_result: CalibInfo) -> Plan:
+            return bps.abs_set(self._calib_info, calib_result, wait=True)
+
+        def _read_calib() -> Plan:
+            return bps.trigger_and_read([self._calib_info], name=self._stream_name)
+
+        def _get_set_read_calib(msg: Msg) -> Plan:
+            state = tuple()
+            if self._locked_signals:
+                state = (yield from _read_locked_signals())
+            calib_result = _get_calib(state)
+            yield from _set_calib(calib_result)
+            yield from _read_calib()
             return (yield msg)
 
         def _mutate(msg: Msg):
@@ -143,7 +156,7 @@ class CalibPreprocessor:
             ) and (
                 not group.startswith(self._dark_group_prefix)
             ):
-                return _read_calib_info(msg), None
+                return _get_set_read_calib(msg), None
             return None, None
 
         return bpp.plan_mutator(plan, _mutate)

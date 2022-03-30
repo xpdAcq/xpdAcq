@@ -1,9 +1,9 @@
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 from bluesky.run_engine import RunEngine
-from bluesky_darkframes.sim import DiffractionDetector
+from ophyd.sim import hw
 from pkg_resources import resource_filename
-from pyFAI.geometry import Geometry
+import bluesky.preprocessors as bpp
 from xpdacq.preprocessors.calibpreprocessor import CalibPreprocessor, CalibInfo
 from databroker import Broker
 
@@ -26,71 +26,49 @@ def test_set():
     assert ci.detector.get() == calib_result[7]
 
 
-def test_load():
-    det = DiffractionDetector(name="pe1c")
-    cp = CalibPreprocessor(det)
-    assert cp._read(PONI_FILE) is None
-
-
-def test_call():
-    det_name = "pe1c"
-    det = DiffractionDetector(name=det_name)
-    cp = CalibPreprocessor(det)
-    plan = cp(bp.count([det]))
+def test_preprocessor_usage():
+    devices = hw()
+    det = devices.det
+    det_z = devices.motor
+    cp = CalibPreprocessor(det, locked_signals=[det_z])
     db = Broker.named("temp")
     RE = RunEngine()
     RE.subscribe(db.insert)
-    RE(plan)
-    del RE, plan, det
-    # should find all the calibration data in the output
+    
+    def simple_count():
+        return cp(bp.count([det]))
+    
+    # case 1: no cache, no calib
+    plan1 = simple_count()
+    RE(plan1)
+    assert not hasattr(db[-1], "calib")
+    # add cache
+    pos1 = 1.
+    calib_result1 = (1., 1., 0., 0., 0., 0., 0., "Perkin detector")
+    cp.add_calib_result([pos1], calib_result1)
+    pos2 = 2.
+    calib_result2 = (1., 2., 0., 0., 0., 0., 0., "Perkin detector")
+    cp.add_calib_result([pos2], calib_result2)
+    pos3 = 3.
+    # case 2: state in cache, use corresponding calib result
+    plan2 = bpp.pchain(bps.mv(det_z, pos1), simple_count())
+    RE(plan2)
     run = db[-1]
-    attrs = ("wavelength", "dist", "poni1", "poni2", "rot1", "rot2", "rot3", "detector", "calibrated")
-    for attr in attrs:
-        signal = getattr(cp._calib_info, attr)
-        key = "{}_{}".format(det_name, attr)
-        data = list(run.data(key, stream_name="calib"))
-        assert len(data) == 1
-        assert data[0] == signal.get()
+    attrs = ("wavelength", "dist", "poni1", "poni2", "rot1", "rot2", "rot3", "detector")
+    for i in range(len(attrs)):
+        key = "{}_{}".format(det.name, attrs[i])
+        data = list(run.data(key, stream_name="calib"))[0]
+        assert data == calib_result1[i]
+    # case 3: state not in cache, use latest calib result
+    plan3 = bpp.pchain(bps.mv(det_z, pos3), simple_count())
+    RE(plan3)
+    run = db[-1]
+    for i in range(len(attrs)):
+        key = "{}_{}".format(det.name, attrs[i])
+        data = list(run.data(key, stream_name="calib"))[0]
+        assert data == calib_result2[i]
 
 
+# TODO: simply test if the plan is changed or not
 def test_disable_and_enable():
-    det_name = "pe1c"
-    det = DiffractionDetector(name=det_name)
-    cp = CalibPreprocessor(det)
-    # test disable
-    cp.disable()
-    msgs1 = list(cp(bps.trigger(det)))
-    assert len(msgs1) == 1
-    assert msgs1[0].command == "trigger"
-    assert msgs1[0].obj is det
-    # test enable
-    cp.enable()
-    msgs2 = list(cp(bps.trigger(det)))
-    assert len(msgs2) > 1
-    assert msgs2[-1].command == "trigger"
-    assert msgs2[-1].obj is det
-
-
-def test_set_calib_info_using_RE():
-    RE = RunEngine()
-    geo = Geometry(
-        wavelength=0.16,
-        dist=200.,
-        poni1=1000.,
-        poni2=1000.,
-        rot1=0.1,
-        rot2=-0.2,
-        rot3=0.3,
-        detector="Perkin detector"
-    )
-    det = DiffractionDetector(name="pe1c")
-    cp = CalibPreprocessor(det)
-    RE(cp.set_calib_info(geo))
-    assert cp.calib_info.wavelength.get() == geo.wavelength
-    assert cp.calib_info.dist.get() == geo.dist
-    assert cp.calib_info.poni1.get() == geo.poni1
-    assert cp.calib_info.poni2.get() == geo.poni2
-    assert cp.calib_info.rot1.get() == geo.rot1
-    assert cp.calib_info.rot2.get() == geo.rot2
-    assert cp.calib_info.rot3.get() == geo.rot3
-    assert cp.calib_info.detector.get() == geo.detector.name
+    pass
