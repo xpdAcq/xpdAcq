@@ -33,7 +33,7 @@ from .glbl import glbl
 from .tools import regularize_dict_key
 from .validated_dict import ValidatedDictLike
 from .xpdacq_conf import xpd_configuration
-from .yamldict import YamlDict, YamlChainMap
+from .yamldict import YamlChainMap, YamlDict
 
 # This is used to map plan names (strings in the YAML file) to actual
 # plan functions in Python.
@@ -89,9 +89,16 @@ def _summarize(plan):
 def configure_area_det(det, exposure, acq_time):
     """Configure exposure time of a detector in continuous acquisition mode"""
     _check_mini_expo(exposure, acq_time)
-    yield from bps.mv(det.cam.acquire_time, acq_time)
-    res = yield from bps.read(det.cam.acquire_time)
-    real_acq_time = res[det.cam.acquire_time.name]["value"] if res else 1
+    real_acq_time = 0.1
+    # if the detector has a camera and acquire time, set it
+    if hasattr(det, "cam"):
+        if hasattr(det.cam, "acquire_time"):
+            yield from bps.mv(det.cam.acquire_time, acq_time)
+            real_acq_time = (yield from bps.rd(det.cam.acquire_time))
+        else:
+            print("WARNING: `{}.cam` doesn't have `acquire_time` signal.".format(det.name))
+    else:
+        print("WARNING: `{}` doesn't have `cam` component.".format(det.name))
     if hasattr(det, "images_per_set"):
         # compute number of frames
         num_frame = np.ceil(exposure / real_acq_time)
