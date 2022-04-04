@@ -6,8 +6,6 @@ from bluesky_darkframes.sim import DiffractionDetector, Shutter
 from databroker import Broker
 from ophyd import Component, Device, Kind, Signal, SoftPositioner
 
-from xpdacq.simulators import Eurotherm, FastShutter, PerkinElmerDetector
-
 
 def get_shutter(name="shutter") -> Shutter:
     return Shutter(name=name)

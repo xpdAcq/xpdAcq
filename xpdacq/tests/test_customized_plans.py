@@ -1,4 +1,3 @@
-# Add tests for the ct, Tlist and Tramp
 import xpdacq.beamtime as xbt
 from xpdacq.beamtime import xpd_configuration
 from xpdacq.simulators import WorkSpace
