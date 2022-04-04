@@ -14,9 +14,15 @@ from frozendict import frozendict
 Plan = T.Generator[Msg, T.Any, T.Any]
 SignalList = T.List[Signal]
 CalibResult = T.Tuple[float, float, float, float, float, float, float, str]
-# TODO: use frozendict instead of tuple
+FilePath = T.Union[str, Path]
 State = T.Dict[str, T.Hashable]
 
+def _get_state(signals) -> Plan:
+    plist = (bps.rd(s) for s in signals)
+    values = (yield from bpp.pchain(*plist))
+    keys = (s.name for s in signals)
+    state = frozendict(zip(keys, values))
+    return state
 
 class CalibPreprocessorError(Exception):
     pass
@@ -89,8 +95,12 @@ class CalibPreprocessor:
     def locked_signals(self) -> SignalList:
         return self._locked_signals
 
+    @property
+    def detector(self) -> Device:
+        return self._detector
+
     @staticmethod
-    def read(poni_file: str) -> CalibResult:
+    def read(poni_file: FilePath) -> CalibResult:
         """Read the calibration information from the poni file."""
         poni_path = Path(poni_file)
         if not poni_path.is_file():
@@ -125,9 +135,6 @@ class CalibPreprocessor:
         if self._disabled or not self._cache:
             return plan
 
-        def _read_locked_signals() -> Plan:
-            plist = (bps.rd(s) for s in self._locked_signals)
-            return bpp.pchain(*plist)
 
         def _get_calib(state: State) -> CalibResult:
             if state in self._cache:
@@ -141,11 +148,7 @@ class CalibPreprocessor:
             return bps.trigger_and_read([self._calib_info], name=self._stream_name)
 
         def _get_set_read_calib(msg: Msg) -> Plan:
-            state = frozendict(dict())
-            if self._locked_signals:
-                values = (yield from _read_locked_signals())
-                names = (s.name for s in self._locked_signals)
-                state = frozendict(zip(names, values))
+            state = (yield from _get_state(self._locked_signals))
             calib_result = _get_calib(state)
             yield from _set_calib(calib_result)
             yield from _read_calib()
@@ -170,10 +173,6 @@ class CalibPreprocessor:
         return
 
     def record(self, calib_result: CalibResult) -> Plan:
-        plist = (bps.rd(s) for s in self._locked_signals)
-        values = (yield from bpp.pchain(*plist))
-        keys = (s.name for s in self._locked_signals)
-        state = dict(zip(keys, values))
+        state = (yield from _get_state(self._locked_signals))
         self.add_calib_result(state, calib_result)
         return
-    
