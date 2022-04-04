@@ -4,6 +4,7 @@ import bluesky.preprocessors as bpp
 from bluesky.run_engine import RunEngine
 from databroker import Broker
 from ophyd.sim import hw
+from frozendict import frozendict
 from pkg_resources import resource_filename
 from xpdacq.preprocessors.calibpreprocessor import CalibInfo, CalibPreprocessor
 
@@ -45,10 +46,10 @@ def test_preprocessor_usage():
     # add cache
     pos1 = 1.
     calib_result1 = (1., 1., 0., 0., 0., 0., 0., "Perkin detector")
-    cp.add_calib_result([pos1], calib_result1)
+    cp.add_calib_result({det_z.name: pos1}, calib_result1)
     pos2 = 2.
     calib_result2 = (1., 2., 0., 0., 0., 0., 0., "Perkin detector")
-    cp.add_calib_result([pos2], calib_result2)
+    cp.add_calib_result({det_z.name: pos2}, calib_result2)
     pos3 = 3.
     # case 2: state in cache, use corresponding calib result
     plan2 = bpp.pchain(bps.mv(det_z, pos1), simple_count())
@@ -79,7 +80,7 @@ def test_read_and_record():
     pos = 1.
     plan = bpp.pchain(bps.mv(det_z, pos), cp.record(calib_result))
     RE(plan)
-    assert cp._cache[(pos,)] == calib_result
+    assert cp._cache[frozendict({det_z.name: pos})] == calib_result
 
 
 def test_disable_and_enable():
@@ -87,7 +88,7 @@ def test_disable_and_enable():
     det = devices.det
     cp = CalibPreprocessor(det)
     calib_result = (1., 1., 0., 0., 0., 0., 0., "Perkin detector")
-    cp.add_calib_result(tuple(), calib_result)
+    cp.add_calib_result(dict(), calib_result)
 
     def plan1():
         return bps.trigger_and_read([det])

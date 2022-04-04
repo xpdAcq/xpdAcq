@@ -9,11 +9,13 @@ from ophyd import Component as Cpt
 from ophyd import Device, Signal
 from ophyd.status import Status
 from pyFAI.geometry import Geometry
+from frozendict import frozendict
 
 Plan = T.Generator[Msg, T.Any, T.Any]
 SignalList = T.List[Signal]
 CalibResult = T.Tuple[float, float, float, float, float, float, float, str]
-State = T.Iterable[T.Hashable]
+# TODO: use frozendict instead of tuple
+State = T.Dict[str, T.Hashable]
 
 
 class CalibPreprocessorError(Exception):
@@ -100,7 +102,7 @@ class CalibPreprocessor:
         return calib_result
 
     def add_calib_result(self, state: State, calib_result: CalibResult) -> None:
-        self._cache[tuple(state)] = calib_result
+        self._cache[frozendict(state)] = calib_result
         return
 
     def load_calib_result(self, state: State, poni_file: str) -> None:
@@ -139,9 +141,11 @@ class CalibPreprocessor:
             return bps.trigger_and_read([self._calib_info], name=self._stream_name)
 
         def _get_set_read_calib(msg: Msg) -> Plan:
-            state = tuple()
+            state = frozendict(dict())
             if self._locked_signals:
-                state = (yield from _read_locked_signals())
+                values = (yield from _read_locked_signals())
+                names = (s.name for s in self._locked_signals)
+                state = frozendict(zip(names, values))
             calib_result = _get_calib(state)
             yield from _set_calib(calib_result)
             yield from _read_calib()
@@ -167,7 +171,9 @@ class CalibPreprocessor:
 
     def record(self, calib_result: CalibResult) -> Plan:
         plist = (bps.rd(s) for s in self._locked_signals)
-        state = (yield from bpp.pchain(*plist))
+        values = (yield from bpp.pchain(*plist))
+        keys = (s.name for s in self._locked_signals)
+        state = dict(zip(keys, values))
         self.add_calib_result(state, calib_result)
         return
     
