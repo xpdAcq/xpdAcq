@@ -113,7 +113,7 @@ class UserInterface:
             other_dets=area_dets[1:]
         )
         # reload glbl
-        self._print("INFO: reload the global configuration.")
+        self._print("reload the global configuration.")
         from xpdacq.glbl import glbl
         _glbl = _reload_glbl(glbl_yaml)
         if _glbl:
@@ -121,9 +121,9 @@ class UserInterface:
         # load beamtime
         bt = start_xpdacq()
         if bt:
-            self._print("INFO: Reload beamtime objects:\n{}\n".format(bt))
+            self._print("Reload beamtime objects:\n{}\n".format(bt))
         else:
-            self._print("INFO: No Beamtime object.")
+            self._print("No Beamtime object.")
         # instantiate xrun without beamtime, like bluesky setup
         self._print("Create xrun object.")
         xrun = CustomizedRunEngine(None)
@@ -173,6 +173,6 @@ class UserInterface:
 
     def _print(self, *args, **kwargs):
         if self._verbose > 0:
-            print(*args, **kwargs)
+            print("INFO:",*args, **kwargs)
         return
     
