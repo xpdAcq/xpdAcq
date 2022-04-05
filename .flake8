@@ -7,6 +7,7 @@ exclude =
     build,
     dist,
     xpdacq/999-load.py
+    xpdacq/999-load2.py
 max-line-length = 115
 max-complexity = 10
 ignore = C901
