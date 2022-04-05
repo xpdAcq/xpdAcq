@@ -9,7 +9,7 @@ from ophyd import Device
 
 from xpdacq.preprocessors import (CalibPreprocessor, DarkPreprocessor,
                                   ShutterConfig, ShutterPreprocessor)
-
+from xpdacq.calib2 import RunCalibration
 from .beamtimeSetup import start_xpdacq
 from .xpdacq import CustomizedRunEngine, xpdAcqError
 from .xpdacq_conf import (_load_beamline_config, _reload_glbl, _set_glbl,
@@ -148,6 +148,9 @@ class UserInterface:
         _add_many_dark_preprocessors(xrun, area_dets, sc)
         _add_many_calib_preprocessors(xrun, area_dets, det_zs)
         _add_many_shutter_preprocessors(xrun, area_dets, sc)
+        # add run calibration
+        self._print("Create run_calibration.")
+        run_calibration = RunCalibration(xrun, glbl)
         # register as attributes
         self._print("Register attributes.")
         from xpdacq.xpdacq_conf import xpd_configuration
@@ -155,6 +158,7 @@ class UserInterface:
         self.xpd_configuration = xpd_configuration
         self.bt = bt
         self.xrun = xrun
+        self.run_calibration = run_calibration
         # Change directory
         if not test:
             home_dir = Path(glbl["home"])
