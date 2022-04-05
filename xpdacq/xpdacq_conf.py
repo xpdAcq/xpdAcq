@@ -82,7 +82,7 @@ def _verify_within_test(beamline_config_fp, verif):
 
 
 def _load_beamline_config(beamline_config_fp, verif="", test=False):
-    if not os.path.isfile(beamline_config_fp):
+    if (not test) and (not os.path.isfile(beamline_config_fp)):
         raise xpdAcqException(
             "WARNING: can not find long term beamline "
             "configuration file. Please contact the "
@@ -94,6 +94,7 @@ def _load_beamline_config(beamline_config_fp, verif="", test=False):
         editor = "notepad"
     else:
         editor = os.environ.get("EDITOR", "vim")
+    beamline_config = dict()
     if not test:
         while verif.upper() != ("Y" or "YES"):
             with open(beamline_config_fp, "r") as f:
@@ -110,8 +111,6 @@ def _load_beamline_config(beamline_config_fp, verif="", test=False):
         )
         with open(beamline_config_fp, "w") as f:
             yaml.dump(beamline_config, f)
-    else:
-        beamline_config = _verify_within_test(beamline_config_fp, verif)
     return beamline_config
 
 
