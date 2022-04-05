@@ -91,6 +91,7 @@ class UserInterface:
         filter_bank: Device,
         ring_current: Device,
         db: Broker,
+        shutter_config: T.Optional[ShutterConfig] = None,
         glbl_yaml: str = None,
         blconfig_yaml: str = None,
         publish_to: Address = "localhost:5567",
@@ -144,7 +145,7 @@ class UserInterface:
         xrun.subscribe(pub)
         # add dark preprocessors
         self._print("Subscribe preprocessors.")
-        sc = ShutterConfig.from_xpdacq()
+        sc = ShutterConfig.from_xpdacq() if shutter_config is None else shutter_config
         _add_many_dark_preprocessors(xrun, area_dets, sc)
         _add_many_calib_preprocessors(xrun, area_dets, det_zs)
         _add_many_shutter_preprocessors(xrun, area_dets, sc)
