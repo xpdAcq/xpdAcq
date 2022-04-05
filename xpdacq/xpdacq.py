@@ -386,7 +386,7 @@ def xpdacq_composer(
     # Insert analysis stage tag
     grand_plan = bpp.msg_mutator(grand_plan, _inject_analysis_stage)
     # Insert filter metadata
-    grand_plan = bpp.msg_mutator(grand_plan, _inject_filter_positions)
+    grand_plan = bpp.plan_mutator(grand_plan, _inject_filter_positions)
     # close shutter
     if shutter_control:
         shutter, close_state = shutter_control
@@ -563,18 +563,25 @@ def inject_metadata(plan: typing.Generator, metadata: dict) -> typing.Generator:
     return plan1
 
 
+def __inject_filter_positions(msg):
+    filter_bank = xpd_configuration["filter_bank"]
+    filter_status = dict()
+    for name in filter_bank.read_attrs:
+        flt = getattr(filter_bank, name)
+        sts = (yield from bps.rd(flt))
+        filter_status[name] = sts
+    print("INFO: Current filter status")
+    for name, status in filter_status.items():
+        print("INFO: {} : {}".format(name, status))
+    msg.kwargs["filter_positions"] = filter_status
+    return (yield msg)
+
+
 def _inject_filter_positions(msg):
     """Inject the filter position in start."""
     if msg.command == "open_run":
-        filter_bank = xpd_configuration["filter_bank"]
-        filter_status = {
-            name: getattr(filter_bank, name).get() for name in filter_bank.read_attrs
-        }
-        print("INFO: Current filter status")
-        for name, status in filter_status.items():
-            print("INFO: {} : {}".format(name, status))
-        msg.kwargs["filter_positions"] = filter_status
-    return msg
+        return __inject_filter_positions(msg), None
+    return None, None
 
 
 def _inject_qualified_dark_frame_uid(msg):
