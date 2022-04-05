@@ -1,6 +1,9 @@
 """Set up the objects ipython profile."""
+import os
 import typing as T
+from pathlib import Path
 
+from bluesky.callbacks.zmq import Publisher
 from databroker import Broker
 from ophyd import Device
 
@@ -11,6 +14,8 @@ from .beamtimeSetup import start_xpdacq
 from .xpdacq import CustomizedRunEngine, xpdAcqError
 from .xpdacq_conf import (_load_beamline_config, _reload_glbl, _set_glbl,
                           configure_device)
+
+Address = T.Union[T.Tuple[str, int], str]
 
 
 def _get_locked_signals(det: Device) -> None:
@@ -62,7 +67,7 @@ def _add_many_shutter_preprocessors(xrun: CustomizedRunEngine, dets: T.List[Devi
 class UserInterface:
     """The user interace of xpdAcq.
 
-    It contiains the necessary python objects that user will interact with in the ipython session.
+    It contiains the necessary python objects that user will interact with in the ipython session. Be ware that initation will change the home directory to the one specified in glbl.
 
     Attributes
     ----------
@@ -88,11 +93,16 @@ class UserInterface:
         db: Broker,
         glbl_yaml: str = None,
         blconfig_yaml: str = None,
+        publish_to: Address = "localhost:5567",
+        verbose: int = 1,
         test: bool = False
     ):
         if len(area_dets) == 0:
             raise xpdAcqError("There must be no less than one `area_dets`.")
+        # add verbose
+        self._verbose = verbose
         # configure devices
+        self._print("INFO: Initializing the XPD data acquisition environment.")
         configure_device(
             area_det=area_dets[0],
             shutter=shutter,
@@ -103,6 +113,7 @@ class UserInterface:
             other_dets=area_dets[1:]
         )
         # reload glbl
+        self._print("INFO: reload the global configuration.")
         from xpdacq.glbl import glbl
         _glbl = _reload_glbl(glbl_yaml)
         if _glbl:
@@ -110,10 +121,11 @@ class UserInterface:
         # load beamtime
         bt = start_xpdacq()
         if bt:
-            print("INFO: Reload beamtime objects:\n{}\n".format(bt))
+            self._print("INFO: Reload beamtime objects:\n{}\n".format(bt))
         else:
-            print("INFO: No Beamtime object.")
+            self._print("INFO: No Beamtime object.")
         # instantiate xrun without beamtime, like bluesky setup
+        self._print("Create xrun object.")
         xrun = CustomizedRunEngine(None)
         xrun.md["beamline_id"] = glbl["beamline_id"]
         xrun.md["group"] = glbl["group"]
@@ -122,17 +134,41 @@ class UserInterface:
             blconfig_yaml = glbl["blconfig_path"]
         xrun.md["beamline_config"] = _load_beamline_config(blconfig_yaml, test=test)
         # insert header to db, either simulated or real
+        self._print("Subscribe database.")
         xrun.subscribe(db.v1.insert)
         if bt:
             xrun.beamtime = bt
+        # add publisher
+        self._print("Subscribe publisher, publishing to '{}'.".format(publish_to))
+        pub = Publisher(publish_to, prefix=b'raw')
+        xrun.subscribe(pub)
         # add dark preprocessors
+        self._print("Subscribe preprocessors.")
         sc = ShutterConfig.from_xpdacq()
         _add_many_dark_preprocessors(xrun, area_dets, sc)
         _add_many_calib_preprocessors(xrun, area_dets, det_zs)
         _add_many_shutter_preprocessors(xrun, area_dets, sc)
         # register as attributes
+        self._print("Register attributes.")
         from xpdacq.xpdacq_conf import xpd_configuration
         self.glbl = glbl
         self.xpd_configuration = xpd_configuration
         self.bt = bt
         self.xrun = xrun
+        # Change directory
+        if not test:
+            home_dir = Path(glbl["home"])
+            base_dir = Path(glbl["base"])
+            if home_dir.is_dir():
+                self._print("Change current directory to '{}'.".format(str(home_dir)))
+                os.chdir(home_dir)
+            elif base_dir.is_dir():
+                self._print("Change current directory to '{}'.".format(str(base_dir)))
+                os.chdir(base_dir)
+
+
+    def _print(self, *args, **kwargs):
+        if self._verbose > 0:
+            print(*args, **kwargs)
+        return
+    
