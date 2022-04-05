@@ -201,9 +201,6 @@ class GlblYamlDict(YamlDict):
                 "key='{}' is not allowed to change!".format(key)
             )
         else:
-            # annoying logic specifically for area_det
-            if key == "frame_acq_time":
-                configure_frame_acq_time(val)
             super().__setitem__(key, val)
 
     def __setattr__(self, key, val):
