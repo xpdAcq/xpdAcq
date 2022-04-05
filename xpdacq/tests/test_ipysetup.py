@@ -2,7 +2,7 @@ import pytest
 from databroker import Broker
 from xpdsim import xpd_pe1c, shctl1, cs700, ring_current, fb
 
-from xpdacq.ipysetup import ipysetup
+from xpdacq.ipysetup import UserInterface
 
 
 @pytest.mark.parametrize(
@@ -11,8 +11,9 @@ from xpdacq.ipysetup import ipysetup
 def test_ipysetup(glbl_yaml, capfd, beamline_config_file):
     with capfd.disabled():
         db = Broker.named("temp")
-        glbl, bt, xrun = ipysetup(
-            area_det=xpd_pe1c,
+        ui = UserInterface(
+            area_dets=[xpd_pe1c],
+            det_zs=[None],
             shutter=shctl1,
             temp_controller=cs700,
             filter_bank=fb,
@@ -22,6 +23,7 @@ def test_ipysetup(glbl_yaml, capfd, beamline_config_file):
             blconfig_yaml=beamline_config_file,
             test=True
         )
-    assert glbl
-    assert not bt
-    assert xrun
+    assert ui.glbl
+    assert not ui.bt
+    assert ui.xrun
+    assert ui.xpd_configuration
