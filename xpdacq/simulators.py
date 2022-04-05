@@ -53,6 +53,27 @@ class Eurotherm(SoftPositioner):
         super().__init__(egu=egu, limits=limits, source=source, init_pos=init_pos, **kwargs)
 
 
+class Stage(Device):
+
+    x = Component(SoftPositioner, egu="mm", init_pos=0.)
+    y = Component(SoftPositioner, egu="mm", init_pos=0.)
+    z = Component(SoftPositioner, egu="mm", init_pos=0.)
+
+
+class FilterBank(Device):
+
+    flt1 = Component(SoftPositioner, init_pos="In")
+    flt2 = Component(SoftPositioner, init_pos="In")
+    flt3 = Component(SoftPositioner, init_pos="In")
+    flt4 = Component(SoftPositioner, init_pos="In")
+
+
+class RingCurrent(SoftPositioner):
+
+    def __init__(self, *, egu='mA', limits=None, source='computed', init_pos=400., **kwargs):
+        super().__init__(egu=egu, limits=limits, source=source, init_pos=init_pos, **kwargs)
+
+
 class WorkSpace:
 
     def __init__(self) -> None:
@@ -63,3 +84,5 @@ class WorkSpace:
         self.det: PerkinElmerDetector = PerkinElmerDetector(name="pe1")
         self.eurotherm: Eurotherm = Eurotherm(name="temperature")
         self.shutter: FastShutter = FastShutter(name="shutter")
+
+del DiffractionDetector, Shutter
