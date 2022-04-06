@@ -59,14 +59,16 @@ class CalibInfo(Device):
 class CalibPreprocessor:
     """The preprocessor to inject calibration data.
 
-    The calibration data of the detector will be stored in the ophyd device `CalibInfo`. This device will be read after the detector is read. The calibration data will be in the same stream as the image of the detector. Be aware that this preprocessor should be used before the DarkPreprocessor to make sure the calibration data will not be injected into the dark stream.
-
     Parameters
     ----------
     detector : Device
         The detector to associate the calibration data with.
+    locked_signals : List[Signal]
+        A list of `Signal` object that affects the sample detector distances or other parameters in the calibration data.
     stream_name: str
-        The name of the stream to add calibratino data, default `calib`.
+        The name of the stream to add calibratino data, default "calib".
+    dark_group_prefix : str
+        The prefix of the trigger message for a dark frame, default "bluesky-darkframes-trigger".
     """
 
     def __init__(
