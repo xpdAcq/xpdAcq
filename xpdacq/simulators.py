@@ -54,9 +54,9 @@ class Eurotherm(Signal):
 
 class Stage(Device):
 
-    x = Component(Signal, value=0.)
-    y = Component(Signal, value=0.)
-    z = Component(Signal, value=0.)
+    x = Component(Signal, value=0., kind=Kind.hinted)
+    y = Component(Signal, value=0., kind=Kind.hinted)
+    z = Component(Signal, value=0., kind=Kind.hinted)
 
 
 class FilterBank(Device):
