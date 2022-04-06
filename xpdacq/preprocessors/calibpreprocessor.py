@@ -176,3 +176,6 @@ class CalibPreprocessor:
         state = (yield from _get_state(self._locked_signals))
         self.add_calib_result(state, calib_result)
         return
+
+    def __repr__(self):
+        return "<{} of {} with {} cache>".format(self.__class__.__name__, self.detector.name, len(self._cache))
