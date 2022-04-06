@@ -141,6 +141,7 @@ class CalibPreprocessor:
         def _get_calib(state: State) -> CalibResult:
             if state in self._cache:
                 return self._cache[state]
+            print("WARNING: Cannot find '{}' in the cache. Use the latest one.".format(state))
             return next(reversed(self._cache.values()))
 
         def _set_calib(calib_result: CalibInfo) -> Plan:
