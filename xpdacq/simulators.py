@@ -84,5 +84,3 @@ class WorkSpace:
         self.det: PerkinElmerDetector = PerkinElmerDetector(name="pe1")
         self.eurotherm: Eurotherm = Eurotherm(name="temperature")
         self.shutter: FastShutter = FastShutter(name="shutter")
-
-del DiffractionDetector, Shutter
