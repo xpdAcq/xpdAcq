@@ -89,3 +89,5 @@ class ShutterPreprocessor:
         self._disabled = False
         return
     
+    def __repr__(self) -> str:
+        return "<{} for {}>".format(self.__class__.__name__, self._detector.name)
