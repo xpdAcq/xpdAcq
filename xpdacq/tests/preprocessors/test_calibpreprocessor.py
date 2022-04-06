@@ -106,3 +106,10 @@ def test_disable_and_enable():
     assert get_steps(plan1()) == get_steps(plan2())
     cp.enable()
     assert get_steps(plan1()) < get_steps(plan2())
+
+
+def test_repr():
+    devices = hw()
+    det = devices.det
+    cp = CalibPreprocessor(det)
+    assert cp.__repr__() == "<CalibPreprocessor of det with 0 cache>"
