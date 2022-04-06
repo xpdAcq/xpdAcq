@@ -152,12 +152,13 @@ class CustomizedRunEngine(RunEngine):
         self.dark_preprocessors: typing.List[DarkPreprocessor] = []
         self.calib_preprocessors: typing.List[CalibPreprocessor] = []
         self.shutter_preprocessors: typing.List[ShutterPreprocessor] = []
-        self.bec = BestEffortCallback()
-        self.bec.noplot_streams.extend(["calib", "dark"])
-        self.bec.disable_baseline()
-        self.bec.disable_plots()
-        self.bec.enable_heading()
-        self.bec.enable_table()
+        bec = BestEffortCallback()
+        bec.noplot_streams.extend(["calib", "dark"])
+        bec.disable_baseline()
+        bec.disable_plots()
+        bec.enable_heading()
+        bec.enable_table()
+        self.subscribe(bec)
 
     @property
     def beamtime(self):
@@ -219,7 +220,6 @@ class CustomizedRunEngine(RunEngine):
             grand_plan = dpp(grand_plan)
         for spp in self.shutter_preprocessors:
             grand_plan = spp(grand_plan)
-        grand_plan = bpp.subs_wrapper(grand_plan, self.bec)
         return grand_plan
 
     def __call__(
