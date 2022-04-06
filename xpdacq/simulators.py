@@ -4,7 +4,7 @@ import bluesky.plan_stubs as bps
 from bluesky import RunEngine
 from bluesky_darkframes.sim import DiffractionDetector, Shutter
 from databroker import Broker
-from ophyd import Component, Device, Kind, Signal, SoftPositioner
+from ophyd import Component, Device, Kind, Signal
 
 
 def get_shutter(name="shutter") -> Shutter:
@@ -47,31 +47,29 @@ class FastShutter(Shutter):
     pass
 
 
-class Eurotherm(SoftPositioner):
+class Eurotherm(Signal):
 
-    def __init__(self, *, egu='K', limits=None, source='computed', init_pos=300., **kwargs):
-        super().__init__(egu=egu, limits=limits, source=source, init_pos=init_pos, **kwargs)
+    pass
 
 
 class Stage(Device):
 
-    x = Component(SoftPositioner, egu="mm", init_pos=0.)
-    y = Component(SoftPositioner, egu="mm", init_pos=0.)
-    z = Component(SoftPositioner, egu="mm", init_pos=0.)
+    x = Component(Signal, value=0.)
+    y = Component(Signal, value=0.)
+    z = Component(Signal, value=0.)
 
 
 class FilterBank(Device):
 
-    flt1 = Component(SoftPositioner, init_pos="In")
-    flt2 = Component(SoftPositioner, init_pos="In")
-    flt3 = Component(SoftPositioner, init_pos="In")
-    flt4 = Component(SoftPositioner, init_pos="In")
+    flt1 = Component(Signal, value="In")
+    flt2 = Component(Signal, value="In")
+    flt3 = Component(Signal, value="In")
+    flt4 = Component(Signal, value="In")
 
 
-class RingCurrent(SoftPositioner):
+class RingCurrent(Signal):
 
-    def __init__(self, *, egu='mA', limits=None, source='computed', init_pos=400., **kwargs):
-        super().__init__(egu=egu, limits=limits, source=source, init_pos=init_pos, **kwargs)
+    pass
 
 
 class WorkSpace:
