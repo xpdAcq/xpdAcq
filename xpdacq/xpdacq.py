@@ -153,6 +153,7 @@ class CustomizedRunEngine(RunEngine):
         self.calib_preprocessors: typing.List[CalibPreprocessor] = []
         self.shutter_preprocessors: typing.List[ShutterPreprocessor] = []
         self.bec = BestEffortCallback()
+        self.bec.noplot_streams.extend(["calib", "dark"])
         self.bec.disable_baseline()
         self.bec.disable_plots()
         self.bec.enable_heading()
