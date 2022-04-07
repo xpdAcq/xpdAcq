@@ -1,10 +1,10 @@
-from pathlib import Path
-import pytest
 import shutil
+from pathlib import Path
+
+import pytest
 from pkg_resources import resource_filename
 from xpdacq.calib2 import RunCalibration
 from xpdacq.preprocessors import CalibPreprocessor
-from xpdacq.xpdacq import CustomizedRunEngine
 from xpdacq.simulators import WorkSpace
 
 _PONI_FILE = Path(resource_filename("xpdacq", "tests/Ni_poni_file.poni"))
