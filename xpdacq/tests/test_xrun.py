@@ -506,8 +506,6 @@ class xrunTest(unittest.TestCase):
         # no beamline config -> raise
         if os.path.exists(glbl["blconfig_path"]):
             os.remove(glbl["blconfig_path"])
-        with self.assertRaises(xpdAcqException):
-            _load_beamline_config(glbl["blconfig_path"], test=True)
         # move files
         stem, fn = os.path.split(glbl["blconfig_path"])
         src = os.path.join(pytest_dir, fn)
