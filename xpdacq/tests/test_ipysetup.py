@@ -1,14 +1,10 @@
-import pytest
 from databroker import Broker
 from xpdsim import xpd_pe1c, shctl1, cs700, ring_current, fb
 
 from xpdacq.ipysetup import UserInterface
 
 
-@pytest.mark.parametrize(
-    "glbl_yaml", [None]
-)
-def test_ipysetup(glbl_yaml, capfd, beamline_config_file):
+def test_ipysetup(capfd, beamline_config_file):
     with capfd.disabled():
         db = Broker.named("temp")
         ui = UserInterface(
@@ -19,7 +15,6 @@ def test_ipysetup(glbl_yaml, capfd, beamline_config_file):
             filter_bank=fb,
             ring_current=ring_current,
             db=db,
-            glbl_yaml=glbl_yaml,
             blconfig_yaml=beamline_config_file,
             test=True
         )
