@@ -5,11 +5,11 @@ from pathlib import Path
 import bluesky.plan_stubs as bps
 import bluesky.preprocessors as bpp
 from bluesky import Msg
+from frozendict import frozendict
 from ophyd import Component as Cpt
 from ophyd import Device, Signal
 from ophyd.status import Status
 from pyFAI.geometry import Geometry
-from frozendict import frozendict
 
 Plan = T.Generator[Msg, T.Any, T.Any]
 SignalList = T.List[Signal]
@@ -17,12 +17,14 @@ CalibResult = T.Tuple[float, float, float, float, float, float, float, str]
 FilePath = T.Union[str, Path]
 State = T.Dict[str, T.Hashable]
 
+
 def _get_state(signals) -> Plan:
     plist = (bps.rd(s) for s in signals)
     values = (yield from bpp.pchain(*plist))
     keys = (s.name for s in signals)
     state = frozendict(zip(keys, values))
     return state
+
 
 class CalibPreprocessorError(Exception):
     pass
@@ -64,7 +66,8 @@ class CalibPreprocessor:
     detector : Device
         The detector to associate the calibration data with.
     locked_signals : List[Signal]
-        A list of `Signal` object that affects the sample detector distances or other parameters in the calibration data.
+        A list of `Signal` object that affects the sample detector
+        distances or other parameters in the calibration data.
     stream_name: str
         The name of the stream to add calibratino data, default "calib".
     dark_group_prefix : str
@@ -136,7 +139,6 @@ class CalibPreprocessor:
         """Mutate the plan. Read the calibration information data every time after the detector is read."""
         if self._disabled or not self._cache:
             return plan
-
 
         def _get_calib(state: State) -> CalibResult:
             if state in self._cache:
