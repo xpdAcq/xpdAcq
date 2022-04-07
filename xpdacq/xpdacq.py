@@ -14,7 +14,6 @@
 #
 ##############################################################################
 import os
-from pathlib import Path
 import time
 import typing
 import uuid
@@ -30,22 +29,20 @@ import bluesky.plans as bp
 import bluesky.preprocessors as bpp
 import yaml
 from bluesky import RunEngine
+from bluesky.callbacks.best_effort import BestEffortCallback
 from bluesky.callbacks.broker import verify_files_saved
 from bluesky.preprocessors import pchain
 from bluesky.suspenders import SuspendFloor
-from bluesky.utils import normalize_subs_input, single_gen, Msg
+from bluesky.utils import Msg, normalize_subs_input, single_gen
 from ophyd import Device
-from bluesky.callbacks.best_effort import BestEffortCallback
-from xpdconf.conf import XPD_SHUTTER_CONF
 
-from xpdacq.beamtime import Beamtime, ScanPlan
-from xpdacq.beamtime import close_shutter_stub, open_shutter_stub
+from xpdacq.beamtime import (Beamtime, ScanPlan, close_shutter_stub,
+                             open_shutter_stub)
 from xpdacq.glbl import glbl
-from xpdacq.tools import xpdAcqError
-from xpdacq.tools import xpdAcqException
-from xpdacq.xpdacq_conf import xpd_configuration, XPDACQ_MD_VERSION
-from xpdacq.preprocessors import DarkPreprocessor, CalibPreprocessor, ShutterPreprocessor
-
+from xpdacq.preprocessors import (CalibPreprocessor, DarkPreprocessor,
+                                  ShutterPreprocessor)
+from xpdacq.tools import xpdAcqError, xpdAcqException
+from xpdacq.xpdacq_conf import XPDACQ_MD_VERSION, xpd_configuration
 
 Plan = typing.Generator[Msg, typing.Any, typing.Any]
 XPD_shutter = xpd_configuration.get("shutter")
