@@ -1,7 +1,7 @@
-from xpdconf.conf import XPD_SHUTTER_CONF
-
+import pytest
 from xpdacq.beamtime import tseries
 from xpdacq.xpdacq_conf import xpd_configuration
+from xpdconf.conf import XPD_SHUTTER_CONF
 
 
 def _verify_tseries_message(msgs):
@@ -34,6 +34,7 @@ def _verify_tseries_message(msgs):
     assert all([msgs[ind + 3].command == "checkpoint" for ind in save_msg_pos])
 
 
+@pytest.mark.skip
 def test_tseries_with_shutter_control_pureMsg(fresh_xrun):
     print(xpd_configuration)
     p = tseries([xpd_configuration["area_det"]], 2, 0.5, 10, True)
@@ -42,6 +43,7 @@ def test_tseries_with_shutter_control_pureMsg(fresh_xrun):
     _verify_tseries_message(msgs)
 
 
+@pytest.mark.skip(reason="Tests are moved to test_customized_plans")
 def test_tseries_with_shutter_control_xrun(fresh_xrun, glbl):
     print(xpd_configuration)
     xrun = fresh_xrun
