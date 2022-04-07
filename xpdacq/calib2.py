@@ -13,7 +13,8 @@ from xpdacq.utils import ExceltoYaml
 
 CalibMetaData = T.Dict[str, T.Any]
 SampleMetaData = T.Dict[str, T.Any]
-_INFO = """INFO: Please navigate to the pyFAI-calib2 window to finish the calibration. Once the calbration file is saved or replaced, the session will be terminated.
+_INFO = """INFO: Please navigate to the pyFAI-calib2 window to finish the calibration.
+Once the calbration file is saved or replaced, the session will be terminated.
 
 Please read visit the website below to learn more about how to use the pyFAI-calib2.
 
@@ -34,7 +35,8 @@ class RunCalibration():
     exposure : float, optional
         The in seconds for exposure of one image, by default 5.
     calibrant : str, optional
-        The name of the calibration, like the calibrant name in the pyFAI-calib2 calibrant list, by default "Ni_calib"
+        The name of the calibration, like the calibrant name in the pyFAI-calib2 calibrant
+        list, by default "Ni_calib"
     phase_info : str, optional
         The information of the phase, by default "Ni"
     detector : str, optional
@@ -56,10 +58,10 @@ class RunCalibration():
             raise xpdAcqException("Error: `glbl` doesn't have the key 'frame_acq_time'.")
         self._xrun = xrun
         self._glbl = glbl
-    
+
     @staticmethod
     def _sample_name_phase_info_configuration(
-        sample_name: str, 
+        sample_name: str,
         phase_info: str
     ) -> SampleMetaData:
         sample_md = ExceltoYaml.parse_phase_info(phase_info)
@@ -107,7 +109,7 @@ class RunCalibration():
                 break
             time.sleep(1.)
         return
-    
+
     def __call__(
         self,
         *,
@@ -132,7 +134,8 @@ class RunCalibration():
         if n == 0:
             raise xpdAcqException("Error: there is no calibration preprocessors subscribed in the xrun.")
         if not (-1 < preprocessor_id < n):
-            raise xpdAcqException("Error: there is no calibration preprocessor with index '{}'.".format(preprocessor_id))
+            raise xpdAcqException(
+                "Error: there is no calibration preprocessor with index '{}'.".format(preprocessor_id))
         cpp = xrun.calib_preprocessors[preprocessor_id]
         # hash file content before calibration
         calib_file = Path(glbl["config_base"]).joinpath(glbl["calib_config_name"])
