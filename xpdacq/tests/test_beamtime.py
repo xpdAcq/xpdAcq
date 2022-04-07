@@ -74,14 +74,6 @@ class BeamtimeObjTest(unittest.TestCase):
         if os.path.isdir(os.path.join(self.base_dir, "pe2_data")):
             shutil.rmtree(os.path.join(self.base_dir, "pe2_data"))
 
-    def test_print_scanplan(self):
-        # using positional args
-        sp1 = ScanPlan(self.bt, ct, 1)
-        # using kwargs is equivalent
-        sp2 = ScanPlan(self.bt, ct, exposure=1)
-        # test Msg processed
-        self.assertEqual(str(sp1), str(sp2))
-
     def test_ct_scanplan_autoname(self):
         sp = ScanPlan(self.bt, ct, 1)
         # std_f_name = 'ct_1_None.yml' #py3.4 only gets args
