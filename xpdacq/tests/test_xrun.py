@@ -502,25 +502,6 @@ class xrunTest(unittest.TestCase):
         for s in starts:
             assert s == starts[0]
 
-    def test_load_beamline_config(self):
-        # no beamline config -> raise
-        if os.path.exists(glbl["blconfig_path"]):
-            os.remove(glbl["blconfig_path"])
-        # move files
-        stem, fn = os.path.split(glbl["blconfig_path"])
-        src = os.path.join(pytest_dir, fn)
-        shutil.copyfile(src, glbl["blconfig_path"])
-        beamline_config_dict = _load_beamline_config(
-            glbl["blconfig_path"], test=True
-        )
-        assert "is_pytest" in beamline_config_dict
-        # check md -> only is_pytest in template now
-        self.xrun.md["beamline_config"] = beamline_config_dict
-        self.xrun({}, ScanPlan(self.bt, ct, 1.0))
-        hdr = xpd_configuration["db"][-1]
-        print(beamline_config_dict)
-        assert hdr.start["beamline_config"] == beamline_config_dict
-
 
 def test_dexela(fresh_xrun):
     xpd_configuration['area_det'] = dexela
