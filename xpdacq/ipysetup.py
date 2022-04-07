@@ -46,7 +46,11 @@ def _add_a_calib_preprocessor(xrun: CustomizedRunEngine, det: Device, det_z: T.O
     return
 
 
-def _add_many_calib_preprocessors(xrun: CustomizedRunEngine, dets: T.List[Device], det_zs: T.List[T.Optional[Device]]) -> None:
+def _add_many_calib_preprocessors(
+    xrun: CustomizedRunEngine,
+    dets: T.List[Device],
+    det_zs: T.List[T.Optional[Device]]
+) -> None:
     for det, det_z in zip(dets, det_zs):
         _add_a_calib_preprocessor(xrun, det, det_z)
     return
@@ -67,7 +71,8 @@ def _add_many_shutter_preprocessors(xrun: CustomizedRunEngine, dets: T.List[Devi
 class UserInterface:
     """The user interace of xpdAcq.
 
-    It contiains the necessary python objects that user will interact with in the ipython session. Be ware that initation will change the home directory to the one specified in glbl.
+    It contiains the necessary python objects that user will interact with in the ipython session.
+    Be ware that initation will change the home directory to the one specified in glbl.
 
     Attributes
     ----------
@@ -171,9 +176,7 @@ class UserInterface:
                 self._print("Change current directory to '{}'.".format(str(base_dir)))
                 os.chdir(base_dir)
 
-
     def _print(self, *args, **kwargs):
         if self._verbose > 0:
-            print("INFO:",*args, **kwargs)
+            print("INFO:", *args, **kwargs)
         return
-    
