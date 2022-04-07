@@ -14,7 +14,9 @@ ShutterControl = T.Callable[[], Plan]
 class DarkPreprocessor(DarkFramePreprocessor):
     """A plan preprocessor that ensures each Run records a dark frame.
 
-    Specifically this adds a new Event stream, named ‘dark’ by default. It inserts one Event with a reading that contains a ‘dark’ frame. The same reading may be used across multiple runs, depending on the rules for when a dark frame is taken.
+    Specifically this adds a new Event stream, named ‘dark’ by default. It inserts one Event with a reading
+    that contains a ‘dark’ frame. The same reading may be used across multiple runs, depending on the rules
+    for when a dark frame is taken.
 
     Parameters
     ----------
