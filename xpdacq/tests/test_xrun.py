@@ -14,27 +14,16 @@ import pytest
 import yaml
 from bluesky.callbacks import collector
 from pkg_resources import resource_filename as rs_fn
-from xpdsim import dexela
-
-from xpdacq.beamtime import ScanPlan, ct, Tramp, tseries, Tlist
-from xpdacq.beamtime import _nstep
+from xpdacq.beamtime import ScanPlan, Tlist, Tramp, _nstep, ct, tseries
 from xpdacq.beamtimeSetup import _start_beamtime
 from xpdacq.glbl import glbl
-from xpdacq.simulation import pe1c, cs700, shctl1, fb
-from xpdacq.tools import xpdAcqException
+from xpdacq.simulation import cs700, fb, pe1c, shctl1
 from xpdacq.utils import import_sample_info
-from xpdacq.xpdacq import (
-    _validate_dark,
-    CustomizedRunEngine,
-    _auto_load_calibration_file,
-    set_beamdump_suspender,
-)
-from xpdacq.xpdacq_conf import (
-    configure_device,
-    XPDACQ_MD_VERSION,
-    _load_beamline_config,
-)
-from xpdacq.xpdacq_conf import xpd_configuration
+from xpdacq.xpdacq import (CustomizedRunEngine, _auto_load_calibration_file,
+                           _validate_dark, set_beamdump_suspender)
+from xpdacq.xpdacq_conf import (XPDACQ_MD_VERSION, configure_device,
+                                xpd_configuration)
+from xpdsim import dexela
 
 pytest_dir = rs_fn("xpdacq", "tests/")
 
