@@ -1,9 +1,11 @@
+import pytest
 from databroker import Broker
 from xpdsim import xpd_pe1c, shctl1, cs700, ring_current, fb
 
 from xpdacq.ipysetup import UserInterface
 
 
+@pytest.mark.skip(reason="This will pause the session.")
 def test_ipysetup(beamline_config_file):
     db = Broker.named("temp")
     ui = UserInterface(
