@@ -1,11 +1,16 @@
-import pytest
+import shutil
+from pathlib import Path
+
 from databroker import Broker
-from xpdsim import xpd_pe1c, shctl1, cs700, ring_current, fb
+from pkg_resources import resource_filename
+from xpdacq.ipysetup import (CalibPreprocessor, UserInterface,
+                             _set_calib_preprocessor)
+from xpdacq.simulators import PerkinElmerDetector, Stage
+from xpdsim import cs700, fb, ring_current, shctl1, xpd_pe1c
 
-from xpdacq.ipysetup import UserInterface
+_PONI_FILFE = Path(resource_filename("xpdacq", "tests/Ni_poni_file.poni"))
 
 
-@pytest.mark.skip(reason="This will pause the session.")
 def test_ipysetup(beamline_config_file):
     db = Broker.named("temp")
     ui = UserInterface(
@@ -19,7 +24,27 @@ def test_ipysetup(beamline_config_file):
         blconfig_yaml=beamline_config_file,
         test=True
     )
-    assert ui.glbl
-    assert not ui.bt
-    assert ui.xrun
-    assert ui.xpd_configuration
+    assert ui is not None
+
+
+def test__set_calib_preprocessor(tmp_path: Path):
+    det = PerkinElmerDetector(name="det")
+    det_z = Stage(name="det_stage").z
+    poni_file = tmp_path.joinpath(_PONI_FILFE.name)
+    shutil.copy(_PONI_FILFE, poni_file)
+    dct = {
+        "config_base": str(poni_file.parent),
+        "calib_config_name": poni_file.name
+    }
+    # case 1
+    cpp1 = CalibPreprocessor(det)
+    _set_calib_preprocessor(cpp1, dct, None)
+    assert cpp1._cache
+    first = next(iter(cpp1._cache.keys()))
+    assert dict(first) == dict()
+    # case 2
+    cpp2 = CalibPreprocessor(det)
+    _set_calib_preprocessor(cpp2, dct, det_z)
+    assert cpp2._cache
+    first = next(iter(cpp2._cache.keys()))
+    assert dict(first) == {det_z.name: det_z.get()}
