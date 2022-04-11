@@ -7,13 +7,14 @@ from bluesky.callbacks.zmq import Publisher
 from databroker import Broker
 from ophyd import Device
 
+from xpdacq.calib2 import RunCalibration
 from xpdacq.preprocessors import (CalibPreprocessor, DarkPreprocessor,
                                   ShutterConfig, ShutterPreprocessor)
-from xpdacq.calib2 import RunCalibration
+
 from .beamtimeSetup import start_xpdacq
 from .xpdacq import CustomizedRunEngine, xpdAcqError
-from .xpdacq_conf import (_load_beamline_config, _reload_glbl, _set_glbl,
-                          configure_device)
+from .xpdacq_conf import (GlblYamlDict, _load_beamline_config, _reload_glbl,
+                          _set_glbl, configure_device)
 
 Address = T.Union[T.Tuple[str, int], str]
 
@@ -65,6 +66,24 @@ def _add_a_shutter_preprocessor(xrun: CustomizedRunEngine, det: Device, sc: Shut
 def _add_many_shutter_preprocessors(xrun: CustomizedRunEngine, dets: T.List[Device], sc: ShutterConfig) -> None:
     for det in dets:
         _add_a_shutter_preprocessor(xrun, det, sc)
+    return
+
+
+def _set_calib_preprocessor(cpp: CalibPreprocessor, glbl: GlblYamlDict, det_z: T.Optional[Device]) -> None:
+    poni_file = Path(glbl["config_base"]).joinpath(glbl["calib_config_name"])
+    if poni_file.is_file():
+        calib_result = cpp.read(poni_file)
+        if det_z is not None and hasattr(det_z, "get"):
+            cpp.add_calib_result({det_z.name: det_z.get()}, calib_result)
+        else:
+            cpp.add_calib_result({}, calib_result)
+    else:
+        print(
+            "WARNING: '{}' doesn't exist. "
+            "Please do the calibration before you conduct measurement.".format(
+                str(poni_file)
+            )
+        )
     return
 
 
@@ -157,6 +176,8 @@ class UserInterface:
         # add run calibration
         self._print("Create run_calibration.")
         run_calibration = RunCalibration(xrun, glbl)
+        # set the first calibration preprocessor
+        _set_calib_preprocessor(xrun.calib_preprocessors[0], glbl, det_zs[0])
         # register as attributes
         self._print("Register attributes.")
         from xpdacq.xpdacq_conf import xpd_configuration
