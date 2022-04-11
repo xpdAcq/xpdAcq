@@ -1,4 +1,5 @@
 import shutil
+import pytest
 from pathlib import Path
 
 from databroker import Broker
@@ -11,6 +12,7 @@ from xpdsim import cs700, fb, ring_current, shctl1, xpd_pe1c
 _PONI_FILFE = Path(resource_filename("xpdacq", "tests/Ni_poni_file.poni"))
 
 
+@pytest.mark.skip
 def test_ipysetup(beamline_config_file):
     db = Broker.named("temp")
     ui = UserInterface(
@@ -27,6 +29,7 @@ def test_ipysetup(beamline_config_file):
     assert ui is not None
 
 
+@pytest.mark.skip
 def test__set_calib_preprocessor(tmp_path: Path):
     det = PerkinElmerDetector(name="det")
     det_z = Stage(name="det_stage").z
