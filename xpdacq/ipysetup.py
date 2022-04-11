@@ -7,14 +7,14 @@ from bluesky.callbacks.zmq import Publisher
 from databroker import Broker
 from ophyd import Device
 
+from xpdacq.beamtimeSetup import start_xpdacq
 from xpdacq.calib2 import RunCalibration
 from xpdacq.preprocessors import (CalibPreprocessor, DarkPreprocessor,
                                   ShutterConfig, ShutterPreprocessor)
-
-from .beamtimeSetup import start_xpdacq
-from .xpdacq import CustomizedRunEngine, xpdAcqError
-from .xpdacq_conf import (GlblYamlDict, _load_beamline_config, _reload_glbl,
-                          _set_glbl, configure_device)
+from xpdacq.xpdacq import CustomizedRunEngine, xpdAcqError
+from xpdacq.xpdacq_conf import (GlblYamlDict, _load_beamline_config,
+                                _reload_glbl, _set_glbl, configure_device,
+                                xpd_configuration)
 
 Address = T.Union[T.Tuple[str, int], str]
 
@@ -180,7 +180,6 @@ class UserInterface:
         _set_calib_preprocessor(xrun.calib_preprocessors[0], glbl, det_zs[0])
         # register as attributes
         self._print("Register attributes.")
-        from xpdacq.xpdacq_conf import xpd_configuration
         self.glbl = glbl
         self.xpd_configuration = xpd_configuration
         self.bt = bt
