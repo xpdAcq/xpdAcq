@@ -36,9 +36,7 @@ class Shutter(Signal):
 
 def generate_image(dark=False, num=1):
     # TODO Add noise, zingers, and other nondeterministic things.
-    output = dark_frame
-    if not dark:
-        output += diffraction_pattern
+    output = dark_frame if dark else light_frame
     return np.stack([output] * num)
 
 
