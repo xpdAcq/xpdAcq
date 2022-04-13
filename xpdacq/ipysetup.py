@@ -7,7 +7,7 @@ from bluesky.callbacks.zmq import Publisher
 from databroker import Broker
 from ophyd import Device
 
-from xpdacq.beamtimeSetup import start_xpdacq
+from xpdacq.beamtimeSetup import start_xpdacq, _start_beamtime
 from xpdacq.calib2 import RunCalibration
 from xpdacq.preprocessors import (CalibPreprocessor, DarkPreprocessor,
                                   ShutterConfig, ShutterPreprocessor)
@@ -147,6 +147,8 @@ class UserInterface:
         bt = start_xpdacq()
         if bt:
             self._print("Reload beamtime objects:\n{}\n".format(bt))
+        elif test:
+            bt = _start_beamtime("Billinge", 300000, wavelength=0.1675, test=True)
         else:
             self._print("No Beamtime object.")
         # instantiate xrun without beamtime, like bluesky setup
