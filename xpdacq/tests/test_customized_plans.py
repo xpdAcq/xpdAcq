@@ -17,7 +17,7 @@ def test_ct():
     db = ws.db
     del ws
     xpd_configuration["area_det"] = det
-    RE(xbt.ct([det], 5.))
+    RE(xbt.ct([det], 0.1))
     key = "{}_image".format(det.name)
     data = list(db[-1].data(key))
     assert len(data) == 1
@@ -33,7 +33,7 @@ def test_Tlist():
     xpd_configuration["area_det"] = det
     xpd_configuration["temp_controller"] = eurotherm
     setpoints = [100., 200., 300.]
-    RE(xbt.Tlist([det], 5., setpoints))
+    RE(xbt.Tlist([det], 0.1, setpoints))
     key = eurotherm.name
     measured = list(db[-1].data(key))
     assert measured == setpoints
@@ -49,7 +49,7 @@ def test_Tramp():
     xpd_configuration["area_det"] = det
     xpd_configuration["temp_controller"] = eurotherm
     setpoints = [100., 200., 300.]
-    RE(xbt.Tramp([det], 5., 100., 300., 100.))
+    RE(xbt.Tramp([det], 0.1, 100., 300., 100.))
     key = eurotherm.name
     measured = list(db[-1].data(key))
     assert measured == setpoints
