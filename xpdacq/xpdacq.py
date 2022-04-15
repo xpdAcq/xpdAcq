@@ -184,6 +184,7 @@ class CustomizedRunEngine(RunEngine):
         sample: typing.Union[int, str, dict, list, tuple],
         plan: typing.Union[int, str, typing.Generator, ScanPlan, list, tuple],
         robot: bool,
+        poni_file: typing.Optional[str]
     ) -> Plan:
         """_summary_
 
@@ -202,7 +203,7 @@ class CustomizedRunEngine(RunEngine):
             _description_
         """
         # Translate the index of sample and plan to bluesky plan with metadata
-        grand_plan = xpdacq_composer(
+        plan = xpdacq_composer(
             self.beamtime,
             sample,
             plan,
@@ -211,13 +212,20 @@ class CustomizedRunEngine(RunEngine):
             dark_strategy=None,
             auto_load_calib=False
         )
-        for cpp in self.calib_preprocessors:
-            grand_plan = cpp(grand_plan)
+        # create one time use cpp if poni_file is not None
+        if poni_file is not None:
+            cpps = [CalibPreprocessor(cpp.detector) for cpp in self.calib_preprocessors]
+            for cpp in cpps:
+                cpp.load_calib_result({}, poni_file)
+        else:
+            cpps = self.calib_preprocessors
+        for cpp in cpps:
+            plan = cpp(plan)
         for dpp in self.dark_preprocessors:
-            grand_plan = dpp(grand_plan)
+            plan = dpp(plan)
         for spp in self.shutter_preprocessors:
-            grand_plan = spp(grand_plan)
-        return grand_plan
+            plan = spp(plan)
+        return plan
 
     def __call__(
         self,
@@ -225,6 +233,7 @@ class CustomizedRunEngine(RunEngine):
         plan: typing.Union[int, str, typing.Generator, ScanPlan, list, tuple],
         subs: typing.Union[typing.Callable, dict, list] = None,
         *,
+        poni_file: str = None,
         verify_write: bool = False,
         dark_strategy: typing.Callable = None,
         robot: bool = False,
@@ -263,6 +272,11 @@ class CustomizedRunEngine(RunEngine):
               lists of callables; valid keys are {'all', 'start', 'stop',
               'event', 'descriptor'}
 
+        poni_file: str
+
+            The path to a poni file. This poni file will be read and the data in it will be in the `calib`
+            stream instead of the data in the registered CalibPreprocessors. This is only for one time use.
+
         verify_write: bool, optional
 
             Double check if the data have been written into database. In general data is written in a lossless
@@ -297,7 +311,7 @@ class CustomizedRunEngine(RunEngine):
                 "global metadata"
             )
         # compose the plan
-        final_plan = self.gen_plan(sample, plan, robot=robot)
+        final_plan = self.gen_plan(sample, plan, robot, poni_file)
         # normalize the subs
         _subs = normalize_subs_input(subs) if subs else {}
         # verify writing files
