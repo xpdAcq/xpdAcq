@@ -37,6 +37,15 @@ def _load_overlapping_masks(mask_files: T.List[str]) -> np.ndarray:
 
 
 class MaskPreprocessor:
+    """Mutate the plan to push the mask data in the `mask` event stream right after the run open.
+
+    Parameter
+    ---------
+    detector: Device
+        The detector to use the mask for.
+    stream_name: str
+        The name of the event stream to push the mask, default "mask".
+    """
 
     def __init__(self, detector: Device, stream_name: str = "mask") -> None:
         self._mask = Signal(name=detector.name, value=None)

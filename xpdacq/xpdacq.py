@@ -40,11 +40,12 @@ from xpdacq.beamtime import (Beamtime, ScanPlan, close_shutter_stub,
                              open_shutter_stub)
 from xpdacq.glbl import glbl
 from xpdacq.preprocessors import (CalibPreprocessor, DarkPreprocessor,
-                                  ShutterPreprocessor)
+                                  MaskPreprocessor, ShutterPreprocessor)
 from xpdacq.tools import xpdAcqError, xpdAcqException
 from xpdacq.xpdacq_conf import XPDACQ_MD_VERSION, xpd_configuration
 
 Plan = typing.Generator[Msg, typing.Any, typing.Any]
+MaskFiles = typing.List[typing.Tuple[Device, typing.List[str]]]
 XPD_shutter = xpd_configuration.get("shutter")
 PAUSE_MSG = """
 Your RunEngine (xrun) is entering a paused state.
@@ -179,12 +180,21 @@ class CustomizedRunEngine(RunEngine):
         exp_hash_uid = str(uuid.uuid4())
         glbl["exp_hash_uid"] = exp_hash_uid
 
+    def _make_mpps(self, mask_files: MaskFiles):
+        mpps = []
+        for det, masks in mask_files:
+            mpp = MaskPreprocessor(det)
+            mpp.load_masks(masks)
+            mpps.append(mpp)
+        return mpps
+
     def gen_plan(
         self,
         sample: typing.Union[int, str, dict, list, tuple],
         plan: typing.Union[int, str, typing.Generator, ScanPlan, list, tuple],
         robot: bool,
-        poni_file: typing.Optional[str]
+        poni_file: typing.Optional[str],
+        mask_files: typing.Optional[MaskFiles]
     ) -> Plan:
         """_summary_
 
@@ -212,19 +222,23 @@ class CustomizedRunEngine(RunEngine):
             dark_strategy=None,
             auto_load_calib=False
         )
-        # create one time use cpp if poni_file is not None
+        # create one time use cpp if poni_file is given
         if poni_file is not None:
             cpps = [CalibPreprocessor(cpp.detector) for cpp in self.calib_preprocessors]
             for cpp in cpps:
                 cpp.load_calib_result({}, poni_file)
         else:
             cpps = self.calib_preprocessors
+        # create one time use mask preprocessor if mask_files are given
+        mpps = self._make_mpps(mask_files) if mask_files is not None else list()
         for cpp in cpps:
             plan = cpp(plan)
         for dpp in self.dark_preprocessors:
             plan = dpp(plan)
         for spp in self.shutter_preprocessors:
             plan = spp(plan)
+        for mpp in mpps:
+            plan = mpp(plan)
         return plan
 
     def __call__(
@@ -234,6 +248,7 @@ class CustomizedRunEngine(RunEngine):
         subs: typing.Union[typing.Callable, dict, list] = None,
         *,
         poni_file: str = None,
+        mask_files: MaskFiles = None,
         verify_write: bool = False,
         dark_strategy: typing.Callable = None,
         robot: bool = False,
@@ -277,6 +292,11 @@ class CustomizedRunEngine(RunEngine):
             The path to a poni file. This poni file will be read and the data in it will be in the `calib`
             stream instead of the data in the registered CalibPreprocessors. This is only for one time use.
 
+        mask_files: List[str]
+
+            A list of the paths to mask files. The mask convention is 0 good other bad. The masks will be
+            overlay (sum up) to create a sinlge mask and this mask will be in the `mask` event stream.
+
         verify_write: bool, optional
 
             Double check if the data have been written into database. In general data is written in a lossless
@@ -311,7 +331,7 @@ class CustomizedRunEngine(RunEngine):
                 "global metadata"
             )
         # compose the plan
-        final_plan = self.gen_plan(sample, plan, robot, poni_file)
+        final_plan = self.gen_plan(sample, plan, robot, poni_file, mask_files)
         # normalize the subs
         _subs = normalize_subs_input(subs) if subs else {}
         # verify writing files
