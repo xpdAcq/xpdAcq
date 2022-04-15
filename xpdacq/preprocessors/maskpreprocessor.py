@@ -48,7 +48,7 @@ class MaskPreprocessor:
     """
 
     def __init__(self, detector: Device, stream_name: str = "mask") -> None:
-        self._mask = Signal(name=detector.name, value=None)
+        self._mask = Signal(name="{}_mask".format(detector.name), value=None)
         self._stream_name = stream_name
 
     def set_mask(self, mask: np.ndarray) -> None:
