@@ -4,7 +4,6 @@ import bluesky.plans as bp
 import numpy as np
 from databroker import Broker, Header
 from pkg_resources import resource_filename
-from xpdacq.preprocessors import CalibPreprocessor
 from xpdacq.simulators import PerkinElmerDetector
 from xpdacq.xpdacq import CustomizedRunEngine
 
@@ -15,8 +14,7 @@ def test_force_use_poni_file(db: Broker, fresh_xrun: CustomizedRunEngine):
     xrun = fresh_xrun
     del fresh_xrun
     det = PerkinElmerDetector(name="pe1")
-    xrun.calib_preprocessors.append(CalibPreprocessor(det))
-    xrun({}, bp.count([det]), poni_file=PONI_FILE)
+    xrun({}, bp.count([det]), poni_file=[(det, PONI_FILE)])
     assert "calib" in db[-1].stream_names
 
 
