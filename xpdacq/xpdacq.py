@@ -46,6 +46,7 @@ from xpdacq.xpdacq_conf import XPDACQ_MD_VERSION, xpd_configuration
 
 Plan = typing.Generator[Msg, typing.Any, typing.Any]
 MaskFiles = typing.List[typing.Tuple[Device, typing.List[str]]]
+PoniFile = typing.List[typing.Tuple[Device, str]]
 XPD_shutter = xpd_configuration.get("shutter")
 PAUSE_MSG = """
 Your RunEngine (xrun) is entering a paused state.
@@ -180,6 +181,14 @@ class CustomizedRunEngine(RunEngine):
         exp_hash_uid = str(uuid.uuid4())
         glbl["exp_hash_uid"] = exp_hash_uid
 
+    def _make_cpps(self, poni_file: PoniFile):
+        cpps = []
+        for det, poni in poni_file:
+            cpp = CalibPreprocessor(det)
+            cpp.load_calib_result({}, poni)
+            cpps.append(cpp)
+        return cpps
+
     def _make_mpps(self, mask_files: MaskFiles):
         mpps = []
         for det, masks in mask_files:
@@ -193,7 +202,7 @@ class CustomizedRunEngine(RunEngine):
         sample: typing.Union[int, str, dict, list, tuple],
         plan: typing.Union[int, str, typing.Generator, ScanPlan, list, tuple],
         robot: bool,
-        poni_file: typing.Optional[str],
+        poni_file: typing.Optional[PoniFile],
         mask_files: typing.Optional[MaskFiles]
     ) -> Plan:
         """_summary_
@@ -223,12 +232,7 @@ class CustomizedRunEngine(RunEngine):
             auto_load_calib=False
         )
         # create one time use cpp if poni_file is given
-        if poni_file is not None:
-            cpps = [CalibPreprocessor(cpp.detector) for cpp in self.calib_preprocessors]
-            for cpp in cpps:
-                cpp.load_calib_result({}, poni_file)
-        else:
-            cpps = self.calib_preprocessors
+        cpps = self._make_cpps(poni_file) if poni_file is not None else self.calib_preprocessors
         # create one time use mask preprocessor if mask_files are given
         mpps = self._make_mpps(mask_files) if mask_files is not None else list()
         for cpp in cpps:
@@ -247,7 +251,7 @@ class CustomizedRunEngine(RunEngine):
         plan: typing.Union[int, str, typing.Generator, ScanPlan, list, tuple],
         subs: typing.Union[typing.Callable, dict, list] = None,
         *,
-        poni_file: str = None,
+        poni_file: PoniFile = None,
         mask_files: MaskFiles = None,
         verify_write: bool = False,
         dark_strategy: typing.Callable = None,
