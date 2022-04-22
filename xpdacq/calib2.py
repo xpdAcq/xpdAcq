@@ -36,9 +36,11 @@ class RunCalibration():
         The in seconds for exposure of one image, by default 5.
     calibrant : str, optional
         The name of the calibration, like the calibrant name in the pyFAI-calib2 calibrant
-        list, by default "Ni_calib"
+        list, or the path to the dspacing file, by default use "Ni24.D" in xpdacq pacakge.
+    sample_name: str, optional
+        The sample name, used to create directory to save data files, by default "Ni_calib".
     phase_info : str, optional
-        The information of the phase, by default "Ni"
+        The information of the phase, used by pdfgetx, by default "Ni"
     detector : str, optional
         The detector name in the pyFAI-calib2 detector list, by default "'perkin-elmer"
     RE_instance : CustomizedRunEngine, optional
@@ -75,11 +77,12 @@ class RunCalibration():
         self,
         sample_name: str,
         phase_info: str,
+        calibrant: str,
         detector_type: str
     ) -> CalibMetaData:
         md = self._sample_name_phase_info_configuration(sample_name, phase_info)
         md["pyfai_calib_kwargs"] = {
-            "calibrant": str(sample_name),
+            "calibrant": str(calibrant),
             "detector": str(detector_type),
             "wavelength": str(self._xrun.beamtime.wavelength),
             "poni": str(self._get_calib_file())
@@ -123,6 +126,7 @@ class RunCalibration():
         *,
         exposure: float = 5.,
         calibrant: str = "Ni",
+        sample_name: str = "Ni_calib",
         phase_info: str = "Ni",
         detector: str = "'perkin-elmer",
         RE_instance: CustomizedRunEngine = None,
@@ -135,8 +139,6 @@ class RunCalibration():
         del RE_instance
         detector_type = detector
         del detector
-        sample_name = calibrant
-        del calibrant
         # check
         n = len(xrun.calib_preprocessors)
         if n == 0:
@@ -149,7 +151,7 @@ class RunCalibration():
         calib_file = self._get_calib_file()
         old_file_hash = self._get_hash(calib_file)
         # collect metadata and data
-        metadata = self._collect_metadata(sample_name, phase_info, detector_type)
+        metadata = self._collect_metadata(sample_name, phase_info, calibrant, detector_type)
         self._collect_image(xrun, glbl, cpp.detector, exposure, metadata)
         # wait for update
         print(_INFO)
