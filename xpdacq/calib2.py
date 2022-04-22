@@ -1,5 +1,6 @@
 import typing as T
 from pathlib import Path
+from pkg_resources import resource_filename
 import time
 
 import bluesky.preprocessors as bpp
@@ -20,6 +21,7 @@ Please read visit the website below to learn more about how to use the pyFAI-cal
 
 https://pyfai.readthedocs.io/en/master/usage/cookbook/calib-gui/index.html#cookbook-calibration-gui
 """
+DSPACING_FILE = resource_filename("xpdacq", "data/N24.D")
 
 
 class RunCalibration():
@@ -125,7 +127,7 @@ class RunCalibration():
         self,
         *,
         exposure: float = 5.,
-        calibrant: str = "Ni",
+        calibrant: str = DSPACING_FILE,
         sample_name: str = "Ni_calib",
         phase_info: str = "Ni",
         detector: str = "'perkin-elmer",
