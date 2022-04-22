@@ -68,6 +68,9 @@ class RunCalibration():
         sample_md.update({"sample_name": sample_name})
         return sample_md
 
+    def _get_calib_file(self) -> Path:
+        return Path(self._glbl["config_base"]).joinpath(self._glbl["calib_config_name"])
+
     def _collect_metadata(
         self,
         sample_name: str,
@@ -76,8 +79,10 @@ class RunCalibration():
     ) -> CalibMetaData:
         md = self._sample_name_phase_info_configuration(sample_name, phase_info)
         md["pyfai_calib_kwargs"] = {
+            "calibrant": sample_name,
             "detector": detector_type,
-            "wavelength": self._xrun.beamtime.wavelength
+            "wavelength": self._xrun.beamtime.wavelength,
+            "poni": str(self._get_calib_file())
         }
         return md
 
@@ -117,7 +122,7 @@ class RunCalibration():
         self,
         *,
         exposure: float = 5.,
-        calibrant: str = "Ni_calib",
+        calibrant: str = "Ni",
         phase_info: str = "Ni",
         detector: str = "'perkin-elmer",
         RE_instance: CustomizedRunEngine = None,
@@ -141,7 +146,7 @@ class RunCalibration():
                 "Error: there is no calibration preprocessor with index '{}'.".format(preprocessor_id))
         cpp = xrun.calib_preprocessors[preprocessor_id]
         # hash file content before calibration
-        calib_file = Path(glbl["config_base"]).joinpath(glbl["calib_config_name"])
+        calib_file = self._get_calib_file()
         old_file_hash = self._get_hash(calib_file)
         # collect metadata and data
         metadata = self._collect_metadata(sample_name, phase_info, detector_type)
