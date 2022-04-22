@@ -79,9 +79,9 @@ class RunCalibration():
     ) -> CalibMetaData:
         md = self._sample_name_phase_info_configuration(sample_name, phase_info)
         md["pyfai_calib_kwargs"] = {
-            "calibrant": sample_name,
-            "detector": detector_type,
-            "wavelength": self._xrun.beamtime.wavelength,
+            "calibrant": str(sample_name),
+            "detector": str(detector_type),
+            "wavelength": str(self._xrun.beamtime.wavelength),
             "poni": str(self._get_calib_file())
         }
         return md
