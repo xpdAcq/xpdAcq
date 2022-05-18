@@ -240,7 +240,7 @@ def ct(dets, exposure):
     yield from plan
 
 
-def Tramp(dets, exposure, Tstart, Tstop, Tstep):
+def Tramp(dets, exposure, Tstart, Tstop, Tstep, per_step=None):
     """
     Collect data over a range of temperatures
 
@@ -318,11 +318,12 @@ def Tramp(dets, exposure, Tstart, Tstop, Tstep):
         Tstop,
         Nsteps,
         md=_md,
+        per_step=per_step
     )
     yield from plan
 
 
-def Tlist(dets, exposure, T_list):
+def Tlist(dets, exposure, T_list, per_step=None):
     """
     Collect data over a list of user-specific temperatures
 
@@ -380,7 +381,7 @@ def Tlist(dets, exposure, T_list):
     }
     # pass xpdacq_md to as additional md to bluesky plan
     plan = bp.list_scan(
-        [area_det], T_controller, T_list, md=xpdacq_md
+        [area_det], T_controller, T_list, md=xpdacq_md, per_step=per_step
     )
     plan = bpp.subs_wrapper(plan, LiveTable([T_controller]))
     yield from plan
