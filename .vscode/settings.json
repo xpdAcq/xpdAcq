@@ -11,4 +11,5 @@
         "editor.insertSpaces": true,
         "editor.formatOnSave": true
     },
+    "esbonio.sphinx.confDir": "",
 }
