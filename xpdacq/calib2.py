@@ -130,7 +130,7 @@ class RunCalibration():
         calibrant: str = DSPACING_FILE,
         sample_name: str = "Ni_calib",
         phase_info: str = "Ni",
-        detector: str = "perkin-elmer",
+        detector: str = "Perkin Elmer",
         RE_instance: CustomizedRunEngine = None,
         wait_for_cal: bool = True,
         preprocessor_id: int = 0
