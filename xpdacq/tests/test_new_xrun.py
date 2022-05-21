@@ -33,5 +33,5 @@ def test_use_mask_files(
     xrun({}, bp.count([det]), mask_files=[(det, [mask_file])])
     run: Header = db[-1]
     assert "mask" in run.stream_names
-    _mask = next(run.data(det.name, stream_name="mask"))
+    _mask = next(run.data("pe1_mask", stream_name="mask"))
     assert np.array_equal(mask, _mask)
