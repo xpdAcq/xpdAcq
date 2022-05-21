@@ -21,7 +21,7 @@ Please read visit the website below to learn more about how to use the pyFAI-cal
 
 https://pyfai.readthedocs.io/en/master/usage/cookbook/calib-gui/index.html#cookbook-calibration-gui
 """
-DSPACING_FILE = resource_filename("xpdacq", "data/N24.D")
+DSPACING_FILE = resource_filename("xpdacq", "data/Ni24.D")
 
 
 class RunCalibration():
@@ -130,7 +130,7 @@ class RunCalibration():
         calibrant: str = DSPACING_FILE,
         sample_name: str = "Ni_calib",
         phase_info: str = "Ni",
-        detector: str = "Perkin Elmer",
+        detector: str = "Perkin",
         RE_instance: CustomizedRunEngine = None,
         wait_for_cal: bool = True,
         preprocessor_id: int = 0
