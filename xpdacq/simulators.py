@@ -10,7 +10,6 @@ import bluesky.plan_stubs as bps
 import numpy as np
 from bluesky import RunEngine
 from bluesky.utils import short_uid
-from bluesky_darkframes.sim import Shutter
 from databroker import Broker
 from ophyd import Component, Device, DeviceStatus, Kind, Signal, Staged
 from ophyd.sim import new_uid
