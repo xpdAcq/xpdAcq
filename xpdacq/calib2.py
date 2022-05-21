@@ -21,7 +21,7 @@ Please read visit the website below to learn more about how to use the pyFAI-cal
 
 https://pyfai.readthedocs.io/en/master/usage/cookbook/calib-gui/index.html#cookbook-calibration-gui
 """
-DSPACING_FILE = resource_filename("xpdacq", "data/Ni24.D")
+DSPACING_FILE = resource_filename("xpdacq", "data/Ni_dspacing.txt")
 
 
 class RunCalibration():
