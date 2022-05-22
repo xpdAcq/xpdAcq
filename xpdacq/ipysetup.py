@@ -1,7 +1,7 @@
 """Set up the objects ipython profile."""
 import os
 import typing as T
-from pathlib import Path
+from pathlib import Path, PurePath
 
 from bluesky.callbacks.zmq import Publisher
 from databroker import Broker
@@ -17,6 +17,13 @@ from xpdacq.xpdacq_conf import (GlblYamlDict, _load_beamline_config,
                                 xpd_configuration)
 
 Address = T.Union[T.Tuple[str, int], str]
+
+
+def _rename_calib_file_suffix(glbl: dict) -> None:
+    if "calib_config_name" not in glbl:
+        return
+    glbl["calib_config_name"] = PurePath(glbl["calib_config_name"]).with_suffix(".poni").name
+    return
 
 
 def _get_locked_signals(det: Device) -> None:
@@ -160,6 +167,8 @@ class UserInterface:
         if not blconfig_yaml:
             blconfig_yaml = glbl["blconfig_path"]
         xrun.md["beamline_config"] = _load_beamline_config(blconfig_yaml, test=test)
+        # rename the suffix
+        _rename_calib_file_suffix(glbl)
         # insert header to db, either simulated or real
         self._print("Subscribe database.")
         xrun.subscribe(db.v1.insert)
