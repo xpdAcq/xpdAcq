@@ -383,7 +383,6 @@ def Tlist(dets, exposure, T_list, per_step=None):
     plan = bp.list_scan(
         [area_det], T_controller, T_list, md=xpdacq_md, per_step=per_step
     )
-    plan = bpp.subs_wrapper(plan, LiveTable([T_controller]))
     yield from plan
 
 
