@@ -26,7 +26,6 @@ import bluesky.preprocessors as bpp
 import numpy as np
 import pyFAI
 import yaml
-from bluesky.callbacks import LiveTable
 from xpdconf.conf import XPD_SHUTTER_CONF
 
 from .glbl import glbl
@@ -462,7 +461,6 @@ def tseries(dets, exposure, delay, num, auto_shutter=True):
         },
     )
     plan = bp.count([area_det], num, delay, md=_md)
-    plan = bpp.subs_wrapper(plan, LiveTable([]))
 
     def inner_shutter_control(msg):
         if msg.command == "trigger":
@@ -1023,6 +1021,5 @@ def count_with_calib(detectors: list, num: int = 1, delay: float = None, *, cali
         return
 
     plan = bp.count(detectors, num, delay, md=md, per_shot=_per_shot)
-    bpp.subs_wrapper(plan, LiveTable(detectors))
     sts = yield from plan
     return sts
