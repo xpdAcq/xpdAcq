@@ -14,6 +14,7 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -105,7 +106,7 @@
            <div itemprop="articleBody">
              
   <section id="scanplan-objects">
-<span id="usb-scan"></span><h1>ScanPlan objects<a class="headerlink" href="#scanplan-objects" title="Permalink to this headline"></a></h1>
+<span id="usb-scan"></span><h1>ScanPlan objects<a class="headerlink" href="#scanplan-objects" title="Permalink to this heading"></a></h1>
 <p>Firstly, what is a scanplan?  A scanplan is a grouped set of detector exposures.  The set may
 contain just one exposure (we call that a count scan, <code class="docutils literal notranslate"><span class="pre">'ct'</span></code> ).  Or it may be a series of exposures
 taken one after the other, possibly with a delay between.  We
@@ -132,7 +133,7 @@ What we do is that we <strong>create a new ScanPlan object</strong>,
 every time we want to do a different, <em>even slightly different</em>, scan. These are all
 saved for reload and will be sent home with you at the end of the experiment.</p>
 <section id="setting-up-scanplans">
-<h2>Setting up ScanPlans<a class="headerlink" href="#setting-up-scanplans" title="Permalink to this headline"></a></h2>
+<h2>Setting up ScanPlans<a class="headerlink" href="#setting-up-scanplans" title="Permalink to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ScanPlan</span></code> takes <code class="docutils literal notranslate"><span class="pre">Beamtime</span></code>, scanplan and corresponding arguments. Let’s type <code class="docutils literal notranslate"><span class="pre">ScanPlan?</span></code> and hit return to find out more:</p>
 <p>Here are some examples of valid count-type ScanPlan definitions:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">ScanPlan</span><span class="p">(</span><span class="n">bt</span><span class="p">,</span> <span class="n">ct</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>                      <span class="c1"># the simplest count scan definition</span>
@@ -162,7 +163,7 @@ controller equilibrates at each of the temperatures.</p></li>
 </dl>
 </section>
 <section id="summary-table-on-scanplan">
-<h2>Summary table on ScanPlan:<a class="headerlink" href="#summary-table-on-scanplan" title="Permalink to this headline"></a></h2>
+<h2>Summary table on ScanPlan:<a class="headerlink" href="#summary-table-on-scanplan" title="Permalink to this heading"></a></h2>
 <blockquote>
 <div><table class="docutils align-default">
 <colgroup>
