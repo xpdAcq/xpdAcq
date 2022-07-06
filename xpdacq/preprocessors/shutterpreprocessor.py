@@ -53,17 +53,13 @@ class ShutterPreprocessor:
         delay = self._shutter_config.delay
 
         def _open_shutter_before(msg: Msg) -> Plan:
-            curr_state = (yield from bps.rd(shutter))
-            if curr_state != open_state:
-                yield from bps.mv(shutter, open_state)
+            yield from bps.mv(shutter, open_state)
             if delay > 0.:
                 yield from bps.sleep(delay)
             return (yield msg)
 
         def _close_shutter() -> Plan:
-            curr_state = (yield from bps.rd(shutter))
-            if curr_state != close_state:
-                yield from bps.mv(shutter, close_state)
+            yield from bps.mv(shutter, close_state)
             return
 
         def _mutate(msg: Msg):
