@@ -385,7 +385,7 @@ def Tlist(dets, exposure, T_list, per_step=None):
     yield from plan
 
 
-def tseries(dets, exposure, delay, num, auto_shutter=True):
+def tseries(dets, exposure, delay, num, auto_shutter=False):
     """
     time series scan with area detector.
 
