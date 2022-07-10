@@ -1,6 +1,5 @@
 """Wrappers for the ophyd devices."""
-from ophyd import Device, Signal
-from ophyd import Kind
+from ophyd import Device, Kind, Signal
 from ophyd.device import Component as Cpt
 
 

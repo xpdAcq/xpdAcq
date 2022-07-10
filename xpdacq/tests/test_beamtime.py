@@ -3,23 +3,13 @@ import shutil
 import unittest
 
 import yaml
-from bluesky.simulators import summarize_plan
 from pkg_resources import resource_filename as rs_fn
-
-import xpdacq.beamtime as xbt
-from xpdacq.beamtime import (
-    ScanPlan,
-    ct,
-    Beamtime,
-    Sample,
-)
+from xpdacq.beamtime import Beamtime, Sample, ScanPlan, ct
 from xpdacq.beamtimeSetup import _start_beamtime, load_beamtime
 from xpdacq.glbl import glbl
-from xpdacq.simulation import pe1c, db, shctl1, cs700, fb
+from xpdacq.simulation import cs700, db, fb, pe1c, shctl1
 from xpdacq.xpdacq import CustomizedRunEngine
 from xpdacq.xpdacq_conf import configure_device
-from xpdacq.xpdacq_conf import xpd_configuration
-
 
 # print messages for debugging
 # xrun.msg_hook = print

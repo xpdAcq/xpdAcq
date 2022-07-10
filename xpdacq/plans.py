@@ -4,7 +4,7 @@ import subprocess
 import typing as tp
 from pathlib import Path
 from pprint import pprint
-from typing import Union, Tuple, Generator, Any
+from typing import Any, Generator, Tuple, Union
 
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
@@ -15,7 +15,7 @@ import pyFAI
 from bluesky.plan_stubs import mv, null
 from bluesky.simulators import summarize_plan
 from bluesky_darkframes import DarkFramePreprocessor, SnapshotDevice
-from databroker import Header, Broker
+from databroker import Broker, Header
 from pkg_resources import resource_filename
 from tifffile import TiffWriter
 

@@ -7,7 +7,7 @@ from bluesky.callbacks.zmq import Publisher
 from databroker import Broker
 from ophyd import Device
 
-from xpdacq.beamtimeSetup import start_xpdacq, _start_beamtime
+from xpdacq.beamtimeSetup import _start_beamtime, start_xpdacq
 from xpdacq.calib2 import RunCalibration
 from xpdacq.preprocessors import (CalibPreprocessor, DarkPreprocessor,
                                   ShutterConfig, ShutterPreprocessor)

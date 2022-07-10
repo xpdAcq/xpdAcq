@@ -25,7 +25,7 @@ from IPython import get_ipython
 
 from .beamtime import Beamtime, Sample
 from .glbl import glbl
-from .tools import validate_dict_key, _check_obj, _graceful_exit
+from .tools import _check_obj, _graceful_exit, validate_dict_key
 
 
 def composition_analysis(compstring):
