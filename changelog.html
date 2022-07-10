@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>xpdAcq Change Log &mdash; xpdAcq 1.0.1 documentation</title>
+  <title>xpdAcq Change Log &mdash; xpdAcq 1.1.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -30,7 +30,7 @@
             <a href="index.html" class="icon icon-home"> xpdAcq
           </a>
               <div class="version">
-                1.0
+                1.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -57,6 +57,7 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">xpdAcq Change Log</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#v1-1-0">v1.1.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#v1-0-1">v1.0.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#v1-0-0">v1.0.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#v0-12-0">v0.12.0</a></li>
@@ -110,6 +111,29 @@
              
   <section id="xpdacq-change-log">
 <h1>xpdAcq Change Log<a class="headerlink" href="#xpdacq-change-log" title="Permalink to this heading"></a></h1>
+<section id="v1-1-0">
+<h2>v1.1.0<a class="headerlink" href="#v1-1-0" title="Permalink to this heading"></a></h2>
+<p><strong>Added:</strong></p>
+<ul class="simple">
+<li><p>Add <cite>CalibPreprocessor</cite> to record calibration data and put the data in the <cite>calib</cite> data stream.</p></li>
+<li><p>Add <cite>DarkPreprocessor</cite> to add taking dark frame steps into the plan, snapshot the dark frame and add it in the <cite>dark</cite> data stream.</p></li>
+<li><p>Add <cite>ShutterPreprocessor</cite> to open the shutter before the trigger of detector and close it after the wait.</p></li>
+<li><p>Add <cite>xpdcaq.simulators</cite> module. It contains the simulated devices for testing.</p></li>
+<li><p>Add <cite>UserInterface</cite> to create the objects necessary in the ipython session.</p></li>
+</ul>
+<p><strong>Deprecated:</strong></p>
+<ul class="simple">
+<li><p><cite>periodic_dark</cite> and <cite>take_dark</cite> are no longer used in <cite>CustomizeRunEngine</cite>. The dark frame is taken care by <cite>DarkPreprocessor</cite>.</p></li>
+<li><p>Setting <cite>frame_acq_time</cite> no longer changes the detector acquire time immmediately. The value will be read and used to set the acquire time when using the xpdacq customizd plans, like <cite>ct</cite>, <cite>Tlist</cite>, <cite>Tramp</cite> and <cite>tseries</cite>.</p></li>
+<li><p><cite>CustomizedRunEngine</cite> no longer loads the calibration data at the <cite>open_run</cite>. The calibration data is handled by <cite>CalibPreprocessor</cite>.</p></li>
+<li><p><cite>auto_load_calib</cite> no longer used in the global setting since the <cite>CustomizedRunEngine</cite> no longers loads the calibration data.</p></li>
+<li><p><cite>inner_shutter_control</cite> is no longer used in the xpdacq customized plans. The shutter control is given to <cite>ShutterPreprocessor</cite>.</p></li>
+</ul>
+<p><strong>Fixed:</strong></p>
+<ul class="simple">
+<li><p>Skip the outdated tests and make CI tests run smoothly.</p></li>
+</ul>
+</section>
 <section id="v1-0-1">
 <h2>v1.0.1<a class="headerlink" href="#v1-0-1" title="Permalink to this heading"></a></h2>
 <p><strong>Added:</strong></p>
