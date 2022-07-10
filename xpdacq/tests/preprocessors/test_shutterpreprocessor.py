@@ -15,12 +15,10 @@ def test_call():
     plan = spp(plan)
     msgs = list(plan)
     expected = [
-        ("read", shutter),
         ("set", shutter),
         ("wait", None),
         ("trigger", detector),
         ("wait", None),
-        ("read", shutter),
         ("set", shutter),
         ("wait", None)
     ]

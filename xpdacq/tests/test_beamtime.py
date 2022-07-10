@@ -269,12 +269,3 @@ class BeamtimeObjTest(unittest.TestCase):
         glbl["frame_acq_time"] = 0.5
         self.assertRaises(ValueError, lambda: xrun({}, ScanPlan(bt, ct, 0.2)))
         glbl["frame_acq_time"] = 0.1  # reset after test
-
-
-def test_count_with_calib():
-    if "shutter" not in xpd_configuration:
-        xpd_configuration["shutter"] = shctl1
-    poni_file = rs_fn("xpdacq", "tests/Ni_poni_file.poni")
-    md = xbt.load_calibration_md(poni_file)
-    plan = xbt.count_with_calib([pe1c], calibration_md=md)
-    summarize_plan(plan)
