@@ -10,7 +10,7 @@ import bluesky.plan_stubs as bps
 import numpy as np
 from bluesky import RunEngine
 from bluesky.utils import short_uid
-from databroker import Broker
+from databroker.v2 import Broker, temp
 from ophyd import Component, Device, DeviceStatus, Kind, Signal, Staged
 from ophyd.sim import new_uid
 from pkg_resources import resource_filename
@@ -165,7 +165,7 @@ class WorkSpace:
     def __init__(self) -> None:
 
         self.RE: RunEngine = RunEngine()
-        self.db: Broker = Broker.named("temp")
+        self.db: Broker = temp()
         self.RE.subscribe(self.db.insert)
         self.det: PerkinElmerDetector = PerkinElmerDetector(name="pe1")
         self.eurotherm: Eurotherm = Eurotherm(name="temperature")

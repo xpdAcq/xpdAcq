@@ -318,7 +318,7 @@ v0.7.2
 
 
 v0.7.1
-~~~~~~~~~~~~~~~~~~~~
+====================
 
 **Added:**
 
@@ -350,7 +350,7 @@ v0.7.1
 
 
 v0.7.0
-~~~~~~~~~~~~~~~~~~~~
+====================
 
 **Added:**
 
@@ -398,7 +398,7 @@ None
 
 
 v0.6.0
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+====================
 
 This is a stable release of ``xpdAcq`` software.
 
@@ -443,7 +443,7 @@ New features introduced to this version:
 
 
 v0.5.2
-~~~~~~~~~~
+====================
 
 This is a stable release of ``xpdAcq`` software.
 
@@ -480,7 +480,7 @@ This version is fully documented and extensively tested.
 
 
 v0.5.0
-~~~~~~~~~~
+====================
 
 This is a stable release of ``xpdAcq`` software.
 
@@ -516,7 +516,7 @@ Additional built-in scan types will be added in future releases.
 This version is fully documented and extensively tested.
 
 v0.3.0
-~~~~~~~~~~
+====================
 
 This is the first full, stable, release, of xpdAcq software.
 It offers functionality to acquire data at XPD but with very limited

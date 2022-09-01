@@ -1,7 +1,7 @@
 .. xpdAcq documentation master file, created by
-sphinx-quickstart on Thu Jan 28 11:58:44 2016.
-You can adapt this file completely to your liking, but it should at least
-contain the root `toctree` directive.
+   sphinx-quickstart on Thu Jan 28 11:58:44 2016.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
 xpdAcq documentation
 ====================
@@ -66,12 +66,6 @@ the software, please post it as a new thread at `XPD-Users
    :maxdepth: 3
 
    troubleshooting
-
-.. toctree::
-   :maxdepth: 3
-   :hidden:
-
-   release_note
 
 .. toctree::
    :maxdepth: 2

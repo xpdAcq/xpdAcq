@@ -6,12 +6,12 @@ API Documentation
 run_calibration API Documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autofunction:: xpdacq.calib.run_calibration
+.. autoclass:: xpdacq.calib2.RunCalibration
 
 .. _xrun_api:
 
-xrun API Documentation
-^^^^^^^^^^^^^^^^^^^^^^
+CustomizedRunEngine API Documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: xpdacq.xpdacq.CustomizedRunEngine
 
@@ -19,10 +19,19 @@ xrun API Documentation
 
 .. _ScanPlan_api:
 
-ScanPlan API Documentation
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Predefined Plans API Documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autofunction:: xpdacq.beamtime.ct
 .. autofunction:: xpdacq.beamtime.Tramp
 .. autofunction:: xpdacq.beamtime.Tlist
 .. autofunction:: xpdacq.beamtime.tseries
+
+Beamtime API Documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: xpdacq.beamtimeSetup._start_beamtime
+.. autofunction:: xpdacq.beamtimeSetup._end_beamtime
+.. autofunction:: xpdacq.beamtime.ScanPlan
+.. autofunction:: xpdacq.beamtime.Sample
+

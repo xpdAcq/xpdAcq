@@ -7,7 +7,7 @@ import uuid
 import warnings
 from pathlib import Path
 
-import databroker
+import databroker.v1
 import numpy as np
 import ophyd
 import pytest

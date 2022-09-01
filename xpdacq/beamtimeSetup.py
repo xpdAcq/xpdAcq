@@ -218,7 +218,7 @@ def load_yaml(f, known_uids=None):
 
 
 def _end_beamtime(base_dir=None, archive_dir=None, bto=None, usr_confirm="y"):
-    """ funciton to end a beamtime.
+    """Helper funciton to end a beamtime.
 
     Detail steps are:
         2) Archive ``xpdUser`` directory to remove backup

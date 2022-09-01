@@ -4,7 +4,7 @@ import typing as T
 from pathlib import Path, PurePath
 
 from bluesky.callbacks.zmq import Publisher
-from databroker import Broker
+from databroker.v2 import Broker
 from ophyd import Device
 
 from xpdacq.beamtimeSetup import _start_beamtime, start_xpdacq
@@ -95,10 +95,10 @@ def _set_calib_preprocessor(cpp: CalibPreprocessor, glbl: GlblYamlDict, det_z: T
 
 
 class UserInterface:
-    """The user interace of xpdAcq.
+    """The user interface of xpdAcq.
 
-    It contiains the necessary python objects that user will interact with in the ipython session.
-    Be ware that initation will change the home directory to the one specified in glbl.
+    It contains the necessary python objects that user will interact with in the ipython session.
+    Be ware that initiation will change the home directory to the one specified in glbl.
 
     Attributes
     ----------
@@ -129,6 +129,42 @@ class UserInterface:
         verbose: int = 1,
         test: bool = False
     ):
+        """Create the python objects for the ipython session.
+
+        Parameters
+        ----------
+        area_dets : T.List[Device]
+            A list of the area detectors
+        det_zs : T.List[T.Optional[Device]]
+            A list of the motor that controls the z axis of the detectors, None if not exists
+        shutter : Device
+            A fast shutter
+        temp_controller : Device
+            A temperature controller
+        filter_bank : Device
+            A filter bank device
+        ring_current : Device
+            A ring current SynAxis
+        db : Broker
+            A databroker.
+        shutter_config : T.Optional[ShutterConfig], optional
+            The configuration for the shutter, by default, use the settings in the xpdacq configuration file
+        glbl_yaml : str, optional
+            The path to the glbl yaml file, by default None
+        blconfig_yaml : str, optional
+            The path to the beamline configuration file, by default None
+        publish_to : _type_, optional
+            The address to publish the data to, by default "localhost:5567"
+        verbose : int, optional
+            The verbose level when creating the objects, by default 1
+        test : bool, optional
+            Used for pytest, by default False
+
+        Raises
+        ------
+        xpdAcqError
+            _description_
+        """
         if len(area_dets) == 0:
             raise xpdAcqError("There must be no less than one `area_dets`.")
         # add verbose

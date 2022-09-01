@@ -449,8 +449,7 @@ phase string
 
   .. code-block:: python
 
-
-    {'sample_composition': {'Na':0.09, 'Cl':0.09, `H`:1.82, `O`:0.91},
+    {'sample_composition': {'Na':0.09, 'Cl':0.09, 'H':1.82, 'O':0.91},
      'sample_phase': {'NaCl':0.09, 'H20':0.91},
      'composition_string': 'Na0.09Cl0.09H1.82O0.91'}
 

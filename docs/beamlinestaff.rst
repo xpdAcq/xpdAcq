@@ -8,6 +8,7 @@ For Beamline Staff
 
    sb_cheat_sheet
    sb_overview
+   sb_profile_collection
    sb_icollection
    sb_newBeamtime
    sb_endBeamtime

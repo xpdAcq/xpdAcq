@@ -7,8 +7,7 @@ Saving tiff files
 """""""""""""""""
 
 The most obvious way of accessing your data is to pull them from centralized
-server and save them into your working directory. As we have mentioned in
-:ref:`qs`, saving tiff can be done in following ways:
+server and save them into your working directory.
 
 .. code-block:: python
 

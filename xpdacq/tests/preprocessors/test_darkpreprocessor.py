@@ -2,7 +2,7 @@ import bluesky.plans as bp
 import numpy as np
 from bluesky import RunEngine
 from bluesky_darkframes.sim import DiffractionDetector, Shutter
-from databroker import Broker
+from databroker.v2 import temp
 from ophyd.sim import NumpySeqHandler
 from xpdacq.preprocessors import DarkPreprocessor, ShutterConfig
 
@@ -10,7 +10,7 @@ from xpdacq.preprocessors import DarkPreprocessor, ShutterConfig
 def test_in_a_run():
     detector = DiffractionDetector(name="detector")
     shutter = Shutter(name="shutter", value="open")
-    db = Broker.named('temp')
+    db = temp()
     db.reg.register_handler('NPY_SEQ', NumpySeqHandler)
     RE = RunEngine()
     RE.subscribe(db.insert)

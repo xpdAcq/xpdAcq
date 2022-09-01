@@ -48,12 +48,10 @@ Table of directories and their uses:
 |userAnalysis   |Users can create any sets of directories under here for     |
 |               |storing analysis files (e.g those saved by xPDFsuite).      |
 +---------------+------------------------------------------------------------+
-|...            |In fact, users can create any directories and files          |
+|...            |In fact, users can create any directories and files         |
 |               |they want. This is because at the end of beamtime, they     |
 |               |will be bundled, tarred and zipped as to be taken home.     |
 |               |                                                            |
 +---------------+------------------------------------------------------------+
 
 For detailed information, proceed to **XPD user** section
-
-For a simple instruction, proceed to :ref:`qs`

@@ -2,7 +2,7 @@ import shutil
 import pytest
 from pathlib import Path
 
-from databroker import Broker
+from databroker.v2 import temp
 from pkg_resources import resource_filename
 from xpdacq.ipysetup import (CalibPreprocessor, UserInterface,
                              _set_calib_preprocessor)
@@ -14,7 +14,7 @@ _PONI_FILFE = Path(resource_filename("xpdacq", "tests/Ni_poni_file.poni"))
 
 @pytest.mark.skip
 def test_ipysetup(beamline_config_file):
-    db = Broker.named("temp")
+    db = temp()
     ui = UserInterface(
         area_dets=[xpd_pe1c],
         det_zs=[None],

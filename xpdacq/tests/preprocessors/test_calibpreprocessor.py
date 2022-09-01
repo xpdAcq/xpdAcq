@@ -2,7 +2,7 @@ import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 import bluesky.preprocessors as bpp
 from bluesky.run_engine import RunEngine
-from databroker import Broker
+from databroker.v2 import temp
 from ophyd.sim import hw
 from frozendict import frozendict
 from pkg_resources import resource_filename
@@ -32,7 +32,7 @@ def test_preprocessor_usage():
     det = devices.det
     det_z = devices.motor
     cp = CalibPreprocessor(det, locked_signals=[det_z])
-    db = Broker.named("temp")
+    db = temp()
     RE = RunEngine()
     RE.subscribe(db.insert)
 

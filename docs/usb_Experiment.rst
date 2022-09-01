@@ -1,7 +1,7 @@
 .. _usb_experiment:
 
 Setting up your XPD acquisition objects
---------------------------------------
+---------------------------------------
 
 Overview
 """"""""
@@ -32,7 +32,7 @@ of what are the required and optional arguments of this object.  ``ipython`` off
 handy feature that you can type a ``?`` instead of the parentheses after a function and
 ipython will remind you of what the arguments are for that function.
 
-.. code-block:: python
+.. code-block:: text
 
   >>> sa = Sample?
   Init signature: Sample(beamtime, sample_md, **kwargs)
@@ -62,6 +62,7 @@ ipython will remind you of what the arguments are for that function.
   Init docstring:
   Initialize a ChainMap by setting *maps* to the given mappings.
   If no mappings are provided, a single empty dictionary is used.
+
 
 Here we see that ``Sample`` takes 3 arguments (this will change in later versions of
 the software, so always check!), ``beamtime``, ``sample_md`` and ``**kwargs``.

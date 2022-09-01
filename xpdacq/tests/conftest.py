@@ -15,7 +15,7 @@
 import os
 import shutil
 
-import databroker
+import databroker.v1
 import ophyd.sim as sim
 import pytest
 from pkg_resources import resource_filename as rs_fn
