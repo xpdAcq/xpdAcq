@@ -464,7 +464,7 @@ phase string
 
 
 dictionary-like fields
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
   Fields that are utilized to store information as ``key-value pair`` format.
   Standard format of it is ``key: value`` and it also follows the comma-separate rule

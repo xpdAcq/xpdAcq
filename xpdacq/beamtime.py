@@ -837,8 +837,7 @@ class Sample(ValidatedDictLike, YamlChainMap, ABC):
 
 
 class ScanPlan(ValidatedDictLike, YamlChainMap, ABC):
-    """
-    class that carries scan plan with corresponding experimental arguements
+    """A class that carries scan plan with corresponding experimental arguments
 
     after creation, this Sample object will be related to Beamtime
     object given as argument and will be available in bt.list()
@@ -849,7 +848,7 @@ class ScanPlan(ValidatedDictLike, YamlChainMap, ABC):
         object representing current beamtime.
     plan_func :
         predefined plan function. For complete list of available functions,
-        please refere to http://xpdacq.github.io for more information.
+        please refer to http://xpdacq.github.io for more information.
     args :
         positional arguments corresponding to plan function in used.
     kwargs :

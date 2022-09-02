@@ -30,8 +30,12 @@ Predefined Plans API Documentation
 Beamtime API Documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autofunction:: xpdacq.beamtimeSetup._start_beamtime
-.. autofunction:: xpdacq.beamtimeSetup._end_beamtime
-.. autofunction:: xpdacq.beamtime.ScanPlan
-.. autofunction:: xpdacq.beamtime.Sample
+.. autoclass:: xpdacq.beamtime.Beamtime
+.. autoclass:: xpdacq.beamtime.Sample
+.. autofunction:: xpdacq.utils.import_sample_info
+
+IPython Setup Documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: xpdacq.ipysetup.UserInterface
 

@@ -132,5 +132,3 @@ This file has a big change at the version `1.1.0`. Thus, there is a if clause to
 
 
 In the latest version, all python objects are created by the `UserInterface` class.
-
-.. autoclass:: xpdacq.ipysetup.UserInterface

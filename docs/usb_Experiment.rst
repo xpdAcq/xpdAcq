@@ -67,7 +67,7 @@ ipython will remind you of what the arguments are for that function.
 Here we see that ``Sample`` takes 3 arguments (this will change in later versions of
 the software, so always check!), ``beamtime``, ``sample_md`` and ``**kwargs``.
 ``beamtime`` which is a beamtime object,``sample_md`` is a dictionary and ``kwargs`` is
-a standard python argument. See reference `here <https://docs.python.org/3.5/faq/programming.html>`_.
+a standard python argument. See reference `here <https://docs.python.org/3.5/faq/programming.html>`__.
 
 We also see there are examples on how to create a valid ``Sample`` object, so let's go ahead and create it
 

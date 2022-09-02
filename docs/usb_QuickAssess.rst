@@ -30,12 +30,12 @@ want with various combinations.
 
 .. note::
 
-  if you are new to ``python``, please see `here <https://docs.python.org/3.5/tutorial/introduction.html>`_
+  if you are new to ``python``, please see `here <https://docs.python.org/3.5/tutorial/introduction.html>`__
   for basic information.
 
 ``db`` stands for ``databroker`` which is another
 *awesome* software package developed by NSLS-II software team. For more information, please see
-`here <https://nsls-ii.github.io/databroker/>`_
+`here <https://nsls-ii.github.io/databroker/>`__
 
 Automated dark subtraction
 """"""""""""""""""""""""""
