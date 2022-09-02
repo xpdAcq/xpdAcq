@@ -8,7 +8,7 @@ XPD is equipped with a sample loading robot, which requires special syntax to us
 0. Load data into ``bt`` as usual
 ----------------------------------
 
-Follow the normal routine for loading data from the sample spreadsheet from import_sample_.
+Follow the normal routine for loading data from the sample spreadsheet.
 
 1. Tell ``bt`` about where the samples are loaded in the robot magazine
 -----------------------------------------------------------------------
@@ -17,8 +17,7 @@ To use the robot properly ``bt`` needs to know where the samples are loaded.
 This is achieved by running ``bt.robot_location_number()``.
 This will prompt you to enter the location for each sample currently in
 ``bt``.
-If the sample is not in the magazine that's ok just leave the prompt
- blank and hit ``<enter>``.
+If the sample is not in the magazine that's ok just leave the prompt blank and hit ``<enter>``.
 
 
 2. Run ``xrun`` with the robot flag

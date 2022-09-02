@@ -38,9 +38,8 @@ for you.  Let's check if it is the case.
 
 1. Type ``bt.md`` and hit return, you should see similar output as following:
 
-  .. code-block:: python:
+  .. code-block:: python
 
-    >>> bt.md
     {'bt_experimenters': ['Tim', 'Liu'],
     'bt_piLast': 'Billinge',
     'bt_safN': '300564',
@@ -69,7 +68,7 @@ for you.  Let's check if it is the case.
 
 There are other setups that you can do to make your experiment run smoothly.
 For example, by carrying out a calibration before you start collecting it greatly facilitates data reduction later.
-Please follow the workflow in the :ref:`cheat_sheet` or talk to the IS if you don't know how to do this.
+Please follow the workflow in the cheat sheet or talk to the IS if you don't know how to do this.
 
 
 Why does my scan halt for no reason?

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automated Calibration Injection &mdash; xpdAcq 1.1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Automatic Dark Frame" href="usb_darkframe.html" />
+    <link rel="prev" title="An overhaul at v1.1.0" href="usb_design.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          </a>
+              <div class="version">
+                1.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="xpdusers.html">For XPD Users</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sb_overview.html">Overview of xpd acquisition environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_icollection.html">Overview of the bsui+xpdAcq environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Beamtime.html">Setting up your Beamtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Experiment.html">Setting up your XPD acquisition objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Scan.html">ScanPlan objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html">Where did all my Sample and Scan objects go?????</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-is-your-friends">bt.list() is your friends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-gotchas">bt.list() Gotchas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Running.html">Running scans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_QuickAssess.html">Initial assessment of your data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_GlobalOptions.html">xpdAcq Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_export.html">Databroker Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot.html">Using the Robot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tomo.html">Running Tomography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_design.html">An overhaul at v1.1.0</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Automated Calibration Injection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#calibpreprocessor">CalibPreprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logic">Logic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#run-calibration">Run Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#locked-signals">Locked_signals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calibration-data-from-poni-files">Calibration Data from Poni Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#enable-and-disable">Enable and Disable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calibration-data-stream">Calibration Data Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#disposable-calibration-data">Disposable Calibration Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#collecting-xrd-and-pdf-by-moving-the-detector">Collecting XRD and PDF by Moving the Detector</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usb_darkframe.html">Automatic Dark Frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_mask.html">Mask Data Injection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_shutter.html">Automatic Shutter Control</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="xpdusers.html">For XPD Users</a> &raquo;</li>
+      <li>Automated Calibration Injection</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usb_calibration.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="automated-calibration-injection">
+<h1>Automated Calibration Injection<a class="headerlink" href="#automated-calibration-injection" title="Permalink to this heading"></a></h1>
+<p>In this section, the automated calibratoin injection in <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> will
+be introduced.</p>
+<section id="calibpreprocessor">
+<h2>CalibPreprocessor<a class="headerlink" href="#calibpreprocessor" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> takes care of the injection of calibration
+data into the data stream.</p>
+<p>It is registered in the <code class="docutils literal notranslate"><span class="pre">xrun.calib_preprocessors</span></code> list.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.calib_preprocessors
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">CalibPreprocessor</span> <span class="n">of</span> <span class="n">detector</span> <span class="k">with</span> <span class="mi">0</span> <span class="n">cache</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">CalibPreprocessor</span> <span class="n">of</span> <span class="n">detector1</span> <span class="k">with</span> <span class="mi">0</span> <span class="n">cache</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">CalibPreprocessor</span> <span class="n">of</span> <span class="n">detector2</span> <span class="k">with</span> <span class="mi">0</span> <span class="n">cache</span><span class="o">&gt;</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="logic">
+<h2>Logic<a class="headerlink" href="#logic" title="Permalink to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> finds that the <code class="docutils literal notranslate"><span class="pre">detector</span></code> is going to be
+triggered and it is not a dark frame (not labeled by
+<code class="docutils literal notranslate"><span class="pre">dark_group_prefix</span></code>), it will start doing its job. What it will do is
+presented as the peseudo below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>if (there are no registered `locked_signals`):
+    inject the calibration data collected when there were no `locked_signals`
+else:
+    read the `locked_signals` and search the cache
+    if (there is calibration data collected at the same values of the `locked_signals`):
+        inject that calibration data
+    else:
+        inject the most recent calibration data
+</pre></div>
+</div>
+<p>Here, the <code class="docutils literal notranslate"><span class="pre">locked_signals</span></code> can be any scalar values that determines
+the geometry of the setup, like the z axis motor of the detecotr, the z
+axis motor of the sample stage, etc.</p>
+<p>For example, the <code class="docutils literal notranslate"><span class="pre">locked_signals</span></code> is <code class="docutils literal notranslate"><span class="pre">[det_stage_z]</span></code>, which is the
+motor of the z axis of the detector. And the <code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> has
+<code class="docutils literal notranslate"><span class="pre">det_stage_z=200</span> <span class="pre">-&gt;</span> <span class="pre">calibration</span> <span class="pre">data</span> <span class="pre">1</span></code> and
+<code class="docutils literal notranslate"><span class="pre">det_stage_z=1000</span> <span class="pre">-&gt;</span> <span class="pre">calibration</span> <span class="pre">data</span> <span class="pre">2</span></code> in the cache. The latter
+record is the latest record. When the detector is at position
+<code class="docutils literal notranslate"><span class="pre">det_stage_z=200</span></code>, the <code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> will inject the
+<code class="docutils literal notranslate"><span class="pre">calibration</span> <span class="pre">data</span> <span class="pre">1</span></code> into the data stream and then the the detector
+moves to position <code class="docutils literal notranslate"><span class="pre">det_stage_z=1000</span></code>, the <code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> will
+inject <code class="docutils literal notranslate"><span class="pre">calibration</span> <span class="pre">data</span> <span class="pre">2</span></code> into the data stream. After that, the
+detector moves to <code class="docutils literal notranslate"><span class="pre">det_stage_z=1200</span></code>. There is no record at <code class="docutils literal notranslate"><span class="pre">1200</span></code>
+and the <code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> will inject the latest
+<code class="docutils literal notranslate"><span class="pre">calibration</span> <span class="pre">data</span> <span class="pre">2</span></code> into the data stream. This behavior is designed
+to be coherent with the old xpdAcq calibration logic, that is, always
+injecting the lastest calibration data without checking the situations.</p>
+</section>
+<section id="run-calibration">
+<h2>Run Calibration<a class="headerlink" href="#run-calibration" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> is only in charge of injecting calibration data.
+To run the calibration and give the calirbation result to
+<code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code>, <code class="docutils literal notranslate"><span class="pre">RunCalibration</span></code> functor should be used.</p>
+<p>This functor is usually set up during the start up of the ipython
+session and its variable name is usually <code class="docutils literal notranslate"><span class="pre">run_calibration</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>run_calibration()
+</pre></div>
+</div>
+<p>What it does is as following:</p>
+<ol class="arabic simple">
+<li><p>Let the <code class="docutils literal notranslate"><span class="pre">xrun</span></code> collect a image and send it to the analysis server.</p></li>
+<li><p>The analysis server will start the calibration session and the user
+will interact with the
+<a class="reference external" href="https://pyfai.readthedocs.io/en/master/usage/cookbook/calib-gui/index.html#cookbook-calibration-gui">pyFAI-calib2</a>.</p></li>
+<li><p>Wait for the calibration to be finished.</p></li>
+<li><p>Once it is finished, load the calibration data from the output poni
+file.</p></li>
+<li><p>Let <code class="docutils literal notranslate"><span class="pre">xrun</span></code> read the <code class="docutils literal notranslate"><span class="pre">locked_signals</span></code> and add the mapping from
+<code class="docutils literal notranslate"><span class="pre">locked_signals</span></code> values to the calibration data into the cache.</p></li>
+</ol>
+<p>To know more about how to interact with pyFAI-calib2, here is a
+<a class="reference external" href="https://pyfai.readthedocs.io/en/master/usage/cookbook/calib-gui/index.html#cookbook-calibration-gui">cookbook</a>
+for it.</p>
+<p>There could be multiple detectors. Each detector has a
+<code class="docutils literal notranslate"><span class="pre">Calibpreprocessor</span></code> to look after it. The <code class="docutils literal notranslate"><span class="pre">run_calibration</span></code> will
+calibrate the detecotr taken care by the first <code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> by
+default.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.calib_preprocessors[0]
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">CalibPreprocessor</span> <span class="n">of</span> <span class="n">detector</span> <span class="k">with</span> <span class="mi">0</span> <span class="n">cache</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>To calibrate another detector, use the key word arguemnt
+<code class="docutils literal notranslate"><span class="pre">preprocessor_id</span></code>. It is the index of the <code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> in the
+<code class="docutils literal notranslate"><span class="pre">xrun.calib_preprocessors</span></code>. For example, to calibrate the detector
+taken care by the second <code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code>, which has the index
+<code class="docutils literal notranslate"><span class="pre">1</span></code> in the list, use <code class="docutils literal notranslate"><span class="pre">preprocessor_id</span> <span class="pre">=</span> <span class="pre">1</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>run_calibration(preprocessor_id=1)
+</pre></div>
+</div>
+</section>
+<section id="locked-signals">
+<h2>Locked_signals<a class="headerlink" href="#locked-signals" title="Permalink to this heading"></a></h2>
+<p>In default, the motors control the z axis positions of detecotrs have
+already been registered in the <code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> in the ipython
+start up session. For example, the first <code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> has the
+<code class="docutils literal notranslate"><span class="pre">det_stage_z</span></code> as the locked signal.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.calib_preprocessors[0].locked_signals
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">SoftPositioner</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;det_stage_z&#39;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s1">&#39;det_stage&#39;</span><span class="p">,</span> <span class="n">settle_time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">egu</span><span class="o">=</span><span class="s1">&#39;mm&#39;</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">source</span><span class="o">=</span><span class="s1">&#39;computed&#39;</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>Users can remove it or add new <code class="docutils literal notranslate"><span class="pre">locked_signals</span></code> by usual python list
+operation. For example, to pop the <code class="docutils literal notranslate"><span class="pre">det_stage_z</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>det_stage_z = xrun.calib_preprocessors[0].locked_signals.pop()
+</pre></div>
+</div>
+<p>And add this motor back to the list.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.calib_preprocessors[0].locked_signals.append(det_stage_z)
+</pre></div>
+</div>
+</section>
+<section id="calibration-data-from-poni-files">
+<h2>Calibration Data from Poni Files<a class="headerlink" href="#calibration-data-from-poni-files" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> can also read the calibration data from the poni
+files and add it into the cache. There are two ways to do it. First way
+is to use <code class="docutils literal notranslate"><span class="pre">load_calib_result</span></code>. It is used when users would like to
+manually specify what <code class="docutils literal notranslate"><span class="pre">locked_signals</span></code> it should be when this
+calibration data is injected.</p>
+<p>Below is an example to use the calibration data in the “near_field.poni”
+when the <code class="docutils literal notranslate"><span class="pre">det_stage_z</span></code> is at 200 mm.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cpp0 = xrun.calib_preprocessors[0]
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cpp0.load_calib_result({&quot;det_stage_z&quot;: 200.}, &quot;near_field.poni&quot;)
+</pre></div>
+</div>
+<p>The data will be record in the cache.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cpp0._cache
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OrderedDict</span><span class="p">([(</span><span class="n">frozendict</span><span class="o">.</span><span class="n">frozendict</span><span class="p">({</span><span class="s1">&#39;det_stage_z&#39;</span><span class="p">:</span> <span class="mf">200.0</span><span class="p">}),</span>
+              <span class="p">(</span><span class="mf">1.671e-11</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;Perkin detector&#39;</span><span class="p">))])</span>
+</pre></div>
+</div>
+<p>Here, we clear the cache because we will demonstrate a second example.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cpp0.clear()
+</pre></div>
+</div>
+<p>The second way is to use the calibration data in the poni at the current
+<code class="docutils literal notranslate"><span class="pre">locked_signals</span></code> values. Below is an example to use the calibration
+data at the current <code class="docutils literal notranslate"><span class="pre">det_stage_z</span></code> position. Currently the position is
+<code class="docutils literal notranslate"><span class="pre">0.0</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>calib_data = cpp0.read(&quot;near_field.poni&quot;)
+xrun({}, cpp0.record(calib_data))
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In this way, the calibration data will be record with the key of the
+current <code class="docutils literal notranslate"><span class="pre">det_stage_z</span></code> position <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cpp0._cache
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OrderedDict</span><span class="p">([(</span><span class="n">frozendict</span><span class="o">.</span><span class="n">frozendict</span><span class="p">({</span><span class="s1">&#39;det_stage_z&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">}),</span>
+              <span class="p">(</span><span class="mf">1.671e-11</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;Perkin detector&#39;</span><span class="p">))])</span>
+</pre></div>
+</div>
+<p>This is equivalent to manually read the <code class="docutils literal notranslate"><span class="pre">det_stage_z</span></code> and add the
+calibration data. Its advantage is to make sure every operation command
+on the devices go throught the <code class="docutils literal notranslate"><span class="pre">xrun</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cpp0.load_calib_result({&quot;det_stage_z&quot;: det_stage_z.get()}, &quot;near_field.poni&quot;)
+</pre></div>
+</div>
+<p>Here, we clear the cahce to preprare for the next example.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cpp0.clear()
+</pre></div>
+</div>
+</section>
+<section id="enable-and-disable">
+<h2>Enable and Disable<a class="headerlink" href="#enable-and-disable" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> can be disabled by calling <code class="docutils literal notranslate"><span class="pre">disable</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.calib_preprocessors[0].disable()
+</pre></div>
+</div>
+<p>It can be enabled again by calling <code class="docutils literal notranslate"><span class="pre">enable</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.calib_preprocessors[0].enable()
+</pre></div>
+</div>
+</section>
+<section id="calibration-data-stream">
+<h2>Calibration Data Stream<a class="headerlink" href="#calibration-data-stream" title="Permalink to this heading"></a></h2>
+<p>The calibration data is saved in the <code class="docutils literal notranslate"><span class="pre">calib</span></code> data stream. For example,
+we collect a image on the <code class="docutils literal notranslate"><span class="pre">detector</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun(0, 1)
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INFO</span><span class="p">:</span> <span class="n">requested</span> <span class="n">exposure</span> <span class="n">time</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">-</span> <span class="o">&gt;</span> <span class="n">computed</span> <span class="n">exposure</span> <span class="n">time</span><span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">Current</span> <span class="nb">filter</span> <span class="n">status</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt1</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt2</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt3</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt4</span> <span class="p">:</span> <span class="n">In</span>
+
+
+<span class="n">Transient</span> <span class="n">Scan</span> <span class="n">ID</span><span class="p">:</span> <span class="mi">2</span>     <span class="n">Time</span><span class="p">:</span> <span class="mi">2022</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">13</span> <span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">32</span>
+<span class="n">Persistent</span> <span class="n">Unique</span> <span class="n">Scan</span> <span class="n">ID</span><span class="p">:</span> <span class="s1">&#39;eb975d15-2531-49ee-8cde-d39c7518cffa&#39;</span>
+<span class="n">WARNING</span><span class="p">:</span> <span class="n">Cannot</span> <span class="n">find</span> <span class="s1">&#39;frozendict.frozendict({&#39;</span><span class="n">det_stage_z</span><span class="s1">&#39;: 0.0})&#39;</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">cache</span><span class="o">.</span> <span class="n">Use</span> <span class="n">the</span> <span class="n">latest</span> <span class="n">one</span><span class="o">.</span>
+<span class="n">New</span> <span class="n">stream</span><span class="p">:</span> <span class="s1">&#39;calib&#39;</span>
+<span class="n">New</span> <span class="n">stream</span><span class="p">:</span> <span class="s1">&#39;dark&#39;</span>
+<span class="n">New</span> <span class="n">stream</span><span class="p">:</span> <span class="s1">&#39;primary&#39;</span>
+<span class="o">+-----------+------------+</span>
+<span class="o">|</span>   <span class="n">seq_num</span> <span class="o">|</span>       <span class="n">time</span> <span class="o">|</span>
+<span class="o">+-----------+------------+</span>
+<span class="o">|</span>         <span class="mi">1</span> <span class="o">|</span> <span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mf">32.4</span> <span class="o">|</span>
+<span class="o">+-----------+------------+</span>
+<span class="n">generator</span> <span class="n">count</span> <span class="p">[</span><span class="s1">&#39;eb975d15&#39;</span><span class="p">]</span> <span class="p">(</span><span class="n">scan</span> <span class="n">num</span><span class="p">:</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="s1">&#39;eb975d15-2531-49ee-8cde-d39c7518cffa&#39;</span><span class="p">,)</span>
+</pre></div>
+</div>
+<p>The calibration data is the <code class="docutils literal notranslate"><span class="pre">calib</span></code> stream in the database record.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>run = db[-1]
+run.stream_names
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s1">&#39;calib&#39;</span><span class="p">,</span> <span class="s1">&#39;primary&#39;</span><span class="p">,</span> <span class="s1">&#39;dark&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="disposable-calibration-data">
+<h2>Disposable Calibration Data<a class="headerlink" href="#disposable-calibration-data" title="Permalink to this heading"></a></h2>
+<p>All the calibration data in the registered <code class="docutils literal notranslate"><span class="pre">CalibPreprocessors</span></code> are
+intended to be used during the whole beamtime. If users would like to
+use some calibration data just for one specific experiment and dispose
+it after that, they can provide the keyword argument <code class="docutils literal notranslate"><span class="pre">poni_file</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun(
+    0, bp.count([detector]),
+    poni_file=[(detector, &quot;specific_calibration.poni&quot;)]
+)
+</pre></div>
+</div>
+<p>Here, users need to specify the path of the calibration data file, that
+is, <code class="docutils literal notranslate"><span class="pre">&quot;specific_calibration.poni&quot;</span></code>, and what detector they would like
+to use this file for, that is, <code class="docutils literal notranslate"><span class="pre">detector</span></code>. They can specify
+calibration data for more than one detector when using multiple
+detectors.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun(
+    0, bp.count([detector1, det_stage2]),
+    poni_file=[
+        (detector1, &quot;specific_calibration_1.poni&quot;),
+        (detector2, &quot;specific_calibration_1.poni&quot;),
+    ]
+)
+</pre></div>
+</div>
+</section>
+<section id="collecting-xrd-and-pdf-by-moving-the-detector">
+<h2>Collecting XRD and PDF by Moving the Detector<a class="headerlink" href="#collecting-xrd-and-pdf-by-moving-the-detector" title="Permalink to this heading"></a></h2>
+<p>Here, an example of collecting XRD and PDF by moving one detector in z
+axis is shown to demonstrate how the <code class="docutils literal notranslate"><span class="pre">CalibPreprocessor</span></code> works. Below
+is the user’s plan. The user wants to collect a near field image for PDF
+data and a far field image for XRD data for sample 0 at 300 K, 400 K and
+500 K. The near field image is taken at <code class="docutils literal notranslate"><span class="pre">det_stage_z</span> <span class="pre">=</span> <span class="pre">200</span> <span class="pre">mm</span></code> while
+the far field image is taken at <code class="docutils literal notranslate"><span class="pre">det_stage_z</span> <span class="pre">=</span> <span class="pre">1000</span> <span class="pre">mm</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>plan = bp.list_grid_scan([detector], cryostream, [300., 400., 500.], det_stage.z, [200., 1000.])
+</pre></div>
+</div>
+<p>The user move the <code class="docutils literal notranslate"><span class="pre">det_stage_z</span></code> to do the calibration at two different
+detector positions.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun({}, bp.mv(det_stage_z, 200.))
+run_calibration()
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun({}, bp.mv(det_stage_z, 1000.))
+run_calibration()
+</pre></div>
+</div>
+<p>If the user already has the poni files, the user can also directly use
+them like below.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cpp0 = xrun.calib_preprocessors[0]
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cpp0.load_calib_result({&quot;det_stage_z&quot;: 200.}, &quot;near_field.poni&quot;)
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cpp0.load_calib_result({&quot;det_stage_z&quot;: 1000.}, &quot;far_field.poni&quot;)
+</pre></div>
+</div>
+<p>Now, there are two calibration data records in the cache.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cpp0._cache
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OrderedDict</span><span class="p">([(</span><span class="n">frozendict</span><span class="o">.</span><span class="n">frozendict</span><span class="p">({</span><span class="s1">&#39;det_stage_z&#39;</span><span class="p">:</span> <span class="mf">200.0</span><span class="p">}),</span>
+              <span class="p">(</span><span class="mf">1.671e-11</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;Perkin detector&#39;</span><span class="p">)),</span>
+             <span class="p">(</span><span class="n">frozendict</span><span class="o">.</span><span class="n">frozendict</span><span class="p">({</span><span class="s1">&#39;det_stage_z&#39;</span><span class="p">:</span> <span class="mf">1000.0</span><span class="p">}),</span>
+              <span class="p">(</span><span class="mf">1.671e-11</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;Perkin detector&#39;</span><span class="p">))])</span>
+</pre></div>
+</div>
+<p>Then, the user starts the plan. The calibration data will be
+automatically injected to to data stream when the plan is running. What
+data will be injected is determined by the value of the
+<code class="docutils literal notranslate"><span class="pre">locked_signals</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.calib_preprocessors[0].locked_signals
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;det_stage_z&#39;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s1">&#39;det_stage&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="mf">1649882537.696865</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>The user execute the plan.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun(0, plan)
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INFO</span><span class="p">:</span> <span class="n">Current</span> <span class="nb">filter</span> <span class="n">status</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt1</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt2</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt3</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt4</span> <span class="p">:</span> <span class="n">In</span>
+
+
+<span class="n">Transient</span> <span class="n">Scan</span> <span class="n">ID</span><span class="p">:</span> <span class="mi">3</span>     <span class="n">Time</span><span class="p">:</span> <span class="mi">2022</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">13</span> <span class="mi">16</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mi">57</span>
+<span class="n">Persistent</span> <span class="n">Unique</span> <span class="n">Scan</span> <span class="n">ID</span><span class="p">:</span> <span class="s1">&#39;be8310db-452c-4002-8e1b-1a7df291b635&#39;</span>
+<span class="n">New</span> <span class="n">stream</span><span class="p">:</span> <span class="s1">&#39;calib&#39;</span>
+<span class="n">New</span> <span class="n">stream</span><span class="p">:</span> <span class="s1">&#39;dark&#39;</span>
+<span class="n">New</span> <span class="n">stream</span><span class="p">:</span> <span class="s1">&#39;primary&#39;</span>
+<span class="o">+-----------+------------+-------------+-------------+</span>
+<span class="o">|</span>   <span class="n">seq_num</span> <span class="o">|</span>       <span class="n">time</span> <span class="o">|</span> <span class="n">temperature</span> <span class="o">|</span> <span class="n">det_stage_z</span> <span class="o">|</span>
+<span class="o">+-----------+------------+-------------+-------------+</span>
+<span class="o">|</span>         <span class="mi">1</span> <span class="o">|</span> <span class="mi">16</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mf">57.5</span> <span class="o">|</span>     <span class="mf">300.000</span> <span class="o">|</span>     <span class="mf">200.000</span> <span class="o">|</span>
+<span class="o">|</span>         <span class="mi">2</span> <span class="o">|</span> <span class="mi">16</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mf">57.7</span> <span class="o">|</span>     <span class="mf">300.000</span> <span class="o">|</span>    <span class="mf">1000.000</span> <span class="o">|</span>
+<span class="o">|</span>         <span class="mi">3</span> <span class="o">|</span> <span class="mi">16</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mf">57.9</span> <span class="o">|</span>     <span class="mf">400.000</span> <span class="o">|</span>     <span class="mf">200.000</span> <span class="o">|</span>
+<span class="o">|</span>         <span class="mi">4</span> <span class="o">|</span> <span class="mi">16</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mf">58.0</span> <span class="o">|</span>     <span class="mf">400.000</span> <span class="o">|</span>    <span class="mf">1000.000</span> <span class="o">|</span>
+<span class="o">|</span>         <span class="mi">5</span> <span class="o">|</span> <span class="mi">16</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mf">58.2</span> <span class="o">|</span>     <span class="mf">500.000</span> <span class="o">|</span>     <span class="mf">200.000</span> <span class="o">|</span>
+<span class="o">|</span>         <span class="mi">6</span> <span class="o">|</span> <span class="mi">16</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mf">58.3</span> <span class="o">|</span>     <span class="mf">500.000</span> <span class="o">|</span>    <span class="mf">1000.000</span> <span class="o">|</span>
+<span class="o">+-----------+------------+-------------+-------------+</span>
+<span class="n">generator</span> <span class="n">list_grid_scan</span> <span class="p">[</span><span class="s1">&#39;be8310db&#39;</span><span class="p">]</span> <span class="p">(</span><span class="n">scan</span> <span class="n">num</span><span class="p">:</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="s1">&#39;be8310db-452c-4002-8e1b-1a7df291b635&#39;</span><span class="p">,)</span>
+</pre></div>
+</div>
+<p>There is <code class="docutils literal notranslate"><span class="pre">New</span> <span class="pre">stream:</span> <span class="pre">'calib'</span></code> craeted. This stream is where the
+calibration data is saved. Below is a visualization of the calibrated
+distances and the detector position on z axis. The recorded calibrated
+distance changes with the position of the detector.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import numpy as np
+import matplotlib.pyplot as plt
+
+
+def visualize(run):
+    dist = np.array(list(run.data(&quot;detector_dist&quot;, stream_name=&quot;calib&quot;))) * 1000
+    det_z = np.array(list(run.data(&quot;det_stage_z&quot;, stream_name=&quot;primary&quot;)))
+    seq_num = list(range(1, len(dist) + 1))
+    _, ax = plt.subplots(figsize=(6, 4))
+    ax.plot(seq_num, dist, &quot;-o&quot;, label=&quot;calibrated distance&quot;)
+    ax.plot(seq_num, det_z, &quot;--x&quot;, label=&quot;detector position&quot;)
+    ax.set_xlabel(&quot;seq_num&quot;)
+    ax.set_ylabel(&quot;position [mm]&quot;)
+    ax.legend()
+    return
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>run = db[-1]
+visualize(run)
+</pre></div>
+</div>
+<img alt="_images/auto_calib_logic_75_0.png" src="_images/auto_calib_logic_75_0.png" />
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usb_design.html" class="btn btn-neutral float-left" title="An overhaul at v1.1.0" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="usb_darkframe.html" class="btn btn-neutral float-right" title="Automatic Dark Frame" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright (c) 2016 trustees of Columbia University in the City of New York.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

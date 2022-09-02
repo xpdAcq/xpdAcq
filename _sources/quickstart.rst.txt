@@ -11,7 +11,7 @@ ipython terminals that are controlling your experiment and analysis.  After
 pasting, hit enter.
 
 Remember, to post questions about anything XPD, including software, and to see archived answers, at the `XPD-Users Google group
-<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ . If you are not already a member please request to join
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`__ . If you are not already a member please request to join
 the community
 
 XPD Data Collection Workflow Summary
@@ -20,7 +20,7 @@ XPD Data Collection Workflow Summary
 This is the summary of the steps for collection data at XPD. They are explained below.
 Carry out the steps in this order to ensure a successful experiment.
 
-  1. If you haven't already, join `XPD-Users Google group <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ . Look here for answers if you get stuck and if the answer to your question is not already there, please ask it!
+  1. If you haven't already, join `XPD-Users Google group <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`__ . Look here for answers if you get stuck and if the answer to your question is not already there, please ask it!
 
   2. ``run_calibration()`` (rerun if the experiment geometry changes).
 
@@ -58,7 +58,7 @@ Carry out the steps in this order to ensure a successful experiment.
 
 These and many more things are explained below and elsewhere in the
 documentation. `XPD-Users Google group
-<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ .
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`__ .
 
 Overview
 --------
@@ -92,7 +92,7 @@ Below we give a step-by-step guide to setting up and running a successful experi
 much more power within the ``xpdAcq`` and ``Bluesky`` software that you can explore as you get more advanced, but we recommend that
 you follow through the following guide step-by-step, typing the commands and seeing what happens, to get used to the software and,
 more importantly, to do things in the right order set up your experiment for success. `XPD-Users Google group
-<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ to find them. IPython terminals start the line with something like ``In[49]:`` and ``Out[50]``, so you should
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`__ to find them. IPython terminals start the line with something like ``In[49]:`` and ``Out[50]``, so you should
 see that in a terminal.  Try typing ``show_env()``.  If you see something like ``collection-17Q1.0`` or ``analysis-17Q1.1``
 (the numbers will change with time) then you are good, you will use these terminals to run your
 experiment and to visualize and analyze your data, respectively.  We recommend that you run ``collection`` on
@@ -224,7 +224,7 @@ just written and doesn't show.
 
 Your sample information should be loaded in an excel spreadsheet, with a well
 defined format (a template file may be found at `XPD-Users Google group
-<https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`_)
+<https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/xpd-users/_6NSRWg_-l0>`__)
 
 If the IS didn't already do it, save your sample xls file to the ``.../xpdUser/import`` directory using the name
 ``<saf_number>_sample.xlsx``, where you replace ``<saf_number>`` with the number
@@ -275,7 +275,7 @@ Place the Ni calibrant at the sample position, close the hutch and open the shut
   * Full API documentation: :ref:`calib_api`
 
   * Documentation of ``pyFAI`` calibration gui `link
-    <http://pyfai.readthedocs.io/en/latest/usage/cookbook/calibrate.html#start-pyfai-calib>`_
+    <http://pyfai.readthedocs.io/en/latest/usage/cookbook/calibrate.html#start-pyfai-calib>`__
 
 
 The resulting calibration parameters will be saved in the header of every scan you run until you
@@ -432,7 +432,7 @@ quickstart.  Please see the Bluesky documentation for more details on defining b
 
 Many, if not most, of XPD's measurements can be carried out using ``xpdAcq`` ScanPlan templates.
 We currently support four common scans-types (more will follow, please request yours at `xpd-users Google group!
-<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_ ): a
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`__ ): a
 simple count, a series of counts, a temperature scan, and a user-supplied list of temperatures.
 You can create particular ``ScanPlans`` now to use later, with all the parameters such as start-temperature,
 stop-temperature and temperature-step, or you can create
@@ -489,7 +489,7 @@ and that they are correctly linked to the samples for which they are the backgro
 
   More details are available :ref:`here <background_obj>`.
 
-  How long should you run your background scan for? See discussion `here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`_
+  How long should you run your background scan for? See discussion `here <https://groups.google.com/forum/#!topic/xpd-users/RvGa4pmDbqY>`__
   but for kapton we often do it for 15-30 minutes, though it can be highly dependent
   on the scattering properties of your sample.  For example, strongly scattering samples
   like Ni often need no background subtraction at all.
@@ -561,7 +561,7 @@ selectively if you don't want a dump of every scan.
 We use "h", short for "header", for the object given back by the NSLS-II databroker (``db``) data-fetching software.
 This is a software object that contains all the information about your scan and can
 be passed to different functions to do analysis.
-more information on headers is `here <http://nsls-ii.github.io/databroker/headers.html>`_
+more information on headers is `here <http://nsls-ii.github.io/databroker/headers.html>`__
 
 
 2. Save images and also integrate images to a 1D patterns
@@ -628,11 +628,11 @@ The ability to write your own ``bluesky`` plans gives enormous flexibility
 but has a steep learning curve, but you should be able to get help
 setting these up from your local contact.
 For more details about how to write a ``bluesky`` scan plan,
-please see `here <http://nsls-ii.github.io/bluesky/plans.html>`_.
+please see `here <http://nsls-ii.github.io/bluesky/plans.html>`__.
 
 We recommend that you use ``xpdAcq`` built-in plans wherever possible.  If there
 is a new scan plan that you think could be useful to other users, please post it to
-the `XPD-Users Google group <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_,
+the `XPD-Users Google group <https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`__,
 and suggest that perhaps it would be great to have that
 as an ``xpdAcq`` built-in ScanPlan in the future!
 
@@ -702,7 +702,7 @@ xrun.halt()      Do not perform cleanup --- just stop.
 xrun.state       Check if 'paused' or 'idle'.
 ============== ===========
 
-For more info: `here <http://nsls-ii.github.io/bluesky/state-machine.html#interactive-pause-summary>`_
+For more info: `here <http://nsls-ii.github.io/bluesky/state-machine.html#interactive-pause-summary>`__
 
 
 Write multiple-calibration plan

@@ -43,7 +43,7 @@ of rich and correct metadata with the saved data for easier retrieval later.  It
 hoped that this will greatly speed up and facilitate users' later data analysis
 and modeling workflows.
 You are reading the xpdAcq documentation.  Documentation for the NSLS-II data acquisition
-package, 'Bluesky' can be found `here <http://nsls-ii.github.io/bluesky/>`_.
+package, 'Bluesky' can be found `here <http://nsls-ii.github.io/bluesky/>`__.
 
 xpdAcq philosophy
 +++++++++++++++++

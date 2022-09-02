@@ -88,6 +88,11 @@
 <li class="toctree-l2"><a class="reference internal" href="db_export.html">Databroker Export</a></li>
 <li class="toctree-l2"><a class="reference internal" href="robot.html">Using the Robot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tomo.html">Running Tomography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_design.html">An overhaul at v1.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html">Automated Calibration Injection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_darkframe.html">Automatic Dark Frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_mask.html">Mask Data Injection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_shutter.html">Automatic Shutter Control</a></li>
 </ul>
 </li>
 </ul>
@@ -143,7 +148,7 @@ a predefined ScanPlan object, then hit return and sit back, your scan will be ca
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">xrun</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">scanplan</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">xrun</span></code> stands for “XPD run” which is a our main run engine. Full API documentation can be found <a class="reference internal" href="api_doc.html#xrun-api"><span class="std std-ref">xrun API Documentation</span></a></p>
+<p><code class="docutils literal notranslate"><span class="pre">xrun</span></code> stands for “XPD run” which is a our main run engine. Full API documentation can be found <a class="reference internal" href="api_doc.html#xrun-api"><span class="std std-ref">CustomizedRunEngine API Documentation</span></a></p>
 <p>Here are some examples of a workflow.  Assume a Ni_calibrant sample is loaded on the diffractometer
 and the <code class="docutils literal notranslate"><span class="pre">Ni</span></code> Sample object is created as well as all the <code class="docutils literal notranslate"><span class="pre">ScanPlan</span></code> we need.
 We will start by doing a scan with <code class="docutils literal notranslate"><span class="pre">Sample</span></code> object <code class="docutils literal notranslate"><span class="pre">Setup</span></code> on our <code class="docutils literal notranslate"><span class="pre">ct_1</span></code> ScanPlan.</p>
@@ -454,9 +459,9 @@ your sample</p></td>
 </pre></div>
 </div>
 <p>This <code class="docutils literal notranslate"><span class="pre">Phase</span> <span class="pre">Info</span></code> will be parsed as:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>{&#39;sample_composition&#39;: {&#39;Na&#39;:0.09, &#39;Cl&#39;:0.09, `H`:1.82, `O`:0.91},
- &#39;sample_phase&#39;: {&#39;NaCl&#39;:0.09, &#39;H20&#39;:0.91},
- &#39;composition_string&#39;: &#39;Na0.09Cl0.09H1.82O0.91&#39;}
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;sample_composition&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Na&#39;</span><span class="p">:</span><span class="mf">0.09</span><span class="p">,</span> <span class="s1">&#39;Cl&#39;</span><span class="p">:</span><span class="mf">0.09</span><span class="p">,</span> <span class="s1">&#39;H&#39;</span><span class="p">:</span><span class="mf">1.82</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">:</span><span class="mf">0.91</span><span class="p">},</span>
+ <span class="s1">&#39;sample_phase&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;NaCl&#39;</span><span class="p">:</span><span class="mf">0.09</span><span class="p">,</span> <span class="s1">&#39;H20&#39;</span><span class="p">:</span><span class="mf">0.91</span><span class="p">},</span>
+ <span class="s1">&#39;composition_string&#39;</span><span class="p">:</span> <span class="s1">&#39;Na0.09Cl0.09H1.82O0.91&#39;</span><span class="p">}</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">composition_string</span></code> is designed for data reduction software going to be

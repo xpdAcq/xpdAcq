@@ -1,7 +1,7 @@
 .. xpdAcq documentation master file, created by
-sphinx-quickstart on Thu Jan 28 11:58:44 2016.
-You can adapt this file completely to your liking, but it should at least
-contain the root `toctree` directive.
+   sphinx-quickstart on Thu Jan 28 11:58:44 2016.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
 xpdAcq documentation
 ====================
@@ -10,7 +10,7 @@ Introduction
 ++++++++++++
 
 To post questions about anything XPD, including software, and to see archived answers, please join the `XPD-Users Google group
-<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`_
+<https://groups.google.com/forum/#!forum/xpd-users;context-place=overview>`__
 
 ``xpdAcq`` is a Python package that aids data collection at the XPD beamlime. It is built on top of and augments the NSLS-II data acquisition Python
 package `bluesky <http://nsls-ii.github.io/bluesky/>`_ .
@@ -66,12 +66,6 @@ the software, please post it as a new thread at `XPD-Users
    :maxdepth: 3
 
    troubleshooting
-
-.. toctree::
-   :maxdepth: 3
-   :hidden:
-
-   release_note
 
 .. toctree::
    :maxdepth: 2

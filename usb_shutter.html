@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automatic Shutter Control &mdash; xpdAcq 1.1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Documentation" href="api_doc.html" />
+    <link rel="prev" title="Mask Data Injection" href="usb_mask.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          </a>
+              <div class="version">
+                1.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="xpdusers.html">For XPD Users</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sb_overview.html">Overview of xpd acquisition environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_icollection.html">Overview of the bsui+xpdAcq environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Beamtime.html">Setting up your Beamtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Experiment.html">Setting up your XPD acquisition objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Scan.html">ScanPlan objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html">Where did all my Sample and Scan objects go?????</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-is-your-friends">bt.list() is your friends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-gotchas">bt.list() Gotchas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Running.html">Running scans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_QuickAssess.html">Initial assessment of your data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_GlobalOptions.html">xpdAcq Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_export.html">Databroker Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot.html">Using the Robot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tomo.html">Running Tomography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_design.html">An overhaul at v1.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html">Automated Calibration Injection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_darkframe.html">Automatic Dark Frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_mask.html">Mask Data Injection</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Automatic Shutter Control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#shutterpreprocessor">ShutterPreprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logic">Logic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#enable-and-disable">Enable and Disable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#shutterconfig">ShutterConfig</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="xpdusers.html">For XPD Users</a> &raquo;</li>
+      <li>Automatic Shutter Control</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usb_shutter.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="automatic-shutter-control">
+<h1>Automatic Shutter Control<a class="headerlink" href="#automatic-shutter-control" title="Permalink to this heading"></a></h1>
+<p>In this section, the automatic shutter control in <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> is
+introduced.</p>
+<section id="shutterpreprocessor">
+<h2>ShutterPreprocessor<a class="headerlink" href="#shutterpreprocessor" title="Permalink to this heading"></a></h2>
+<p>The automatic shutter control is realized by the
+<code class="docutils literal notranslate"><span class="pre">ShutterPreprocessor</span></code>.</p>
+<p>They are registered in the <code class="docutils literal notranslate"><span class="pre">xrun.shutter_preprocessors</span></code> list.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.shutter_preprocessors
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">ShutterPreprocessor</span> <span class="k">for</span> <span class="n">detector</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">ShutterPreprocessor</span> <span class="k">for</span> <span class="n">detector1</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">ShutterPreprocessor</span> <span class="k">for</span> <span class="n">detector2</span><span class="o">&gt;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>There is an one to one mapping between a shutter preprocessors to a
+detector and a many to one mapping between shutter preprocessors to the
+fast shutter.</p>
+</section>
+<section id="logic">
+<h2>Logic<a class="headerlink" href="#logic" title="Permalink to this heading"></a></h2>
+<p>When the <code class="docutils literal notranslate"><span class="pre">ShutterPreProcessor</span></code> finds that the <code class="docutils literal notranslate"><span class="pre">detector</span></code> is
+triggered to take a light frame (not labled by <code class="docutils literal notranslate"><span class="pre">dark_group_prefix</span></code>).
+Then, it will add the open and close shutter into the plan. The logic is
+shown in the peseudo code below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">shutter</span> <span class="ow">is</span> <span class="n">closed</span> <span class="n">currently</span><span class="p">):</span>
+    <span class="nb">open</span> <span class="n">the</span> <span class="n">shutter</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">delay</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+    <span class="n">wait</span> <span class="k">for</span> <span class="n">seconds</span>
+<span class="n">trigger</span> <span class="n">the</span> <span class="n">detector</span>
+<span class="n">wait</span> <span class="k">for</span> <span class="n">the</span> <span class="n">detector</span> <span class="n">to</span> <span class="n">finish</span> <span class="n">counting</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">shutter</span> <span class="ow">is</span> <span class="n">opened</span> <span class="n">currently</span><span class="p">):</span>
+    <span class="n">close</span> <span class="n">the</span> <span class="n">shutter</span>
+</pre></div>
+</div>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<p>By using the <code class="docutils literal notranslate"><span class="pre">ShutterPreprocessor</span></code>, users can use all the predefined
+plan in the <code class="docutils literal notranslate"><span class="pre">bluesky.plans</span></code> without worrying about the shutter
+control. For example, when users would like to collect one light frame,
+they just need to run the <code class="docutils literal notranslate"><span class="pre">bluesky.plans.count</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun(0, bp.count([detector]))
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INFO</span><span class="p">:</span> <span class="n">Current</span> <span class="nb">filter</span> <span class="n">status</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt1</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt2</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt3</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt4</span> <span class="p">:</span> <span class="n">In</span>
+
+
+<span class="n">Transient</span> <span class="n">Scan</span> <span class="n">ID</span><span class="p">:</span> <span class="mi">1</span>     <span class="n">Time</span><span class="p">:</span> <span class="mi">2022</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">07</span> <span class="mi">12</span><span class="p">:</span><span class="mi">29</span><span class="p">:</span><span class="mi">55</span>
+<span class="n">Persistent</span> <span class="n">Unique</span> <span class="n">Scan</span> <span class="n">ID</span><span class="p">:</span> <span class="s1">&#39;95cc5a91-2832-45b3-95df-630c8563414c&#39;</span>
+<span class="n">New</span> <span class="n">stream</span><span class="p">:</span> <span class="s1">&#39;dark&#39;</span>
+<span class="n">New</span> <span class="n">stream</span><span class="p">:</span> <span class="s1">&#39;primary&#39;</span>
+<span class="o">+-----------+------------+</span>
+<span class="o">|</span>   <span class="n">seq_num</span> <span class="o">|</span>       <span class="n">time</span> <span class="o">|</span>
+<span class="o">+-----------+------------+</span>
+<span class="o">|</span>         <span class="mi">1</span> <span class="o">|</span> <span class="mi">12</span><span class="p">:</span><span class="mi">29</span><span class="p">:</span><span class="mf">57.1</span> <span class="o">|</span>
+<span class="o">+-----------+------------+</span>
+<span class="n">generator</span> <span class="n">count</span> <span class="p">[</span><span class="s1">&#39;95cc5a91&#39;</span><span class="p">]</span> <span class="p">(</span><span class="n">scan</span> <span class="n">num</span><span class="p">:</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="s1">&#39;95cc5a91-2832-45b3-95df-630c8563414c&#39;</span><span class="p">,)</span>
+</pre></div>
+</div>
+<p>The shutter will open automatically before the collection and close
+after that.</p>
+<p>Here is another example where users would like to collect several light
+frames at different temperatures.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun(0, bp.scan([detector], cryostream, 300, 500, 3))
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INFO</span><span class="p">:</span> <span class="n">Current</span> <span class="nb">filter</span> <span class="n">status</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt1</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt2</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt3</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt4</span> <span class="p">:</span> <span class="n">In</span>
+
+
+<span class="n">Transient</span> <span class="n">Scan</span> <span class="n">ID</span><span class="p">:</span> <span class="mi">2</span>     <span class="n">Time</span><span class="p">:</span> <span class="mi">2022</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">07</span> <span class="mi">12</span><span class="p">:</span><span class="mi">32</span><span class="p">:</span><span class="mi">39</span>
+<span class="n">Persistent</span> <span class="n">Unique</span> <span class="n">Scan</span> <span class="n">ID</span><span class="p">:</span> <span class="s1">&#39;3e72d2a9-c6ef-4278-81da-db91bd28e35c&#39;</span>
+<span class="n">New</span> <span class="n">stream</span><span class="p">:</span> <span class="s1">&#39;dark&#39;</span>
+<span class="n">New</span> <span class="n">stream</span><span class="p">:</span> <span class="s1">&#39;primary&#39;</span>
+<span class="o">+-----------+------------+-------------+</span>
+<span class="o">|</span>   <span class="n">seq_num</span> <span class="o">|</span>       <span class="n">time</span> <span class="o">|</span> <span class="n">temperature</span> <span class="o">|</span>
+<span class="o">+-----------+------------+-------------+</span>
+<span class="o">|</span>         <span class="mi">1</span> <span class="o">|</span> <span class="mi">12</span><span class="p">:</span><span class="mi">32</span><span class="p">:</span><span class="mf">41.1</span> <span class="o">|</span>     <span class="mf">300.000</span> <span class="o">|</span>
+<span class="o">|</span>         <span class="mi">2</span> <span class="o">|</span> <span class="mi">12</span><span class="p">:</span><span class="mi">32</span><span class="p">:</span><span class="mf">42.1</span> <span class="o">|</span>     <span class="mf">400.000</span> <span class="o">|</span>
+<span class="o">|</span>         <span class="mi">3</span> <span class="o">|</span> <span class="mi">12</span><span class="p">:</span><span class="mi">32</span><span class="p">:</span><span class="mf">43.1</span> <span class="o">|</span>     <span class="mf">500.000</span> <span class="o">|</span>
+<span class="o">+-----------+------------+-------------+</span>
+<span class="n">generator</span> <span class="n">scan</span> <span class="p">[</span><span class="s1">&#39;3e72d2a9&#39;</span><span class="p">]</span> <span class="p">(</span><span class="n">scan</span> <span class="n">num</span><span class="p">:</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="s1">&#39;3e72d2a9-c6ef-4278-81da-db91bd28e35c&#39;</span><span class="p">,)</span>
+</pre></div>
+</div>
+<p>During the run, the shutter will open before the image collection and
+close after that at every temperature point. Users don’t need to worry
+that the shutter keeps open during the temperature ramping.</p>
+</section>
+<section id="enable-and-disable">
+<h2>Enable and Disable<a class="headerlink" href="#enable-and-disable" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">ShutterPreprocessor</span></code> can be disabled by calling <code class="docutils literal notranslate"><span class="pre">disable</span></code>.
+After disabled, it will do noting to the users’ plans.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.shutter_preprocessors[0].disable()
+</pre></div>
+</div>
+<p>It can be enabled again by calling <code class="docutils literal notranslate"><span class="pre">enable</span></code>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.shutter_preprocessors[0].enable()
+</pre></div>
+</div>
+</section>
+<section id="shutterconfig">
+<h2>ShutterConfig<a class="headerlink" href="#shutterconfig" title="Permalink to this heading"></a></h2>
+<p>The open and close state are defined in the <code class="docutils literal notranslate"><span class="pre">ShutterConfig</span></code> object.</p>
+<p>This object is a private attribute of <code class="docutils literal notranslate"><span class="pre">ShutterPreprocessor</span></code> should be
+changed by users but the values in it can be reference to users when
+they are writing their own shutter control in the plan.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.shutter_preprocessors[0]._shutter_config
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ShutterConfig</span><span class="p">(</span><span class="n">shutter</span><span class="o">=</span><span class="n">FastShutter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;shutter&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s1">&#39;closed&#39;</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="mf">1649349163.1470232</span><span class="p">),</span> <span class="n">open_state</span><span class="o">=</span><span class="s1">&#39;open&#39;</span><span class="p">,</span> <span class="n">close_state</span><span class="o">=</span><span class="s1">&#39;closed&#39;</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usb_mask.html" class="btn btn-neutral float-left" title="Mask Data Injection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api_doc.html" class="btn btn-neutral float-right" title="API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright (c) 2016 trustees of Columbia University in the City of New York.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>An overhaul at v1.1.0 &mdash; xpdAcq 1.1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Automated Calibration Injection" href="usb_calibration.html" />
+    <link rel="prev" title="Running Tomography" href="tomo.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          </a>
+              <div class="version">
+                1.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="xpdusers.html">For XPD Users</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sb_overview.html">Overview of xpd acquisition environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_icollection.html">Overview of the bsui+xpdAcq environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Beamtime.html">Setting up your Beamtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Experiment.html">Setting up your XPD acquisition objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Scan.html">ScanPlan objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html">Where did all my Sample and Scan objects go?????</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-is-your-friends">bt.list() is your friends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-gotchas">bt.list() Gotchas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Running.html">Running scans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_QuickAssess.html">Initial assessment of your data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_GlobalOptions.html">xpdAcq Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_export.html">Databroker Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot.html">Using the Robot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tomo.html">Running Tomography</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">An overhaul at v1.1.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#automated-processes">Automated Processes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#shutter-control">Shutter Control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dark-frame">Dark Frame</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#calibration">Calibration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mask">Mask</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#final-goal">Final Goal</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html">Automated Calibration Injection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_darkframe.html">Automatic Dark Frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_mask.html">Mask Data Injection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_shutter.html">Automatic Shutter Control</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="xpdusers.html">For XPD Users</a> &raquo;</li>
+      <li>An overhaul at v1.1.0</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usb_design.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="an-overhaul-at-v1-1-0">
+<h1>An overhaul at v1.1.0<a class="headerlink" href="#an-overhaul-at-v1-1-0" title="Permalink to this heading"></a></h1>
+<p>I made an important update at v1.1.0. I will introduce what I did, why I did it, and what I achieved by doing it. In principle, I didn’t change any behaviors in the use cases for previous versions. However, if you developed any software based on the API of the XpdAcq, I recommend you reading this section.</p>
+<section id="automated-processes">
+<h2>Automated Processes<a class="headerlink" href="#automated-processes" title="Permalink to this heading"></a></h2>
+<p>The XpdAcq automated three important processes in the x-ray scattering experiments: (1) open and close shutter (2) take dark frame and save it (3) run calibration and save the result.</p>
+<p>I will first show how the previous XpaAcq did it, why it was not good enough, and then demonstrate what is like after my update. The details of the code are shown in the later sections. Here, I only introduced the logics. I also shows the new fucntion of mask injection in the last paragraph.</p>
+<section id="shutter-control">
+<h3>Shutter Control<a class="headerlink" href="#shutter-control" title="Permalink to this heading"></a></h3>
+<p>Everytime a light frame is going to be taken, the shutter should open and then close after this is done. This behavior is programmed in the beamtime scan plans in the previous XqdAcq. However, there is an issue doing it this way. If users would like to do anything other than the XpaAcq programmed, they need to explicitly write the open and close shutter in their plan. This is quite hard for usres without the knowledge to the beamline and python programming skills.</p>
+<p>I would like to make the control of the shutter taken cared in a more automated way. I developed a shutter preprocessor to realize it. This preprocessor reads the users’ plan, and if it sees that a light frame is going to be taken, it will open the shutter before it, wait for a time specified by the user, and then continue the plan. When it finds that the light frame has been taken, it will close the shutter. This preprocessor is subcribed in the <cite>xrun.shutter_preprocessors</cite>.</p>
+<p>Because of this preprocessor, users do not need to worry about the shutter control. They can use any helper functions in the <cite>bluesky.plans</cite> or write their own plan without knowing what is the name of the shutter and how it opens and closes.</p>
+</section>
+<section id="dark-frame">
+<h3>Dark Frame<a class="headerlink" href="#dark-frame" title="Permalink to this heading"></a></h3>
+<p>The preivous XpdAcq took dark frame automatically before every bluesky run. It realized it by using a preprocessor. This preprocessor will read users’ bluesky plan step by step and then if it finds a <cite>open_run</cite>, it will decide whether a new dark frame needs to be taken. If there is such a need, it will add a step in users’ plan to close the shutter, take the dark frame, save it in database, inject the metadata about how to find the dark frame, and finally open the shutter again.</p>
+<p>You may already find the problems in this method.</p>
+<ul class="simple">
+<li><p>Because it saves the dark frame in a separate individual document, the data analysis servers must query the database everytime it needs to do a dark subtraction.</p></li>
+<li><p>It force users to user no more than one dark frame for the entire run, and thus cannot satify the needs for multiple dark frame when the experiment is long.</p></li>
+<li><p>The code of this preprocessor is hard coded in the <cite>xrun</cite>. It makes the development hard. This dark frame preprocessor can only be used for one detector.</p></li>
+<li><p>This only take care of one detector and if the detector is changed, it cannot distinguish their dark frame.</p></li>
+</ul>
+<p>I deprecate this dark frame preprocessor and made a new one.</p>
+<ul class="simple">
+<li><p>It save the dark frame in its cache, and injected the data in the <cite>dark</cite> event stream.</p></li>
+<li><p>It check the necessity to take dark frame before every light frame is taken. It allows users to fully control how their dark frame was taken in an experiment.</p></li>
+<li><p>This one was separated from the <cite>xrun</cite>. It can be subcribed in a list <cite>xrun.dark_preprocessors</cite>. One dark frame preprocessor takes care of one detector.</p></li>
+<li><p>It allows the usage of multiple detectors with automatic dark frame without mixing their dark frame data, which the old preprocessor did.</p></li>
+</ul>
+</section>
+<section id="calibration">
+<h3>Calibration<a class="headerlink" href="#calibration" title="Permalink to this heading"></a></h3>
+<p>The calibration in preivous xpdacq was also done by preprocessing the plan. It first saves the calibration results in a poni file and then read and inject the data in this poni file in the start documents. There are some problems with this method.</p>
+<ul class="simple">
+<li><p>One bluesky run only has one start document. It force the calibration data to be constant in the whole runk, which is not always the case. An typical example is to move the detector back and forth to take far field image and near field image.</p></li>
+<li><p>It assumes that there is only one detector. If there is another detector, it cannot distinguish which calibration data to use.</p></li>
+<li><p>It only keeps the latest calibration data in the record. Users needs to do calibration again even when they just change the experiment setup back to the previous setup.</p></li>
+<li><p>This preprocessing is hard coded in the <cite>xrun</cite>.</p></li>
+</ul>
+<p>I designed the calibration preprocessor to solve these problems. The calibration preprocessor is separated from the <cite>xrun</cite> and it is subcribed in the list <cite>xrun.calib_preprocessors</cite> to take effect. It hosts a cache of the calibration data. When a light frame is going to be taken, it will check the position of the detectors (or other devices specified by the user), find the calibration data, and inject the data in the <cite>calib</cite> even stream. It enables the users to move the detector or use multiple detector during the experiments without worrying that calibration data is not correct. It is also quicker because it doesn’t needs to read a file every time. It is also compatible with the previous one. It saves the latest result in a poni file so that the latest results are always loaded if <cite>bsui</cite> is restarted.</p>
+</section>
+<section id="mask">
+<h3>Mask<a class="headerlink" href="#mask" title="Permalink to this heading"></a></h3>
+<p>In the past, users cannot give their own masks in the data processing. They can only expect the automasking gives them a good results. But now, because of the mask preprocessor, the users can give any masks they want. The mask preprocessor will inject the mask data in <cite>mask</cite> event stream. This event stream can be used again by the data analysis server.</p>
+</section>
+</section>
+<section id="final-goal">
+<h2>Final Goal<a class="headerlink" href="#final-goal" title="Permalink to this heading"></a></h2>
+<p>My ultimate goal of the development is to fulfill the initial motivation of the XpdAcq, that is, to make bluesky easy to use in the x-ray scattering experiments. The previous version solved this problem but it left the room for improvement. As a frequent issue, every time the users would like to run some experiments out of the scope of the helper functions in the <cite>beamtime</cite> module, I need to write a pretty long script for them. After this improvements, the users can actually use the well developed bluesky library without any more knowledge or skills.</p>
+<p>For example, in the past, the users needs to worry about all kinds of things like calibration, shutter or dark frame when they just would like to measure diffraction images at a series temperature at a near field for PDF and a far field for XRD. Now, they just write the code below and things will work out for them.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">bluesky.plans</span> <span class="k">as</span> <span class="nn">bp</span>
+
+<span class="n">plan</span> <span class="o">=</span> <span class="n">bp</span><span class="o">.</span><span class="n">grid_scan</span><span class="p">([</span><span class="n">detector</span><span class="p">],</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">num_of_points</span><span class="p">,</span> <span class="n">detector_z</span><span class="p">,</span> <span class="n">near_field</span><span class="p">,</span> <span class="n">far_field</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">xrun</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">plan</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tomo.html" class="btn btn-neutral float-left" title="Running Tomography" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="usb_calibration.html" class="btn btn-neutral float-right" title="Automated Calibration Injection" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright (c) 2016 trustees of Columbia University in the City of New York.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -60,6 +60,11 @@
 <li class="toctree-l2"><a class="reference internal" href="db_export.html">Databroker Export</a></li>
 <li class="toctree-l2"><a class="reference internal" href="robot.html">Using the Robot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tomo.html">Running Tomography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_design.html">An overhaul at v1.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html">Automated Calibration Injection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_darkframe.html">Automatic Dark Frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_mask.html">Mask Data Injection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_shutter.html">Automatic Shutter Control</a></li>
 </ul>
 </li>
 </ul>
@@ -102,6 +107,7 @@
              
   <section id="for-xpd-users">
 <span id="xpdu"></span><h1>For XPD Users<a class="headerlink" href="#for-xpd-users" title="Permalink to this heading"></a></h1>
+<p>I will introduce how to use the software in an ipython or jupyter notebook session. I will first show the typical usage in the sections below.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="sb_overview.html">Overview of xpd acquisition environment</a></li>
@@ -159,6 +165,51 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tomo.html">Running Tomography</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tomo.html#running-a-tomographic-scan">Running a tomographic scan</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p>If you would like to know more about what happened behind, I recommend reading the sections below. I wrote about how the calibration, dark frame, mask and shutter are automatically controlled and how to tune their behavior using your own configuration.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usb_design.html">An overhaul at v1.1.0</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usb_design.html#automated-processes">Automated Processes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_design.html#final-goal">Final Goal</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usb_calibration.html">Automated Calibration Injection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html#calibpreprocessor">CalibPreprocessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html#logic">Logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html#run-calibration">Run Calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html#locked-signals">Locked_signals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html#calibration-data-from-poni-files">Calibration Data from Poni Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html#enable-and-disable">Enable and Disable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html#calibration-data-stream">Calibration Data Stream</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html#disposable-calibration-data">Disposable Calibration Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html#collecting-xrd-and-pdf-by-moving-the-detector">Collecting XRD and PDF by Moving the Detector</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usb_darkframe.html">Automatic Dark Frame</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usb_darkframe.html#dark-frame-preprocessor">Dark Frame Preprocessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_darkframe.html#logic">Logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_darkframe.html#tune-configuration">Tune Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_darkframe.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_darkframe.html#dark-frame-data-stream">Dark Frame Data Stream</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_darkframe.html#current-limitation">Current Limitation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_darkframe.html#more-information">More Information</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usb_mask.html">Mask Data Injection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usb_mask.html#maskpreprocessor">MaskPreprocessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_mask.html#use-in-xrun">Use in xrun</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usb_shutter.html">Automatic Shutter Control</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usb_shutter.html#shutterpreprocessor">ShutterPreprocessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_shutter.html#logic">Logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_shutter.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_shutter.html#enable-and-disable">Enable and Disable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_shutter.html#shutterconfig">ShutterConfig</a></li>
 </ul>
 </li>
 </ul>

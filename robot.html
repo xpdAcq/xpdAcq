@@ -66,6 +66,11 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="tomo.html">Running Tomography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_design.html">An overhaul at v1.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html">Automated Calibration Injection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_darkframe.html">Automatic Dark Frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_mask.html">Mask Data Injection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_shutter.html">Automatic Shutter Control</a></li>
 </ul>
 </li>
 </ul>
@@ -112,7 +117,7 @@
 <p>XPD is equipped with a sample loading robot, which requires special syntax to use properly.</p>
 <section id="load-data-into-bt-as-usual">
 <h2>0. Load data into <code class="docutils literal notranslate"><span class="pre">bt</span></code> as usual<a class="headerlink" href="#load-data-into-bt-as-usual" title="Permalink to this heading"></a></h2>
-<p>Follow the normal routine for loading data from the sample spreadsheet from <a href="#id1"><span class="problematic" id="id2">import_sample_</span></a>.</p>
+<p>Follow the normal routine for loading data from the sample spreadsheet.</p>
 </section>
 <section id="tell-bt-about-where-the-samples-are-loaded-in-the-robot-magazine">
 <h2>1. Tell <code class="docutils literal notranslate"><span class="pre">bt</span></code> about where the samples are loaded in the robot magazine<a class="headerlink" href="#tell-bt-about-where-the-samples-are-loaded-in-the-robot-magazine" title="Permalink to this heading"></a></h2>
@@ -120,10 +125,7 @@
 This is achieved by running <code class="docutils literal notranslate"><span class="pre">bt.robot_location_number()</span></code>.
 This will prompt you to enter the location for each sample currently in
 <code class="docutils literal notranslate"><span class="pre">bt</span></code>.
-If the sample is not in the magazine that’s ok just leave the prompt</p>
-<blockquote>
-<div><p>blank and hit <code class="docutils literal notranslate"><span class="pre">&lt;enter&gt;</span></code>.</p>
-</div></blockquote>
+If the sample is not in the magazine that’s ok just leave the prompt blank and hit <code class="docutils literal notranslate"><span class="pre">&lt;enter&gt;</span></code>.</p>
 </section>
 <section id="run-xrun-with-the-robot-flag">
 <h2>2. Run <code class="docutils literal notranslate"><span class="pre">xrun</span></code> with the robot flag<a class="headerlink" href="#run-xrun-with-the-robot-flag" title="Permalink to this heading"></a></h2>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automatic Dark Frame &mdash; xpdAcq 1.1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Mask Data Injection" href="usb_mask.html" />
+    <link rel="prev" title="Automated Calibration Injection" href="usb_calibration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          </a>
+              <div class="version">
+                1.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="xpdusers.html">For XPD Users</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sb_overview.html">Overview of xpd acquisition environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_icollection.html">Overview of the bsui+xpdAcq environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Beamtime.html">Setting up your Beamtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Experiment.html">Setting up your XPD acquisition objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Scan.html">ScanPlan objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html">Where did all my Sample and Scan objects go?????</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-is-your-friends">bt.list() is your friends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Where.html#bt-list-gotchas">bt.list() Gotchas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_Running.html">Running scans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_QuickAssess.html">Initial assessment of your data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_GlobalOptions.html">xpdAcq Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db_export.html">Databroker Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robot.html">Using the Robot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tomo.html">Running Tomography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_design.html">An overhaul at v1.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_calibration.html">Automated Calibration Injection</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Automatic Dark Frame</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#dark-frame-preprocessor">Dark Frame Preprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logic">Logic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tune-configuration">Tune Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dark-frame-data-stream">Dark Frame Data Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#current-limitation">Current Limitation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#more-information">More Information</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usb_mask.html">Mask Data Injection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usb_shutter.html">Automatic Shutter Control</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="xpdusers.html">For XPD Users</a> &raquo;</li>
+      <li>Automatic Dark Frame</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usb_darkframe.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="automatic-dark-frame">
+<h1>Automatic Dark Frame<a class="headerlink" href="#automatic-dark-frame" title="Permalink to this heading"></a></h1>
+<p>In this section, the automatic dark frame in the <code class="docutils literal notranslate"><span class="pre">xpdAcq</span></code> is
+introduced.</p>
+<section id="dark-frame-preprocessor">
+<h2>Dark Frame Preprocessor<a class="headerlink" href="#dark-frame-preprocessor" title="Permalink to this heading"></a></h2>
+<p>The dark frame is taken care by <code class="docutils literal notranslate"><span class="pre">DarkPreprocessor</span></code>.</p>
+<p>It is registered in the <code class="docutils literal notranslate"><span class="pre">xrun.dark_preprocessors</span></code> list and will be
+automatically applied on the users’ plan when the <code class="docutils literal notranslate"><span class="pre">xrun</span></code> is called.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.dark_preprocessors
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">DarkPreprocessor</span> <span class="mi">0</span> <span class="n">snapshots</span> <span class="n">cached</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">DarkPreprocessor</span> <span class="mi">0</span> <span class="n">snapshots</span> <span class="n">cached</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="o">&lt;</span><span class="n">DarkPreprocessor</span> <span class="mi">0</span> <span class="n">snapshots</span> <span class="n">cached</span><span class="o">&gt;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>There could be more than one preprocessor, each for a different detector
+or a different strategy for the same detector.</p>
+</section>
+<section id="logic">
+<h2>Logic<a class="headerlink" href="#logic" title="Permalink to this heading"></a></h2>
+<p>Here is the introduction of the logic of the automatic dark frame. When
+<code class="docutils literal notranslate"><span class="pre">DarkPreprocessor</span></code> finds a <code class="docutils literal notranslate"><span class="pre">trigger</span></code> of the <code class="docutils literal notranslate"><span class="pre">detector</span></code> and this
+<code class="docutils literal notranslate"><span class="pre">trigger</span></code> is not for a dark frame (labeled by <code class="docutils literal notranslate"><span class="pre">dark_group_prefix</span></code>),
+it will decide what to do based on the situations. The logic is shown in
+the peseudocode below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">no</span> <span class="n">dark</span> <span class="n">frames</span> <span class="n">have</span> <span class="n">been</span> <span class="n">taken</span> <span class="n">before</span><span class="p">):</span>
+    <span class="n">take</span> <span class="n">the</span> <span class="n">first</span> <span class="n">dark</span> <span class="n">frame</span> <span class="ow">and</span> <span class="n">save</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">cache</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">they</span> <span class="n">were</span> <span class="ow">not</span> <span class="n">taken</span> <span class="n">under</span> <span class="n">the</span> <span class="n">same</span> <span class="n">situation</span><span class="p">):</span>
+        <span class="n">take</span> <span class="n">a</span> <span class="n">new</span> <span class="n">dark</span> <span class="n">frame</span> <span class="ow">and</span> <span class="n">save</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">cache</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">they</span> <span class="n">expired</span><span class="p">):</span>
+            <span class="n">take</span> <span class="n">a</span> <span class="n">new</span> <span class="n">dark</span> <span class="n">frame</span> <span class="ow">and</span> <span class="n">update</span> <span class="n">the</span> <span class="n">cache</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">don</span><span class="s1">&#39;t take new dark frame but use the dark frame in the cache</span>
+</pre></div>
+</div>
+<p>Here, the <code class="docutils literal notranslate"><span class="pre">taken</span> <span class="pre">under</span> <span class="pre">the</span> <span class="pre">same</span> <span class="pre">situation</span></code> means that the values of
+the <code class="docutils literal notranslate"><span class="pre">locked_signals</span></code> are the same. This criterion can be used to take
+new dark frame when the frame acquisition time or the number of frames
+per image change.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">expired</span></code> means that the life time of the cached dark frame is
+longer than the <code class="docutils literal notranslate"><span class="pre">max_age</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">take</span> <span class="pre">a</span> <span class="pre">dark</span> <span class="pre">frame</span></code> means a series of operations including:</p>
+<ul class="simple">
+<li><p>close shutter if it is not closed</p></li>
+<li><p>unstage and stage detector to make sure the dark frame is in an
+individual tiff file</p></li>
+<li><p>trigger detector</p></li>
+<li><p>wait for the detector to finish counting</p></li>
+<li><p>unstage and stage detector to make sure the detector save the future
+frames in a separate tiff file</p></li>
+<li><p>move the shutter to the previous state before the dark frame</p></li>
+</ul>
+</section>
+<section id="tune-configuration">
+<h2>Tune Configuration<a class="headerlink" href="#tune-configuration" title="Permalink to this heading"></a></h2>
+<p>The configuration of the <code class="docutils literal notranslate"><span class="pre">DarkPreprocessors</span></code> can be tuned by directly
+changing the attribute of its class. Below is an example to tune the
+<code class="docutils literal notranslate"><span class="pre">max_age</span></code> to <code class="docutils literal notranslate"><span class="pre">0.</span></code>, which means that a new dark frame will always be
+collected whenever a light frame is going to be taken.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.dark_preprocessors[0].max_age = 0.
+</pre></div>
+</div>
+<p>If there is no need to use this preprocessor, below is the way to
+disable it.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.dark_preprocessors[0].disable()
+</pre></div>
+</div>
+<p>If it needs to be used after disabled, below is the way to enable it
+again.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun.dark_preprocessors[0].enable()
+</pre></div>
+</div>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<p>Usually, users don’t need to create the these preprocessors. The
+preprocessors will be created during the start up of the ipython
+session. Users just need to run the <code class="docutils literal notranslate"><span class="pre">xrun</span></code> as usual.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xrun(0, 1)
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INFO</span><span class="p">:</span> <span class="n">requested</span> <span class="n">exposure</span> <span class="n">time</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">-</span> <span class="o">&gt;</span> <span class="n">computed</span> <span class="n">exposure</span> <span class="n">time</span><span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">Current</span> <span class="nb">filter</span> <span class="n">status</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt1</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt2</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt3</span> <span class="p">:</span> <span class="n">In</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">flt4</span> <span class="p">:</span> <span class="n">In</span>
+
+
+<span class="n">Transient</span> <span class="n">Scan</span> <span class="n">ID</span><span class="p">:</span> <span class="mi">1</span>     <span class="n">Time</span><span class="p">:</span> <span class="mi">2022</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">13</span> <span class="mi">10</span><span class="p">:</span><span class="mi">55</span><span class="p">:</span><span class="mi">26</span>
+<span class="n">Persistent</span> <span class="n">Unique</span> <span class="n">Scan</span> <span class="n">ID</span><span class="p">:</span> <span class="s1">&#39;6c700510-65c9-4025-8d7e-5352cb9fdf8b&#39;</span>
+<span class="n">New</span> <span class="n">stream</span><span class="p">:</span> <span class="s1">&#39;dark&#39;</span>
+<span class="n">New</span> <span class="n">stream</span><span class="p">:</span> <span class="s1">&#39;primary&#39;</span>
+<span class="o">+-----------+------------+</span>
+<span class="o">|</span>   <span class="n">seq_num</span> <span class="o">|</span>       <span class="n">time</span> <span class="o">|</span>
+<span class="o">+-----------+------------+</span>
+<span class="o">|</span>         <span class="mi">1</span> <span class="o">|</span> <span class="mi">10</span><span class="p">:</span><span class="mi">55</span><span class="p">:</span><span class="mf">27.0</span> <span class="o">|</span>
+<span class="o">+-----------+------------+</span>
+<span class="n">generator</span> <span class="n">count</span> <span class="p">[</span><span class="s1">&#39;6c700510&#39;</span><span class="p">]</span> <span class="p">(</span><span class="n">scan</span> <span class="n">num</span><span class="p">:</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="s1">&#39;6c700510-65c9-4025-8d7e-5352cb9fdf8b&#39;</span><span class="p">,)</span>
+</pre></div>
+</div>
+</section>
+<section id="dark-frame-data-stream">
+<h2>Dark Frame Data Stream<a class="headerlink" href="#dark-frame-data-stream" title="Permalink to this heading"></a></h2>
+<p>The dark frames are saved in the <code class="docutils literal notranslate"><span class="pre">dark</span></code> stream by default while the
+light frames are in the <code class="docutils literal notranslate"><span class="pre">primary</span></code> stream by default.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>run = db[-1]
+light_image = next(run.data(&quot;detector_image&quot;, stream_name=&quot;primary&quot;))[0]
+dark_image = next(run.data(&quot;detector_image&quot;, stream_name=&quot;dark&quot;))[0]
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import numpy as np
+import matplotlib.pyplot as plt
+import xarray as xr
+
+
+def visualize(light_image: np.ndarray, dark_image: np.ndarray) -&gt; None:
+    subtracted_image = light_image - dark_image
+    images = [light_image, dark_image, subtracted_image]
+    titles = [&quot;Light&quot;, &quot;Dark&quot;, &quot;Subtracted&quot;]
+    _, axes = plt.subplots(1, 3, figsize=(12, 4), dpi=72.)
+    for image, title, ax in zip(images, titles, axes):
+        ax.imshow(image, vmax=7000.)
+        ax.set_title(title)
+        ax.set_xticks([])
+        ax.set_yticks([])
+    return
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>visualize(light_image, dark_image)
+</pre></div>
+</div>
+<img alt="_images/dark_frame_logic_24_0.png" src="_images/dark_frame_logic_24_0.png" />
+</section>
+<section id="current-limitation">
+<h2>Current Limitation<a class="headerlink" href="#current-limitation" title="Permalink to this heading"></a></h2>
+<p>Current version of the <code class="docutils literal notranslate"><span class="pre">DarkPreprocessor</span></code> has the unexpected behavior
+if two detectors are triggered simutaneously and two dark frames are
+needed at the same time. This was address in <a class="reference external" href="https://github.com/bluesky/bluesky-darkframes/issues/35">the issue
+here</a>.</p>
+<p>The suggestion is to use <code class="docutils literal notranslate"><span class="pre">trigger_and_read</span></code> on the two detector
+separately. In the future, the <code class="docutils literal notranslate"><span class="pre">DarkPreprocessor</span></code> will be enhanced to
+take care of multiple detectors in a coherent way.</p>
+</section>
+<section id="more-information">
+<h2>More Information<a class="headerlink" href="#more-information" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DarkPreprocessor</span></code> is a wrapper class of the <code class="docutils literal notranslate"><span class="pre">DarkFramePreprocessor</span></code>
+in the <code class="docutils literal notranslate"><span class="pre">bluesky-darkframes</span></code> package. To know more information about
+it, please visit the <a class="reference external" href="https://blueskyproject.io/bluesky-darkframes/">bluesky-darkframes
+documentation</a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usb_calibration.html" class="btn btn-neutral float-left" title="Automated Calibration Injection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="usb_mask.html" class="btn btn-neutral float-right" title="Mask Data Injection" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright (c) 2016 trustees of Columbia University in the City of New York.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

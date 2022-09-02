@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setup Profile Collection &mdash; xpdAcq 1.1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Initializing a new beamtime for a user" href="sb_newBeamtime.html" />
+    <link rel="prev" title="Cheat Sheet" href="sb_cheat_sheet.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> xpdAcq
+          </a>
+              <div class="version">
+                1.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="xpdusers.html">For XPD Users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_doc.html">API Documentation</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="beamlinestaff.html">For Beamline Staff</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="sb_cheat_sheet.html">Cheat Sheet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_overview.html">Overview of xpd acquisition environment</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Setup Profile Collection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_icollection.html">Overview of the bsui+xpdAcq environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_newBeamtime.html">Initializing a new beamtime for a user</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sb_endBeamtime.html">Finalizing and ending a completed beamtime for a user</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">xpdAcq Change Log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xpdAcq</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="beamlinestaff.html">For Beamline Staff</a> &raquo;</li>
+      <li>Setup Profile Collection</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/sb_profile_collection.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="setup-profile-collection">
+<span id="profile-collection"></span><h1>Setup Profile Collection<a class="headerlink" href="#setup-profile-collection" title="Permalink to this heading"></a></h1>
+<p>I will introduce how to set up the profile collection for the <cite>IPython</cite> session in this section. The profile collection is a folder of <cite>*.py</cite> files. These files will be executed in order when <cite>bsui</cite> is called. The <cite>xrun</cite> and other helper functions are added into the namespace by one of the <cite>*.py</cite> file. Its usual name is <cite>999-load.py</cite> or <cite>94-load.py</cite>.</p>
+<p>This file has a big change at the version <cite>1.1.0</cite>. Thus, there is a if clause to determine how to create the python objects differently.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;XpdAcq Initializatoion</span>
+
+<span class="sd">Initialize the XpdAcq objects for xpdacq &gt;= 1.1.0.</span>
+<span class="sd">This file will do the following changes to the name space:</span>
+
+<span class="sd">    (1) create objects of `xrun`, `glbl` etc. using the UserInterface class in XpdAcq.</span>
+<span class="sd">    (2) import helper functions for users from XpdAcq</span>
+<span class="sd">    (3) change the home directory to `glbl[&#39;home&#39;]` or `glbl[&#39;base&#39;]`</span>
+<span class="sd">    (4) disable the logging of pyFAI</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">xpdacq</span>
+
+<span class="n">xpdacq_version</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">xpdacq</span><span class="o">.</span><span class="n">__version__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)))</span>
+
+<span class="k">if</span> <span class="n">xpdacq_version</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">from</span> <span class="nn">xpdacq.xpdacq_conf</span> <span class="kn">import</span> <span class="p">(</span><span class="n">glbl_dict</span><span class="p">,</span> <span class="n">configure_device</span><span class="p">,</span>
+                                <span class="n">_reload_glbl</span><span class="p">,</span> <span class="n">_set_glbl</span><span class="p">,</span>
+                                <span class="n">_load_beamline_config</span><span class="p">)</span>
+
+    <span class="c1"># configure experiment device being used in current version</span>
+    <span class="k">if</span> <span class="n">glbl_dict</span><span class="p">[</span><span class="s1">&#39;is_simulation&#39;</span><span class="p">]:</span>
+        <span class="kn">from</span> <span class="nn">xpdacq.simulation</span> <span class="kn">import</span> <span class="p">(</span><span class="n">xpd_pe1c</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">cs700</span><span class="p">,</span> <span class="n">shctl1</span><span class="p">,</span>
+                                    <span class="n">ring_current</span><span class="p">,</span> <span class="n">fb</span><span class="p">)</span>
+        <span class="n">pe1c</span> <span class="o">=</span> <span class="n">xpd_pe1c</span> <span class="c1"># alias</span>
+
+    <span class="n">configure_device</span><span class="p">(</span><span class="n">area_det</span><span class="o">=</span><span class="n">pe1c</span><span class="p">,</span> <span class="n">shutter</span><span class="o">=</span><span class="n">fs</span><span class="p">,</span>
+                    <span class="n">temp_controller</span><span class="o">=</span><span class="n">eurotherm</span><span class="p">,</span> <span class="c1">#changed from None to eurotherm on 3/22/19 - DPO</span>
+                    <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+                    <span class="n">filter_bank</span><span class="o">=</span><span class="n">fb</span><span class="p">,</span>
+                    <span class="n">ring_current</span><span class="o">=</span><span class="n">ring_current</span><span class="p">)</span>
+
+    <span class="c1"># cache previous glbl state</span>
+    <span class="n">reload_glbl_dict</span> <span class="o">=</span> <span class="n">_reload_glbl</span><span class="p">()</span>
+    <span class="kn">from</span> <span class="nn">xpdacq.glbl</span> <span class="kn">import</span> <span class="n">glbl</span>
+
+    <span class="c1"># reload beamtime</span>
+    <span class="kn">from</span> <span class="nn">xpdacq.beamtimeSetup</span> <span class="kn">import</span> <span class="p">(</span><span class="n">start_xpdacq</span><span class="p">,</span> <span class="n">_start_beamtime</span><span class="p">,</span>
+                                    <span class="n">_end_beamtime</span><span class="p">)</span>
+
+    <span class="n">bt</span> <span class="o">=</span> <span class="n">start_xpdacq</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">bt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;INFO: Reload beamtime objects:</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bt</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">reload_glbl_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_set_glbl</span><span class="p">(</span><span class="n">glbl</span><span class="p">,</span> <span class="n">reload_glbl_dict</span><span class="p">)</span>
+
+    <span class="c1"># import necessary modules</span>
+    <span class="kn">from</span> <span class="nn">xpdacq.xpdacq</span> <span class="kn">import</span> <span class="o">*</span>
+    <span class="kn">from</span> <span class="nn">xpdacq.beamtime</span> <span class="kn">import</span> <span class="o">*</span>
+    <span class="kn">from</span> <span class="nn">xpdacq.utils</span> <span class="kn">import</span> <span class="n">import_sample_info</span>
+
+    <span class="c1"># instantiate xrun without beamtime, like bluesky setup</span>
+    <span class="n">xrun</span> <span class="o">=</span> <span class="n">CustomizedRunEngine</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">xrun</span><span class="o">.</span><span class="n">md</span><span class="p">[</span><span class="s1">&#39;beamline_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">glbl</span><span class="p">[</span><span class="s1">&#39;beamline_id&#39;</span><span class="p">]</span>
+    <span class="n">xrun</span><span class="o">.</span><span class="n">md</span><span class="p">[</span><span class="s1">&#39;group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">glbl</span><span class="p">[</span><span class="s1">&#39;group&#39;</span><span class="p">]</span>
+    <span class="n">xrun</span><span class="o">.</span><span class="n">md</span><span class="p">[</span><span class="s1">&#39;facility&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">glbl</span><span class="p">[</span><span class="s1">&#39;facility&#39;</span><span class="p">]</span>
+    <span class="n">beamline_config</span> <span class="o">=</span> <span class="n">_load_beamline_config</span><span class="p">(</span><span class="n">glbl</span><span class="p">[</span><span class="s1">&#39;blconfig_path&#39;</span><span class="p">])</span>
+    <span class="n">xrun</span><span class="o">.</span><span class="n">md</span><span class="p">[</span><span class="s1">&#39;beamline_config&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">beamline_config</span>
+
+    <span class="c1"># insert header to db, either simulated or real</span>
+    <span class="n">xrun</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">,</span> <span class="s1">&#39;all&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">bt</span><span class="p">:</span>
+        <span class="n">xrun</span><span class="o">.</span><span class="n">beamtime</span> <span class="o">=</span> <span class="n">bt</span>
+
+    <span class="n">HOME_DIR</span> <span class="o">=</span> <span class="n">glbl</span><span class="p">[</span><span class="s1">&#39;home&#39;</span><span class="p">]</span>
+    <span class="n">BASE_DIR</span> <span class="o">=</span> <span class="n">glbl</span><span class="p">[</span><span class="s1">&#39;base&#39;</span><span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;INFO: Initializing the XPD data acquisition environment</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">HOME_DIR</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">HOME_DIR</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">BASE_DIR</span><span class="p">)</span>
+
+    <span class="c1"># See https://github.com/silx-kit/pyFAI/issues/1399#issuecomment-694185304</span>
+    <span class="kn">import</span> <span class="nn">logging</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">())</span>
+
+    <span class="kn">from</span> <span class="nn">xpdacq.calib</span> <span class="kn">import</span> <span class="o">*</span>
+
+    <span class="c1"># analysis functions, only at beamline</span>
+    <span class="c1">#from xpdan.data_reduction import *</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;OK, ready to go.  To continue, follow the steps in the xpdAcq&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;documentation at http://xpdacq.github.io/xpdacq</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+
+    <span class="c1"># Disable interactive logging of pyFAI</span>
+    <span class="c1"># See https://github.com/silx-kit/pyFAI/issues/1399#issuecomment-694185304</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PYFAI_NO_LOGGING&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">xpdacq.utils</span> <span class="kn">import</span> <span class="n">import_userScriptsEtc</span><span class="p">,</span> <span class="n">import_sample_info</span>
+    <span class="kn">from</span> <span class="nn">xpdacq.beamtimeSetup</span> <span class="kn">import</span> <span class="n">_start_beamtime</span><span class="p">,</span> <span class="n">_end_beamtime</span>
+    <span class="kn">from</span> <span class="nn">xpdacq.beamtime</span> <span class="kn">import</span> <span class="n">ScanPlan</span><span class="p">,</span> <span class="n">Sample</span><span class="p">,</span> <span class="n">ct</span><span class="p">,</span> <span class="n">Tramp</span><span class="p">,</span> <span class="n">Tlist</span><span class="p">,</span> <span class="n">tseries</span>
+    <span class="kn">from</span> <span class="nn">xpdacq.ipysetup</span> <span class="kn">import</span> <span class="n">UserInterface</span>
+
+    <span class="c1"># Do all setup in the constructor of UserInterface</span>
+    <span class="c1"># HOME directory will be changed to the one in glbl</span>
+    <span class="n">ui</span> <span class="o">=</span> <span class="n">UserInterface</span><span class="p">(</span>
+        <span class="n">area_dets</span><span class="o">=</span><span class="p">[</span><span class="n">pe1c</span><span class="p">],</span>
+        <span class="n">det_zs</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span>
+        <span class="n">shutter</span><span class="o">=</span><span class="n">fs</span><span class="p">,</span>
+        <span class="n">temp_controller</span><span class="o">=</span><span class="n">eurotherm</span><span class="p">,</span>
+        <span class="n">filter_bank</span><span class="o">=</span><span class="n">fb</span><span class="p">,</span>
+        <span class="n">ring_current</span><span class="o">=</span><span class="n">ring_current</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span>
+    <span class="p">)</span>
+    <span class="n">xrun</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">xrun</span>
+    <span class="n">glbl</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">glbl</span>
+    <span class="n">xpd_configuration</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">xpd_configuration</span>
+    <span class="n">run_calibration</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">run_calibration</span>
+    <span class="n">bt</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">bt</span>
+
+    <span class="c1"># Remove the variables that won&#39;t be used</span>
+    <span class="k">del</span> <span class="n">UserInterface</span><span class="p">,</span> <span class="n">ui</span>
+
+<span class="c1"># remove the uselss names</span>
+<span class="k">del</span> <span class="n">xpdacq_version</span>
+</pre></div>
+</div>
+<p>In the latest version, all python objects are created by the <cite>UserInterface</cite> class.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sb_cheat_sheet.html" class="btn btn-neutral float-left" title="Cheat Sheet" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sb_newBeamtime.html" class="btn btn-neutral float-right" title="Initializing a new beamtime for a user" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright (c) 2016 trustees of Columbia University in the City of New York.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
