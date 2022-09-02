@@ -110,6 +110,8 @@ class UserInterface:
         The object containing the information about the beamtime.
     xrun: CustomizedRunEngine
         The xpdacq wrapper of the bluesky run engine.
+    run_calibration: Callable
+        A callable object to control the calibration preprocessors in the xrun.
     """
 
     def __init__(
