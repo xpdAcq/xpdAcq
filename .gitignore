@@ -75,3 +75,6 @@ rever/
 
 # pytest cache
 .pytest_cache/
+
+# vscode
+.vscode/
