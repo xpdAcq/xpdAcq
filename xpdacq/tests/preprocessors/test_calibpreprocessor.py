@@ -3,9 +3,10 @@ import bluesky.plans as bp
 import bluesky.preprocessors as bpp
 from bluesky.run_engine import RunEngine
 from databroker.v2 import temp
-from ophyd.sim import hw
 from frozendict import frozendict
+from ophyd.sim import hw
 from pkg_resources import resource_filename
+from xarray import Dataset
 from xpdacq.preprocessors.calibpreprocessor import CalibInfo, CalibPreprocessor
 
 PONI_FILE = str(resource_filename("xpdacq", "tests/Ni_poni_file.poni"))
@@ -13,7 +14,7 @@ PONI_FILE = str(resource_filename("xpdacq", "tests/Ni_poni_file.poni"))
 
 def test_set():
     ci = CalibInfo(name="calib_info")
-    calib_result = (1., 200., 1000., 1500., 0.1, 0.2, 0.3, "Perkin detector")
+    calib_result = (1.0, 200.0, 1000.0, 1500.0, 0.1, 0.2, 0.3, "Perkin detector")
     sts = ci.set(calib_result)
     assert sts is not None
     # check if the signals are set correctly
@@ -34,7 +35,7 @@ def test_preprocessor_usage():
     cp = CalibPreprocessor(det, locked_signals=[det_z])
     db = temp()
     RE = RunEngine()
-    RE.subscribe(db.insert)
+    RE.subscribe(db.v1.insert)
 
     def simple_count():
         return cp(bp.count([det]))
@@ -44,30 +45,28 @@ def test_preprocessor_usage():
     RE(plan1)
     assert not hasattr(db[-1], "calib")
     # add cache
-    pos1 = 1.
-    calib_result1 = (1., 1., 0., 0., 0., 0., 0., "Perkin detector")
+    pos1 = 1.0
+    calib_result1 = (1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, "Perkin detector")
     cp.add_calib_result({det_z.name: pos1}, calib_result1)
-    pos2 = 2.
-    calib_result2 = (1., 2., 0., 0., 0., 0., 0., "Perkin detector")
+    pos2 = 2.0
+    calib_result2 = (1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, "Perkin detector")
     cp.add_calib_result({det_z.name: pos2}, calib_result2)
-    pos3 = 3.
+    pos3 = 3.0
     # case 2: state in cache, use corresponding calib result
     plan2 = bpp.pchain(bps.mv(det_z, pos1), simple_count())
     RE(plan2)
-    run = db[-1]
     attrs = ("wavelength", "dist", "poni1", "poni2", "rot1", "rot2", "rot3", "detector")
+    calib_data: Dataset = db[-1].calib.read()
     for i in range(len(attrs)):
         key = "{}_{}".format(det.name, attrs[i])
-        data = list(run.data(key, stream_name="calib"))[0]
-        assert data == calib_result1[i]
+        assert calib_data[key].item() == calib_result1[i]
     # case 3: state not in cache, use latest calib result
     plan3 = bpp.pchain(bps.mv(det_z, pos3), simple_count())
     RE(plan3)
-    run = db[-1]
+    calib_data: Dataset = db[-1].calib.read()
     for i in range(len(attrs)):
         key = "{}_{}".format(det.name, attrs[i])
-        data = list(run.data(key, stream_name="calib"))[0]
-        assert data == calib_result2[i]
+        assert calib_data[key].item() == calib_result2[i]
 
 
 def test_read_and_record():
@@ -77,7 +76,7 @@ def test_read_and_record():
     cp = CalibPreprocessor(det, locked_signals=[det_z])
     calib_result = cp.read(PONI_FILE)
     RE = RunEngine()
-    pos = 1.
+    pos = 1.0
     plan = bpp.pchain(bps.mv(det_z, pos), cp.record(calib_result))
     RE(plan)
     assert cp._cache[frozendict({det_z.name: pos})] == calib_result
@@ -87,7 +86,7 @@ def test_disable_and_enable():
     devices = hw()
     det = devices.det
     cp = CalibPreprocessor(det)
-    calib_result = (1., 1., 0., 0., 0., 0., 0., "Perkin detector")
+    calib_result = (1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, "Perkin detector")
     cp.add_calib_result(dict(), calib_result)
 
     def plan1():

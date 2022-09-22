@@ -2,7 +2,7 @@ from pathlib import Path
 
 import bluesky.plans as bp
 import numpy as np
-from databroker.v1 import Broker, Header
+from databroker.v2 import Broker
 from pkg_resources import resource_filename
 from xpdacq.simulators import PerkinElmerDetector
 from xpdacq.xpdacq import CustomizedRunEngine
@@ -15,14 +15,10 @@ def test_force_use_poni_file(db: Broker, fresh_xrun: CustomizedRunEngine):
     del fresh_xrun
     det = PerkinElmerDetector(name="pe1")
     xrun({}, bp.count([det]), poni_file=[(det, PONI_FILE)])
-    assert "calib" in db[-1].stream_names
+    assert hasattr(db[-1], "calib")
 
 
-def test_use_mask_files(
-    db: Broker,
-    fresh_xrun: CustomizedRunEngine,
-    tmp_path: Path
-):
+def test_use_mask_files(db: Broker, fresh_xrun: CustomizedRunEngine, tmp_path: Path):
     xrun = fresh_xrun
     del fresh_xrun
     det = PerkinElmerDetector(name="pe1")
@@ -31,7 +27,6 @@ def test_use_mask_files(
     mask_file = tmp_path.joinpath("mask.npy").absolute()
     np.save(mask_file, mask)
     xrun({}, bp.count([det]), mask_files=[(det, [mask_file])])
-    run: Header = db[-1]
-    assert "mask" in run.stream_names
-    _mask = next(run.data("pe1_mask", stream_name="mask"))
+    assert hasattr(db[-1], "mask")
+    _mask = db[-1].mask.read()["pe1_mask"].data[0]
     assert np.array_equal(mask, _mask)

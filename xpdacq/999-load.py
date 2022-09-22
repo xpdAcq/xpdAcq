@@ -62,7 +62,7 @@ beamline_config = _load_beamline_config(glbl["blconfig_path"])
 xrun.md["beamline_config"] = beamline_config
 
 # insert header to db, either simulated or real
-xrun.subscribe(db.insert, "all")
+xrun.subscribe(db.v1.insert, "all")
 
 if bt:
     xrun.beamtime = bt

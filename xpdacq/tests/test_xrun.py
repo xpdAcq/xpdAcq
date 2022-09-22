@@ -7,7 +7,7 @@ import uuid
 import warnings
 from pathlib import Path
 
-import databroker.v1
+from databroker.v2 import temp
 import numpy as np
 import ophyd
 import pytest
@@ -19,10 +19,13 @@ from xpdacq.beamtimeSetup import _start_beamtime
 from xpdacq.glbl import glbl
 from xpdacq.simulation import cs700, fb, pe1c, shctl1
 from xpdacq.utils import import_sample_info
-from xpdacq.xpdacq import (CustomizedRunEngine, _auto_load_calibration_file,
-                           _validate_dark, set_beamdump_suspender)
-from xpdacq.xpdacq_conf import (XPDACQ_MD_VERSION, configure_device,
-                                xpd_configuration)
+from xpdacq.xpdacq import (
+    CustomizedRunEngine,
+    _auto_load_calibration_file,
+    _validate_dark,
+    set_beamdump_suspender,
+)
+from xpdacq.xpdacq_conf import XPDACQ_MD_VERSION, configure_device, xpd_configuration
 from xpdsim import dexela
 
 pytest_dir = rs_fn("xpdacq", "tests/")
@@ -46,7 +49,7 @@ class xrunTest(unittest.TestCase):
             shutil.rmtree(self.home_dir)
         self.home_dir.mkdir()
         # set simulation objects
-        db = databroker.v1.temp()
+        db = temp()
         configure_device(
             area_det=pe1c,
             temp_controller=cs700,
@@ -87,7 +90,7 @@ class xrunTest(unittest.TestCase):
 
     @pytest.mark.skip
     def test_validate_dark(self):
-        """ test login in this function """
+        """test login in this function"""
         # no dark_dict_list
         glbl["_dark_dict_list"] = []
         rv = _validate_dark()
@@ -185,9 +188,7 @@ class xrunTest(unittest.TestCase):
 
         self.xrun.msg_hook = msg_rv
         self.xrun(0, 0)
-        open_run = [el.kwargs for el in msg_list if el.command == "open_run"][
-            0
-        ]
+        open_run = [el.kwargs for el in msg_list if el.command == "open_run"][0]
         assert dark_uid == open_run["sc_dk_field_uid"]
         # no auto-dark
         glbl["auto_dark"] = False
@@ -215,14 +216,10 @@ class xrunTest(unittest.TestCase):
         self.xrun.msg_hook = msg_rv
         glbl["auto_load_calib"] = True
         self.xrun(0, 0)
-        open_run = [el.kwargs for el in msg_list if el.command == "open_run"][
-            0
-        ]
+        open_run = [el.kwargs for el in msg_list if el.command == "open_run"][0]
         # equality
         self.assertTrue("calibration_md" in open_run)
-        self.assertEqual(
-            open_run["calibration_md"], reload_calibration_md_dict
-        )
+        self.assertEqual(open_run["calibration_md"], reload_calibration_md_dict)
         # specific info encoded in test file
         self.assertEqual(open_run["calibration_md"]["is_pytest"], True)
 
@@ -235,9 +232,7 @@ class xrunTest(unittest.TestCase):
         self.xrun.msg_hook = msg_rv
         glbl["auto_load_calib"] = False
         self.xrun(0, 0)
-        open_run = [el.kwargs for el in msg_list if el.command == "open_run"][
-            0
-        ]
+        open_run = [el.kwargs for el in msg_list if el.command == "open_run"][0]
         self.assertFalse("calibration_md" in open_run)
 
     @pytest.mark.skip
@@ -251,9 +246,7 @@ class xrunTest(unittest.TestCase):
 
         self.xrun.msg_hook = msg_rv
         self.xrun({}, ScanPlan(self.bt, ct, exp))
-        open_run = [
-            el.kwargs for el in msg_list if el.command == "open_run"
-        ].pop()
+        open_run = [el.kwargs for el in msg_list if el.command == "open_run"].pop()
         self.assertEqual(open_run["sp_type"], "ct")
         self.assertEqual(open_run["sp_requested_exposure"], exp)
         # test with Tramp
@@ -277,9 +270,7 @@ class xrunTest(unittest.TestCase):
         expected_traj = np.linspace(Tstart, Tstop, Num)
         assert np.all(traj_list == expected_traj)
         # verify md
-        open_run = [
-            el.kwargs for el in msg_list if el.command == "open_run"
-        ].pop()
+        open_run = [el.kwargs for el in msg_list if el.command == "open_run"].pop()
         self.assertEqual(open_run["sp_type"], "Tramp")
         self.assertEqual(open_run["sp_requested_exposure"], exp)
         self.assertEqual(open_run["sp_startingT"], Tstart)
@@ -294,9 +285,7 @@ class xrunTest(unittest.TestCase):
 
         self.xrun.msg_hook = msg_rv
         self.xrun({}, ScanPlan(self.bt, tseries, exp, delay, num))
-        open_run = [
-            el.kwargs for el in msg_list if el.command == "open_run"
-        ].pop()
+        open_run = [el.kwargs for el in msg_list if el.command == "open_run"].pop()
         self.assertEqual(open_run["sp_type"], "tseries")
         self.assertEqual(open_run["sp_requested_exposure"], exp)
         self.assertEqual(open_run["sp_requested_delay"], delay)
@@ -312,15 +301,11 @@ class xrunTest(unittest.TestCase):
         temp_controller = xpd_configuration["temp_controller"]
         callback = collector(temp_controller.readback.name, traj_list)
         self.xrun.msg_hook = msg_rv
-        self.xrun(
-            {}, ScanPlan(self.bt, Tlist, exp, T_list), subs={"event": callback}
-        )
+        self.xrun({}, ScanPlan(self.bt, Tlist, exp, T_list), subs={"event": callback})
         # verify trajectory
         assert T_list == traj_list
         # verify md
-        open_run = [
-            el.kwargs for el in msg_list if el.command == "open_run"
-        ].pop()
+        open_run = [el.kwargs for el in msg_list if el.command == "open_run"].pop()
         self.assertEqual(open_run["sp_type"], "Tlist")
         self.assertEqual(open_run["sp_requested_exposure"], exp)
         self.assertEqual(open_run["sp_T_list"], T_list)
@@ -364,7 +349,7 @@ class xrunTest(unittest.TestCase):
         xpd_configuration["ring_current"] = sig
         set_beamdump_suspender(self.xrun, wait_time=0.1)
         sig.put(200)
-        self.xrun({}, ScanPlan(self.bt, ct, .1))
+        self.xrun({}, ScanPlan(self.bt, ct, 0.1))
         # operate at low current, test user warnning
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -385,9 +370,7 @@ class xrunTest(unittest.TestCase):
 
         self.xrun.msg_hook = msg_rv
         self.xrun({}, ScanPlan(self.bt, ct, 1.0))
-        open_run = [
-            el.kwargs for el in msg_list if el.command == "open_run"
-        ].pop()
+        open_run = [el.kwargs for el in msg_list if el.command == "open_run"].pop()
         assert key in open_run
         assert open_run[key] == val
 
@@ -401,9 +384,7 @@ class xrunTest(unittest.TestCase):
 
         self.xrun.msg_hook = msg_rv
         self.xrun({}, ScanPlan(self.bt, ct, 1.0))
-        open_run = [
-            el.kwargs for el in msg_list if el.command == "open_run"
-        ].pop()
+        open_run = [el.kwargs for el in msg_list if el.command == "open_run"].pop()
         assert key in open_run
         assert open_run[key] == val
 
@@ -421,9 +402,7 @@ class xrunTest(unittest.TestCase):
         assert glbl["auto_load_calib"]
         # calibration hasn't been run -> still receive client uid
         self.xrun({}, ScanPlan(self.bt, ct, 1.0))
-        open_run = [
-            el.kwargs for el in msg_list if el.command == "open_run"
-        ].pop()
+        open_run = [el.kwargs for el in msg_list if el.command == "open_run"].pop()
         assert client_key in open_run
         assert open_run[client_key] == server_val
         # attach calib md to glbl and verify injection
@@ -441,9 +420,7 @@ class xrunTest(unittest.TestCase):
 
         self.xrun.msg_hook = msg_rv
         self.xrun({}, ScanPlan(self.bt, ct, 1.0))
-        open_run = [
-            el.kwargs for el in msg_list if el.command == "open_run"
-        ].pop()
+        open_run = [el.kwargs for el in msg_list if el.command == "open_run"].pop()
         assert client_key in open_run
         assert open_run[client_key] == server_val
 
@@ -457,9 +434,7 @@ class xrunTest(unittest.TestCase):
         assert all(glbl[k] == h.start[k] for k in key_list)
 
     def test_double_scan(self):
-        xpd_configuration["db"].prepare_hook = lambda name, doc: copy.deepcopy(
-            doc
-        )
+        xpd_configuration["db"].prepare_hook = lambda name, doc: copy.deepcopy(doc)
         key_list = ["owner", "facility", "group"]
         for k in key_list:
             self.xrun.md[k] = glbl[k]
@@ -467,12 +442,12 @@ class xrunTest(unittest.TestCase):
             {"sample_name": "double_scan"},
             [ScanPlan(self.bt, ct, 1.0), ScanPlan(self.bt, ct, 1.0)],
         )
-        hdrs = [xpd_configuration["db"][-1 * i] for i in [1, 2]]
-        starts = [h["start"] for h in hdrs]
-        for h in hdrs:
-            assert "dark_frame" not in h["start"]
-            assert h["start"]["uid"] in uids
-            assert h["start"]["sample_name"] == "double_scan"
+        runs = [xpd_configuration["db"][-1 * i] for i in [1, 2]]
+        starts = [run.metadata["start"] for run in runs]
+        for start in starts:
+            assert "dark_frame" not in start
+            assert start["uid"] in uids
+            assert start["sample_name"] == "double_scan"
 
         pops = [
             "uid",
@@ -493,7 +468,7 @@ class xrunTest(unittest.TestCase):
 
 
 def test_dexela(fresh_xrun):
-    xpd_configuration['area_det'] = dexela
+    xpd_configuration["area_det"] = dexela
     xrun = fresh_xrun
     L = []
     xrun.subscribe(lambda *x: L.append(x))

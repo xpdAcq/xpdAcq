@@ -15,18 +15,11 @@
 import os
 import shutil
 
-import databroker.v1
+from databroker.v2 import temp
 import ophyd.sim as sim
 import pytest
 from pkg_resources import resource_filename as rs_fn
-from xpdsim import (
-    cs700,
-    simple_pe1c,
-    shctl1,
-    ring_current,
-    xpd_wavelength,
-    fb
-)
+from xpdsim import cs700, simple_pe1c, shctl1, ring_current, xpd_wavelength, fb
 
 import xpdacq.devices as devices
 from xpdacq.beamtimeSetup import _start_beamtime
@@ -37,8 +30,7 @@ from xpdacq.xpdacq_conf import glbl_dict, configure_device
 
 @pytest.fixture(scope="session")
 def db():
-    db = databroker.v1.temp()
-    return db
+    return temp()
 
 
 @pytest.fixture(scope="module")
@@ -55,9 +47,7 @@ def bt(home_dir):
     configsrc = os.path.join(pytest_dir, config)
     shutil.copyfile(configsrc, glbl_dict["blconfig_path"])
     assert os.path.isfile(glbl_dict["blconfig_path"])
-    bt = _start_beamtime(
-        pi, saf_num, experimenters, wavelength=wavelength, test=True
-    )
+    bt = _start_beamtime(pi, saf_num, experimenters, wavelength=wavelength, test=True)
     # spreadsheet
     xlf = "300000_sample.xlsx"
     src = os.path.join(pytest_dir, xlf)

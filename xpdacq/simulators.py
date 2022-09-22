@@ -166,7 +166,7 @@ class WorkSpace:
 
         self.RE: RunEngine = RunEngine()
         self.db: Broker = temp()
-        self.RE.subscribe(self.db.insert)
+        self.RE.subscribe(self.db.v1.insert)
         self.det: PerkinElmerDetector = PerkinElmerDetector(name="pe1")
         self.eurotherm: Eurotherm = Eurotherm(name="temperature")
         self.shutter: Shutter = Shutter(name="shutter")
