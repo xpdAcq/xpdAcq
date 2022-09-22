@@ -3,6 +3,19 @@ xpdAcq Change Log
 
 .. current developments
 
+v1.1.1
+====================
+
+**Changed:**
+
+* Change all databroker clients to `v2` version.
+
+**Fixed:**
+
+* Fix bugs caused by API changes in `databroker`. Make sure the package compatible with `databroker 2.0` and `bluesky 1.10`.
+
+
+
 v1.1.0
 ====================
 
