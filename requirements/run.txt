@@ -3,7 +3,6 @@ bluesky
 bluesky-darkframes
 databroker
 frozendict
-ipython
 numpy
 openpyxl
 ophyd
@@ -12,5 +11,5 @@ pyfai
 pyopencl
 pyyaml
 xlrd
-xpdconf >=0.4.5
+xpdconf
 xpdsim
