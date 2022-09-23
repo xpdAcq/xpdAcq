@@ -2,6 +2,7 @@ python >=3.8
 bluesky
 bluesky-darkframes
 databroker
+fabio
 frozendict
 numpy
 openpyxl
@@ -10,6 +11,7 @@ pandas
 pyfai
 pyopencl
 pyyaml
+tifffile
 xlrd
-xpdconf
-xpdsim
+xpdconf >=0.4.5
+xpdsim >=0.4.3
