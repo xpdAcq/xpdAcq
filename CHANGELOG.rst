@@ -3,6 +3,15 @@ xpdAcq Change Log
 
 .. current developments
 
+v1.1.2
+====================
+
+**Fixed:**
+
+* Add the missing data files for `simulators` module in the pypi release.
+
+
+
 v1.1.1
 ====================
 
