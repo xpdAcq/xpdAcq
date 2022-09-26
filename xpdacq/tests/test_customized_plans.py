@@ -44,6 +44,5 @@ def test_Tramp():
     del ws
     xpd_configuration["area_det"] = det
     xpd_configuration["temp_controller"] = eurotherm
-    setpoints = [100.0, 200.0, 300.0]
     RE(xbt.Tramp([det], 0.1, 100.0, 300.0, 100.0))
     assert db[-1]

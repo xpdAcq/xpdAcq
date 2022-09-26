@@ -3,7 +3,6 @@ import numpy as np
 from bluesky import RunEngine
 from bluesky_darkframes.sim import DiffractionDetector, Shutter
 from databroker.v2 import temp
-from ophyd.sim import NumpySeqHandler
 from xpdacq.preprocessors import DarkPreprocessor, ShutterConfig
 
 
