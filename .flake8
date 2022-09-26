@@ -11,4 +11,4 @@ exclude =
     xpdacq/999-load2.py
     notebooks/*
 max-complexity = 10
-ignore = E501
+ignore = C901,E501
