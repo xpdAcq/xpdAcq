@@ -1,6 +1,7 @@
 import typing as T
 from dataclasses import dataclass
 from functools import partial
+import itertools as its
 
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
@@ -88,16 +89,13 @@ class TwoDetectors:
         self,
         detectors: OtherDetectors,
         motors: T.List[Motor],
-        positions: T.List[T.Sequence[Number]],
+        lists: T.List[T.Sequence[Number]],
     ) -> Plan:
         m = len(motors)
-        p = len(positions[0])
         pos_cache = dict(zip(motors, [None] * m))
-        step = dict(zip(motors, [position[0] for position in positions]))
-        for i in range(p):
-            for j in range(m):
-                step[motors[j]] = positions[j][i]
-                yield from self._one_nd_scan(detectors, step, pos_cache)
+        for positions in its.product(*lists):
+            step = dict(zip(motors, positions))
+            yield from self._one_nd_scan(detectors, step, pos_cache)
         return
 
     def count(
