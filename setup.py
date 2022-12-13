@@ -27,7 +27,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as readme_file:
 
 setup(
     name="xpdacq",
-    version='1.1.2',
+    version='v0.6.2',
     packages=find_packages(),
     long_description=readme,
     long_description_content_type='text/markdown',
