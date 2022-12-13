@@ -458,9 +458,9 @@ class BeamtimeHelper:
             The plan message generator.
         """
         if isinstance(plan, str):
-            plan_cls = self._bt.scanplans[plan]  # type: ScanPlan
+            plan_cls: ScanPlan = self._bt.scanplans[plan]
         elif isinstance(plan, int):
-            plan_cls = list(self._bt.scanplans.values())[plan]  # type: ScanPlan
+            plan_cls: ScanPlan = list(self._bt.scanplans.values())[plan]
         else:
             raise ValueError(f"{plan} is not int or str. It is {type(plan)}.")
         plan_gen = plan_cls.factory()
