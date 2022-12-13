@@ -216,6 +216,12 @@ class GlblYamlDict(YamlDict):
                 raise AttributeError(
                     "{} doesn't support setting attribute".format(self._name)
                 )
+        elif key == "dk_window":
+            print("'dk_window' is deprecated. Please set the dark window using the command below"
+                  "xrun.dark_preprocessors[0].max_age = {}".format(val * 60.0))
+        elif key == "frame_acq_time":
+            print("'frame_acq_time' is deprecated. Please set the acquire time using the detector object, like below"
+                  "pe1c.cam.acquire_time = {}".format(val))
         else:
             super().__setattr__(key, val)
 
