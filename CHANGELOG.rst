@@ -3,6 +3,19 @@ xpdAcq Change Log
 
 .. current developments
 
+v1.1.3
+====================
+
+**Added:**
+
+* Add the `xpdacq.twodetectors.TwoDectectors` module. It contains the plans to collect XRD and PDF on two detectors.
+
+**Fixed:**
+
+* Fixed the bug in scan plans. It now has the correct order of dimensions.
+
+
+
 vv0.6.2
 ====================
 
