@@ -49,6 +49,10 @@ def configure_device(*, area_det, shutter, temp_controller, db, **kwargs):
 
 def configure_frame_acq_time(new_frame_acq_time):
     """function to configure frame acquire time of area detector"""
+    if "area_det" not in xpd_configuration:
+        print("'xrun' not registered in the xpd_configuration. Please use the following line to set the dark window. Change pe1c to the detector object name."
+              "pe1c.cam.acquire_time = {}".format(new_frame_acq_time))
+        return
     area_det = xpd_configuration["area_det"]
     # stop acquisition
     area_det.cam.acquire.put(0)
@@ -67,7 +71,9 @@ def configure_frame_acq_time(new_frame_acq_time):
 
 def _set_first_max_age(val: float):
     if "xrun" not in xpd_configuration:
-        raise xpdAcqException("'xrun' not registered in the xpd_configuration.")
+        print("'xrun' not registered in the xpd_configuration. Please use the following line to set the dark window."
+              "xrun.dark_preprocessors[0].max_age = {}".format(val * 60.0))
+        return
     xpd_configuration["xrun"].dark_preprocessors[0].max_age = val * 60.0
     return
 
@@ -208,6 +214,10 @@ class GlblYamlDict(YamlDict):
                 "key='{}' is not allowed to change!".format(key)
             )
         else:
+            if key == "frame_acq_time":
+                configure_frame_acq_time(val)
+            elif key == "dk_window":
+                _set_first_max_age(val)
             super().__setitem__(key, val)
 
     def __setattr__(self, key, val):

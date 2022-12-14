@@ -50,6 +50,7 @@ class TimerStatus(DeviceStatus):
 
 class Camera(Device):
 
+    acquire = Component(Signal, name="acquire", kind=Kind.config, value=0)
     acquire_time = Component(Signal, name="acquire_time", kind=Kind.config, value=0.1)
 
 
