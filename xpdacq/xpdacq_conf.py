@@ -65,6 +65,13 @@ def configure_frame_acq_time(new_frame_acq_time):
     )
 
 
+def _set_first_max_age(val: float):
+    if "xrun" not in xpd_configuration:
+        raise xpdAcqException("'xrun' not registered in the xpd_configuration.")
+    xpd_configuration["xrun"].dark_preprocessors[0].max_age = val * 60.0
+    return
+
+
 def _verify_within_test(beamline_config_fp, verif):
     while verif != "y":
         with open(beamline_config_fp, "r") as f:
@@ -216,13 +223,11 @@ class GlblYamlDict(YamlDict):
                 raise AttributeError(
                     "{} doesn't support setting attribute".format(self._name)
                 )
-        elif key == "dk_window":
-            print("'dk_window' is deprecated. Please set the dark window using the command below"
-                  "xrun.dark_preprocessors[0].max_age = {}".format(val * 60.0))
-        elif key == "frame_acq_time":
-            print("'frame_acq_time' is deprecated. Please set the acquire time using the detector object, like below"
-                  "pe1c.cam.acquire_time = {}".format(val))
         else:
+            if key == "frame_acq_time":
+                configure_frame_acq_time(val)
+            elif key == "dk_window":
+                _set_first_max_age(val)
             super().__setattr__(key, val)
 
     @classmethod

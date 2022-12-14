@@ -199,6 +199,8 @@ class UserInterface:
         # instantiate xrun without beamtime, like bluesky setup
         self._print("Create xrun object.")
         xrun = CustomizedRunEngine(None)
+        # add xrun into the xpd_configuration so that glbl can tune dark window
+        xpd_configuration["xrun"] = xrun
         xrun.md["beamline_id"] = glbl["beamline_id"]
         xrun.md["group"] = glbl["group"]
         xrun.md["facility"] = glbl["facility"]
