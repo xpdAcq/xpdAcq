@@ -633,12 +633,10 @@ def _inject_calibration_md(msg):
     if msg.command == "open_run":
         exp_hash_uid = glbl.get("exp_hash_uid")
         # inject client uid to all runs
-        msg.kwargs.update({"detector_calibration_client_uid": exp_hash_uid})
+        msg.kwargs.setdefault("detector_calibration_client_uid", exp_hash_uid)
         if "is_calibration" in msg.kwargs:
             # inject server uid if it's calibration run
-            msg.kwargs.update(
-                {"detector_calibration_server_uid": exp_hash_uid}
-            )
+            msg.kwargs.setdefault("detector_calibration_server_uid", exp_hash_uid)
         else:
             # load calibration param if exists
             calibration_md = _auto_load_calibration_file()
