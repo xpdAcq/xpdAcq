@@ -645,7 +645,7 @@ def _inject_calibration_md(msg):
             if calibration_md:
                 injected_calib_dict = dict(calibration_md)
                 # inject calibration md
-                msg.kwargs["calibration_md"] = injected_calib_dict
+                msg.kwargs.setdefault("calibration_md", injected_calib_dict)
     return msg
 
 
