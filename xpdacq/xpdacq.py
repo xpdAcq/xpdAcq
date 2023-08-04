@@ -105,6 +105,14 @@ def periodic_dark(plan):
     return (yield from bpp.plan_mutator(plan, insert_take_dark))
 
 
+def no_dark(plan):
+    def plan_with_shutter():
+        yield from open_shutter_stub()
+        return (yield from plan)
+
+    return (yield from bpp.finalize_wrapper(plan_with_shutter(), close_shutter_stub()))
+
+
 class CustomizedRunEngine(RunEngine):
     """A RunEngine customized for XPD workflows.
 
@@ -242,7 +250,7 @@ class CustomizedRunEngine(RunEngine):
                 "Robot must be specified at call time, not in"
                 "global metadata"
             )
-        dark_strategy = dark_strategy if glbl["auto_dark"] else None
+        dark_strategy = dark_strategy if glbl["auto_dark"] else no_dark
         shutter_control = (
             xpd_configuration["shutter"], XPD_SHUTTER_CONF["close"]
         ) if glbl["shutter_control"] else None
