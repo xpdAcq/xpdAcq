@@ -106,15 +106,69 @@ def configure_area_det(det, exposure, acq_time):
     return num_frame, real_acq_time, computed_exposure
 
 
-def _configure_area_det(exposure):
-    """private function to configure pe1c
+def configure_area_det2(det, exposure: float):
+    '''Configure an area detector in "continuous mode"'''
+    manufaturer = yield from bps.rd(det.cam.manufacturer, default_value="Unknown")
+    if manufaturer == "Perkin Elmer":
+        return (yield from _configure_PE(det, exposure))
+    else:
+        yield from bps.mv(
+            det.cam.acquire_time, exposure, det.cam.acquire_period, exposure
+        )
+        return 1, exposure, exposure
 
-    This binds the general public function to the xpdacq global state
-    """
-    det = xpd_configuration["area_det"]
-    # cs studio configuration doesn't propagate to python level
-    acq_time = glbl["frame_acq_time"]
-    return configure_area_det(det, exposure, acq_time)
+
+def _configure_PE(det, exposure: float):
+    def _check_mini_expo(exposure, acq_time):
+        if exposure < acq_time:
+            raise ValueError(
+                "WARNING: total exposure time: {}s is shorter "
+                "than frame acquisition time {}s\n"
+                "you have two choices:\n"
+                "1) increase your exposure time to be at least"
+                "larger than frame acquisition time\n"
+                "2) increase the frame rate, if possible\n"
+                "    - to increase exposure time, simply resubmit"
+                " the ScanPlan with a longer exposure time\n"
+                "    - to increase frame-rate/decrease the"
+                " frame acquisition time, please use the"
+                " following command:\n"
+                "    >>> {} \n then rerun your ScanPlan definition"
+                " or rerun the xrun.\n"
+                "Note: by default, xpdAcq recommends running"
+                "the detector at its fastest frame-rate\n"
+                "(currently with a frame-acquisition time of"
+                "0.1s)\n in which case you cannot set it to a"
+                "lower value.".format(
+                    exposure,
+                    acq_time,
+                    ">>> glbl['frame_acq_time'] = 0.5  #set" " to 0.5s",
+                )
+            )
+
+    # todo make
+    acq_time = yield from bps.rd(det.cam.acquire_time, default_value=1)
+
+    _check_mini_expo(exposure, acq_time)
+
+    num_frame = np.ceil(exposure / acq_time)
+    yield from bps.mov(det.images_per_set, num_frame)
+    computed_exposure = num_frame * acq_time
+
+    # print exposure time
+    print(
+        "INFO: requested exposure time = {} - > computed exposure time"
+        "= {}".format(exposure, computed_exposure)
+    )
+    return num_frame, acq_time, computed_exposure
+
+
+def _configure_area_det(exposure: float):
+    return (
+        yield from configure_area_det2(
+            xpd_configuration["area_det"], exposure
+        )
+    )
 
 
 def _check_mini_expo(exposure, acq_time):
