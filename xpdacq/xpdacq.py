@@ -548,7 +548,8 @@ def _inject_qualified_dark_frame_uid(msg):
     """Inject the dark frame uid in start."""
     if msg.command == "open_run" and msg.kwargs.get("dark_frame") is not True:
         dark_uid = _validate_dark(glbl["dk_window"])
-        msg.kwargs["sc_dk_field_uid"] = dark_uid
+        if dark_uid is not None:
+            msg.kwargs["sc_dk_field_uid"] = dark_uid
     return msg
 
 
